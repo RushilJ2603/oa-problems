@@ -8,8 +8,10 @@
     "two-pointer",
     "hashmap"
   ],
-  "languages": [],
-  "runnable": false,
+  "languages": [
+    "cpp"
+  ],
+  "runnable": true,
   "io_mode": "stdin_stdout",
   "compare": "tokens",
   "limits": {
@@ -17,5 +19,6 @@
     "memory_mb": 256
   },
   "origin": "Cisco OA (transcribed)",
+  "author": "jishu",
   "links": []
 }
