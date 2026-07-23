@@ -1,0 +1,44 @@
+# Verify every problem package on each push / PR.
+#
+# A problem is only allowed to land if its reference solution reproduces every sample output
+# and its package is wired correctly. This is what keeps the shared bank from rotting as it
+# grows: a broken problem cannot be merged.
+#
+# The judge engine lives in the sibling repo (oa-judge), so we check that out and run its
+# verify_all.py against this checkout via OAJ_PROBLEMS_DIR.
+name: verify-problems
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the problem bank
+        uses: actions/checkout@v4
+        with:
+          path: oa-problems
+
+      - name: Check out the judge engine
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/oa-judge
+          path: oa-judge
+        # If oa-judge is private, a token with read access is needed here. For a public repo
+        # this works unauthenticated.
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install g++ (C++17)
+        run: sudo apt-get update && sudo apt-get install -y g++
+
+      - name: Verify all problems
+        run: |
+          cd oa-judge
+          OAJ_PROBLEMS_DIR="${GITHUB_WORKSPACE}/oa-problems" python3 verify_all.py

@@ -1,0 +1,7 @@
+# Build / run artifacts that may appear during local verification
+__pycache__/
+*.pyc
+*.out.tmp
+a.out
+*.exe
+.DS_Store
