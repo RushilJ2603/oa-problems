@@ -1,0 +1,25 @@
+{
+  "id": "oahelper-max-game-score",
+  "title": "Max Game Score",
+  "company": "Uber",
+  "difficulty": "Medium",
+  "tags": [
+    "dynamic-programming",
+    "sieve"
+  ],
+  "languages": [
+    "cpp"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper \u2014 Uber OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "dp",
+  "author": "jishu",
+  "links": []
+}

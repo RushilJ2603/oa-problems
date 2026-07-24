@@ -1,0 +1,26 @@
+{
+  "id": "oahelper-shrink-array",
+  "title": "Shrink the Array",
+  "company": "Google",
+  "difficulty": "Medium",
+  "tags": [
+    "array",
+    "hashing",
+    "simulation"
+  ],
+  "languages": [
+    "cpp"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper \u2014 Google OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "hashing",
+  "author": "jishu",
+  "links": []
+}
