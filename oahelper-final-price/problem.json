@@ -1,0 +1,26 @@
+{
+  "id": "oahelper-final-price",
+  "title": "Final Price",
+  "company": "Microsoft",
+  "difficulty": "Medium",
+  "tags": [
+    "array",
+    "monotonic-stack",
+    "greedy"
+  ],
+  "languages": [
+    "cpp"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper \u2014 Microsoft OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "stack",
+  "author": "jishu",
+  "links": []
+}
