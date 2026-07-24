@@ -1,0 +1,17 @@
+{
+  "id": "goldman-alphanumeric-combinations",
+  "title": "Alphanumeric Combinations",
+  "company": "Goldman Sachs",
+  "difficulty": "Medium",
+  "tags": ["dynamic-programming", "strings", "decode-ways"],
+  "languages": [],
+  "runnable": false,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper - Goldman Sachs (4nov)",
+  "source": "oa-helper",
+  "topic": "dynamic-programming",
+  "author": "jishu",
+  "links": [{"name": "Solve on LeetCode — 91. Decode Ways", "url": "https://leetcode.com/problems/decode-ways/"}]
+}

@@ -1,0 +1,17 @@
+{
+  "id": "goldman-dora-preferred-route",
+  "title": "Dora's Preferred Route",
+  "company": "Goldman Sachs",
+  "difficulty": "Medium",
+  "tags": ["graphs", "backtracking", "longest-path"],
+  "languages": ["cpp"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper - Goldman Sachs (12nov)",
+  "source": "oa-helper",
+  "topic": "graphs",
+  "author": "jishu",
+  "links": []
+}
