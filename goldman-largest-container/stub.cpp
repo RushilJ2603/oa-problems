@@ -1,7 +1,9 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-// Return the lexicographically largest arrangement reachable by the (reusable) swaps.
+// Return the lexicographically largest arrangement reachable by applying a SUBSET of the m swaps,
+// each swap used at most once, in any order. Swap i exchanges indices
+// (firstPos[i]-slide[i]) mod n and (secondPos[i]+slide[i]) mod n. Inputs are small.
 vector<long long> largestContainer(vector<long long>& container,
                                    vector<long long>& firstPos,
                                    vector<long long>& secondPos,
