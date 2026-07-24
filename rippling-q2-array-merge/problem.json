@@ -1,0 +1,15 @@
+{
+  "id": "rippling-q2-array-merge",
+  "title": "Make Two Arrays Equal by Merging",
+  "company": "Rippling",
+  "difficulty": "Hard",
+  "tags": ["prefix-sums", "dynamic-programming", "greedy"],
+  "languages": ["cpp"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "Rippling OA (transcribed)",
+  "author": "jishu",
+  "links": []
+}

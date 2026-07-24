@@ -1,0 +1,15 @@
+{
+  "id": "oa-q3-tree-good-pairs",
+  "title": "Tree Good Pairs",
+  "company": "Unknown OA",
+  "difficulty": "Hard",
+  "tags": ["trees", "dfs", "binary-search", "prefix-sums"],
+  "languages": ["cpp"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA (transcribed) — 1-hour set, Q3",
+  "author": "jishu",
+  "links": []
+}
