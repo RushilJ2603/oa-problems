@@ -25,5 +25,7 @@
       "url": "https://leetcode.com/problems/shortest-path-visiting-all-nodes/",
       "note": "very close (BFS + bitmask over must-visit nodes)"
     }
-  ]
+  ],
+  "source": "gyan",
+  "topic": "graph"
 }

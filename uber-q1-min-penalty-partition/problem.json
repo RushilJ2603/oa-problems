@@ -23,5 +23,7 @@
       "url": "https://leetcode.com/problems/optimal-partition-of-string/",
       "note": "similar structure (greedy/DP string partition)"
     }
-  ]
+  ],
+  "source": "gyan",
+  "topic": "dp"
 }

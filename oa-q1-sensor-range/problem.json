@@ -3,13 +3,24 @@
   "title": "Sensor Range Overlap",
   "company": "Unknown OA",
   "difficulty": "Medium",
-  "tags": ["sorting", "greedy", "sweep"],
-  "languages": ["cpp"],
+  "tags": [
+    "sorting",
+    "greedy",
+    "sweep"
+  ],
+  "languages": [
+    "cpp"
+  ],
   "runnable": true,
   "io_mode": "stdin_stdout",
   "compare": "tokens",
-  "limits": {"time_ms": 2000, "memory_mb": 256},
-  "origin": "OA (transcribed) — 1-hour set, Q1",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA (transcribed) \u2014 1-hour set, Q1",
   "author": "jishu",
-  "links": []
+  "links": [],
+  "source": "gyan",
+  "topic": "sorting"
 }

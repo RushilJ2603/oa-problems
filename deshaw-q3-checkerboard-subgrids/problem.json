@@ -25,5 +25,7 @@
       "url": "https://leetcode.com/problems/count-submatrices-with-all-ones/",
       "note": "similar structure (histogram submatrix counting)"
     }
-  ]
+  ],
+  "source": "gyan",
+  "topic": "dp"
 }

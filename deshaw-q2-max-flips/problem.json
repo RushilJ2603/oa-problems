@@ -24,5 +24,7 @@
       "url": "https://leetcode.com/problems/rearrange-array-to-maximize-prefix-score/",
       "note": "related technique (prefix-sum sign choices)"
     }
-  ]
+  ],
+  "source": "gyan",
+  "topic": "greedy"
 }

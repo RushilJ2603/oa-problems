@@ -25,5 +25,7 @@
       "url": "https://leetcode.com/problems/construct-binary-tree-from-string/",
       "note": "similar structure (build a tree from a path/string encoding)"
     }
-  ]
+  ],
+  "source": "gyan",
+  "topic": "tree"
 }

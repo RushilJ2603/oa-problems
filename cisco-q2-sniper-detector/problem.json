@@ -20,5 +20,7 @@
   },
   "origin": "Cisco OA (transcribed)",
   "author": "jishu",
-  "links": []
+  "links": [],
+  "source": "gyan",
+  "topic": "sliding-window"
 }

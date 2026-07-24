@@ -3,13 +3,29 @@
   "title": "Beautiful Arrangement",
   "company": "Rippling",
   "difficulty": "Medium",
-  "tags": ["bitmask-dp", "combinatorics", "permutations"],
-  "languages": ["cpp"],
+  "tags": [
+    "bitmask-dp",
+    "combinatorics",
+    "permutations"
+  ],
+  "languages": [
+    "cpp"
+  ],
   "runnable": true,
   "io_mode": "stdin_stdout",
   "compare": "tokens",
-  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
   "origin": "Rippling OA (transcribed)",
   "author": "jishu",
-  "links": [{"name": "LeetCode 526 (same problem)", "url": "https://leetcode.com/problems/beautiful-arrangement/"}]
+  "links": [
+    {
+      "name": "LeetCode 526 (same problem)",
+      "url": "https://leetcode.com/problems/beautiful-arrangement/"
+    }
+  ],
+  "source": "gyan",
+  "topic": "bitmask-dp"
 }

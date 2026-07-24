@@ -3,13 +3,29 @@
   "title": "Longest Palindromic Subsequence",
   "company": "Unknown OA",
   "difficulty": "Medium",
-  "tags": ["dynamic-programming", "strings", "palindrome"],
-  "languages": ["cpp"],
+  "tags": [
+    "dynamic-programming",
+    "strings",
+    "palindrome"
+  ],
+  "languages": [
+    "cpp"
+  ],
   "runnable": true,
   "io_mode": "stdin_stdout",
   "compare": "tokens",
-  "limits": {"time_ms": 2000, "memory_mb": 256},
-  "origin": "OA (transcribed) — 1-hour set, Q2",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA (transcribed) \u2014 1-hour set, Q2",
   "author": "jishu",
-  "links": [{"name": "LeetCode 516 (same problem)", "url": "https://leetcode.com/problems/longest-palindromic-subsequence/"}]
+  "links": [
+    {
+      "name": "LeetCode 516 (same problem)",
+      "url": "https://leetcode.com/problems/longest-palindromic-subsequence/"
+    }
+  ],
+  "source": "gyan",
+  "topic": "dynamic-programming"
 }

@@ -29,5 +29,7 @@
       "url": "https://leetcode.com/problems/minimize-maximum-pair-sum-in-array/",
       "note": "related technique (greedy pairing)"
     }
-  ]
+  ],
+  "source": "gyan",
+  "topic": "greedy"
 }

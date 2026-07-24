@@ -17,5 +17,7 @@
     "memory_mb": 256
   },
   "origin": "Flipkart OA (transcribed)",
-  "links": []
+  "links": [],
+  "source": "gyan",
+  "topic": "sql"
 }
