@@ -1,0 +1,32 @@
+{
+  "id": "tuf-count-number-of-nice-subarrays",
+  "title": "Count Number of Nice Subarrays",
+  "company": "Microsoft",
+  "difficulty": "Hard",
+  "tags": [
+    "array",
+    "sliding-window",
+    "prefix-sum"
+  ],
+  "languages": [
+    "cpp"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "TUF+ (takeuforward) \u2014 tagged Microsoft",
+  "source": "tuf",
+  "topic": "sliding-window",
+  "author": "jishu",
+  "links": [
+    {
+      "site": "LeetCode",
+      "url": "https://leetcode.com/problems/count-number-of-nice-subarrays/",
+      "note": "same problem (LC 1248)"
+    }
+  ]
+}

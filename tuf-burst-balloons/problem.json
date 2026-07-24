@@ -1,0 +1,32 @@
+{
+  "id": "tuf-burst-balloons",
+  "title": "Burst Balloons",
+  "company": "Microsoft",
+  "difficulty": "Hard",
+  "tags": [
+    "array",
+    "dynamic-programming",
+    "interval-dp"
+  ],
+  "languages": [
+    "cpp"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "TUF+ (takeuforward) \u2014 tagged Microsoft",
+  "source": "tuf",
+  "topic": "dp",
+  "author": "jishu",
+  "links": [
+    {
+      "site": "LeetCode",
+      "url": "https://leetcode.com/problems/burst-balloons/",
+      "note": "same problem (LC 312)"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "tuf-binary-subarrays-with-sum",
+  "title": "Binary Subarrays With Sum",
+  "company": "Microsoft",
+  "difficulty": "Hard",
+  "tags": [
+    "array",
+    "prefix-sum",
+    "sliding-window"
+  ],
+  "languages": [
+    "cpp"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "TUF+ (takeuforward) \u2014 tagged Microsoft",
+  "source": "tuf",
+  "topic": "sliding-window",
+  "author": "jishu",
+  "links": [
+    {
+      "site": "LeetCode",
+      "url": "https://leetcode.com/problems/binary-subarrays-with-sum/",
+      "note": "same problem (LC 930)"
+    }
+  ]
+}

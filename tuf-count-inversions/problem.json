@@ -1,0 +1,32 @@
+{
+  "id": "tuf-count-inversions",
+  "title": "Count Inversions",
+  "company": "Microsoft",
+  "difficulty": "Hard",
+  "tags": [
+    "array",
+    "merge-sort",
+    "divide-and-conquer"
+  ],
+  "languages": [
+    "cpp"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "TUF+ (takeuforward) \u2014 tagged Microsoft",
+  "source": "tuf",
+  "topic": "divide-and-conquer",
+  "author": "jishu",
+  "links": [
+    {
+      "site": "LeetCode",
+      "url": "https://leetcode.com/problems/count-of-smaller-numbers-after-self/",
+      "note": "same problem (LC 493)"
+    }
+  ]
+}

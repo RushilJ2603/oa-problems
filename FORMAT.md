@@ -9,6 +9,11 @@ gracefully. **`problems/flipkart-q1-golden-price/` is the reference implementati
 > right — the stub rule, required metadata, references present). See `oa-judge/SOLUTION.md` for the
 > full authoring reference. In particular: **the stub's `main()` only does I/O and calls a named
 > solution function; never solve inside `main()`.**
+>
+> **Test quality is mandatory:** every runnable problem ships **>= 5 curated edge cases including a
+> max-scale case** (bounds, max-scale, an overflow trigger that forces 64-bit, an adversarial case,
+> and a degenerate/no-answer case), and every reference is cross-checked against an **independent
+> brute force** before publishing. `audit.py` warns below 5 edges and hard-fails below 2.
 
 ```
 problems/<id>/

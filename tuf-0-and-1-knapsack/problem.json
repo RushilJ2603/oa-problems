@@ -1,0 +1,31 @@
+{
+  "id": "tuf-0-and-1-knapsack",
+  "title": "0/1 Knapsack",
+  "company": "Microsoft",
+  "difficulty": "Hard",
+  "tags": [
+    "dynamic-programming",
+    "knapsack"
+  ],
+  "languages": [
+    "cpp"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "TUF+ (takeuforward) \u2014 tagged Microsoft",
+  "source": "tuf",
+  "topic": "dp",
+  "author": "jishu",
+  "links": [
+    {
+      "site": "LeetCode",
+      "url": "https://leetcode.com/problems/partition-equal-subset-sum/",
+      "note": "same problem (LC 416)"
+    }
+  ]
+}
