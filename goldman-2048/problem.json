@@ -1,0 +1,17 @@
+{
+  "id": "goldman-2048",
+  "title": "2048",
+  "company": "Goldman Sachs",
+  "difficulty": "Medium",
+  "tags": ["simulation", "matrix", "implementation"],
+  "languages": ["cpp"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper - Goldman Sachs (12nov)",
+  "source": "oa-helper",
+  "topic": "simulation",
+  "author": "jishu",
+  "links": []
+}
