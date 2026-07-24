@@ -1,0 +1,31 @@
+{
+  "id": "tuf-climbing-stairs",
+  "title": "Climbing Stairs",
+  "company": "Microsoft",
+  "difficulty": "Easy",
+  "tags": [
+    "dynamic-programming",
+    "math"
+  ],
+  "languages": [
+    "cpp"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "TUF+ (takeuforward) \u2014 tagged Microsoft",
+  "source": "tuf",
+  "topic": "dp",
+  "author": "jishu",
+  "links": [
+    {
+      "site": "LeetCode",
+      "url": "https://leetcode.com/problems/climbing-stairs/",
+      "note": "same problem (LC 70)"
+    }
+  ]
+}

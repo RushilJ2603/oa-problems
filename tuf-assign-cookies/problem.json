@@ -1,0 +1,32 @@
+{
+  "id": "tuf-assign-cookies",
+  "title": "Assign Cookies",
+  "company": "Microsoft",
+  "difficulty": "Easy",
+  "tags": [
+    "greedy",
+    "sorting",
+    "two-pointers"
+  ],
+  "languages": [
+    "cpp"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "TUF+ (takeuforward) \u2014 tagged Microsoft",
+  "source": "tuf",
+  "topic": "greedy",
+  "author": "jishu",
+  "links": [
+    {
+      "site": "LeetCode",
+      "url": "https://leetcode.com/problems/assign-cookies/",
+      "note": "same problem (LC 455)"
+    }
+  ]
+}

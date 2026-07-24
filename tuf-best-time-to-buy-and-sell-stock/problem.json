@@ -1,0 +1,31 @@
+{
+  "id": "tuf-best-time-to-buy-and-sell-stock",
+  "title": "Best Time to Buy and Sell Stock",
+  "company": "Microsoft",
+  "difficulty": "Easy",
+  "tags": [
+    "array",
+    "dynamic-programming"
+  ],
+  "languages": [
+    "cpp"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "TUF+ (takeuforward) \u2014 tagged Microsoft",
+  "source": "tuf",
+  "topic": "dp",
+  "author": "jishu",
+  "links": [
+    {
+      "site": "LeetCode",
+      "url": "https://leetcode.com/problems/best-time-to-buy-and-sell-stock/",
+      "note": "same problem (LC 121)"
+    }
+  ]
+}
