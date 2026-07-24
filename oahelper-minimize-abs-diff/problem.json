@@ -1,0 +1,26 @@
+{
+  "id": "oahelper-minimize-abs-diff",
+  "title": "Minimize Sum of Absolute Differences",
+  "company": "DE Shaw",
+  "difficulty": "Medium",
+  "tags": [
+    "array",
+    "prefix-sum",
+    "greedy"
+  ],
+  "languages": [
+    "cpp"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper \u2014 DE Shaw OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "prefix-sum",
+  "author": "jishu",
+  "links": []
+}

@@ -1,0 +1,26 @@
+{
+  "id": "oahelper-weird-stock",
+  "title": "Weird Stock",
+  "company": "Arcesium",
+  "difficulty": "Medium",
+  "tags": [
+    "bfs",
+    "shortest-path",
+    "greedy"
+  ],
+  "languages": [
+    "cpp"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper \u2014 Arcesium OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "bfs",
+  "author": "jishu",
+  "links": []
+}

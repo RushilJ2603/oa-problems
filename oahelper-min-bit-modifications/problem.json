@@ -1,0 +1,25 @@
+{
+  "id": "oahelper-min-bit-modifications",
+  "title": "Minimum Bit Modifications to Equalize User Roles",
+  "company": "DE Shaw",
+  "difficulty": "Medium",
+  "tags": [
+    "bit-manipulation",
+    "greedy"
+  ],
+  "languages": [
+    "cpp"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper \u2014 DE Shaw OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "bit-manipulation",
+  "author": "jishu",
+  "links": []
+}
