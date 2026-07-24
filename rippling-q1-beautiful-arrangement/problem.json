@@ -9,7 +9,8 @@
     "permutations"
   ],
   "languages": [
-    "cpp"
+    "cpp",
+    "py"
   ],
   "runnable": true,
   "io_mode": "stdin_stdout",

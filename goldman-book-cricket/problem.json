@@ -3,12 +3,22 @@
   "title": "Game of Book Cricket",
   "company": "Goldman Sachs",
   "difficulty": "Medium",
-  "tags": ["dynamic-programming", "combinatorics", "counting"],
-  "languages": ["cpp"],
+  "tags": [
+    "dynamic-programming",
+    "combinatorics",
+    "counting"
+  ],
+  "languages": [
+    "cpp",
+    "py"
+  ],
   "runnable": true,
   "io_mode": "stdin_stdout",
   "compare": "tokens",
-  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
   "origin": "OA Helper - Goldman Sachs (9aug)",
   "source": "oa-helper",
   "topic": "dynamic-programming",

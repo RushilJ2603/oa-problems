@@ -3,12 +3,22 @@
   "title": "Dora's Preferred Route",
   "company": "Goldman Sachs",
   "difficulty": "Medium",
-  "tags": ["graphs", "backtracking", "longest-path"],
-  "languages": ["cpp"],
+  "tags": [
+    "graphs",
+    "backtracking",
+    "longest-path"
+  ],
+  "languages": [
+    "cpp",
+    "py"
+  ],
   "runnable": true,
   "io_mode": "stdin_stdout",
   "compare": "tokens",
-  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
   "origin": "OA Helper - Goldman Sachs (12nov)",
   "source": "oa-helper",
   "topic": "graphs",

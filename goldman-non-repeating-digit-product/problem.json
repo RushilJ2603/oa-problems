@@ -3,12 +3,22 @@
   "title": "Non-repeating Digit in Product",
   "company": "Goldman Sachs",
   "difficulty": "Medium",
-  "tags": ["math", "digits", "brute-force"],
-  "languages": ["cpp"],
+  "tags": [
+    "math",
+    "digits",
+    "brute-force"
+  ],
+  "languages": [
+    "cpp",
+    "py"
+  ],
   "runnable": true,
   "io_mode": "stdin_stdout",
   "compare": "tokens",
-  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
   "origin": "OA Helper - Goldman Sachs (4nov)",
   "source": "oa-helper",
   "topic": "math",
