@@ -1,0 +1,25 @@
+{
+  "id": "goldman-missed-courses",
+  "title": "Missed Courses",
+  "company": "Goldman Sachs",
+  "difficulty": "Easy",
+  "tags": [
+    "math",
+    "modular-arithmetic"
+  ],
+  "languages": [
+    "cpp"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "Goldman Sachs OA (recalled by user)",
+  "source": "gyan",
+  "topic": "math",
+  "author": "jishu",
+  "links": []
+}

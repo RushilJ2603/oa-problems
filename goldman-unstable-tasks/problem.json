@@ -1,0 +1,26 @@
+{
+  "id": "goldman-unstable-tasks",
+  "title": "Unstable Tasks",
+  "company": "Goldman Sachs",
+  "difficulty": "Medium",
+  "tags": [
+    "hashing",
+    "sorting",
+    "simulation"
+  ],
+  "languages": [
+    "cpp"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "Goldman Sachs OA (recalled by user)",
+  "source": "gyan",
+  "topic": "hashing",
+  "author": "jishu",
+  "links": []
+}

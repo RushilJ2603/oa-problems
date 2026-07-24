@@ -1,0 +1,26 @@
+{
+  "id": "goldman-largest-container",
+  "title": "Largest Container",
+  "company": "Goldman Sachs",
+  "difficulty": "Hard",
+  "tags": [
+    "union-find",
+    "greedy",
+    "sorting"
+  ],
+  "languages": [
+    "cpp"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "Goldman Sachs OA (recalled by user)",
+  "source": "gyan",
+  "topic": "union-find",
+  "author": "jishu",
+  "links": []
+}
