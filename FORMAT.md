@@ -4,6 +4,12 @@ Every problem is a folder `problems/<id>/`. `<id>` is kebab-case, `company-qN-sl
 (e.g. `deshaw-q2-max-flips`). The server loads whatever is present; missing optional files degrade
 gracefully. **`problems/flipkart-q1-golden-price/` is the reference implementation — clone its shape.**
 
+> **Before publishing, both gates must pass** (run from the oa-judge repo root):
+> `python3 verify_all.py` (references are correct) **and** `python3 audit.py` (packages are shaped
+> right — the stub rule, required metadata, references present). See `oa-judge/SOLUTION.md` for the
+> full authoring reference. In particular: **the stub's `main()` only does I/O and calls a named
+> solution function; never solve inside `main()`.**
+
 ```
 problems/<id>/
   problem.json      required   metadata (schema below)
