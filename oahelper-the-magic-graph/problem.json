@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-the-magic-graph",
+  "title": "The Magic Graph",
+  "company": "Tech Mahindra",
+  "difficulty": "Medium",
+  "tags": ["graphs", "segment-tree", "two-pointers"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 3000, "memory_mb": 256},
+  "origin": "OA Helper — Tech Mahindra OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "graphs",
+  "author": "grok",
+  "links": []
+}
