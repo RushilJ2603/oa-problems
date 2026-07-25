@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-colorful-construction",
+  "title": "Colorful Construction",
+  "company": "Algo University",
+  "difficulty": "Medium",
+  "tags": ["dynamic-programming", "combinatorics"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 3000, "memory_mb": 512},
+  "origin": "OA Helper — Algo University OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "dp",
+  "author": "grok",
+  "links": []
+}
