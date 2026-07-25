@@ -2,7 +2,7 @@
   "id": "oahelper-calculate-amount",
   "title": "Calculate Amount",
   "company": "Microsoft",
-  "difficulty": "Medium",
+  "difficulty": "Easy",
   "tags": [
     "array",
     "greedy",

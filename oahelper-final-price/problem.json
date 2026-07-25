@@ -2,7 +2,7 @@
   "id": "oahelper-final-price",
   "title": "Final Price",
   "company": "Microsoft",
-  "difficulty": "Medium",
+  "difficulty": "Easy",
   "tags": [
     "array",
     "monotonic-stack",
