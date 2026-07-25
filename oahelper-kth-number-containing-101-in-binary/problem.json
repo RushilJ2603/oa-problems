@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-kth-number-containing-101-in-binary",
+  "title": "K-th Binary Subsequence Number",
+  "company": "UBS",
+  "difficulty": "Hard",
+  "tags": ["dynamic-programming", "binary-search", "bit-manipulation"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — UBS OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "dp",
+  "author": "grok",
+  "links": []
+}
