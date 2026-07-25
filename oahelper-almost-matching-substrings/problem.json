@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-almost-matching-substrings",
+  "title": "Almost Matching Substrings",
+  "company": "Trilogy",
+  "difficulty": "Medium",
+  "tags": ["strings", "two-pointers", "enumeration"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — Trilogy OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "strings",
+  "author": "grok",
+  "links": []
+}

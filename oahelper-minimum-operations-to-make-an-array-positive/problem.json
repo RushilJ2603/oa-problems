@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-minimum-operations-to-make-an-array-positive",
+  "title": "Minimum Operations to Make an Array Positive",
+  "company": "ION Group",
+  "difficulty": "Hard",
+  "tags": ["greedy", "intervals", "prefix-sum"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — ION Group OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "greedy",
+  "author": "grok",
+  "links": []
+}
