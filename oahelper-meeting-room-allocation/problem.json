@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-meeting-room-allocation",
+  "title": "Meeting Room Allocation",
+  "company": "Infosys",
+  "difficulty": "Medium",
+  "tags": ["greedy", "heap", "sorting", "simulation"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — Infosys OA (story-wrapped)",
+  "source": "oa-helper",
+  "topic": "greedy",
+  "author": "grok",
+  "links": []
+}
