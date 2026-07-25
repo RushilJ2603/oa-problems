@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-maximize-score-after-n-operations",
+  "title": "Maximize Score After N Operations",
+  "company": "UBS",
+  "difficulty": "Hard",
+  "tags": ["dynamic-programming"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — UBS OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "dp",
+  "author": "grok",
+  "links": []
+}
