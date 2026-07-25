@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-train-reservation-reroute-auditor",
+  "title": "Train Reservation Reroute Auditor",
+  "company": "Cisco Code",
+  "difficulty": "Medium",
+  "tags": ["data-structures"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — Cisco Code OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "data-structures",
+  "author": "grok",
+  "links": []
+}
