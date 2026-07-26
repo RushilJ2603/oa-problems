@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-blocks-maximum-alternating-binary-value",
+  "title": "Blocks: Maximum Alternating Binary Value",
+  "company": "Infosys",
+  "difficulty": "Medium",
+  "tags": ["greedy", "math"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — Infosys OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "greedy",
+  "author": "grok",
+  "links": []
+}

@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-bank-bot-cashback-ledger",
+  "title": "Bank Bot Cashback Ledger",
+  "company": "Trilogy Innovations",
+  "difficulty": "Medium",
+  "tags": ["simulation", "heap", "greedy"],
+  "topic": "greedy",
+  "source": "oa-helper",
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — Trilogy Innovations OA (story-wrapped original)",
+  "author": "grok",
+  "links": []
+}

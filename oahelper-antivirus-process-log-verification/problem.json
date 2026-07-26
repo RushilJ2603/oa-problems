@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-antivirus-process-log-verification",
+  "title": "Antivirus Process Log Verification",
+  "company": "HackerRank",
+  "difficulty": "Medium",
+  "tags": ["trees", "graphs", "bfs"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — HackerRank OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "graphs",
+  "author": "grok",
+  "links": []
+}

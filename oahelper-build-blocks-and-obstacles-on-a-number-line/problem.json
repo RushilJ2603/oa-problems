@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-build-blocks-and-obstacles-on-a-number-line",
+  "title": "Build Blocks and Obstacles on a Number Line",
+  "company": "eBay",
+  "difficulty": "Medium",
+  "tags": ["ordered-set", "binary-search", "data-structures"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 4000, "memory_mb": 256},
+  "origin": "OA Helper — eBay OA",
+  "source": "oa-helper",
+  "topic": "greedy",
+  "author": "grok",
+  "links": []
+}

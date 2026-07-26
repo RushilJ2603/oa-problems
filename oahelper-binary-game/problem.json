@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-binary-game",
+  "title": "Binary Game",
+  "company": "AT&T",
+  "difficulty": "Medium",
+  "tags": ["dp", "counting"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — AT&T OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "dp",
+  "author": "grok",
+  "links": []
+}
