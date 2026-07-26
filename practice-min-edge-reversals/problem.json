@@ -1,0 +1,16 @@
+{
+  "id": "practice-min-edge-reversals",
+  "title": "Minimum Edge Reversals to Reach Destination",
+  "company": "Practice",
+  "difficulty": "Medium",
+  "tags": ["graph", "0-1 bfs", "shortest path", "deque", "bfs"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "Practice (Iris — Personal)",
+  "source": "gyan",
+  "topic": "graph",
+  "author": "claude"
+}
