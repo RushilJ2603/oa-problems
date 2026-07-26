@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-dungeon-game",
+  "title": "Dungeon Game",
+  "company": "Quince",
+  "difficulty": "Hard",
+  "tags": ["dynamic-programming", "matrix"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — Quince OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "dp",
+  "author": "grok",
+  "links": []
+}

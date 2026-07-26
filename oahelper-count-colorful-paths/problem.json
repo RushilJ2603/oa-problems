@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-count-colorful-paths",
+  "title": "Count Colorful Paths",
+  "company": "CureFit",
+  "difficulty": "Medium",
+  "tags": ["graphs", "backtracking", "matrix"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — CureFit OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "graphs",
+  "author": "grok",
+  "links": []
+}

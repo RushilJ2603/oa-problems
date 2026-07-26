@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-dr-jangs-probabilistic-walk",
+  "title": "Dr. Jang's Probabilistic Walk",
+  "company": "Samsung",
+  "difficulty": "Medium",
+  "tags": ["dynamic-programming", "graphs", "probability"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — Samsung OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "dp",
+  "author": "grok",
+  "links": []
+}

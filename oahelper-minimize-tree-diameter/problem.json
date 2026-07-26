@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-minimize-tree-diameter",
+  "title": "Minimize Tree Diameter",
+  "company": "Intuit",
+  "difficulty": "Hard",
+  "tags": ["trees", "graphs", "binary-search"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — Intuit OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "graphs",
+  "author": "grok",
+  "links": []
+}
