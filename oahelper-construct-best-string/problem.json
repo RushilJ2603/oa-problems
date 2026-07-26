@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-construct-best-string",
+  "title": "Construct Best String",
+  "company": "BNY",
+  "difficulty": "Hard",
+  "tags": ["dynamic-programming", "string-matching", "aho-corasick"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 5000, "memory_mb": 256},
+  "origin": "OA Helper — BNY OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "dp",
+  "author": "grok",
+  "links": []
+}

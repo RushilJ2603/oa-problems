@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-encryption",
+  "title": "Encryptable Subsequences",
+  "company": "Tech Mahindra",
+  "difficulty": "Medium",
+  "tags": ["combinatorics", "two-pointers", "counting"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — Tech Mahindra OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "dp",
+  "author": "grok",
+  "links": []
+}

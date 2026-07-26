@@ -1,0 +1,27 @@
+{
+  "id": "oahelper-maximize-reviewed-driver-support-chat-load",
+  "title": "Maximize Reviewed Support Chat Load",
+  "company": "Uber",
+  "difficulty": "Medium",
+  "tags": [
+    "greedy",
+    "prefix-sums",
+    "sorting"
+  ],
+  "languages": [
+    "cpp",
+    "py"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper \u2014 Uber OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "greedy",
+  "author": "grok",
+  "links": []
+}

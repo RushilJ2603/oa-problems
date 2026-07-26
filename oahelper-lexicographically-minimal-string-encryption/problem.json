@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-lexicographically-minimal-string-encryption",
+  "title": "Lexicographically Minimal String Encryption",
+  "company": "FactSet",
+  "difficulty": "Medium",
+  "tags": ["greedy", "stack", "string"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — FactSet OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "greedy",
+  "author": "grok",
+  "links": []
+}

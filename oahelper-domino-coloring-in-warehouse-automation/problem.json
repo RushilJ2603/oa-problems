@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-domino-coloring-in-warehouse-automation",
+  "title": "Domino Coloring in Warehouse Automation",
+  "company": "Amazon",
+  "difficulty": "Medium",
+  "tags": ["dynamic-programming", "string", "combinatorics"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — Amazon OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "dp",
+  "author": "grok",
+  "links": []
+}

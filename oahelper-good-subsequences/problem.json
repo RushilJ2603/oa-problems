@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-good-subsequences",
+  "title": "Good Subsequences",
+  "company": "Agoda",
+  "difficulty": "Medium",
+  "tags": ["combinatorics", "math", "strings"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — Agoda OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "greedy",
+  "author": "grok",
+  "links": []
+}

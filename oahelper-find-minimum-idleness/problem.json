@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-find-minimum-idleness",
+  "title": "Find Minimum Idleness",
+  "company": "Citadel Securities",
+  "difficulty": "Medium",
+  "tags": ["binary-search", "greedy", "strings"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — Citadel Securities OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "greedy",
+  "author": "grok",
+  "links": []
+}

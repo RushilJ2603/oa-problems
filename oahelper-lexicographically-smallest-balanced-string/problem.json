@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-lexicographically-smallest-balanced-string",
+  "title": "Lexicographically Smallest Balanced String",
+  "company": "ConcertAI",
+  "difficulty": "Medium",
+  "tags": ["greedy", "strings"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — ConcertAI OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "greedy",
+  "author": "grok",
+  "links": []
+}

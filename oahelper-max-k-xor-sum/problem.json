@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-max-k-xor-sum",
+  "title": "Max K XOR Sum",
+  "company": "Infosys",
+  "difficulty": "Medium",
+  "tags": ["greedy", "bit-manipulation", "sorting"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — Infosys OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "greedy",
+  "author": "grok",
+  "links": []
+}
