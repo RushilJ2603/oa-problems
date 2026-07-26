@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-drone-delivery-with-battery-swap-stations",
+  "title": "Drone Delivery with Battery Swap Stations",
+  "company": "Cisco",
+  "difficulty": "Medium",
+  "tags": ["shortest-path", "grid", "state-space"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — Cisco OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "graphs",
+  "author": "grok",
+  "links": []
+}

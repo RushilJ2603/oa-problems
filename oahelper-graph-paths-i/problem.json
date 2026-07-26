@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-graph-paths-i",
+  "title": "Counting Walks of Fixed Length",
+  "company": "AlgoUniversity",
+  "difficulty": "Hard",
+  "tags": ["graphs", "dynamic-programming", "matrix-exponentiation"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — AlgoUniversity OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "graphs",
+  "author": "grok",
+  "links": []
+}
