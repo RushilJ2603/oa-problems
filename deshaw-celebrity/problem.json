@@ -1,0 +1,17 @@
+{
+  "id": "deshaw-celebrity",
+  "title": "Find the Celebrity",
+  "company": "de shaw",
+  "difficulty": "Medium",
+  "tags": ["arrays", "two-pointers", "stack", "matrix"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "DE Shaw on-campus interview (Iris — Personal)",
+  "source": "gyan",
+  "topic": "arrays",
+  "author": "claude",
+  "links": [{"site": "LeetCode", "url": "https://leetcode.com/problems/find-the-celebrity/", "note": "277"}]
+}

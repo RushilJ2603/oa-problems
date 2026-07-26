@@ -1,0 +1,17 @@
+{
+  "id": "deshaw-grid-min-direction-cost",
+  "title": "Minimum Cost Path in a Direction Grid",
+  "company": "de shaw",
+  "difficulty": "Medium",
+  "tags": ["graph", "0-1-bfs", "shortest-path", "grid", "dijkstra"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "DE Shaw on-campus interview (Iris — Personal)",
+  "source": "gyan",
+  "topic": "graph",
+  "author": "claude",
+  "links": [{"site": "LeetCode", "url": "https://leetcode.com/problems/minimum-cost-to-make-at-least-one-valid-path-in-a-grid/", "note": "1368 — same problem"}]
+}

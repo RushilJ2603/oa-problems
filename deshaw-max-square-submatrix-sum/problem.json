@@ -1,0 +1,17 @@
+{
+  "id": "deshaw-max-square-submatrix-sum",
+  "title": "Largest Square Submatrix With Sum At Most K",
+  "company": "de shaw",
+  "difficulty": "Medium",
+  "tags": ["binary-search", "prefix-sum", "matrix", "2d"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "DE Shaw on-campus interview (Iris — Personal)",
+  "source": "gyan",
+  "topic": "binary-search",
+  "author": "claude",
+  "links": []
+}

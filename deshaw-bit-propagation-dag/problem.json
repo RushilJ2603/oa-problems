@@ -1,0 +1,17 @@
+{
+  "id": "deshaw-bit-propagation-dag",
+  "title": "Bit Propagation Through a Network",
+  "company": "de shaw",
+  "difficulty": "Medium",
+  "tags": ["graph", "dag", "topological-sort", "dp"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "DE Shaw on-campus interview (Iris — Personal)",
+  "source": "gyan",
+  "topic": "graph",
+  "author": "claude",
+  "links": []
+}
