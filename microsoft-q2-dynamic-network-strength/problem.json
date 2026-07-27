@@ -1,0 +1,16 @@
+{
+  "id": "microsoft-q2-dynamic-network-strength",
+  "title": "Dynamic Network Strength",
+  "company": "Microsoft",
+  "difficulty": "Medium",
+  "tags": ["dsu", "union-find", "graph", "incremental"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "Iris — Personal (Microsoft OA)",
+  "source": "gyan",
+  "topic": "dsu",
+  "author": "claude"
+}

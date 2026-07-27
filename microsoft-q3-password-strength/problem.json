@@ -1,0 +1,16 @@
+{
+  "id": "microsoft-q3-password-strength",
+  "title": "Password Strength Classifier",
+  "company": "Microsoft",
+  "difficulty": "Easy",
+  "tags": ["strings", "implementation", "hashing"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "Iris — Personal (Microsoft OA)",
+  "source": "gyan",
+  "topic": "strings",
+  "author": "claude"
+}

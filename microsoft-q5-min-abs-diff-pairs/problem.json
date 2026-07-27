@@ -1,0 +1,16 @@
+{
+  "id": "microsoft-q5-min-abs-diff-pairs",
+  "title": "Minimum Absolute Difference Pairs",
+  "company": "Microsoft",
+  "difficulty": "Easy",
+  "tags": ["sorting", "arrays", "two-pointer"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "Iris — Personal (Microsoft OA)",
+  "source": "gyan",
+  "topic": "sorting",
+  "author": "claude"
+}

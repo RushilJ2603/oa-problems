@@ -1,0 +1,16 @@
+{
+  "id": "microsoft-q4-compare-flat-json",
+  "title": "Compare Flat JSON Objects",
+  "company": "Microsoft",
+  "difficulty": "Medium",
+  "tags": ["strings", "parsing", "hash-map"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "Iris — Personal (Microsoft OA)",
+  "source": "gyan",
+  "topic": "strings",
+  "author": "claude"
+}

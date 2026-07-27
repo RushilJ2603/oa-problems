@@ -1,0 +1,16 @@
+{
+  "id": "microsoft-q1-valid-parentheses-replacements",
+  "title": "Valid Parentheses with Limited Replacements",
+  "company": "Microsoft",
+  "difficulty": "Medium",
+  "tags": ["stack", "greedy", "strings", "parentheses"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "Iris — Personal (Microsoft OA)",
+  "source": "gyan",
+  "topic": "strings",
+  "author": "claude"
+}

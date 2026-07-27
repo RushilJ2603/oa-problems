@@ -1,0 +1,16 @@
+{
+  "id": "microsoft-q6-maximize-binary-reverse-append",
+  "title": "Maximize the Final Binary String",
+  "company": "Microsoft",
+  "difficulty": "Hard",
+  "tags": ["constructive", "deque", "observation", "greedy"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "Iris — Personal (Microsoft OA)",
+  "source": "gyan",
+  "topic": "constructive",
+  "author": "claude"
+}
