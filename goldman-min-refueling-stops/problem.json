@@ -1,0 +1,16 @@
+{
+  "id": "goldman-min-refueling-stops",
+  "title": "Minimum Refueling Stops",
+  "company": "Goldman Sachs",
+  "difficulty": "Hard",
+  "tags": ["greedy", "heap", "priority-queue", "dp"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "Iris — Personal (Goldman Sachs OA)",
+  "source": "gyan",
+  "topic": "greedy",
+  "author": "claude"
+}
