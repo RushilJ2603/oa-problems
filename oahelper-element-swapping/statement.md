@@ -2,7 +2,9 @@
 
 A logistics team scores packing lanes by a weighted sum. Lane `i` (0-based) contributes `arr[i] * (i + 1)` to the total strength.
 
-You may rearrange the array by swapping adjacent elements any number of times, with one hard rule: **each element may participate in at most one swap**. Consequently, no element can move more than one position from its start, and any two chosen swap positions `i` and `j` must satisfy `|i - j| ≥ 2`.
+You may rearrange the array by swapping adjacent elements, with one hard rule: **each element may participate in at most one swap**. So you choose a set of **non-overlapping** adjacent pairs `(i, i+1)` and swap each pair; since the pairs share no position, no element moves more than one step from its start.
+
+(Equivalently: if you label each swap by its left position, then two chosen swaps `i` and `j` must satisfy `|i - j| ≥ 2` — because a single swap already occupies positions `i` and `i+1`. This is a rule about *different* swaps not overlapping; the two elements inside one swap are, of course, adjacent.)
 
 Find the maximum total strength achievable after an optimal (possibly empty) set of swaps.
 
