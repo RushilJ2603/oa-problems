@@ -19,7 +19,7 @@ There is **at most one** celebrity. Output the celebrity's index, or **−1** if
 
 ## Constraints
 
-- $1 \le n \le 700$
+- `1 ≤ n ≤ 700`
 - `knows[i][j]` ∈ {0, 1}, and `knows[i][i] = 0`.
 
 ## Examples

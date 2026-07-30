@@ -18,9 +18,9 @@ If not even a single cell (a 1 × 1 square) has value ≤ k, the answer is **0**
 
 ## Constraints
 
-- $1 \le m, n \le 300$
-- $0 \le \text{grid}[i][j] \le 10^9$
-- $0 \le k \le 10^{18}$
+- `1 ≤ m, n ≤ 300`
+- `0 ≤ grid[i][j] ≤ 10^9`
+- `0 ≤ k ≤ 10^18`
 
 ## Examples
 

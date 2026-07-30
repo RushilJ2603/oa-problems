@@ -24,8 +24,8 @@ Return the **minimum total cost** to travel from (0, 0) to (m − 1, n − 1).
 
 ## Constraints
 
-- $1 \le m, n \le 500$
-- $m \cdot n \le 2.5 \times 10^5$
+- `1 ≤ m, n ≤ 500`
+- `m · n ≤ 2.5 × 10^5`
 - Every character is one of `U`, `D`, `L`, `R`.
 
 ## Examples

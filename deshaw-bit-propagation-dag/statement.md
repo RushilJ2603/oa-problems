@@ -30,8 +30,8 @@ node `u` carries `send(u)`, where `send(0) = 2` and `send(u) = recv(u) + 1` for 
 
 ## Constraints
 
-- $2 \le n \le 2000$
-- $0 \le m \le 4000$
+- `2 ≤ n ≤ 2000`
+- `0 ≤ m ≤ 4000`
 - The graph is a DAG; node 0 is the producer (it has no incoming links).
 
 ## Examples

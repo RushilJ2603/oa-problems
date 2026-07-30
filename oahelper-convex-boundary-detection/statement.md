@@ -1,6 +1,6 @@
 # Convex Boundary Detection
 
-Nokia's field team planted sensor nodes across a flat survey area. Each node is a point $(x, y)$ on the plane. You must design a protective fence that tightly encloses every node and runs along the outermost ones.
+Nokia's field team planted sensor nodes across a flat survey area. Each node is a point `(x, y)` on the plane. You must design a protective fence that tightly encloses every node and runs along the outermost ones.
 
 Return every node that lies on the boundary of that fence.
 
@@ -8,12 +8,12 @@ Return every node that lies on the boundary of that fence.
 
 - The fence is the convex enclosure of all nodes.
 - Include every node that lies on the perimeter — if several nodes are collinear on a boundary edge, include all of them.
-- Report each distinct node once, sorted in lexicographical order (smaller $x$ first; if tied, smaller $y$ first).
+- Report each distinct node once, sorted in lexicographical order (smaller `x` first; if tied, smaller `y` first).
 
 ## Input Format
 
-- Line 1: integer $N$ — the number of nodes
-- Next $N$ lines: two integers $x_i$ $y_i$ — coordinates of node $i$
+- Line 1: integer `N` — the number of nodes
+- Next `N` lines: two integers `x_i` `y_i` — coordinates of node `i`
 
 ## Output Format
 
@@ -21,8 +21,8 @@ Print the boundary nodes, one per line as `x y`, in lexicographical order.
 
 ## Constraints
 
-- $1 \le N \le 3000$
-- $0 \le x_i, y_i \le 10^4$
+- `1 ≤ N ≤ 3000`
+- `0 ≤ x_i, y_i ≤ 10^4`
 
 ## Examples
 
@@ -48,7 +48,7 @@ Output:
 4 2
 ```
 
-Explanation: Node $(2, 2)$ is strictly inside the enclosure and is omitted. Nodes on the outer edges are kept.
+Explanation: Node `(2, 2)` is strictly inside the enclosure and is omitted. Nodes on the outer edges are kept.
 
 ### Example 2
 
@@ -93,4 +93,4 @@ Output:
 2 2
 ```
 
-Explanation: Midpoints of the square's sides lie on the perimeter and must be included; the center $(1, 1)$ does not.
+Explanation: Midpoints of the square's sides lie on the perimeter and must be included; the center `(1, 1)` does not.

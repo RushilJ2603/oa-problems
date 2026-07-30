@@ -1,6 +1,6 @@
 # Count Colorful Paths
 
-A fitness studio maps its floor as an $N \times M$ grid. Every tile is painted with a color coded by an integer. Instructors must walk from the top-left tile $(0,0)$ to the bottom-right tile $(N-1,M-1)$, moving only **right** or **down** on each step.
+A fitness studio maps its floor as an `N × M` grid. Every tile is painted with a color coded by an integer. Instructors must walk from the top-left tile `(0,0)` to the bottom-right tile `(N-1,M-1)`, moving only **right** or **down** on each step.
 
 A route is called *colorful* if **no color repeats** anywhere along that route: every tile on the path must carry a distinct color value.
 
@@ -8,17 +8,17 @@ Count how many colorful routes exist from start to finish.
 
 ## Input
 
-- First line: two integers $N$ and $M$ — the number of rows and columns.
-- Next $N$ lines: $M$ integers each — the color of cell $(i,j)$.
+- First line: two integers `N` and `M` — the number of rows and columns.
+- Next `N` lines: `M` integers each — the color of cell `(i,j)`.
 
 ## Output
 
-A single integer — the number of colorful paths from $(0,0)$ to $(N-1,M-1)$.
+A single integer — the number of colorful paths from `(0,0)` to `(N-1,M-1)`.
 
 ## Constraints
 
-- $1 \le N, M \le 10$
-- $0 \le \mathrm{grid}[i][j] \le 100$
+- `1 ≤ N, M ≤ 10`
+- `0 ≤ grid[i][j] ≤ 100`
 
 ## Examples
 
@@ -39,7 +39,7 @@ A single integer — the number of colorful paths from $(0,0)$ to $(N-1,M-1)$.
 
 **Explanation**
 
-All nine colors are distinct, so every lattice path is colorful. A $3 \times 3$ grid has $\binom{4}{2} = 6$ right/down paths.
+All nine colors are distinct, so every lattice path is colorful. A `3 × 3` grid has `C(4, 2) = 6` right/down paths.
 
 ### Example 2
 
@@ -58,7 +58,7 @@ All nine colors are distinct, so every lattice path is colorful. A $3 \times 3$ 
 
 **Explanation**
 
-Every path longer than one cell reuses color $1$, so no colorful path exists. (A single-cell grid would still count as $1$.)
+Every path longer than one cell reuses color `1`, so no colorful path exists. (A single-cell grid would still count as `1`.)
 
 ### Example 3
 
@@ -77,4 +77,4 @@ Every path longer than one cell reuses color $1$, so no colorful path exists. (A
 
 **Explanation**
 
-Some right/down routes reuse a color (for example any path that visits both cells colored $2$); exactly three routes keep all colors unique.
+Some right/down routes reuse a color (for example any path that visits both cells colored `2`); exactly three routes keep all colors unique.
