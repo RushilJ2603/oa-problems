@@ -1,0 +1,16 @@
+{
+  "id": "arcesium-max-campaign-score",
+  "title": "Maximum Campaign Score",
+  "company": "Arcesium",
+  "difficulty": "Hard",
+  "tags": ["arrays", "greedy", "sorting", "subarray"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "Iris — Personal (Arcesium OA)",
+  "source": "gyan",
+  "topic": "arrays",
+  "author": "claude"
+}
