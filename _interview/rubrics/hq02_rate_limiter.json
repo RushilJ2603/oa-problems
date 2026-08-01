@@ -1,0 +1,329 @@
+{
+ "id": "hq02_rate_limiter",
+ "title": "Design a distributed rate limiter",
+ "type": "HLD",
+ "relevance": "High — classic standalone HLD prompt (Alex Xu Vol.1 ch.4); also a building-block follow-up inside API, social, payments, and gateway designs (campus + experienced; FAANG and Indian product cos).",
+ "difficulty": "mid",
+ "prereqs": [
+  "h09_rate_limiting",
+  "h01_networking",
+  "h02_load_balancing",
+  "h03_caching",
+  "h14_estimation"
+ ],
+ "company_notes": "Very frequent standalone campus/intern HLD and abuse-control follow-up in URL shortener, Twitter, ticket booking, auth; experienced rounds deepen Redis Lua races, Cluster/hash tags, hot keys, fail-open, multi-DC, and rate-limit vs load shedding at Amazon, Google, Meta, Uber, Stripe-like API cos, Atlassian, Flipkart; Alex Xu Vol.1 ch.4 classic and near-universal on public API designs.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Clarify server-side limiter scope, identity keys, reject vs throttle, and NFRs before designing.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Identify clients via layered keys (user ID / API key when authed, IP for anonymous) and apply the most restrictive of per-user, per-IP, and per-endpoint rules.",
+     "weight": "core",
+     "evidence_hint": "Names user/API-key vs IP and says layer rules, taking the strictest."
+    },
+    {
+     "id": "req2",
+     "point": "Enforce configurable quotas and on exceed return HTTP 429 with Limit/Remaining/Reset and Retry-After headers.",
+     "weight": "core",
+     "evidence_hint": "Mentions 429 plus the standard rate-limit and Retry-After headers."
+    },
+    {
+     "id": "req3",
+     "point": "NFR: low hot-path overhead aiming under about 5–10 ms added latency, high availability, and slight over/under-count across nodes often acceptable.",
+     "weight": "core",
+     "evidence_hint": "States latency budget and accepts approximate distributed counts."
+    },
+    {
+     "id": "req4",
+     "point": "Draw scope: out of analytics warehouse on every deny, strong global consistency across continents, and billing-grade exact metering unless asked.",
+     "weight": "extended",
+     "evidence_hint": "Explicitly parks global strong consistency and billing-grade metering."
+    }
+   ],
+   "probes": [
+    "Is this a server-side API limiter? Per-user, IP, or API key? Soft throttle or hard reject? Is approximate OK?"
+   ],
+   "hints": {
+    "1": "Start by clarifying identity and whether over/under-count is acceptable.",
+    "2": "Separate functional (identify, enforce, 429+headers) from NFRs (latency, availability, multi-replica).",
+    "3": "Layer user+IP+endpoint; aim low added latency; park strong multi-continent consistency and billing-grade metering."
+   }
+  },
+  {
+   "phase": "estimation",
+   "goal": "Size Redis check capacity, shard count, and per-key memory for the chosen scale.",
+   "must_hit": [
+    {
+     "id": "est1",
+     "point": "At peak about 1M req/s through the gateway with a huge key space (example 100M users, sparse active set).",
+     "weight": "core",
+     "evidence_hint": "Uses ~1M peak QPS and large distinct-key space like 100M users."
+    },
+    {
+     "id": "est2",
+     "point": "Budget roughly 50k–100k Lua checks/s per Redis primary, implying about 10–20+ Redis primaries or Redis Cluster for 1M checks/s.",
+     "weight": "core",
+     "evidence_hint": "Divides gateway QPS by per-primary check budget to justify many shards/Cluster."
+    },
+    {
+     "id": "est3",
+     "point": "Token bucket state is about 2 numbers plus TTL per active key; sliding log of timestamps blows memory at this scale.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts compact token-bucket keys with memory-heavy sliding log."
+    },
+    {
+     "id": "est4",
+     "point": "Counters are ephemeral with TTL/idle expiry; disk DBs are too slow on the request path so an in-memory store is mandatory.",
+     "weight": "core",
+     "evidence_hint": "Rejects durable disk DB on the hot path in favor of in-memory Redis-like store."
+    }
+   ],
+   "probes": [
+    "Walk the back-of-envelope: peak QPS, Redis checks per primary, how many shards, and memory per algorithm."
+   ],
+   "hints": {
+    "1": "Pick a concrete peak QPS with the interviewer before sharding math.",
+    "2": "Estimate checks/s per Redis primary, then how many primaries for peak gateway QPS.",
+    "3": "~1M req/s, ~50k–100k checks/s per primary → ~10–20+ primaries; token bucket ≈ 2 ints + TTL; no disk DB on path."
+   }
+  },
+  {
+   "phase": "api",
+   "goal": "Define the gateway-internal allow check and the client-visible 429 response contract.",
+   "must_hit": [
+    {
+     "id": "api1",
+     "point": "Internal check shape: isAllowed(clientId, ruleId) returns allowed, remaining, resetAt, and optional retryAfterSec.",
+     "weight": "core",
+     "evidence_hint": "Describes a middleware/RPC allow API returning remaining and reset metadata."
+    },
+    {
+     "id": "api2",
+     "point": "On deny, clients see HTTP 429 with X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, and Retry-After.",
+     "weight": "core",
+     "evidence_hint": "Lists 429 and the X-RateLimit-* plus Retry-After headers."
+    },
+    {
+     "id": "api3",
+     "point": "Optional admin/config CRUD for rules (limit, window, burst, scope = user|ip|key|endpoint|tier) pushed or polled into gateway memory.",
+     "weight": "extended",
+     "evidence_hint": "Mentions config CRUD and hot reload into gateway cache without treating limiter as a public product API."
+    }
+   ],
+   "probes": [
+    "What does the check API return, and what headers does a denied client get?"
+   ],
+   "hints": {
+    "1": "This is gateway-internal middleware, not a public REST rate-limit product.",
+    "2": "Return allow metadata from the check; map deny to 429 + standard headers.",
+    "3": "isAllowed → {allowed, remaining, resetAt, retryAfterSec?}; 429 with X-RateLimit-* and Retry-After."
+   }
+  },
+  {
+   "phase": "data_model",
+   "goal": "Separate static rules from hot-path Redis bucket/counter keys for one chosen algorithm.",
+   "must_hit": [
+    {
+     "id": "dm1",
+     "point": "Rules config fields: ruleId, scope, limit/refill rate, burst capacity, window, endpoints, tier.",
+     "weight": "core",
+     "evidence_hint": "Lists relatively static rule attributes including scope and burst/window."
+    },
+    {
+     "id": "dm2",
+     "point": "Pick one Redis sketch and stick to it: e.g. token bucket hash rl:{client}:{rule} with tokens and last_refill + TTL; fixed window counter; or sliding counter curr/prev windows.",
+     "weight": "core",
+     "evidence_hint": "Commits to one algorithm’s key/value layout rather than mixing all."
+    },
+    {
+     "id": "dm3",
+     "point": "Sliding log as a sorted set of timestamps is memory-heavy and usually rejected at this scale.",
+     "weight": "extended",
+     "evidence_hint": "Explicitly discards sliding log for large QPS due to memory."
+    },
+    {
+     "id": "dm4",
+     "point": "With Redis Cluster, use hash tags so multi-key Lua for one client stays on one slot (e.g. {user123}:tokens and {user123}:meta).",
+     "weight": "extended",
+     "evidence_hint": "Mentions hash tags so EVAL multi-key scripts are single-slot."
+    }
+   ],
+   "probes": [
+    "What do you store for rules vs for live counters, and how do Cluster hash tags help Lua?"
+   ],
+   "hints": {
+    "1": "Config rules are relatively static; counters/buckets live in Redis on the hot path.",
+    "2": "Choose one algorithm’s key sketch; mention why sliding log is costly.",
+    "3": "Token bucket hash with tokens + last_refill + TTL; Cluster hash tags for multi-key Lua."
+   }
+  },
+  {
+   "phase": "architecture",
+   "goal": "Place enforcement at the gateway with shared Redis Cluster state and hot-reloaded rules.",
+   "must_hit": [
+    {
+     "id": "arch1",
+     "point": "Default path: Client → LB/API Gateway rate-limit middleware → atomic Redis check → allow to API tier or 429.",
+     "weight": "core",
+     "evidence_hint": "Draws gateway middleware in front of services with Redis as counter store."
+    },
+    {
+     "id": "arch2",
+     "point": "Redis Cluster is source of truth for counters/buckets, sharded by hash(clientId); sticky sessions are a bad distributed fix.",
+     "weight": "core",
+     "evidence_hint": "Shards by client id and rejects sticky sessions as the distributed solution."
+    },
+    {
+     "id": "arch3",
+     "point": "Rule config flows disk/DB → workers/push → in-memory cache on gateways so rules change without full redeploy.",
+     "weight": "extended",
+     "evidence_hint": "Describes Stripe-style push/poll of rules into gateway memory."
+    },
+    {
+     "id": "arch4",
+     "point": "Name alternatives: in-process only under-enforces; dedicated rate-limit microservice adds RTT but richer context; edge PoP is low latency with approximate global.",
+     "weight": "extended",
+     "evidence_hint": "Compares local-only, dedicated service, and edge placement tradeoffs."
+    }
+   ],
+   "probes": [
+    "Where do you place the limiter, and why not only local counters on each app server?"
+   ],
+   "hints": {
+    "1": "Prefer API gateway/middleware so you drop early under one policy.",
+    "2": "Shared Redis Cluster keyed by client; rules cached on gateways.",
+    "3": "Gateway middleware + Lua to Redis Cluster sharded by clientId; call out in-process under-enforcement and optional dedicated/edge designs."
+   }
+  },
+  {
+   "phase": "deep_dives",
+   "goal": "Defend algorithm choice, atomic Redis updates, failure mode, and multi-region accuracy.",
+   "must_hit": [
+    {
+     "id": "dd1",
+     "point": "Default to token bucket for controlled bursts and good DX; fixed window is a fine start but has a 2× boundary burst; sliding counter for near-sliding accuracy with O(1) memory; leaky/blocking when smoothing outbound to a fragile dependency.",
+     "weight": "core",
+     "evidence_hint": "Picks token bucket as default and can explain fixed-window 2× and when sliding/leaky fit."
+    },
+    {
+     "id": "dd2",
+     "point": "HMGET then HSET/MULTI still races across gateways; entire refill+consume must run in one Lua EVAL/EVALSHA.",
+     "weight": "core",
+     "evidence_hint": "Rejects read-then-MULTI and insists on a single atomic Lua script."
+    },
+    {
+     "id": "dd3",
+     "point": "Fail-open for availability (e.g. social/blog under Redis blip, Stripe request limiter) vs fail-closed for payments/LLM cost/security quotas; pair with load shedders for fleet emergencies.",
+     "weight": "core",
+     "evidence_hint": "Chooses fail-open vs fail-closed by risk and distinguishes load shedding."
+    },
+    {
+     "id": "dd4",
+     "point": "Exact global multi-DC counts cost RTT/complexity; pragmatic design is per-region or edge limits with slight over-allow.",
+     "weight": "extended",
+     "evidence_hint": "Accepts per-region approximate caps instead of exact global counters."
+    }
+   ],
+   "probes": [
+    "Why token bucket over fixed window? What breaks if two gateways check Redis without Lua? Fail-open or fail-closed when Redis is down?"
+   ],
+   "hints": {
+    "1": "Interviewers will poke algorithm boundary behavior and Redis races.",
+    "2": "Separate algorithm DX, atomicity, and availability-vs-quota failure mode.",
+    "3": "Token bucket default; Lua for refill+consume; fail-open vs fail-closed by risk; per-region not exact global."
+   }
+  },
+  {
+   "phase": "bottlenecks",
+   "goal": "Scale past Redis QPS and hot keys, and operate safely with kill switches and dark-launch.",
+   "must_hit": [
+    {
+     "id": "bn1",
+     "point": "Usual ceiling is Redis CPU/QPS → shard by client id, Redis Cluster, and connection pools on gateways.",
+     "weight": "core",
+     "evidence_hint": "Names Redis throughput as the bottleneck and sharding/pooling as the fix."
+    },
+    {
+     "id": "bn2",
+     "point": "Hot key (one abuser/scraper IP) saturates a shard → local deny cache, stricter IP rules, challenge/ban, or isolate heavy tenants.",
+     "weight": "core",
+     "evidence_hint": "Has a concrete hot-key mitigation beyond more generic shards."
+    },
+    {
+     "id": "bn3",
+     "point": "Config fan-out via push plus feature-flag/kill switch to disable enforcement if a bad rule ships; dark-launch before enforce.",
+     "weight": "extended",
+     "evidence_hint": "Mentions kill switch and dark-launch like Stripe before full enforcement."
+    },
+    {
+     "id": "bn4",
+     "point": "Observe 429s by rule, Redis latency/errors, and fail-open events; co-locate Redis in-region and avoid sticky-session “solutions” for gateway CPU/RTT.",
+     "weight": "extended",
+     "evidence_hint": "Lists observability signals and in-region Redis co-location."
+    }
+   ],
+   "probes": [
+    "What saturates first at high QPS, and how do you handle one mega-client hammering a single shard?"
+   ],
+   "hints": {
+    "1": "Think about Redis as the shared bottleneck, not just gateway CPU.",
+    "2": "Cover sharding, hot keys, and operational kill switches.",
+    "3": "Shard/Cluster + pools; hot-key local deny/ban; push rules with kill switch and dark-launch."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Token bucket vs fixed window vs sliding counter vs leaky bucket",
+   "strong_answer": "Token bucket is the usual default (controlled burst b, sustained refill r, good mobile/batch DX). Fixed window is simple but allows ~2× at the boundary. Sliding counter (Cloudflare) gives near-sliding accuracy with O(1) memory. Leaky/blocking (e.g. Uber lib) smooths outbound to fragile dependencies with little/no burst."
+  },
+  {
+   "topic": "Fail-open vs fail-closed on Redis failure",
+   "strong_answer": "Fail-open preserves availability for social/blog-style APIs (Stripe request limiter) with alerts; fail-closed protects payments, LLM cost, and security quotas. Keep separate load shedders for fleet-health emergencies rather than conflating them with per-identity quotas."
+  },
+  {
+   "topic": "Exact global multi-DC counts vs per-region / edge limits",
+   "strong_answer": "Exact global counters add high RTT and complexity; practical designs use per-region or edge limits and accept slight over-allow, optionally with careful local “already denied” caches under attack."
+  },
+  {
+   "topic": "Gateway middleware vs dedicated rate-limit service vs in-process only",
+   "strong_answer": "Gateway middleware drops early under one policy. In-process counters under-enforce by about replica count. A dedicated service can use richer app context but adds an RTT. Edge PoPs cut latency with approximate global behavior."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Putting a counter only on each app server",
+   "correction": "Local counters under-enforce by about N replicas; use a shared Redis (or equivalent) for distributed quotas."
+  },
+  {
+   "trap": "Fixed window feels correct on the whiteboard",
+   "correction": "Probe the double-limit / 2× burst at the window edge; fix with sliding counter/log or token bucket."
+  },
+  {
+   "trap": "Treating token bucket as unlimited burst",
+   "correction": "Burst capacity b caps the spike; refill rate caps the long-term average."
+  },
+  {
+   "trap": "Using MULTI after a separate non-atomic read for check-and-consume",
+   "correction": "Two gateways can both see the same remaining tokens; put refill+consume in one Lua EVAL (or a single INCR for simple windows)."
+  },
+  {
+   "trap": "Staying silent when Redis is down",
+   "correction": "Explicitly choose and justify fail-open vs fail-closed for the product’s risk."
+  },
+  {
+   "trap": "Conflating rate limiting with load shedding",
+   "correction": "Rate limit is per-identity quota; load shedding drops low-priority traffic for fleet health (Stripe’s split)."
+  },
+  {
+   "trap": "IP-only limits as the sole identity",
+   "correction": "NAT/CGNAT and office Wi-Fi cause false positives; prefer authenticated identity when available and layer keys."
+  },
+  {
+   "trap": "Promising exact global multi-region counters",
+   "correction": "Exact global counts are expensive; per-region or edge with slight over-allow is the pragmatic answer."
+  }
+ ]
+}

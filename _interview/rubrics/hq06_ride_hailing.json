@@ -1,0 +1,328 @@
+{
+ "id": "hq06_ride_hailing",
+ "title": "Design ride-hailing (Uber/Lyft) with geospatial matching",
+ "type": "HLD",
+ "relevance": "High — flagship HLD question (campus + experienced) at Uber, Lyft, Ola, Grab, FAANG, Flipkart/Swiggy-style product cos; probes real-time geo index + matching consistency.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h14_estimation",
+  "h15_building_blocks",
+  "h03_caching",
+  "h08_message_queues",
+  "h04_databases_indexing",
+  "h05_db_scaling",
+  "h10_api_design",
+  "h01_networking"
+ ],
+ "company_notes": "Campus/new-grad: Uber/Ola/Swiggy HLD and FAANG “design Uber/nearby drivers” — Redis GEO + basic matching, light estimation. Experienced (1–4+ YOE): H3 vs geohash, batch vs greedy, lock TTL, city sharding, ETA/surge, queue durability at Uber, Lyft, Grab, Meta/Google geo loops, Flipkart logistics. Among the highest-signal classic HLD prompts; often paired with proximity/Yelp as the static twin of the same geo toolkit.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock matching + location scope, NFRs, and metro-first assumptions before designing.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Functional in-scope: fare estimate for pickup+destination; request ride and match a nearby available driver; driver accept/decline and navigate pickup→dropoff; continuous driver location updates with rider ETA / approaching-car view.",
+     "weight": "core",
+     "evidence_hint": "Lists fare estimate, match nearby driver, accept/decline+navigate, and live location/ETA as the core loop."
+    },
+    {
+     "id": "req2",
+     "point": "Park payments, ratings, scheduled rides, multi-hop pool, and fraud unless probed.",
+     "weight": "core",
+     "evidence_hint": "Explicitly marks those as out of scope / below the line unless the interviewer asks."
+    },
+    {
+     "id": "req3",
+     "point": "NFRs: match in seconds (often < ~30–60s to match or fail); strong consistency on assignment (one driver ↔ one active trip); survive city-scale spikes; location freshness on the order of a few seconds.",
+     "weight": "core",
+     "evidence_hint": "States seconds-scale match latency (~30–60s bound), assignment consistency, spike survival, and few-second location freshness."
+    },
+    {
+     "id": "req4",
+     "point": "State assumptions aloud: one metro first; global = many independent city shards; vehicle types later.",
+     "weight": "extended",
+     "evidence_hint": "Scopes to one metro initially and treats global as city shards, deferring vehicle types."
+    }
+   ],
+   "probes": [
+    "What is in scope for this ride-hailing design, what is out, and what match-latency / consistency NFRs are you assuming?"
+   ],
+   "hints": {
+    "1": "Start with matching + location, then ask what to cut.",
+    "2": "Separate top functional flows from NFRs and metro-first assumptions.",
+    "3": "In: fare, request/match, accept/decline+navigate, live location/ETA; out: payments/ratings/scheduled/pool/fraud; NFRs: ~30–60s match, strong assignment consistency, few-second location freshness; one metro then city shards."
+   }
+  },
+  {
+   "phase": "estimation",
+   "goal": "Show city-shard driver pings dominate write QPS and force an in-memory geo index off the OLTP path.",
+   "must_hit": [
+    {
+     "id": "est1",
+     "point": "Fleet scale: ~1–5M concurrent online drivers globally; a city shard might be 50k–200k online.",
+     "weight": "core",
+     "evidence_hint": "States ~1–5M global online drivers and 50k–200k as a city-shard working set."
+    },
+    {
+     "id": "est2",
+     "point": "Ping every 3–5 s → city write QPS ≈ drivers / 4 (e.g. 100k drivers → ~25k GEO writes/s).",
+     "weight": "core",
+     "evidence_hint": "Derives city GEO write QPS from 3–5 s pings as drivers/4, citing ~25k/s for 100k drivers."
+    },
+    {
+     "id": "est3",
+     "point": "Ride requests are much smaller (hundreds–low thousands RPS peak per large city); nearby/map queries are 5–10× requests.",
+     "weight": "core",
+     "evidence_hint": "Contrasts request RPS (hundreds–low thousands) with 5–10× nearby/map amplification."
+    },
+    {
+     "id": "est4",
+     "point": "Hot path is the Redis working set (current lat/lng + status); historical GPS goes Kafka → cold store — not on the match path; OLTP DB cannot be the geo index.",
+     "weight": "extended",
+     "evidence_hint": "Puts current location in Redis and parks history on Kafka/cold store, rejecting OLTP as the geo index."
+    }
+   ],
+   "probes": [
+    "How many GEO writes/s does a large city produce from driver pings, and why can’t OLTP own that index?"
+   ],
+   "hints": {
+    "1": "Estimate city online drivers and ping interval first.",
+    "2": "Write QPS ≈ drivers / 4; compare to much smaller ride-request RPS.",
+    "3": "50k–200k city online; ping 3–5 s → e.g. 100k → ~25k GEO writes/s; requests hundreds–low thousands RPS; Redis working set vs Kafka cold history."
+   }
+  },
+  {
+   "phase": "api",
+   "goal": "Define fare/ride/location/offer endpoints plus push channels without trusting client identity or fare amounts.",
+   "must_hit": [
+    {
+     "id": "api1",
+     "point": "POST /fares (pickup, destination, optional product) → fareId/estimate/eta; POST /rides with fareId → rideId status REQUESTED (matching async).",
+     "weight": "core",
+     "evidence_hint": "Shows fare estimate then async ride create returning REQUESTED."
+    },
+    {
+     "id": "api2",
+     "point": "POST /drivers/location for GPS updates; PATCH /rides/:rideId with ACCEPT|DECLINE; GET ride status and/or WebSocket push; GET /drivers/nearby for map pins with fuzzed positions.",
+     "weight": "core",
+     "evidence_hint": "Covers location write, accept/decline, status read/push, and fuzzed nearby pins."
+    },
+    {
+     "id": "api3",
+     "point": "Auth via JWT/session — never trust client-sent driverId or fare amount; push offers to drivers and location/status to riders.",
+     "weight": "extended",
+     "evidence_hint": "Rejects client-owned driverId/fareAmount and names push for offers and rider updates."
+    }
+   ],
+   "probes": [
+    "Walk the APIs for fare estimate, request ride, driver location, and accept/decline — what must the server own?"
+   ],
+   "hints": {
+    "1": "Separate fare snapshot, async ride create, and location write.",
+    "2": "Add accept/decline + push; never trust client driverId/fare.",
+    "3": "POST /fares → POST /rides (REQUESTED async); POST /drivers/location; PATCH ACCEPT|DECLINE; push offer/location; fuzz nearby; JWT owns identity."
+   }
+  },
+  {
+   "phase": "data_model",
+   "goal": "Split hot DriverLocation geo state from durable Fare/Ride SQL entities and a strict ride status machine.",
+   "must_hit": [
+    {
+     "id": "dm1",
+     "point": "Hot DriverLocation (driverId, lat, lng, cellId, updatedAt, status) lives in Redis; SQL/DocStore holds Rider/Driver profiles, Fare estimate snapshots, and Ride rows.",
+     "weight": "core",
+     "evidence_hint": "Puts who-is-free-where-now in Redis and rides/fares/users in SQL."
+    },
+    {
+     "id": "dm2",
+     "point": "Ride status: REQUESTED | OFFERED | ACCEPTED | EN_ROUTE | IN_TRIP | COMPLETED | CANCELLED; illegal transitions must be impossible; optional Offer (rideId, driverId, expiresAt) for audit.",
+     "weight": "core",
+     "evidence_hint": "Lists those statuses as a state machine and may mention Offer for audit."
+    },
+    {
+     "id": "dm3",
+     "point": "Geo index shape: Redis GEO key per city (member=driverId) or Redis SET drivers:h3:{cellId} plus hash driver:{id} metadata.",
+     "weight": "extended",
+     "evidence_hint": "Names either Redis GEO per city or H3 cell sets + driver hashes."
+    }
+   ],
+   "probes": [
+    "What lives in Redis versus SQL, and what are the ride status transitions?"
+   ],
+   "hints": {
+    "1": "Two stores: hot location vs durable trip/money.",
+    "2": "DriverLocation in Redis; Fare/Ride in SQL; status machine.",
+    "3": "Redis: lat/lng/cell/status (+ GEO or H3 sets); SQL: Fare/Ride/users; statuses REQUESTED→…→COMPLETED/CANCELLED; optional Offer."
+   }
+  },
+  {
+   "phase": "architecture",
+   "goal": "Wire Location, Ride, Matching/Dispatch, geo index, ETA, locks, and push behind a city-local control plane.",
+   "must_hit": [
+    {
+     "id": "arch1",
+     "point": "Components: API Gateway → Ride Service (SQL Fare/Ride) → Matching/Dispatch using Geo Index (Redis GEO or H3 cells), ETA/Routing, and Lock (Redis TTL) / CAS on Driver; Location Service takes high-QPS GPS into Redis (+ Kafka analytics); Notification/Push (FCM/APNs/WS).",
+     "weight": "core",
+     "evidence_hint": "Sketches Ride + Matching + Geo + ETA + Lock, separate Location Service, and push."
+    },
+    {
+     "id": "arch2",
+     "point": "Ping loop: Driver → Location Service → GEOADD / cell membership update (+ TTL / last-seen). Request: create REQUESTED → enqueue match job (Kafka/SQS) → ack rider.",
+     "weight": "core",
+     "evidence_hint": "Narrates GPS update into geo index and async match enqueue after REQUESTED."
+    },
+    {
+     "id": "arch3",
+     "point": "Match: geo candidates → filter status/vehicle → rank by ETA → lock driver → push offer → accept window → cascade or fail; trip status transitions in SQL while location stream continues for map UX.",
+     "weight": "core",
+     "evidence_hint": "Walks candidate→rank→lock→offer→cascade and SQL trip transitions with ongoing location."
+    },
+    {
+     "id": "arch4",
+     "point": "Shard by city/region: matching is almost always local; partition geo index + match workers by metro so hot cities don’t sink the globe.",
+     "weight": "extended",
+     "evidence_hint": "Partitions geo index and matchers by metro/city affinity."
+    }
+   ],
+   "probes": [
+    "Draw the services for location updates and matching — what happens from ride request to driver offer?"
+   ],
+   "hints": {
+    "1": "Separate Location firehose from Ride/Matching control plane.",
+    "2": "Request enqueues match; match uses geo → ETA → lock → push.",
+    "3": "Location→Redis GEO/H3; Ride creates REQUESTED→queue; match candidates→ETA rank→Redis TTL/CAS lock→offer→cascade; city-shard workers; push via FCM/APNs/WS."
+   }
+  },
+  {
+   "phase": "deep_dives",
+   "goal": "Defend geo-index choice, greedy vs batch dispatch, assignment locks, and ETA ranking.",
+   "must_hit": [
+    {
+     "id": "dd1",
+     "point": "Geo pattern: snap point → cell (geohash/H3) → query center + neighbors (geohash 3×3 or H3 gridDisk/k-ring) → refine with distance or road-network ETA; never scan the global fleet.",
+     "weight": "core",
+     "evidence_hint": "Describes cell + neighbor ring then refine, rejecting a global fleet scan."
+    },
+    {
+     "id": "dd2",
+     "point": "Redis GEO (geohash under the hood) is the fast interview nearby answer; H3 cell sets give uniform neighbor distance / near-equal area for dispatch + surge; PostGIS/quadtree alone is painful as sole store at ~10^4–10^5 writes/s.",
+     "weight": "core",
+     "evidence_hint": "Compares Redis GEO vs H3 rings vs PostGIS/quadtree under high write rates."
+    },
+    {
+     "id": "dd3",
+     "point": "Greedy closest is low-latency and easy to cascade but locally suboptimal; batch marketplace waits 2–5s and bipartite-optimizes system ETAs for better network efficiency at harder ops cost.",
+     "weight": "core",
+     "evidence_hint": "Contrasts greedy cascade with 2–5s batched ETA optimization."
+    },
+    {
+     "id": "dd4",
+     "point": "Prevent double-dispatch with atomic reserve (UPDATE … WHERE status='AVAILABLE' or Redis lock + TTL ≈ accept window); location may be eventually consistent / slightly stale (seconds); assignment must be linearizable on the driver.",
+     "weight": "core",
+     "evidence_hint": "Shows CAS/lock+TTL unlock and the location-vs-assignment consistency split."
+    },
+    {
+     "id": "dd5",
+     "point": "ETA ≠ crow-flies: Haversine filters candidates; ranking uses routing + traffic; DeepETA is a residual ML refinement on a routing engine — don’t invent model details.",
+     "weight": "extended",
+     "evidence_hint": "Filters with Haversine, ranks with routing/traffic, optionally names DeepETA without fake model math."
+    }
+   ],
+   "probes": [
+    "Would you use Redis GEO or H3, greedy or batch matching, and how do you stop double-assigning a driver?"
+   ],
+   "hints": {
+    "1": "Pick geo index and assignment consistency as the first deep dives.",
+    "2": "Cell+neighbors; then greedy vs 2–5s batch; then lock TTL.",
+    "3": "Geohash 3×3 or H3 k-ring→refine; Redis GEO vs H3 vs PostGIS at ~10^4–10^5 writes/s; batch 2–5s; CAS/Redis lock+TTL; Haversine filter, routing rank, optional DeepETA."
+   }
+  },
+  {
+   "phase": "bottlenecks",
+   "goal": "Scale the GPS firehose, hot cells, match storms, offer durability, and map-read amplification.",
+   "must_hit": [
+    {
+     "id": "bn1",
+     "point": "GPS write firehose: shard Redis by city / H3 parent; adaptive ping rate (slow when parked); don’t persist every ping on the match path.",
+     "weight": "core",
+     "evidence_hint": "Shards geo storage, slows parked pings, and keeps history off the match path."
+    },
+    {
+     "id": "bn2",
+     "point": "Hot downtown cells and match storms: finer H3 resolution or split GEO keys; more match workers on that city’s queue partition; expand k-ring/radius; surge to rebalance; degrade to longer ETA honestly.",
+     "weight": "core",
+     "evidence_hint": "Splits hot cells, scales city matchers, expands search, and uses surge/honest ETA degrade."
+    },
+    {
+     "id": "bn3",
+     "point": "Offer timeouts: delay queue or durable workflow (Temporal/Cadence — Uber origin story) so crashes don’t lose REQUESTED rides; multi-region keeps active city affinity and local supply matching.",
+     "weight": "extended",
+     "evidence_hint": "Uses durable match workflow for REQUESTED survival and city-affinity multi-region."
+    },
+    {
+     "id": "bn4",
+     "point": "Map read amplification: fuzz + throttle nearby queries; push location to the matched rider only after accept.",
+     "weight": "extended",
+     "evidence_hint": "Throttles/fuzzes nearby and pushes precise location only post-accept."
+    }
+   ],
+   "probes": [
+    "A stadium lets out — what melts first on location writes and matching, and how do you degrade?"
+   ],
+   "hints": {
+    "1": "Think ping firehose and city queue before global capacity.",
+    "2": "Shard/adaptive pings; hot-cell splits; autoscale matchers + surge.",
+    "3": "City/H3 shard + slow parked pings; finer H3/split GEO; expand k-ring + surge; Temporal/Cadence for REQUESTED; fuzz/throttle nearby; push after accept."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Redis GEO vs H3 cell sets vs PostGIS/quadtree",
+   "strong_answer": "Redis GEO is the fastest interview nearby answer (geohash under the hood). H3 cell sets match Uber’s dispatch/surge story with uniform neighbor distance and near-equal area. PostGIS/quadtree alone is fine for static POIs but painful as the sole store at ~10^4–10^5 writes/s; quadtrees also mutate under heavy writes."
+  },
+  {
+   "topic": "Greedy nearest offer vs batch dispatch",
+   "strong_answer": "Greedy closest is low latency and easy to cascade but can be locally suboptimal. Batch marketplace waits 2–5s, jointly optimizes open requests and drivers for system ETA / network efficiency, at higher operational complexity."
+  },
+  {
+   "topic": "Location eventual consistency vs linearizable assignment",
+   "strong_answer": "Driver location can be slightly stale for a few seconds; assignment must be linearizable on the driver via atomic reserve (SQL CAS or Redis lock + TTL ≈ accept window) so two riders cannot keep the same driver."
+  },
+  {
+   "topic": "Haversine filter vs routing/DeepETA ranking",
+   "strong_answer": "Use crow-flies/Haversine only to filter candidates; rank with road-network routing and traffic. DeepETA is a residual ML layer on a routing engine — name it, don’t invent model details. Barriers (e.g. a river) make Haversine-closest wrong."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using Postgres ORDER BY distance as the primary nearby query.",
+   "correction": "That tends toward a full scan / weak multi-dim B-tree path; geo-index first (cell + neighbors), then refine."
+  },
+  {
+   "trap": "Two riders grab the same driver.",
+   "correction": "Show atomic CAS/lock on availability; the loser cascades to the next candidate."
+  },
+  {
+   "trap": "Driver never responds and the rider blocks forever.",
+   "correction": "TTL unlock after the accept window and cascade; don’t wait indefinitely."
+  },
+  {
+   "trap": "Picking the Haversine-closest driver stuck across a river.",
+   "correction": "ETA/routing beats crow-flies; talk barriers and road network."
+  },
+  {
+   "trap": "Surge cliffs at cell edges / geohash borders.",
+   "correction": "Prefer H3 rings and neighbor blending so prices don’t cliff at borders."
+  },
+  {
+   "trap": "Putting historical GPS trails on the match path or leaving offline drivers in the index.",
+   "correction": "Kafka → analytics/OLAP for history; Redis is current only; TTL / last-seen sweeper removes ghosts."
+  },
+  {
+   "trap": "Trusting client-sent fareAmount or driverId.",
+   "correction": "Security smell — server owns fare snapshots and driver identity via auth."
+  }
+ ]
+}

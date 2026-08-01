@@ -1,0 +1,223 @@
+{
+ "id": "h09_rate_limiting",
+ "title": "Rate limiting & throttling: token bucket, leaky bucket, sliding window, distributed limits",
+ "type": "CONCEPT",
+ "relevance": "High — standalone \"design a rate limiter\" is a common HLD question; also probed as a building block in URL shortener, chat, ticketing, payment, and API-platform designs (campus + experienced; FAANG and Indian product cos).",
+ "difficulty": "mid",
+ "prereqs": [
+  "h01_networking",
+  "h02_load_balancing",
+  "h03_caching"
+ ],
+ "company_notes": "Campus/intern/new-grad: frequent standalone \"design a rate limiter\" and as an abuse box in API, social, ticketing, and auth designs. Experienced/mid (1–4 YOE): deeper probes on algorithm tradeoffs, Redis Lua races, sharding/hot keys, fail-open, multi-DC, and rate limiting vs load shedding — common at Amazon, Google, Meta, Uber, Stripe-like API cos, Atlassian, Flipkart. High frequency both as its own question (Alex Xu Vol.1 ch.4) and as a follow-up inside public-API or write-heavy designs.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish why rate limiting exists, where it sits, how identity is chosen, and the client-visible response contract.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Rate limiting protects backends from overload/abuse, enforces fairness or tiered quotas, controls cost (especially paid outbound APIs), and is distinct from reserving capacity via load shedding.",
+     "weight": "core",
+     "evidence_hint": "Candidate names protect/fairness/cost and separately notes load shedding is not the same as a per-user rate limit."
+    },
+    {
+     "id": "fund2",
+     "point": "Prefer API gateway or middleware for central policy and early drops; client-side limits are advisory only; sticky sessions are a bad distributed fix.",
+     "weight": "core",
+     "evidence_hint": "Says gateway/middleware over client-only, and rejects pinning clients to one limiter via sticky sessions."
+    },
+    {
+     "id": "fund3",
+     "point": "Identity keys: user ID or API key when authenticated, IP for anonymous; NAT/mobile shared IPs cause false positives, so often combine per-user, per-IP, and per-endpoint.",
+     "weight": "core",
+     "evidence_hint": "Picks auth key vs IP appropriately and calls out CGNAT/shared-IP false positives and layered keys."
+    },
+    {
+     "id": "fund4",
+     "point": "Rejected traffic uses HTTP 429 (sometimes 503 for shedder/overload) with Retry-After and GitHub-style X-RateLimit-Limit / Remaining / Reset so clients back off with jitter.",
+     "weight": "extended",
+     "evidence_hint": "Mentions 429, Retry-After, and limit/remaining/reset headers plus client backoff with jitter."
+    }
+   ],
+   "probes": [
+    "Why do we rate limit, where would you place the limiter, and what identity key would you use for authenticated vs anonymous traffic?",
+    "What status and headers should a client see when limited, and what should the client do next?"
+   ],
+   "hints": {
+    "1": "Think about who you are protecting and whether the client can be trusted to enforce the rule.",
+    "2": "Separate placement (client vs gateway vs service), identity (user/API key/IP), and the HTTP contract (429 + headers).",
+    "3": "Gateway/middleware for central policy; user/API key preferred over IP-alone; return 429 with Retry-After and X-RateLimit-* so clients honor backoff with jitter."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain the classic algorithms and how shared Redis state stays correct under concurrency and scale.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Fixed window counters (INCR + TTL) are simple but allow a boundary burst of 2× the limit across the window edge (e.g. N at 0:59 plus N at 1:00).",
+     "weight": "core",
+     "evidence_hint": "Draws or describes the edge double-spend: full quota at end of one window and start of the next."
+    },
+    {
+     "id": "mech2",
+     "point": "Sliding window log stores every timestamp (accurate, memory-heavy, poor at high QPS/long windows); sliding window counter blends previous + current windows with a weighted estimate for near-O(1) memory and small approximation error.",
+     "weight": "core",
+     "evidence_hint": "Contrasts timestamp log vs Cloudflare-style two-window weighted counter on memory and accuracy."
+    },
+    {
+     "id": "mech3",
+     "point": "Token bucket refills at rate r with capacity b; a request consumes a token, allowing controlled bursts up to b then sustained r — the usual default for public APIs (Stripe, AWS API Gateway).",
+     "weight": "core",
+     "evidence_hint": "States refill rate, burst capacity, and that burst is capped by b not unlimited."
+    },
+    {
+     "id": "mech4",
+     "point": "Leaky bucket smooths to a constant drain (queue/shaper) or meters like an inverted token bucket; nginx limit_req is leaky-style — prefer when downstream cannot tolerate bursts.",
+     "weight": "extended",
+     "evidence_hint": "Says leaky smooths/refuses bursts and names nginx-style limiting when backends cannot absorb spikes."
+    },
+    {
+     "id": "mech5",
+     "point": "Local in-memory counters undercount across nodes; use shared Redis with atomic Lua/EVAL (or single INCR for simple counters) because naive get→check→set races; shard by identity and use hash tags so multi-key scripts stay on one Cluster slot.",
+     "weight": "core",
+     "evidence_hint": "Calls for Redis + atomic script, explains the race, and mentions sharding/hash tags for Cluster."
+    }
+   ],
+   "probes": [
+    "Walk through fixed window, sliding log, sliding counter, token bucket, and leaky bucket — what each stores and when you'd pick it.",
+    "Two gateway pods see one token left for the same user — why does naive GET/SET overshoot, and how does Lua/EVAL fix it?"
+   ],
+   "hints": {
+    "1": "Start with what each algorithm stores: a counter, a timestamp list, tokens, or a queue.",
+    "2": "Call out fixed-window boundary burst, then token-bucket (r, b) vs leaky smoothing, then Redis atomicity.",
+    "3": "Fixed window: INCR+TTL but 2× at the edge; token bucket: burst up to b then rate r; Redis: Lua/EVAL (and hash tags on Cluster) so check-and-decrement is atomic."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Force explicit choices among algorithms, failure modes, and rate limiting versus load shedding.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Choose token bucket when controlled bursts are acceptable; choose leaky when the downstream cannot tolerate bursts; fixed window is a fine whiteboard start but fails the edge double-limit exploit.",
+     "weight": "core",
+     "evidence_hint": "Picks token vs leaky by burst tolerance and admits fixed window's boundary weakness."
+    },
+    {
+     "id": "tr2",
+     "point": "Fail-open (allow if Redis is down) prioritizes availability — Stripe's default for the request limiter; fail-closed prioritizes hard quotas, cost, or security; dark-launch and kill switches before hard enforcement.",
+     "weight": "core",
+     "evidence_hint": "Names fail-open vs fail-closed with a justified pick and mentions dark-launch/kill switches."
+    },
+    {
+     "id": "tr3",
+     "point": "Rate limits are usually per identity; load shedders look at fleet health and drop low-priority traffic (Stripe's request rate limiter plus concurrent-request limiter plus fleet/worker load shedders).",
+     "weight": "core",
+     "evidence_hint": "Separates per-identity rate limit from fleet-health shedding and may mention concurrent vs request limiters."
+    },
+    {
+     "id": "tr4",
+     "point": "Global exact counts across multi-region/anycast are hard and high-latency; often enforce per-region or at edge PoP and accept slight over-allow.",
+     "weight": "extended",
+     "evidence_hint": "Says exact global counts are impractical and accepts regional/edge approximate enforcement."
+    }
+   ],
+   "probes": [
+    "For a mobile client that bursts after reconnect at 100 req/min, which algorithm and roughly what r and b — and when would you refuse bursts entirely?",
+    "Redis blips for a few seconds on a payments quota versus a public blog API — fail-open or fail-closed, and how do concurrent limiters/load shedders differ from a plain request rate limiter?"
+   ],
+   "hints": {
+    "1": "Ask whether the backend can absorb a short spike and what happens if the limiter store is unavailable.",
+    "2": "Map burst-OK → token bucket; burst-intolerant → leaky; availability vs hard quota → fail-open vs fail-closed; per-user vs fleet health → rate limit vs shed.",
+    "3": "Token bucket with refill r and capacity b for reconnect bursts; leaky if no bursts allowed; Stripe-like fail-open for availability on request limits; shedders drop by fleet health, not by identity quota."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply placement, identity, algorithms, and client contracts to concrete API and abuse scenarios.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Different limits for /login (brute force), /feed (read), and premium vs free: gateway for cross-cutting abuse, service-local when limits are domain-specific; prefer user ID/API key over IP-only given NAT and shared office Wi-Fi.",
+     "weight": "core",
+     "evidence_hint": "Designs layered limits by endpoint and tier and justifies gateway vs service plus auth identity over IP-alone."
+    },
+    {
+     "id": "app2",
+     "point": "On a fixed 60s window at limit 100, a client can send about 200 near the boundary; fix with sliding log (accurate, memory-heavy) or sliding counter (cheaper, approximate).",
+     "weight": "core",
+     "evidence_hint": "Shows ~200 at the edge of a 60s/100 limit and compares sliding log vs sliding counter fixes."
+    },
+    {
+     "id": "app3",
+     "point": "Correct 429 with remaining/reset; clients must honor Retry-After and use exponential backoff with jitter — immediate retries worsen the overload.",
+     "weight": "extended",
+     "evidence_hint": "Describes 429 + headers and client backoff/jitter, and says instant retry is harmful."
+    }
+   ],
+   "probes": [
+    "Design limits for /login vs /feed and for premium vs free — placement and identity, including NAT failure modes.",
+    "Draw the fixed-window boundary exploit at 60s/100 and fix it; then return a correct 429 and say what the client must do."
+   ],
+   "hints": {
+    "1": "Treat login abuse differently from read traffic, and authenticated users differently from raw IPs.",
+    "2": "Gateway for shared abuse policy; per-user + per-IP + per-endpoint; show the window-edge double spend then sliding fixes; finish with 429 + Retry-After.",
+    "3": "Stricter gateway limits on /login (IP+user), looser/tiered on /feed; sliding counter or token bucket instead of fixed window; clients honor Retry-After with exponential backoff and jitter."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Token bucket vs leaky bucket",
+   "strong_answer": "Token bucket allows controlled bursts up to capacity b then sustains refill rate r — default for most public APIs (Stripe, AWS API Gateway). Leaky bucket smooths to a constant drain (or meters like an inverted token bucket); nginx limit_req is leaky-style. Prefer leaky when downstream cannot tolerate bursts."
+  },
+  {
+   "topic": "Fixed window vs sliding log vs sliding counter",
+   "strong_answer": "Fixed window is simple (INCR + TTL) but permits a 2× boundary burst across the window edge. Sliding log stores every timestamp — accurate but memory-heavy and poor at high QPS/long windows. Sliding counter (previous + current, weighted estimate) is near-O(1) memory with small approximation error and kills most boundary exploits."
+  },
+  {
+   "topic": "Fail-open vs fail-closed",
+   "strong_answer": "Fail-open allows traffic if Redis is down and prioritizes availability (Stripe default for the request limiter). Fail-closed denies when the limiter is unavailable and prioritizes hard quotas, cost, or security. Use dark-launch and feature-flag kill switches before enforcing."
+  },
+  {
+   "topic": "Rate limiting vs load shedding",
+   "strong_answer": "Rate limiting is usually per identity (user/API key/IP/endpoint). Load shedding looks at fleet health and drops low-priority traffic. Stripe separates request rate limiting, concurrent-request limiting, and fleet/worker load shedders."
+  },
+  {
+   "topic": "Local counters vs shared Redis",
+   "strong_answer": "Per-node in-memory counters under-enforce by roughly the replica count. Shared Redis (or equivalent) with atomic Lua/EVAL avoids get→check→set races; scale with identity sharding / Redis Cluster and hash tags so multi-key scripts stay on one slot."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using local counters on each app server as the distributed solution.",
+   "correction": "That under-enforces by roughly the replica count; interviewers expect shared Redis (or similar) state."
+  },
+  {
+   "trap": "Stopping at a fixed window on the whiteboard without addressing the edge.",
+   "correction": "Call out the double-limit at the window edge (N at end of one window + N at start of the next) and fix with sliding log or sliding counter."
+  },
+  {
+   "trap": "Treating token bucket as unlimited burst.",
+   "correction": "Capacity b caps the spike; refill rate caps the long-term average."
+  },
+  {
+   "trap": "Conflating rate limiting with load shedding.",
+   "correction": "Rate limit is usually per identity; load shed looks at fleet health and drops low-priority traffic."
+  },
+  {
+   "trap": "Saying nothing about Redis being down.",
+   "correction": "Explicitly pick fail-open vs fail-closed and justify (availability vs hard quota/cost/security)."
+  },
+  {
+   "trap": "Assuming exact global counts across multi-region/anycast.",
+   "correction": "Exact global counts are hard/high-latency; often enforce per-region or at edge PoP and accept slight over-allow."
+  },
+  {
+   "trap": "Relying on IP-only limits for all traffic.",
+   "correction": "IP-only punishes users behind CGNAT/shared Wi-Fi; prefer authenticated keys when available, often combined with per-IP and per-endpoint."
+  }
+ ]
+}

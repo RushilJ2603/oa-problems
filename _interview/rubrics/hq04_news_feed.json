@@ -1,0 +1,333 @@
+{
+ "id": "hq04_news_feed",
+ "title": "News feed / Twitter timeline (fan-out)",
+ "type": "HLD",
+ "relevance": "High — canonical \"design Twitter / Instagram / Facebook News Feed\" HLD round at FAANG, Meta PA, and Indian product cos (Flipkart, Uber, Atlassian, etc.); the celebrity / hybrid fan-out tradeoff is the probe that separates mid from senior.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h03_caching",
+  "h05_db_scaling",
+  "h08_message_queues",
+  "h14_estimation"
+ ],
+ "company_notes": "Campus/new-grad: extremely common as Design Twitter/Instagram/News Feed; expected signal is hybrid fan-out + Redis ID timelines + async workers. Experienced/Meta PA/mid-level: same prompt with deeper probes on celebrity threshold, reconstruction, delete/fan-in, ranking candidates, multi-DC, graph hotspots. Among the top 5 product HLD questions; sister prompts are notification fan-out and design Facebook News Feed.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Scope post, follow, home vs user timeline, NFRs, and explicit cuts before designing.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Functional scope covers post tweet (text; optional media URL), uni-directional follow/unfollow, reverse-chronological paginated home timeline from followees, and user timeline by one author.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists post, follow/unfollow, home feed, and profile/user timeline, and says home is the hard fan-out problem."
+    },
+    {
+     "id": "req2",
+     "point": "Prefer high availability over strong consistency for feed freshness; eventual consistency for a few seconds is acceptable.",
+     "weight": "core",
+     "evidence_hint": "Candidate states feeds can lag briefly and HA/freshness beats strict consistency on the read path."
+    },
+    {
+     "id": "req3",
+     "point": "Home timeline p99 latency target is ~100–200 ms after hydrate.",
+     "weight": "extended",
+     "evidence_hint": "Candidate names a ~100–200 ms p99 read target after hydration, not just 'fast reads'."
+    },
+    {
+     "id": "req4",
+     "point": "Explicitly cut full-text search, Trends, DMs, and algorithmic For You unless the interviewer pulls them in.",
+     "weight": "extended",
+     "evidence_hint": "Candidate parks search/Trends/DMs/For You and keeps the whiteboard on post + follow + home timeline."
+    }
+   ],
+   "probes": [
+    "What are in-scope functional requirements, and what do you explicitly leave out?",
+    "What consistency and latency goals would you state for the home timeline?"
+   ],
+   "hints": {
+    "1": "Start with post, follow, and the two timeline types users actually see.",
+    "2": "Separate home (merge of followees) from user timeline (one author), then name HA vs consistency.",
+    "3": "Scope: post + follow + reverse-chrono home + user timeline; eventual OK for a few seconds; p99 ~100–200 ms after hydrate; cut search/Trends/DMs/For You."
+   }
+  },
+  {
+   "phase": "estimation",
+   "goal": "Use DAU, write/read QPS, and follower power-law to justify hybrid fan-out and ID-only Redis homes.",
+   "must_hit": [
+    {
+     "id": "est1",
+     "point": "Example write load: 200M DAU, avg 2 tweets/user/day → ~400M tweets/day ≈ ~5K writes/s avg (10–20K peak).",
+     "weight": "core",
+     "evidence_hint": "Candidate walks 200M DAU × ~2 tweets/day to ~400M/day and ~5K writes/s avg with 10–20K peak."
+    },
+    {
+     "id": "est2",
+     "point": "Timeline reads dominate: each user opens feed ~10×/day → ~20B reads/day ≈ ~200K+ QPS avg; read:write is often ~50:1+.",
+     "weight": "core",
+     "evidence_hint": "Candidate shows ~10 opens/day → ~20B reads/day / ~200K+ QPS and calls the product read-heavy (~50:1+)."
+    },
+    {
+     "id": "est3",
+     "point": "Avg ~200 followers but celebrity outliers at 10M–100M make pure push write amplification the cliff.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts ~200 average followers with 10M–100M celebrities and says pure push blows up writes."
+    },
+    {
+     "id": "est4",
+     "point": "Home cache ~800 IDs × 16–24 B ≈ ~15–20 KB/user; active users imply multi-TB Redis RAM, so store IDs only.",
+     "weight": "extended",
+     "evidence_hint": "Candidate sizes ~800 × 16–24 B ≈ ~15–20 KB/user and concludes ID-only timelines to keep RAM feasible."
+    }
+   ],
+   "probes": [
+    "Walk a back-of-envelope for tweet write QPS and home-timeline read QPS.",
+    "Why does pure fan-out-on-write fail at celebrity scale, and what does that imply for the home cache?"
+   ],
+   "hints": {
+    "1": "Pick round DAU and tweets-per-user, then estimate feed opens per day.",
+    "2": "Contrast average followers with celebrity outliers, then size Redis home entries.",
+    "3": "200M DAU → ~5K writes/s avg; ~10 opens/day → ~200K+ QPS reads; celebrities 10M–100M; ~800 IDs ≈ ~15–20 KB/user → hybrid + ID-only Redis."
+   }
+  },
+  {
+   "phase": "api",
+   "goal": "Define REST surfaces for tweets, follows, and cursored home/user timelines with auth-safe identity.",
+   "must_hit": [
+    {
+     "id": "api1",
+     "point": "Expose tweet CRUD-ish APIs (POST/GET/DELETE /v1/tweets), follow APIs (POST /v1/follows, DELETE /v1/follows/{followee_id}), GET user timeline, and GET /v1/feed for home.",
+     "weight": "core",
+     "evidence_hint": "Candidate sketches tweet, follow, /users/{id}/tweets, and /feed endpoints matching the product verbs."
+    },
+    {
+     "id": "api2",
+     "point": "Auth comes from the token; never trust user_id in the body for 'me'.",
+     "weight": "core",
+     "evidence_hint": "Candidate says the authenticated principal is taken from the token, not a client-supplied user_id for self actions."
+    },
+    {
+     "id": "api3",
+     "point": "Pagination cursor is last tweet_id (Snowflake) or timestamp — not fragile offsets.",
+     "weight": "extended",
+     "evidence_hint": "Candidate rejects OFFSET and uses a Snowflake tweet_id or time cursor for pages."
+    }
+   ],
+   "probes": [
+    "Sketch the REST APIs for posting, following, and reading home vs user timelines.",
+    "How do you paginate the feed safely under concurrent inserts?"
+   ],
+   "hints": {
+    "1": "List the write and read endpoints users need for tweets and follows.",
+    "2": "Call out auth-from-token and cursor vs offset.",
+    "3": "POST/GET/DELETE tweets; POST/DELETE follows; GET /users/{id}/tweets and GET /feed with cursor=last tweet_id/time; identity from token only."
+   }
+  },
+  {
+   "phase": "data_model",
+   "goal": "Place tweets, dual-indexed follow graph, ID-only home cache, and hydration object caches.",
+   "must_hit": [
+    {
+     "id": "dm1",
+     "point": "Tweet store: tweet_id PK, author_id, text, media refs, created_at; shard by tweet_id or author_id for user-timeline locality.",
+     "weight": "core",
+     "evidence_hint": "Candidate models tweets with those fields and mentions sharding by tweet_id or author_id."
+    },
+    {
+     "id": "dm2",
+     "point": "Follow graph stores edges (follower_id → followee_id) plus a reverse index: fan-out needs followers-of(author); feed merge needs followees-of(me).",
+     "weight": "core",
+     "evidence_hint": "Candidate requires both directions of the social graph for write fan-out and read-side celebrity merge."
+    },
+    {
+     "id": "dm3",
+     "point": "Home timeline cache is Redis list/ZSET home:{user_id} of tweet IDs, capped ~800, trimmed with LTRIM/ZREMRANGEBYRANK.",
+     "weight": "core",
+     "evidence_hint": "Candidate puts only IDs in Redis homes, caps ~800, and names trim/remrange maintenance."
+    },
+    {
+     "id": "dm4",
+     "point": "Separate tweet:{id} and user:{id} object caches (plus CDN for media) hydrate after ID fetch.",
+     "weight": "extended",
+     "evidence_hint": "Candidate keeps timeline cache ID-only and hydrates tweet/user objects from caches/DB/CDN."
+    }
+   ],
+   "probes": [
+    "What entities and stores do you need for tweets, follows, and home timelines?",
+    "Why not put full tweet text in every follower's home timeline entry?"
+   ],
+   "hints": {
+    "1": "Name Tweet, Follow, User timeline, and HomeTimeline cache as distinct pieces.",
+    "2": "Dual-index the graph; Redis home holds IDs only with a length cap.",
+    "3": "Tweet DB + author timeline + follower/followee indexes + Redis home:{user} of ~800 IDs + tweet/user caches for hydrate."
+   }
+  },
+  {
+   "phase": "architecture",
+   "goal": "Wire async push write path and merge+hydrate read path with the main service boxes.",
+   "must_hit": [
+    {
+     "id": "arch1",
+     "point": "Write path: Client → LB → API → Tweet Service (persist + user timeline) → emit tweet.created to MQ → Fan-out workers → Graph Service → if not celebrity, LPUSH/ZADD into each active follower's Redis home.",
+     "weight": "core",
+     "evidence_hint": "Candidate draws persist-then-enqueue fan-out workers that push IDs only for non-celebrity active followers."
+    },
+    {
+     "id": "arch2",
+     "point": "Read path: Timeline/Feed Service reads Redis home IDs, fetches recent tweets from celebrity followees' user timelines, merge/sorts by id/time, hydrates tweet+user objects, returns the page.",
+     "weight": "core",
+     "evidence_hint": "Candidate merges precomputed home IDs with celebrity pulls, then hydrates before responding."
+    },
+    {
+     "id": "arch3",
+     "point": "Major boxes: API tier, Tweet service, Graph service, Fan-out workers, Timeline service, Redis timeline cluster, Tweet/User DB + caches, object storage + CDN, MQ (Kafka).",
+     "weight": "extended",
+     "evidence_hint": "Candidate names those services/stores rather than one monolith that does fan-out inline."
+    }
+   ],
+   "probes": [
+    "Walk the write path for a new tweet and the read path for home timeline.",
+    "Which components sit on the critical path of POST /tweets versus GET /feed?"
+   ],
+   "hints": {
+    "1": "Separate the post API from fan-out work and the feed read service.",
+    "2": "Persist + MQ on write; Redis IDs + celebrity merge + hydrate on read.",
+    "3": "Tweet service emits to Kafka workers that push non-celebrity homes; feed service merges Redis IDs with celebrity user timelines then hydrates."
+   }
+  },
+  {
+   "phase": "deep_dives",
+   "goal": "Defend hybrid fan-out, async workers, ID caches, celebrity handling, and read-your-writes.",
+   "must_hit": [
+    {
+     "id": "dd1",
+     "point": "Hybrid is the expected answer: push for normal accounts; skip push for celebrities above a tunable threshold (~10K–100K historically); at read time merge precomputed timeline + recent celebrity tweets.",
+     "weight": "core",
+     "evidence_hint": "Candidate names push + celebrity pull merge and that the threshold is operationally tuned (~10K–100K)."
+    },
+    {
+     "id": "dd2",
+     "point": "Never block the post HTTP on millions of Redis writes; use MQ workers with at-least-once delivery and idempotent timeline inserts deduped by tweet_id.",
+     "weight": "core",
+     "evidence_hint": "Candidate keeps post latency low via async workers and mentions idempotent/deduped inserts."
+    },
+    {
+     "id": "dd3",
+     "point": "Cache IDs not full content so RAM stays feasible and one tweet object update does not rewrite millions of timelines; hydration is a batch get (watch N+1).",
+     "weight": "core",
+     "evidence_hint": "Candidate argues ID-only homes + shared tweet cache, and batch hydration instead of per-ID queries."
+    },
+    {
+     "id": "dd4",
+     "point": "Feed is eventually consistent; give the author read-your-writes by showing their own tweet immediately from user timeline / optimistic UI.",
+     "weight": "extended",
+     "evidence_hint": "Candidate accepts seconds of follower lag but still surfaces the author's own post right away."
+    }
+   ],
+   "probes": [
+    "Push vs pull vs hybrid — which do you ship and why?",
+    "How do you handle a celebrity tweet without melting fan-out, and how does the author see their own post immediately?"
+   ],
+   "hints": {
+    "1": "Compare write cost of push with read cost of pull.",
+    "2": "Introduce a follower-count threshold and a read-side merge; keep posting async.",
+    "3": "Push normals, pull celebrities (~10K–100K threshold), MQ fan-out with tweet_id idempotency, ID cache + hydrate, author read-your-writes from user timeline."
+   }
+  },
+  {
+   "phase": "bottlenecks",
+   "goal": "Scale fan-out lag, Redis homes, graph hotspots, hydration, and celebrity delivery p99.",
+   "must_hit": [
+    {
+     "id": "bn1",
+     "point": "Fan-out workers / MQ lag: scale consumer groups; shard by author or follower ranges; backpressure + lag alerts; DLQ for poison tweets.",
+     "weight": "core",
+     "evidence_hint": "Candidate scales consumers, shards work, and watches lag / DLQ rather than one giant fan-out loop."
+    },
+    {
+     "id": "bn2",
+     "point": "Redis timeline cluster: shard by user_id; replicate; reconstruct on miss from graph + tweet store; do not keep inactive homes forever.",
+     "weight": "core",
+     "evidence_hint": "Candidate shards Redis by user_id, plans reconstruction for cold users, and skips eternal inactive homes."
+    },
+    {
+     "id": "bn3",
+     "point": "Graph service hotspots: cache follower lists; paginate huge celebrity follower sets; prefer not materializing full push for celebrities at all.",
+     "weight": "extended",
+     "evidence_hint": "Candidate treats celebrity follower-list fetch as a bottleneck and leans on pull instead of full push."
+    },
+    {
+     "id": "bn4",
+     "point": "Hydration/tweet store: batch multi-get and tweet cache; CDN for media; avoid joining followers × tweets in one giant SQL at request time.",
+     "weight": "extended",
+     "evidence_hint": "Candidate hydrates with batched cache/DB gets and rejects a per-refresh SQL join as the read path."
+    }
+   ],
+   "probes": [
+    "Where does this design break first under load, and how do you scale each hotspot?",
+    "What happens when an inactive user returns and their Redis home is missing?"
+   ],
+   "hints": {
+    "1": "Think about fan-out lag, Redis, graph, and hydration separately.",
+    "2": "Shard Redis by user_id; reconstruct cold homes; pull celebrities instead of full push.",
+    "3": "Scale MQ consumers with sharding/backpressure/DLQ; Redis shard+replicate+reconstruct; cache/paginate graph; batch hydrate — never SQL JOIN every refresh."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Push vs pull vs hybrid fan-out",
+   "strong_answer": "Push gives O(1)-ish reads but O(followers) writes, celebrity write storms, and inactive waste; pull makes writes cheap but reads slow as follow count grows; hybrid pushes normal accounts, skips celebrities above a tuned threshold (~10K–100K), and merges precomputed home + recent celebrity tweets at read — more complexity (two paths + merge) but the production answer."
+  },
+  {
+   "topic": "Sync fan-out vs MQ workers",
+   "strong_answer": "Never block the post HTTP on millions of Redis writes; persist then enqueue; workers are at-least-once so timeline inserts must be idempotent (dedupe by tweet_id); user gets fast 200/201 while delivery is eventually consistent."
+  },
+  {
+   "topic": "Cache full tweet content vs IDs only",
+   "strong_answer": "ID-only homes (~800 recent) keep RAM bounded (~15–20 KB/user) and let edits/counts update one tweet object without rewriting millions of timelines; tradeoff is a batch hydration stage that must avoid N+1."
+  },
+  {
+   "topic": "Celebrity / hot partition handling",
+   "strong_answer": "Huge follower-list fetch and fan-out lag (and reply-before-original races) make pure push fail; mitigate by pulling celebrities, prioritizing active followers, and reordering by Snowflake id at serve time; accept higher p99 delivery for huge fanouts."
+  },
+  {
+   "topic": "Feed consistency vs author read-your-writes",
+   "strong_answer": "Home feed is eventually consistent (seconds; p99 worse for huge fanouts); still show the author their own tweet immediately from user timeline / optimistic UI so write UX does not wait on fan-out."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Designing only pure push and freezing when asked about Justin Bieber / Lady Gaga.",
+   "correction": "Switch celebrity accounts (above threshold) to pull and merge their recent tweets into the precomputed home at read time."
+  },
+  {
+   "trap": "Reply appears in a follower's feed before the original because of long fan-out queues.",
+   "correction": "Sort by Snowflake id at serve time and/or delay reply fan-out until the parent is visible."
+  },
+  {
+   "trap": "Assuming unfollow, mute, block, or delete is free after push.",
+   "correction": "Pushed copies go stale; filter at read/hydrate or issue async removals — deletes are fan-out's ugly twin."
+  },
+  {
+   "trap": "Keeping push to cold/inactive followers or leaving returnees with an empty Redis home.",
+   "correction": "Skip push while cold; on return, run a reconstruction job from graph + disk tweets into Redis."
+  },
+  {
+   "trap": "Proposing SQL JOIN followers × tweets on every home refresh.",
+   "correction": "That dies at read QPS; use it only to motivate precomputed ID timelines."
+  },
+  {
+   "trap": "Paginating with OFFSET.",
+   "correction": "OFFSET breaks under inserts; use a cursor on tweet_id (Snowflake) or time."
+  },
+  {
+   "trap": "Storing full tweet text in every home timeline entry.",
+   "correction": "Causes RAM explosion and painful edits; store IDs and hydrate from tweet/user caches."
+  },
+  {
+   "trap": "Conflating search/Trends with the home timeline path.",
+   "correction": "Search is a separate inverted-index path (index on write, scatter-gather on read); mention only if asked."
+  }
+ ]
+}

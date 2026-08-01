@@ -1,0 +1,321 @@
+{
+ "id": "hq01_url_shortener",
+ "title": "Design a URL Shortener (TinyURL / Bitly)",
+ "type": "HLD",
+ "relevance": "High — the classic first \"design X\" HLD question at campus + FAANG / Indian product cos; tests estimation, unique ID generation, Base62, read-heavy caching, and 301 vs 302.",
+ "difficulty": "campus",
+ "prereqs": [
+  "h01_networking",
+  "h02_load_balancing",
+  "h03_caching",
+  "h04_databases_indexing",
+  "h05_db_scaling",
+  "h10_api_design",
+  "h14_estimation"
+ ],
+ "company_notes": "Extremely common campus/intern/new-grad HLD warm-up or full round at Amazon, Google, Microsoft, Meta, Uber, Atlassian, Flipkart, etc.; still asked at 1–4 YOE with deeper probes on multi-region ID allocation, 301/302 + CDN, cache stampedes, and abuse; among the most frequent HLD design questions.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock core shorten/redirect FRs, optional features, NFRs, and scale clarifications before designing.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Core FRs: shorten a long URL into a short URL, and open the short URL to redirect to the long URL.",
+     "weight": "core",
+     "evidence_hint": "States write = create short link and read = redirect as the only required flows."
+    },
+    {
+     "id": "req2",
+     "point": "NFRs: unique codes, redirect p99 ≪ 100 ms, high availability when a mapping exists, durable mappings, and a read-heavy workload.",
+     "weight": "core",
+     "evidence_hint": "Names uniqueness, sub-100 ms redirect latency, availability, durability, and read-heavy traffic."
+    },
+    {
+     "id": "req3",
+     "point": "Ask about optional FRs: custom alias, TTL/expiry, click analytics, user accounts, and delete/update destination.",
+     "weight": "extended",
+     "evidence_hint": "Explicitly clarifies which optional product features are in or out of scope."
+    },
+    {
+     "id": "req4",
+     "point": "Clarify expected URLs/day, retention (e.g. 5–10 years), custom aliases, analytics, and multi-region needs.",
+     "weight": "extended",
+     "evidence_hint": "Asks scale, retention, alias, analytics, and geo questions before estimating."
+    }
+   ],
+   "probes": [
+    "What functional and non-functional requirements are you assuming, and which optional features are in scope?"
+   ],
+   "hints": {
+    "1": "Separate must-have create/redirect from nice-to-haves like aliases and analytics.",
+    "2": "State uniqueness, redirect latency, availability, durability, and that traffic is read-heavy.",
+    "3": "Core: shorten + redirect; NFR: unique codes, p99 ≪ 100 ms, HA if mapping exists; ask URLs/day, 5–10 year retention, aliases, analytics, multi-region."
+   }
+  },
+  {
+   "phase": "estimation",
+   "goal": "Derive write/read QPS, storage growth, and short-code length from stated assumptions.",
+   "must_hit": [
+    {
+     "id": "est1",
+     "point": "Example load: 100M new URLs / month ≈ 40 writes/s average, with peak about 2–5×.",
+     "weight": "core",
+     "evidence_hint": "Uses ~100M/month → ~40 writes/s and calls out 2–5× peak."
+    },
+    {
+     "id": "est2",
+     "point": "At 100:1 reads, average redirects are ~4k redirects/s, with peak tens of thousands.",
+     "weight": "core",
+     "evidence_hint": "Applies 100:1 read:write to get ~4k redirects/s and higher peaks."
+    },
+    {
+     "id": "est3",
+     "point": "Record ~500 B → 100M/mo ≈ 50 GB/mo raw storage before retention and replication.",
+     "weight": "extended",
+     "evidence_hint": "Multiplies ~500 B per record by 100M/month to ~50 GB/mo."
+    },
+    {
+     "id": "est4",
+     "point": "Base62 alphabet yields 62^n codes; 62^7 ≈ 3.5×10^12, so interview default short-code length is usually n = 7 from lifetime URL count.",
+     "weight": "core",
+     "evidence_hint": "Chooses n so 62^n covers lifetime URLs and lands on length 7 with the 62^7 figure."
+    }
+   ],
+   "probes": [
+    "Walk through your back-of-envelope: writes/s, reads/s, storage, and why the short code is length 7."
+   ],
+   "hints": {
+    "1": "State assumptions out loud for new URLs per month and read:write ratio.",
+    "2": "Convert 100M/month to ~40 writes/s, apply 100:1 reads to ~4k redirects/s, then size storage and code space.",
+    "3": "100M URLs/mo → ~40 w/s; 100:1 → ~4k redirects/s; ~500 B → ~50 GB/mo; need 62^n ≥ lifetime URLs → usually n = 7 (62^7 ≈ 3.5×10^12)."
+   }
+  },
+  {
+   "phase": "api",
+   "goal": "Define create and redirect HTTP contracts, status codes, and optional below-the-line endpoints.",
+   "must_hit": [
+    {
+     "id": "api1",
+     "point": "POST /urls (or /api/v1/shorten) accepts long_url with optional custom_alias and expires_at, returns short_url like https://short.ly/{code}.",
+     "weight": "core",
+     "evidence_hint": "Shows a create endpoint with body fields and a short_url response."
+    },
+    {
+     "id": "api2",
+     "point": "GET /{code} returns 302 (or 301) with Location set to the long URL; 404 if unknown; 410 if expired.",
+     "weight": "core",
+     "evidence_hint": "Names redirect with Location plus 404/410 for missing/expired codes."
+    },
+    {
+     "id": "api3",
+     "point": "Optional DELETE /urls/{code} and GET /urls/{code}/stats stay below the line unless analytics/delete were scoped in.",
+     "weight": "extended",
+     "evidence_hint": "Treats delete and stats as optional, only if requirements included them."
+    }
+   ],
+   "probes": [
+    "What APIs would you expose for shortening and redirecting, including status codes?"
+   ],
+   "hints": {
+    "1": "You need one write API and one redirect read API.",
+    "2": "Create returns a short_url; redirect uses Location with 302/301, 404, or 410.",
+    "3": "POST /urls {long_url, custom_alias?, expires_at?} → {short_url}; GET /{code} → 302 Location, 404 unknown, 410 expired."
+   }
+  },
+  {
+   "phase": "data_model",
+   "goal": "Model the short_code → long_url mapping and keep analytics off the redirect path.",
+   "must_hit": [
+    {
+     "id": "dm1",
+     "point": "Primary table url_mapping keyed by short_code (PK, VARCHAR(8) Base62) storing long_url, optional user_id, created_at, expires_at, and is_custom.",
+     "weight": "core",
+     "evidence_hint": "Describes short_code PK with long_url and the listed optional columns."
+    },
+    {
+     "id": "dm2",
+     "point": "Index/PK on short_code so redirect lookup is O(log n)/O(1).",
+     "weight": "core",
+     "evidence_hint": "Explicitly puts PK/index on short_code for fast redirect reads."
+    },
+    {
+     "id": "dm3",
+     "point": "Optional reverse index or hash of long_url only if dedup of identical long URLs is required; analytics/click tables live elsewhere, not on the redirect critical path.",
+     "weight": "extended",
+     "evidence_hint": "Separates optional long_url reverse lookup and says clicks are not on the hot path."
+    }
+   ],
+   "probes": [
+    "What does your schema look like for the mapping, and what is indexed for redirect?"
+   ],
+   "hints": {
+    "1": "The primary key of the design is short_code → long_url.",
+    "2": "Include created_at/expires_at/user_id/custom flags and keep analytics tables separate.",
+    "3": "url_mapping(short_code PK VARCHAR(8), long_url, user_id, created_at, expires_at, is_custom); optional long_url hash if dedup; clicks elsewhere."
+   }
+  },
+  {
+   "phase": "architecture",
+   "goal": "Sketch LB, split write vs redirect services, ID gen + Base62, cache-aside, and async analytics.",
+   "must_hit": [
+    {
+     "id": "arch1",
+     "point": "Client → LB/API Gateway splits into a write service (ID gen → Base62 → DB) and a redirect service (cache → DB on miss → 302 Location).",
+     "weight": "core",
+     "evidence_hint": "Draws separate write and redirect paths behind a load balancer/gateway."
+    },
+    {
+     "id": "arch2",
+     "point": "Cache-aside on redirect: Redis/Memcached holds hot code → long_url; miss loads from DB and populates cache.",
+     "weight": "core",
+     "evidence_hint": "Describes cache-aside for the redirect hot path."
+    },
+    {
+     "id": "arch3",
+     "point": "Click events go async via a queue to an analytics store so analytics never blocks redirect; scale redirect fleet much larger than write fleet on stateful-less app servers.",
+     "weight": "extended",
+     "evidence_hint": "Enqueues clicks and sizes redirect servers >> write servers."
+    },
+    {
+     "id": "arch4",
+     "point": "Postgres/MySQL with PK on short_code is enough at interview scale; Cassandra/Dynamo only if pushed on massive write/partition needs; CDN/edge optional for viral codes.",
+     "weight": "extended",
+     "evidence_hint": "Starts with SQL + PK, mentions NoSQL only under scale pressure, CDN as optional."
+    }
+   ],
+   "probes": [
+    "Draw the high-level architecture for create and redirect, including cache and analytics."
+   ],
+   "hints": {
+    "1": "Optimize the read/redirect path first — traffic is read-heavy.",
+    "2": "Write path generates IDs; redirect path is cache-aside then DB; analytics is async.",
+    "3": "LB → write (counter/Snowflake/KGS → Base62 → DB) and redirect (Redis → DB miss → 302) with queue for clicks; redirect fleet >> write fleet."
+   }
+  },
+  {
+   "phase": "deep_dives",
+   "goal": "Defend ID-generation choice, 301 vs 302, counter allocation, and custom-alias uniqueness.",
+   "must_hit": [
+    {
+     "id": "dd1",
+     "point": "Hash+truncate+Base62 is deterministic/dedup-friendly but needs collision retry; prefer counter/Snowflake+Base62 (or KGS) unless the interviewer wants identical-URL dedup.",
+     "weight": "core",
+     "evidence_hint": "Compares hash collisions/retries vs counter/Snowflake/KGS and picks based on dedup need."
+    },
+    {
+     "id": "dd2",
+     "point": "301 may be cached forever by browsers (fewer origin hits, weak analytics, hard revoke); 302 (or 301 + short Cache-Control) hits origin every click — default 302 when click tracking is required.",
+     "weight": "core",
+     "evidence_hint": "Ties 301 vs 302 to caching vs analytics/revoke and defaults to 302 for tracking."
+    },
+    {
+     "id": "dd3",
+     "point": "Single Redis INCR is a SPOF/hot counter; range allocator or Snowflake avoids per-write global counter hits, with tradeoffs of unused ranges on crash vs clock skew.",
+     "weight": "extended",
+     "evidence_hint": "Explains range/Snowflake vs central INCR and names crash/skew tradeoffs."
+    },
+    {
+     "id": "dd4",
+     "point": "Custom aliases need a separate namespace or reserved prefix and a strong uniqueness check on create (UNIQUE/conditional write) so they never collide with auto-generated codes.",
+     "weight": "extended",
+     "evidence_hint": "Isolates alias namespace and enforces uniqueness only on write."
+    }
+   ],
+   "probes": [
+    "Why this ID strategy over hash truncation, and would you use 301 or 302?"
+   ],
+   "hints": {
+    "1": "Interviewers usually probe ID generation and redirect status code next.",
+    "2": "Contrast hash collisions vs counter/Snowflake coordination, then link 301/302 to analytics.",
+    "3": "Prefer counter/Snowflake/KGS+Base62 unless dedup; choose 302 for click tracking; ranges beat single INCR; aliases get UNIQUE and a separate namespace."
+   }
+  },
+  {
+   "phase": "bottlenecks",
+   "goal": "Scale redirect QPS, DB, ID generation, writes, expiry, and failure modes.",
+   "must_hit": [
+    {
+     "id": "bn1",
+     "point": "Redirect QPS is dominated by cache hit rate: Redis cluster, local LRU for ultra-hot keys, CDN for viral links, and singleflight to prevent stampede on expiry.",
+     "weight": "core",
+     "evidence_hint": "Names cache hit rate plus cluster/LRU/CDN/singleflight for hot redirects."
+    },
+    {
+     "id": "bn2",
+     "point": "Shard by short_code hash only if storage/QPS exceeds one primary; use read replicas for rare cache-miss storms; pre-allocate ID ranges (or Snowflake for multi-region writes).",
+     "weight": "core",
+     "evidence_hint": "Defers sharding, adds replicas for miss storms, and pre-allocates IDs."
+    },
+    {
+     "id": "bn3",
+     "point": "Writes stay low vs reads: rate-limit creates, validate URLs; expiry via cache TTL ≤ expires_at plus sweeper or lazy 410 on read.",
+     "weight": "extended",
+     "evidence_hint": "Rate-limits creates and describes TTL/sweeper/lazy 410 for expiry."
+    },
+    {
+     "id": "bn4",
+     "point": "If cache is down, degrade to DB with shedding; if DB primary is down, fail creates but serve redirects from replicas/cache.",
+     "weight": "extended",
+     "evidence_hint": "Gives concrete degrade paths for cache-down and primary-down."
+    }
+   ],
+   "probes": [
+    "Where does this system break first under viral traffic, and how do you scale past it?"
+   ],
+   "hints": {
+    "1": "Reads need cache/CDN long before the primary write DB is the bottleneck.",
+    "2": "Talk cache hit rate, then DB sharding/replicas, then ID range allocation and failure degrade.",
+    "3": "Cache cluster + LRU/CDN/singleflight; shard short_code only when needed; range/Snowflake IDs; rate-limit writes; cache-down→DB with shedding; primary-down→fail creates, serve redirects from replicas/cache."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Hash+truncate+Base62 vs counter/Snowflake/KGS+Base62",
+   "strong_answer": "Hash is deterministic and dedup-friendly but truncation forces uniqueness checks and collision retries; counter/range, Snowflake, or pre-generated KGS are collision-free (or pool-managed) and preferred at interview scale unless identical long-URL dedup is required — mention XOR/permutation if sequential enumerable codes are a concern."
+  },
+  {
+   "topic": "301 vs 302",
+   "strong_answer": "301 lets browsers cache forever, cutting origin load but weakening analytics and making revoke/update hard; 302 (or 301 with short Cache-Control) sends every click to the origin so you can count clicks and control expiry/updates — default to 302 when click tracking matters."
+  },
+  {
+   "topic": "Single Redis INCR vs range allocator / Snowflake",
+   "strong_answer": "A single INCR is simple but a SPOF and hot counter; range allocators give app servers batches (unused ranges lost on crash); Snowflake removes the central counter SPOF and is time-sortable but brings clock-skew concerns — range/Snowflake is the expected mid-level answer for multi-writer ID gen."
+  },
+  {
+   "topic": "Same short code vs new code for the same long URL",
+   "strong_answer": "Product choice: hash/dedup reuses one code for identical long URLs; always-new codes suit campaigns that need distinct links and separate analytics."
+  },
+  {
+   "topic": "Availability vs strong consistency",
+   "strong_answer": "Redirects can use an AP-friendly store or SQL replicas once a mapping is written; custom-alias uniqueness still needs a strong uniqueness check on create."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Putting analytics writes on the redirect hot path",
+   "correction": "Enqueue click events asynchronously (Kafka/queue) to an analytics store; never block redirect on analytics; losing some click events is usually OK."
+  },
+  {
+   "trap": "Using UUID directly in the short URL",
+   "correction": "UUIDs are too long and defeat shortening; encode a compact ID (e.g. Base62 of a counter/Snowflake ID) instead."
+  },
+  {
+   "trap": "Sequential codes that are easy to enumerate",
+   "correction": "Randomize/permute IDs, use longer codes, auth sensitive targets, and rate-limit redirects — short links are often public by design."
+  },
+  {
+   "trap": "Custom alias race / taken alias without a uniqueness guarantee",
+   "correction": "Enforce DB UNIQUE constraint (or conditional write in NoSQL) and return retry/error; keep aliases in a separate namespace or reserved prefix so they never eat auto-generated codes."
+  },
+  {
+   "trap": "Drawing Redis but skipping TTL, eviction, and hot-key stampede",
+   "correction": "Interviewers expect cache TTL (≤ expires_at), eviction/LRU behavior, and stampede control (e.g. singleflight) on the redirect path."
+  },
+  {
+   "trap": "Preferring naive hash truncation without defending collisions",
+   "correction": "At interview scale prefer counter/Snowflake/KGS unless dedup is required; hash truncation forces DB uniqueness checks and retries."
+  }
+ ]
+}

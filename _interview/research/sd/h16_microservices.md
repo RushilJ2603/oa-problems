@@ -1,0 +1,66 @@
+# H16 — Microservices foundation (monolith vs microservices, service discovery, API gateway, saga, circuit breaker)
+
+**Interview relevance:** High — almost every HLD "design X" that grows past a single app box (e-commerce, ride-hailing, feeds); FAANG and Indian product cos probe *when* to split, how clients find instances, edge gateway vs LB, and how you keep consistency / survive dependency failure without claiming 2PC across services.
+**Type:** HLD-foundation
+**Prereqs:** h01_networking, h02_load_balancing, h06_consistency_cap, h08_message_queues; helpful: h10_api_design
+
+## Read / watch (curated, in order)
+- [ ] [system-design-primer — Microservices](https://github.com/donnemartin/system-design-primer#microservices) — `primer` — suite of independently deployable services + ops cost; then [Service discovery](https://github.com/donnemartin/system-design-primer#service-discovery)
+- [ ] [Moving from MONOLITHS to MICROSERVICES](https://www.youtube.com/watch?v=rckfN7xFig0) — `Gaurav Sen` — monolith vs micro tradeoffs; **split when the team/org scales**, not when QPS alone spikes; strangler-style extraction (~19 min)
+- [ ] [What Are Microservices Really All About? (And When Not To Use It)](https://www.youtube.com/watch?v=lTAcCNbJ7KE) — `ByteByteGo` — API gateway + identity + service registry diagram; when *not* to use microservices
+- [ ] [Typical Microservice Architecture](https://bytebytego.com/guides/what-does-a-typical-microservice-architecture-look-like/) — `ByteByteGo` — LB, CDN, API gateway, identity, service discovery, per-domain DB — one diagram to redraw in interviews
+- [ ] [9 Essential Components of a Production Microservice Application](https://bytebytego.com/guides/9-essential-components-of-a-production-microservice-application/) — `ByteByteGo` — gateway, registry (Consul/Eureka/ZK), auth, cache, async bus, metrics/logs; pair [EP121](https://blog.bytebytego.com/p/ep121-9-essential-components-of-a)
+- [ ] [6 More Microservices Interview Questions](https://blog.bytebytego.com/p/6-more-microservices-interview-questions) — `ByteByteGo` — API gateway vs LB, BFF / per-client gateways, REST vs RPC for east-west
+- [ ] [Microservices (James Lewis & Martin Fowler)](https://martinfowler.com/articles/microservices.html) — `Martin Fowler` — canonical definition; pair [Microservice Trade-Offs](https://martinfowler.com/articles/microservice-trade-offs.html) and [Microservice Prerequisites](https://martinfowler.com/bliki/MicroservicePrerequisites.html) (CI/CD, monitoring, rapid provisioning — the "premium")
+- [ ] [Pattern: API Gateway / Backends for Frontends](https://microservices.io/patterns/apigateway.html) — `microservices.io` (Chris Richardson) — single entry, routing + composition, BFF; then [Client-side discovery](https://microservices.io/patterns/client-side-discovery.html), [Server-side discovery](https://microservices.io/patterns/server-side-discovery.html), [Service registry](https://microservices.io/patterns/service-registry.html)
+- [ ] [Pattern: Database per service](https://microservices.io/patterns/data/database-per-service.html) — `microservices.io` — private data → no cross-service joins/transactions; forces sagas / composition / CQRS
+- [ ] [Pattern: Saga](https://microservices.io/patterns/data/saga.html) — `microservices.io` — local tx + compensating txs; choreography vs orchestration. Deepen: [Sagas part 1](https://microservices.io/post/microservices/2019/07/09/developing-sagas-part-1.html), [part 2 (coordination)](https://microservices.io/post/sagas/2019/08/04/developing-sagas-part-2.html)
+- [ ] [Saga pattern — Azure Architecture Center](https://learn.microsoft.com/en-us/azure/architecture/patterns/saga) — `Microsoft Learn` — orchestration vs choreography tables; when to use. Pair [Circuit Breaker](https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker) (Closed / Open / Half-Open)
+- [ ] [Circuit Breaker (Martin Fowler)](https://martinfowler.com/bliki/CircuitBreaker.html) — `Martin Fowler` — fail-fast wrapper; prevent resource exhaustion + cascading failure (*Release It!* lineage)
+- [ ] [Pattern: Circuit Breaker](https://microservices.io/patterns/reliability/circuit-breaker.html) — `microservices.io` — threshold → open → probe half-open; used by API gateway / clients
+- [ ] [3 Networking Tricks… → Circuit Breakers](https://www.hellointerview.com/blog/networking-tricks) — `Hello Interview` — interview framing: fail fast, shed load, half-open probe, when to name it in HLD
+- [ ] [Resilience4j CircuitBreaker](https://resilience4j.readme.io/docs/circuitbreaker) — `Resilience4j` — modern library mental model (Hystrix successor); repo: [resilience4j/resilience4j](https://github.com/resilience4j/resilience4j)
+- [ ] [Strangler Fig Application](https://martinfowler.com/bliki/StranglerFigApplication.html) — `Martin Fowler` — incremental extract behind a facade; pair [Azure Strangler Fig](https://learn.microsoft.com/en-us/azure/architecture/patterns/strangler-fig) and [AWS Strangler Fig](https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/strangler-fig.html) (API Gateway as proxy)
+- [ ] [API gateways for microservices](https://learn.microsoft.com/en-us/azure/architecture/microservices/design/gateway) — `Microsoft Learn` — gateway routing / aggregation / offloading; pair [Gateway Routing](https://learn.microsoft.com/en-us/azure/architecture/patterns/gateway-routing), [Gateway Aggregation](https://learn.microsoft.com/en-us/azure/architecture/patterns/gateway-aggregation), [Interservice communication](https://learn.microsoft.com/en-us/azure/architecture/microservices/design/interservice-communication) (retry + circuit breaker)
+- [ ] [Kubernetes Services](https://kubernetes.io/docs/concepts/services-networking/service/) — `Kubernetes` — stable virtual IP/DNS over changing pods = default **server-side discovery** in cloud interviews
+- [ ] [Consul — Service Discovery Explained](https://developer.hashicorp.com/consul/docs/use-case/service-discovery) — `HashiCorp` — catalog + health checks + DNS/API lookup; pair [Register services overview](https://developer.hashicorp.com/consul/docs/register)
+- [ ] [Amazon API Gateway](https://aws.amazon.com/api-gateway/) — `AWS` — managed edge gateway vocabulary; docs: [Developer Guide welcome](https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html). Skim [Microservices on AWS](https://docs.aws.amazon.com/whitepapers/latest/microservices-on-aws/microservices-on-aws.html)
+- [ ] [Introducing Domain-Oriented Microservice Architecture (Uber)](https://www.uber.com/blog/microservice-architecture/) — `Uber Eng` — real-world: thousands of services → group by **domain** + gateways (DOMA), not infinite nanoservices
+- [ ] *Designing Data-Intensive Applications* ch.8 (The Trouble with Distributed Systems) — `DDIA ch.8` — partial failure, timeouts, unreliable networks — why circuit breakers / retries exist; ch.9 (Consistency and Consensus) for why **2PC across services** is painful — book site: [dataintensive.net](https://dataintensive.net/)
+- [ ] [InterviewReady — Microservices](https://github.com/InterviewReady/system-design-resources#microservices) — `InterviewReady` — link dump (monolith-first, Uber nanoservice antipattern video); then [Distributed Transactions consistency Patterns](https://github.com/InterviewReady/system-design-resources#distributed-transactions-consistency-patterns)
+
+## Core concepts to master
+- **Monolith vs microservices:** monolith = one deployable unit (simpler tx, debugging, ops). Microservices = independently deployable services around **business capabilities**, each often with its own datastore. Pay a **microservice premium** (ops, networking, observability, distributed failure). Default interview answer: **start modular monolith**; split when team/ownership/scale of *change* demands it — not as a fashion statement.
+- **When to split:** independent deploy cadence, different scaling profiles (CPU vs I/O), clear bounded contexts, blast-radius isolation. **When not:** small team, unclear domains, no CI/CD or tracing — you'll get a distributed monolith.
+- **Database per service:** private data behind APIs → no shared tables / no cross-service ACID. Cross-service reads = API composition or CQRS views; cross-service writes = **sagas** (or rethink the boundary).
+- **API gateway:** L7 edge **single entry** for clients — routing, authn/authz, rate limit, TLS, sometimes aggregation/BFF. **Not** the same as an L4 load balancer (gateway understands HTTP semantics; LB spreads identical backends). Keep domain logic *out* of the gateway.
+- **Service discovery:** instances have dynamic IPs/ports. **Registry** holds healthy endpoints. **Client-side:** client queries registry and picks instance (Ribbon/Eureka-style). **Server-side:** client hits a stable router/LB/K8s Service that picks an instance. Cloud default: server-side (K8s Service / cloud LB) + health checks.
+- **Saga:** sequence of **local** transactions; on failure run **compensating** transactions (not DB rollback across services). **Choreography** = events trigger next steps (no central boss; can get tangled). **Orchestration** = central saga coordinator commands steps (clearer for complex flows; coordinator is a failure/ops concern). Sagas are **ACD** (atomic/consistent/durable-ish) — weak **isolation**; design for visible intermediate states + idempotent steps.
+- **Circuit breaker:** wrap remote calls — **Closed** (pass through, count failures) → **Open** (fail fast / fallback, give dependency time) → **Half-Open** (probe). Stops cascading failure and thread/connection pile-up on timeouts. Pair with **timeouts, retries with jitter, bulkheads** — retries without a breaker can amplify outages.
+- **Sync vs async between services:** sync RPC (HTTP/gRPC) for request/response on the critical path; async messaging for fan-out, decoupling, and long workflows. Don't turn every call into Kafka.
+- **Migration:** **Strangler Fig** — facade/gateway in front of monolith; peel routes to new services gradually; retire the old path when traffic is gone. Prefer over big-bang rewrite.
+- **Blast radius & ownership:** one service down shouldn't take the product down — degrade (cached/default response). Uber-scale lesson: manage **domains** of related services, not thousands of orphan nanoservices.
+
+## Practice — how it's asked & how to attack it
+Self-test drills (say answers out loud in ≤2 min each):
+
+1. **Monolith vs micro pick:** Startup checkout (5 engineers) vs Flipkart-scale catalog/orders/payments with separate teams. Which architecture, and what *prerequisite* ops would you demand before splitting?
+2. **Gateway vs LB:** Mobile app needs auth, path routing (`/orders` vs `/payments`), and response aggregation. Draw edge boxes and name what sits where. When is a plain LB enough?
+3. **Discovery drill:** 50 order-service pods with changing IPs. Client-side registry vs K8s Service / cloud LB — pick one, explain health checks + what happens on a bad deploy.
+4. **Saga drill:** Place order = reserve inventory → charge payment → create shipment. One step fails after payment succeeds — walk choreography vs orchestration and name the **compensating** actions. Why isn't this a distributed 2PC?
+5. **Circuit breaker drill:** Payment provider p95 latency spikes to 30s. Without a breaker, what dies first (threads, connections, upstream latency)? Sketch Closed → Open → Half-Open + a sensible fallback (queue for retry / "pay later" / cached quote).
+6. **Strangler drill:** Extract "notifications" from a monolith. Where does the gateway route before/during/after cutover? How do you roll back?
+
+## Common follow-ups / gotchas
+- Drawing 12 microservices for a campus URL shortener — over-engineering; interviewers want judgment, not a Netflix clone.
+- Shared database "for convenience" while calling it microservices — that's a distributed monolith; you've paid the network cost without the independence.
+- Claiming **exactly-once** / full ACID across Order + Payment + Inventory services via 2PC — say saga + idempotency + eventual consistency instead.
+- API gateway that embeds business workflows — becomes a new monolith and a deploy bottleneck; keep it thin (routing, auth, limits).
+- Retries **without** idempotency keys + circuit breaker → double charges and thundering herds.
+- Forgetting **observability** (correlation IDs, tracing, metrics) — debugging N services is otherwise hopeless.
+- Equating "Kubernetes" with "microservices" — K8s runs whatever you package; architecture choice is separate.
+
+## Where it appears
+- **Campus / intern / new-grad HLD:** expect you to *mention* services, a gateway, and async boundaries in e-commerce, Uber/Ola, food delivery, Netflix — depth usually stops at tradeoffs + one consistency/resilience pattern (saga or circuit breaker).
+- **Experienced / mid-level (1–4 YOE):** discovery mode, BFF, saga choreography vs orchestration, breaker + timeout budgets, strangler migration, domain boundaries — common at Amazon, Uber, Meta, Flipkart, Atlassian, etc.
+- **Frequency:** near-universal as the *shape* of a scaled design; rarely a standalone "design a service mesh" question outside infra loops. Depth = tradeoffs and failure modes — not implementing Eureka or writing Hystrix.

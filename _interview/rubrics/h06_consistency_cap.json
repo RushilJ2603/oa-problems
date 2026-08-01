@@ -1,0 +1,210 @@
+{
+ "id": "h06_consistency_cap",
+ "title": "Consistency models, CAP, PACELC, ACID vs BASE, transactions, isolation levels",
+ "type": "CONCEPT",
+ "relevance": "High — almost every HLD \"design X\" round probes C vs A tradeoffs, when to use strong vs eventual consistency, and ACID/isolation for money/inventory paths (campus + experienced; FAANG and Indian product cos).",
+ "difficulty": "mid",
+ "prereqs": [
+  "h01_networking",
+  "h02_load_balancing"
+ ],
+ "company_notes": "Campus/new-grad HLD expects CAP and strong-vs-eventual vocabulary on shorteners, feeds, chat, e-commerce, with isolation depth separating strong candidates. Mid-level (1–4+ YOE) probes per-API consistency, PACELC latency tradeoffs, isolation anomalies, and saga vs 2PC at Amazon, Google, Meta, Uber, Atlassian, Flipkart, and payments-heavy loops. Near-universal whenever designs replicate or handle money/inventory.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish CAP under partition, that CAP C ≠ ACID C, PACELC’s normal-path tradeoff, and what ACID vs BASE mean.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Under a network partition in a distributed store, you must choose Consistency (every read sees the latest write or errors) vs Availability (every non-failed node answers, maybe stale); CA without P is not a real distributed design.",
+     "weight": "core",
+     "evidence_hint": "States partitions happen and names the C vs A forced choice; rejects “pick CA and ignore P.”"
+    },
+    {
+     "id": "fund2",
+     "point": "CAP consistency ≈ linearizability / single-copy recency; ACID consistency = preserve application invariants (constraints, balances ≥ 0)—never conflate them.",
+     "weight": "core",
+     "evidence_hint": "Separates “latest replica view” from “invariants still hold,” ideally with a money or constraint example."
+    },
+    {
+     "id": "fund3",
+     "point": "PACELC: if Partition → Availability vs Consistency; Else (healthy) → Latency vs Consistency; most of the time there is no partition, so sync replication buys stronger C at higher latency.",
+     "weight": "core",
+     "evidence_hint": "Recites P→A/C and E→L/C and notes the healthy-path latency tax."
+    },
+    {
+     "id": "fund4",
+     "point": "ACID: Atomic all-or-nothing, Consistent invariants, Isolated concurrent txns, Durable after commit; BASE (Basically Available, Soft state, Eventually consistent) favors availability/scale and requires tolerating temporary divergence plus compensating logic.",
+     "weight": "extended",
+     "evidence_hint": "Lists A/C/I/D clearly and contrasts BASE as availability-oriented, not a theorem."
+    }
+   ],
+   "probes": [
+    "In a distributed database, what does CAP force you to choose during a partition, and how is CAP’s “C” different from ACID’s “C”?"
+   ],
+   "hints": {
+    "1": "Start from “partition happens”—what do non-failed nodes do vs what do readers see?",
+    "2": "Map CAP C to linearizable recency and ACID C to invariants; then name PACELC’s Else branch.",
+    "3": "Under P: Consistency (latest-or-error) vs Availability (answer, maybe stale). CAP C ≠ ACID C (invariants). PACELC Else: Latency vs Consistency."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Walk the replica consistency spectrum, isolation levels and anomalies, linearizability vs serializability, and why 2PC is costly.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Replica consistency spectrum: strong/linearizable (read always latest) → causal (cause before effect) → read-your-writes/session → eventual (replicas converge if writes stop); pick per data item/API.",
+     "weight": "core",
+     "evidence_hint": "Orders the spectrum and says choice is per API/item, not a whole-DB slogan."
+    },
+    {
+     "id": "mech2",
+     "point": "Isolation weak→strong: Read Uncommitted → Read Committed → Repeatable Read / Snapshot → Serializable; phenomena include dirty read, non-repeatable read, phantom, and write skew (classic SI hole—two doctors both go off-call).",
+     "weight": "core",
+     "evidence_hint": "Names the level ladder and at least dirty/non-repeatable/phantom plus write skew with a concrete sketch."
+    },
+    {
+     "id": "mech3",
+     "point": "Linearizability = single-object real-time order; serializability = multi-object txn order as if one-at-a-time; you can have one without the other; strict serializability is both.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts single-object real-time vs multi-object as-if-serial and mentions strict serializability as both."
+    },
+    {
+     "id": "mech4",
+     "point": "2PC/distributed txns give atomic commit across nodes but coordinator failure can block; prefer single-partition ACID or saga/outbox over cross-shard 2PC unless truly needed.",
+     "weight": "extended",
+     "evidence_hint": "Names blocking coordinator risk and defaults to single-partition or saga/outbox."
+    }
+   ],
+   "probes": [
+    "Walk the consistency spectrum for replicas, then sketch dirty read, non-repeatable read, phantom, and write skew—and say which isolation stops write skew."
+   ],
+   "hints": {
+    "1": "Think “what can a reader see after a write” and “what can two concurrent transactions see.”",
+    "2": "Spectrum: linearizable → causal → read-your-writes → eventual. Isolation ladder ends at Serializable/SSI for write skew.",
+    "3": "Write skew is the SI hole (e.g. two doctors off-call); Serializable/SSI stops it. Linearizability ≠ serializability; 2PC can block on coordinator failure."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Frame CP vs AP per feature, PACELC latency vs consistency when healthy, and when strong C beats eventual.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Do not label whole DBs “CP/AP”; real systems mix modes—prefer “for this API, under this failure, we choose …”.",
+     "weight": "core",
+     "evidence_hint": "Refuses Mongo/Cassandra/Postgres as a single CAP letter; scopes to operation and failure mode."
+    },
+    {
+     "id": "tr2",
+     "point": "Under no partition, async primary–replica vs sync quorum trades Latency vs Consistency (PACELC ELC); strong consistency has a latency tax even when healthy (sync replication / quorum R+W>N).",
+     "weight": "core",
+     "evidence_hint": "Ties healthy-path sync/quorum to higher latency for stronger C and mentions R+W>N or sync replication."
+    },
+    {
+     "id": "tr3",
+     "point": "Design rule: money/inventory/unique booking → strong C + careful isolation; feeds, counts, profiles, CDN/DNS-like data → availability + eventual (plus read-your-writes where UX demands).",
+     "weight": "core",
+     "evidence_hint": "Splits money/booking paths from feed/profile/CDN-like paths with matching consistency choices."
+    },
+    {
+     "id": "tr4",
+     "point": "CAP forbids perfect C and perfect A during a partition, not “mostly consistent and mostly available.”",
+     "weight": "extended",
+     "evidence_hint": "Corrects the cartoon triangle: partial C/A and latency matter; perfect C+A under partition is what CAP rules out."
+    }
+   ],
+   "probes": [
+    "For a ticket marketplace, which of browse, reserve seat, pay, and popularity counter lean CP vs AP—and under no partition, what does async vs sync replication trade?"
+   ],
+   "hints": {
+    "1": "Ask what a wrong answer costs the user for each feature.",
+    "2": "Reserve/pay need strong C; browse/popularity can lean AP/eventual; healthy path is L vs C.",
+    "3": "Seat reserve and pay: CP-leaning / strong C. Browse and popularity: AP-leaning / eventual. Async replicas: lower latency, weaker C; sync quorum: stronger C, higher latency."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply consistency choices to concrete paths: transfers, profile UX, checkout vs replicas, and distributed money without 2PC.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Transfer ₹100 A→B needs Atomicity and Durability; distinguish invariant consistency from replica recency; Read Committed alone can leave race/isolation bugs on concurrent money paths.",
+     "weight": "core",
+     "evidence_hint": "Uses the transfer example to separate atomic/durable commit, invariant C, and why weak isolation is unsafe for concurrent updates."
+    },
+    {
+     "id": "app2",
+     "point": "Profile-pic style update: read-your-writes for the writer, eventual for others; causal consistency matters when comments-on-posts must respect cause-before-effect.",
+     "weight": "extended",
+     "evidence_hint": "Gives session/RYW for the updater and eventual for others; links causal to comment/post ordering."
+    },
+    {
+     "id": "app3",
+     "point": "Read replicas are eventually consistent by default—never serve checkout/balance from a lagging replica without sticky/primary reads.",
+     "weight": "core",
+     "evidence_hint": "Explicitly bans checkout/balance off async replicas unless reading primary or sticky to fresh data."
+    },
+    {
+     "id": "app4",
+     "point": "Two services (wallet, ledger): prefer saga/outbox + idempotency over XA/2PC; handle at-least-once duplicates as a failure mode.",
+     "weight": "core",
+     "evidence_hint": "Outlines compensating saga or outbox with idempotent handlers and names duplicate delivery."
+    }
+   ],
+   "probes": [
+    "Walk a ₹100 wallet transfer and a wallet+ledger design without 2PC—where do you need strong isolation, and what breaks if checkout reads a lagging replica?"
+   ],
+   "hints": {
+    "1": "Separate “commit survived” from “both sides stay consistent under concurrency.”",
+    "2": "Primary/sticky reads for checkout; saga/outbox + idempotency instead of XA.",
+    "3": "ACID on the money path; Read Committed races; replicas lag so checkout uses primary; cross-service: saga/outbox, handle duplicate at-least-once."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Consistency vs Availability under partition",
+   "strong_answer": "When the network partitions, every non-failed node either refuses/stales for Consistency or keeps answering for Availability; CA without P is not a viable distributed design."
+  },
+  {
+   "topic": "Latency vs Consistency when healthy (PACELC)",
+   "strong_answer": "Most of the time there is no partition: sync replication or quorum (R+W>N) buys stronger consistency at a latency tax; async replicas lower latency but risk stale reads."
+  },
+  {
+   "topic": "Strong consistency + isolation vs availability + eventual",
+   "strong_answer": "Money, inventory, and unique booking take strong C and careful isolation; feeds, counts, profiles, and CDN/DNS-like data take availability and eventual consistency, with read-your-writes where UX needs it."
+  },
+  {
+   "topic": "Single-partition ACID / saga vs cross-shard 2PC",
+   "strong_answer": "Prefer single-partition ACID or saga/outbox with idempotency; 2PC gives cross-node atomic commit but coordinator failure can block, so use it only when truly required."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Calling Cassandra “AP” and Postgres “CP” as the whole story",
+   "correction": "Too coarse—ask which operation, which consistency setting, and which failure (node vs datacenter partition); systems mix modes."
+  },
+  {
+   "trap": "Treating eventual consistency as “incorrect forever”",
+   "correction": "Replicas converge if writes stop; you still need conflict resolution (LWW, version vectors, app merges)."
+  },
+  {
+   "trap": "Assuming strong consistency is free when the network is healthy",
+   "correction": "PACELC’s ELC: sync replication / quorum still costs latency even without a partition."
+  },
+  {
+   "trap": "Assuming default isolation is Serializable",
+   "correction": "Postgres defaults to Read Committed; MySQL InnoDB often Repeatable Read—race bugs hide until load."
+  },
+  {
+   "trap": "Serving checkout or balance from a default read replica",
+   "correction": "Replicas are eventually consistent by default; use sticky/primary reads for money paths."
+  },
+  {
+   "trap": "Reading CAP as forbidding any mix of consistency and availability",
+   "correction": "CAP forbids perfect C and perfect A during a partition; systems can still be mostly consistent and mostly available."
+  }
+ ]
+}

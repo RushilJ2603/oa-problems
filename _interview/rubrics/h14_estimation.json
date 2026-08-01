@@ -1,0 +1,197 @@
+{
+ "id": "h14_estimation",
+ "title": "Back-of-envelope estimation & capacity planning (QPS, storage, bandwidth)",
+ "type": "CONCEPT",
+ "relevance": "High — expected early in almost every HLD round (campus + experienced); FAANG and Indian product cos (Atlassian, Uber, Flipkart, etc.) use it to see if your architecture class matches the load.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Nearly every campus/new-grad design-X spends a few minutes on scale assumptions (Pastebin/URL shortener/Twitter-lite common); mid/experienced rounds push peak vs average, cache hit-rate to spare the DB, multi-region bandwidth, and cost/SLA nines. Foundational in product-company HLD; weak estimates are a common fail even when the box diagram looks fine.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that estimation picks architecture class via order-of-magnitude, not precision, and name the core quantities plus latency hierarchy.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Goal is order of magnitude (10×), enough to choose 1 box vs sharded fleet vs multi-region; narrate assumptions and round aggressively (86,400 s/day → 10^5).",
+     "weight": "core",
+     "evidence_hint": "Says precision is not the point; walks assumptions out loud and rounds to powers of ten before computing."
+    },
+    {
+     "id": "fund2",
+     "point": "Every design needs avg QPS, peak QPS, storage (growth + retention), and bandwidth (ingress + egress); optional fifth is cache/memory working set.",
+     "weight": "core",
+     "evidence_hint": "Lists those four (and optionally the fifth) as the numbers they will produce before drawing boxes."
+    },
+    {
+     "id": "fund3",
+     "point": "Latency hierarchy orders of magnitude: L1 ~1 ns → RAM ~100 ns → SSD ~100 μs → same-DC RTT ~0.5 ms → disk seek ~10 ms → cross-continent ~100–150 ms; Memory ≫ disk and same-DC ≫ WAN drive cache/CDN/co-location.",
+     "weight": "extended",
+     "evidence_hint": "Recites the ladder roughly and ties same-DC vs WAN / memory vs disk to placement choices."
+    }
+   ],
+   "probes": [
+    "What are you trying to get out of back-of-envelope math in an HLD, and which numbers do you always want before picking an architecture class?"
+   ],
+   "hints": {
+    "1": "Think about how precise the answer needs to be to change the design.",
+    "2": "Name the four capacity numbers, then the latency ladder that motivates caches and CDNs.",
+    "3": "Order-of-magnitude (10×) picks 1 box vs shards vs multi-region; need avg/peak QPS, storage with retention, ingress+egress bandwidth; L1~1ns … cross-continent ~100–150ms."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show working QPS, storage, bandwidth, and server-count pipelines with unit-safe conversions.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "avg QPS ≈ (DAU × actions/user/day) / 10^5; split read vs write; peak ≈ 2–5× avg for consumer (higher for events/B2B hours); design for peak, not average.",
+     "weight": "core",
+     "evidence_hint": "Writes the DAU formula with /10^5, separates read/write, applies a 2–5× peak multiplier, and says they size to peak."
+    },
+    {
+     "id": "mech2",
+     "point": "Storage ≈ bytes/item × items/day × retention_days × replication (often 3×) × index overhead (~1.2–2×), plus encodings/variants and backups.",
+     "weight": "core",
+     "evidence_hint": "Multiplies those factors and explicitly calls out replication and index overhead rather than raw payload only."
+    },
+    {
+     "id": "mech3",
+     "point": "Bandwidth = QPS × avg payload separately for ingress and egress; watch bits vs bytes (8× trap); CDN/cache cut egress at origin.",
+     "weight": "core",
+     "evidence_hint": "Computes ingress and egress apart, labels units, and mentions CDN/cache reducing origin egress."
+    },
+    {
+     "id": "mech4",
+     "point": "Handy conversions: ~2.5×10^6 s/month so 1 RPS ≈ 2.5M req/month and 400 RPS ≈ 1B/month; servers ≈ peak_QPS / QPS_per_instance (or concurrency ≈ QPS × latency) with ~20–50% headroom.",
+     "weight": "extended",
+     "evidence_hint": "Uses the monthly RPS cheat sheet and derives instance count from peak with headroom for deploys/failures."
+    }
+   ],
+   "probes": [
+    "Walk me through how you get from DAU to peak QPS, then to storage and ingress/egress bandwidth—what formulas and unit traps do you use?"
+   ],
+   "hints": {
+    "1": "Start from DAU and actions/day; don’t stop at average.",
+    "2": "Separate read/write QPS, apply peak multiplier, then storage factors and QPS×payload for bandwidth.",
+    "3": "avg QPS=(DAU×actions/day)/10^5; peak≈2–5×; storage multiplies bytes×items×retention×~3× repl×~1.2–2× index; bandwidth=QPS×payload each way; watch 8× bits/bytes."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Connect estimates to architecture forks and know when math is load-bearing versus skippable ritual.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Estimate → architecture: peak write QPS ≫ one primary DB → replicas/shards/queues; hot reads ≫ DB → cache/CDN; storage ≫ one disk → object store/sharding—a number without a design implication is wasted.",
+     "weight": "core",
+     "evidence_hint": "After each figure, states which component class it forces (cache, shard, queue, object store, etc.)."
+    },
+    {
+     "id": "tr2",
+     "point": "Prefer crux-first / just-in-time math: skip ritual QPS if it will not change the design; estimate the bottleneck that chooses in-memory vs sharded (e.g. Top-K trending).",
+     "weight": "core",
+     "evidence_hint": "Names which one estimate would change the design and which calculations they would defer."
+    },
+    {
+     "id": "tr3",
+     "point": "Availability nines constrain redundancy cost: 99.9% ≈ 8.7 h downtime/year; 99.99% ≈ 52 min; DDIA: define load parameters first and use percentiles (p95/p99), not averages—capacity that only hits average QPS still fails p99.",
+     "weight": "extended",
+     "evidence_hint": "Ties SLA nines to redundancy cost and insists on load parameters plus percentile latency, not mean."
+    }
+   ],
+   "probes": [
+    "When does capacity math change your design versus when can you skip it, and how do peak writes, hot reads, and storage size each fork the architecture?"
+   ],
+   "hints": {
+    "1": "Ask which number would actually force a different box diagram.",
+    "2": "Map write peak, read hot-spot, and storage size to concrete component choices; mention SLA nines and p99.",
+    "3": "Write≫one primary→shard/replica/queue; hot reads→cache/CDN; storage≫disk→object store; skip non-crux math; 99.9%≈8.7h/year; design to p99 not mean QPS."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Run short drills that produce peak QPS, storage, bandwidth, or latency judgments with an architecture implication.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "URL shortener drill: 100M DAU, 2 creates + 20 redirects/user/day → compute avg write QPS, avg read QPS, peak (×3), and say what architecture class peak read implies.",
+     "weight": "core",
+     "evidence_hint": "States assumptions, computes avg write/read from the formula, multiplies peak ×3, and names an architecture class for peak reads."
+    },
+    {
+     "id": "app2",
+     "point": "Tweets storage drill: 200M DAU, 2 tweets/user/day, 300 bytes metadata, 5-year retention, 3× replication—ballpark total storage and whether it fits on one machine.",
+     "weight": "core",
+     "evidence_hint": "Multiplies through to a ballpark and concludes single-machine vs distributed storage."
+    },
+    {
+     "id": "app3",
+     "point": "News-feed bandwidth: 50k avg QPS × ~200 KB payloads for origin egress; explain how CDN, thumbnails, and pagination change it; latency drill uses Redis vs HDD vs US→EU against a 100 ms SLO.",
+     "weight": "extended",
+     "evidence_hint": "Computes origin egress, then revises with CDN/thumbnails/pagination; places Redis/HDD/cross-continent on/off a 100 ms critical path."
+    }
+   ],
+   "probes": [
+    "Do the URL-shortener QPS drill out loud (100M DAU, 2 creates + 20 redirects, peak ×3)—what architecture class does peak read imply?"
+   ],
+   "hints": {
+    "1": "State assumptions first; separate write creates from read redirects.",
+    "2": "avg QPS=(DAU×actions)/10^5 for writes and reads, then peak×3, then map peak read to cache/CDN vs DB.",
+    "3": "Writes: 100M×2/10^5; reads: 100M×20/10^5; peak reads ×3; peak read load implies cache/CDN (or read replicas), not a single primary serving all redirects."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Peak QPS vs average QPS",
+   "strong_answer": "Design for peak, not average: consumer peak ≈ 2–5× avg (higher for events or business-hours B2B); sizing only to average melts at peak/launch day."
+  },
+  {
+   "topic": "Just-in-time / crux-first math vs ritual full estimation",
+   "strong_answer": "Estimate the bottleneck that changes the design (e.g. in-memory heap vs sharded Top-K); skip ritual QPS/storage lines that will not move architecture."
+  },
+  {
+   "topic": "Memory/same-DC vs disk/WAN placement",
+   "strong_answer": "Latency hierarchy (memory ≫ disk; same-DC ≫ WAN) drives cache, CDN, and co-location—use order-of-magnitude latency to decide what may sit on the critical path."
+  },
+  {
+   "topic": "Percentile latency (p95/p99) vs average",
+   "strong_answer": "Define load parameters first; capacity that only matches average QPS still fails user-facing p99—grade latency with percentiles, not means."
+  },
+  {
+   "topic": "Availability nines vs redundancy cost",
+   "strong_answer": "99.9% ≈ 8.7 h downtime/year and 99.99% ≈ 52 min; SLA targets constrain how much redundancy you must buy—mention when NFRs ask for high availability."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Designing for average QPS then melting at peak or launch day",
+   "correction": "Always state a peak multiplier (consumer often 2–5× avg; higher for spikes/B2B hours) and size to peak."
+  },
+  {
+   "trap": "Bits vs bytes or KB vs KiB confusion",
+   "correction": "Label units on every line; remember the 8× bits-vs-bytes trap on bandwidth."
+  },
+  {
+   "trap": "Precise calculator theater (e.g. many-decimal QPS) with no design conclusion",
+   "correction": "Interviewers want architecture implications—a number without a design implication is wasted."
+  },
+  {
+   "trap": "Forgetting replication, indexes, encodings, and retention in storage",
+   "correction": "Include often 3× replication, ~1.2–2× index overhead, encodings/variants, backups, and retention—or undercount by 3–10×."
+  },
+  {
+   "trap": "Using ancient “disk seek = everything is slow” to ban SSDs",
+   "correction": "Update intuition: SSD/NVMe changed economics; ratios still matter more than exact ns."
+  },
+  {
+   "trap": "Estimating everything up front when only one bottleneck is load-bearing",
+   "correction": "Prefer crux-first / just-in-time math; skip estimates that will not change the design."
+  },
+  {
+   "trap": "Ignoring read:write skew and sizing the write path like the read path",
+   "correction": "Split read vs write; skew is often 10:1–100:1—do not size writes as if they matched reads."
+  }
+ ]
+}

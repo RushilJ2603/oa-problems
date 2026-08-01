@@ -1,0 +1,332 @@
+{
+ "id": "hq05_video_streaming",
+ "title": "Design Video Streaming (YouTube / Netflix)",
+ "type": "HLD",
+ "relevance": "High — canonical 45-min HLD at FAANG + Indian product cos (Meta, Google, Amazon, Netflix, Uber, Flipkart); tests blob upload, async pipelines, CDN, and ABR more than novel algorithms.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h01_networking",
+  "h02_load_balancing",
+  "h03_caching",
+  "h08_message_queues",
+  "h11_storage",
+  "h14_estimation"
+ ],
+ "company_notes": "Campus/new-grad: very common “design YouTube” covering upload + CDN + multi-quality; ABR/DAG depth differentiates. Experienced/FAANG (1–5+ YOE): same prompt with probes on multipart resume, transcoding parallelism, CDN tiers, hot-video, cost; Netflix loops lean Open Connect + control vs data plane. Top-tier canonical HLD alongside URL shortener, chat, and news feed.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Scope VOD upload+watch in/out, non-functionals, and YouTube-UGC vs Netflix-catalog shape.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Functional in-scope: upload video, stream/watch with start in ~2–3s, and resumable upload.",
+     "weight": "core",
+     "evidence_hint": "Lists upload, low-latency first play (~2–3s), and resumable upload as the core product loop."
+    },
+    {
+     "id": "req2",
+     "point": "Park comments, search, recommendations, live, DRM, and moderation unless the interviewer asks.",
+     "weight": "core",
+     "evidence_hint": "Explicitly marks those as out / below-the-line and confirms with interviewer."
+    },
+    {
+     "id": "req3",
+     "point": "Non-functionals: high availability, global low-latency playback, multi-device / variable bandwidth; scale framing ~1M uploads/day and ~100M watches/day (or own numbers stuck to).",
+     "weight": "core",
+     "evidence_hint": "States HA, global latency, ABR-friendly clients, and cites the Hello Interview scale numbers or commits to alternatives."
+    },
+    {
+     "id": "req4",
+     "point": "Clarify YouTube-like UGC vs Netflix-like catalog because it changes CDN fill strategy.",
+     "weight": "extended",
+     "evidence_hint": "Asks UGC+long-tail pull CDN vs finite catalog proactive fill before drawing architecture."
+    }
+   ],
+   "probes": [
+    "Is this YouTube-style UGC or Netflix-style catalog, and what is explicitly out of scope for this 45-min design?"
+   ],
+   "hints": {
+    "1": "Start by locking upload + watch, then ask what to cut.",
+    "2": "Separate functional in/out from NFRs and UGC vs catalog.",
+    "3": "In: upload, ~2–3s start, resumable; out: comments/search/recs/live/DRM/moderation; note catalog shape drives CDN fill."
+   }
+  },
+  {
+   "phase": "estimation",
+   "goal": "Show upload rate, storage multiplier, watch starts, and why egress—not API QPS—forces a CDN.",
+   "must_hit": [
+    {
+     "id": "est1",
+     "point": "Uploads: 1M/day ≈ 12/sec average with peak 10×; avg raw size ~100–500 MB → tens of PB/year raw before encoding.",
+     "weight": "core",
+     "evidence_hint": "Walks 1M/day → ~12/sec, peak 10×, and ~100–500 MB driving tens of PB/year raw."
+    },
+    {
+     "id": "est2",
+     "point": "Storage multiplies because each title becomes many renditions × segments (often 5–10×+ raw depending on ladder).",
+     "weight": "core",
+     "evidence_hint": "Calls out ladder/segment blow-up as 5–10×+ raw, not one blob per title."
+    },
+    {
+     "id": "est3",
+     "point": "Watch side: 100M watches/day ≈ ~1k starts/sec avg; concurrent viewers and bitrate (e.g. 3–5 Mbps) drive egress Tbps—hence CDN.",
+     "weight": "core",
+     "evidence_hint": "Converts watches to ~1k starts/sec and pivots to Tbps egress from 3–5 Mbps, not API QPS."
+    },
+    {
+     "id": "est4",
+     "point": "Transcode CPU is the write-path bottleneck; size the worker pool from upload rate × encode-minutes-per-video.",
+     "weight": "extended",
+     "evidence_hint": "Sizes encode fleet from upload rate times encode-minutes, not from playback QPS."
+    }
+   ],
+   "probes": [
+    "Walk the back-of-envelope from 1M uploads/day and 100M watches/day—what dominates cost and capacity?"
+   ],
+   "hints": {
+    "1": "Estimate write path and read path separately.",
+    "2": "Uploads → storage+encode; watches → starts/sec and egress Tbps.",
+    "3": "1M/day≈12/sec (peak 10×), ~100–500 MB and 5–10×+ storage; 100M watches≈~1k starts/sec; 3–5 Mbps → egress Tbps → CDN."
+   }
+  },
+  {
+   "phase": "api",
+   "goal": "Define control-plane APIs for metadata/presign/complete while playback hits CDN directly.",
+   "must_hit": [
+    {
+     "id": "api1",
+     "point": "POST /videos creates metadata in processing and returns videoId plus presigned multipart upload URLs (or POST /videos/{id}/upload-urls).",
+     "weight": "core",
+     "evidence_hint": "API issues presigned multipart URLs and stores metadata; client does not upload video bytes through the API."
+    },
+    {
+     "id": "api2",
+     "point": "POST /videos/{id}/complete finalizes multipart and enqueues transcode; optional PATCH /videos/{id}/parts tracks resume state.",
+     "weight": "core",
+     "evidence_hint": "Complete triggers enqueue; parts endpoint (or equivalent) supports resumable multipart state."
+    },
+    {
+     "id": "api3",
+     "point": "GET /videos/{id} returns metadata, status (processing|ready), and manifest URL on the CDN; player fetches manifest/segments from CDN, not the API.",
+     "weight": "core",
+     "evidence_hint": "States status + CDN manifest URL and that segment GETs bypass app servers."
+    },
+    {
+     "id": "api4",
+     "point": "Optional POST /videos/{id}/views is async for view counting if in scope.",
+     "weight": "extended",
+     "evidence_hint": "Mentions async view posting as optional, not on the playback hot path."
+    }
+   ],
+   "probes": [
+    "What does the client call to upload a large video and then start playback?"
+   ],
+   "hints": {
+    "1": "API is control plane; media bytes take another path.",
+    "2": "Create → presign multipart → complete/enqueue → GET metadata+manifest.",
+    "3": "POST /videos (+ upload-urls), optional parts PATCH, POST complete, GET ready+CDN manifest; player GETs CDN objects."
+   }
+  },
+  {
+   "phase": "data_model",
+   "goal": "Separate metadata/status from blob keys and optional resume/rendition records.",
+   "must_hit": [
+    {
+     "id": "dm1",
+     "point": "Video(video_id PK, uploader_id, title, description, status, duration_s, created_at, primary_manifest_url, thumbnail_url) with point lookups by videoId.",
+     "weight": "core",
+     "evidence_hint": "Shows a Video row keyed by video_id including status and primary_manifest_url."
+    },
+    {
+     "id": "dm2",
+     "point": "Blobs in object storage with keys like raw/{video_id}/…, encoded/{video_id}/{rendition}/seg_00001.ts, manifests/{video_id}/master.m3u8; metadata in DB (+ Redis), not in API memory.",
+     "weight": "core",
+     "evidence_hint": "Separates DB metadata from S3/GCS key layout for raw, segments, and manifests."
+    },
+    {
+     "id": "dm3",
+     "point": "UploadPart(video_id, part_no, etag, status) for multipart resume; optional VideoRendition(video_id, codec, resolution, bitrate_kbps, media_manifest_url) or fold into manifests only.",
+     "weight": "extended",
+     "evidence_hint": "Tracks part etag/status for resume and either stores renditions or relies on manifests."
+    },
+    {
+     "id": "dm4",
+     "point": "Metadata store choices: Cassandra/Dynamo partitioned by video_id or Postgres + cache; view counters as a separate write-heavy store / Redis buffer if in scope.",
+     "weight": "extended",
+     "evidence_hint": "Picks a video_id-partitioned metadata store and isolates hot counters if views are in scope."
+    }
+   ],
+   "probes": [
+    "Where do status, manifests, segment objects, and resume state live?"
+   ],
+   "hints": {
+    "1": "Split metadata rows from blob keys.",
+    "2": "Video row + object key prefixes; add UploadPart if resume is required.",
+    "3": "Video with primary_manifest_url/status; raw/encoded/manifests keys; UploadPart etags; optional VideoRendition or manifest-only."
+   }
+  },
+  {
+   "phase": "architecture",
+   "goal": "Draw two planes: async upload/transcode write path and CDN-served playback read path.",
+   "must_hit": [
+    {
+     "id": "arch1",
+     "point": "Never push video bytes through API servers on the hot path: client → API/LB for auth/metadata/presign → Metadata DB + Redis; raw object storage via direct multipart upload.",
+     "weight": "core",
+     "evidence_hint": "Clearly separates control-plane API from direct-to-object-storage uploads."
+    },
+    {
+     "id": "arch2",
+     "point": "Queue → transcode workers (DAG: split → parallel encode bitrate ladder → package HLS/DASH → manifests) → encoded object storage → mark metadata ready.",
+     "weight": "core",
+     "evidence_hint": "Describes queue-orchestrated DAG ending in manifests and status ready."
+    },
+    {
+     "id": "arch3",
+     "point": "Playback: CDN (edge → optional regional/origin shield) serves segments; origin is the encoded bucket; player is latency-critical and read-heavy.",
+     "weight": "core",
+     "evidence_hint": "Shows player→CDN→origin shield→encoded bucket as the streaming path."
+    },
+    {
+     "id": "arch4",
+     "point": "YouTube-shaped default is UGC + long-tail + pull CDN; contrast Netflix Open Connect proactive fill to ISP appliances for a finite catalog.",
+     "weight": "extended",
+     "evidence_hint": "Starts YouTube-shaped then contrasts Open Connect fill for Netflix-like catalogs."
+    }
+   ],
+   "probes": [
+    "Sketch the upload flow and the streaming flow as two diagrams—what components sit on each?"
+   ],
+   "hints": {
+    "1": "Two planes: write-heavy async vs read-heavy sync.",
+    "2": "Presign to object store; queue+DAG encode; CDN for playback.",
+    "3": "Client→API/presign→raw bucket; queue→FFmpeg DAG→encoded+manifests→ready; player→CDN/edge (shield)→origin bucket; note pull CDN vs Open Connect."
+   }
+  },
+  {
+   "phase": "deep_dives",
+   "goal": "Defend ABR packaging, parallel encode, CDN ownership, encode eagerness, and view-count consistency choices.",
+   "must_hit": [
+    {
+     "id": "dd1",
+     "point": "ABR vs single file: ~2–10s segments + ladder enable mid-play quality switches and CDN caching; costs more storage/CPU for smoother UX on flaky networks. Server serves immutable HTTP objects while the client switches on throughput/buffer health.",
+     "weight": "core",
+     "evidence_hint": "Explains manifests/segments, client-driven ABR, and immutable CDN objects vs one progressive file."
+    },
+    {
+     "id": "dd2",
+     "point": "DAG parallel encode vs sequential: wall-clock minutes vs hours; needs orchestrator, idempotent workers, and temp storage by URL.",
+     "weight": "core",
+     "evidence_hint": "Argues parallel bitrate/segment encode with idempotent workers over a single long encode."
+    },
+    {
+     "id": "dd3",
+     "point": "Commercial CDN vs own Open Connect: buy until egress economics/ISP partnerships justify building; Netflix pre-positions catalog, YouTube pull-caches long tail.",
+     "weight": "extended",
+     "evidence_hint": "Ties CDN build-vs-buy to egress and contrasts proactive fill vs pull caching."
+    },
+    {
+     "id": "dd4",
+     "point": "Eager vs lazy encode: full ladder on upload (fast first play) vs popular-formats-first / on-demand rare rungs (save cost, slower long-tail quality).",
+     "weight": "extended",
+     "evidence_hint": "States when to encode full ladder immediately versus defer rare rungs."
+    }
+   ],
+   "probes": [
+    "Why segment into an ABR ladder instead of one file, and when would you build your own CDN?"
+   ],
+   "hints": {
+    "1": "Pick two tradeoffs: packaging and encode/CDN cost.",
+    "2": "ABR segments + parallel DAG; then CDN buy-vs-build / eager-vs-lazy.",
+    "3": "~2–10s segments + client ABR; parallel idempotent DAG; buy CDN until Open Connect economics; eager full ladder vs popular-first."
+   }
+  },
+  {
+   "phase": "bottlenecks",
+   "goal": "Scale egress/origin, transcode backlog, hot metadata, upload failures, and geo latency.",
+   "must_hit": [
+    {
+     "id": "bn1",
+     "point": "Viral egress/origin melt: target 95%+ segment traffic at edge; use origin shield / tiered cache, and pre-warm first segments of hot titles.",
+     "weight": "core",
+     "evidence_hint": "Cites 95%+ edge hit ratio, origin shield, and pre-warm of first segments for hot videos."
+    },
+    {
+     "id": "bn2",
+     "point": "Transcode backlog: autoscale workers, priority queues (creators/trending), degrade ladder under load.",
+     "weight": "core",
+     "evidence_hint": "Scales encode fleet and sheds rare rungs / reorders queue under backlog."
+    },
+    {
+     "id": "bn3",
+     "point": "Metadata hot key: Redis cache, replicate popular rows, avoid single-partition overload; uploads use multipart resume, idempotent complete, and TTL GC for incomplete objects.",
+     "weight": "extended",
+     "evidence_hint": "Caches/replicates hot video metadata and hardens multipart complete + incomplete-object GC."
+    },
+    {
+     "id": "bn4",
+     "point": "Geo latency: multi-region metadata + edge CDN; object-storage cross-region replication is for DR, not for every playback hop.",
+     "weight": "extended",
+     "evidence_hint": "Puts playback locality on CDN/edge and treats CRR as DR, not the primary watch path."
+    }
+   ],
+   "probes": [
+    "A video goes viral—what melts first and how do you protect origin and transcode?"
+   ],
+   "hints": {
+    "1": "Think edge hit ratio before adding API capacity.",
+    "2": "CDN/shield/pre-warm for reads; autoscale/priority/degrade for encode.",
+    "3": "95%+ edge + origin shield + pre-warm; worker autoscaling and ladder degrade; Redis for hot metadata; multipart resume + TTL GC; CDN for geo, CRR for DR."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "ABR segments + ladder vs single file",
+   "strong_answer": "Segments (~2–10s) and a bitrate ladder let the client switch quality mid-play from throughput/buffer health and make immutable objects CDN-cacheable; you pay more storage/CPU versus one progressive file that fails on flaky networks."
+  },
+  {
+   "topic": "DAG parallel encode vs sequential encode",
+   "strong_answer": "Parallel split→encode→package cuts wall-clock from hours toward minutes but needs a queue orchestrator, idempotent workers, and temp object URLs; sequential is simpler and much slower."
+  },
+  {
+   "topic": "Commercial CDN vs Netflix Open Connect",
+   "strong_answer": "Buy a pull CDN until egress cost and ISP partnerships justify building; Netflix pre-positions a finite catalog on ISP appliances, while YouTube-style UGC relies on pull caching for a long tail."
+  },
+  {
+   "topic": "Eager full ladder vs lazy / popular-first encode",
+   "strong_answer": "Encoding the full ladder on upload maximizes fast first play everywhere; encoding popular formats first and rare rungs on demand saves cost at the expense of slower long-tail quality."
+  },
+  {
+   "topic": "Exact vs approximate view counts",
+   "strong_answer": "Redis INCR with periodic flush (or CQRS) trades stricter consistency for lower write amplification on a write-heavy counter path."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating live streaming like VOD batch transcode.",
+   "correction": "Live needs low-latency real-time ingest, shorter segments, and different packaging—do not pretend the batch DAG is live."
+  },
+  {
+   "trap": "Streaming video bytes through app servers.",
+   "correction": "API stays control plane (auth, metadata, presign); pushing media through app servers blows bandwidth and cost—player reads from CDN."
+  },
+  {
+   "trap": "Ignoring auth differences for paid vs public content.",
+   "correction": "Netflix-like paid content needs DRM / signed URLs / token auth; public UGC often uses softer CDN-cached controls."
+  },
+  {
+   "trap": "Forgetting processing UX and cold-start origin spikes.",
+   "correction": "Generate thumbnails/previews and show processing while encode runs; empty edge cache after publish causes origin spikes—pre-push or origin shield."
+  },
+  {
+   "trap": "Confusing codec with container/protocol.",
+   "correction": "Codec is compression (e.g. H.264); HLS/DASH is packaging/protocol for HTTP segment delivery."
+  },
+  {
+   "trap": "Dragging recommendations/search into the core design.",
+   "correction": "They are separate systems—acknowledge and park unless the interviewer pulls you there."
+  }
+ ]
+}

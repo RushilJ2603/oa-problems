@@ -1,0 +1,200 @@
+{
+ "id": "h03_caching",
+ "title": "Caching (cache-aside / write-through / write-back, eviction, Redis/Memcached, CDN, invalidation)",
+ "type": "CONCEPT",
+ "relevance": "High — almost every HLD \"design X\" round; FAANG and Indian product cos expect you to place a cache, pick a write strategy, name eviction + invalidation, and discuss stampede / stale-read tradeoffs when the DB or origin is the bottleneck.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h01_networking",
+  "h02_load_balancing"
+ ],
+ "company_notes": "Campus/intern HLD treats Redis + CDN as table stakes in URL shortener, feed, e-commerce, chat, TikTok/YouTube; mid-level (1–4 YOE) probes stampedes, hot keys, Redis vs Memcached, write-back risk, and CDN purge vs versioned assets at Amazon, Meta, Google, Uber, Atlassian, Flipkart. Near-universal HLD building block; deep consistency follow-ups common; full \"design Memcached\" rarer outside infra-heavy loops.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish why you cache, where layers sit, and what is worth caching.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Cache stores a hot subset in fast memory to cut latency and shield the DB/origin; hit ratio is the goal metric and a miss costs a full DB/origin round-trip (plus possible stampede).",
+     "weight": "core",
+     "evidence_hint": "Candidate states latency/DB protection as the purpose and names hit ratio vs miss cost."
+    },
+    {
+     "id": "fund2",
+     "point": "Placement stack is browser/client → CDN → reverse proxy → app local (in-process) → distributed cache (Redis/Memcached) → DB buffer pool.",
+     "weight": "core",
+     "evidence_hint": "Candidate walks the layers end-to-end rather than only naming Redis."
+    },
+    {
+     "id": "fund3",
+     "point": "Prefer caching read-heavy, slowly changing, expensive-to-compute data — do not cache everything.",
+     "weight": "extended",
+     "evidence_hint": "Candidate says what not to cache and ties choice to read/write and change rate."
+    }
+   ],
+   "probes": [
+    "Why introduce a cache in a design, and where would you place it between the client and the database?"
+   ],
+   "hints": {
+    "1": "Think about what hurts when the DB or origin is the bottleneck.",
+    "2": "Name the layers from browser/CDN down to Redis and the DB buffer pool.",
+    "3": "Hot subset in fast memory → higher hit ratio; miss = full origin round-trip; cache read-heavy, slowly changing, expensive data."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how read/write patterns, invalidation, and eviction actually work.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Cache-aside (lazy loading): app checks cache → miss → read DB → populate cache; flexible, app owns consistency, first request after miss/expiry is slow — default interview pattern.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes the miss path and that the app owns consistency."
+    },
+    {
+     "id": "mech2",
+     "point": "Write-through writes cache and DB synchronously (stronger freshness / read-your-writes, slower writes); write-back writes cache first and flushes DB async (fast writes, data loss if cache dies before flush).",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts sync dual-write vs async flush and names the crash risk for write-back."
+    },
+    {
+     "id": "mech3",
+     "point": "On DB update, prefer delete-after-DB-write of the cache key (idempotent) so the next read refills; TTL is a backstop, not a substitute for explicit invalidation when freshness matters.",
+     "weight": "core",
+     "evidence_hint": "Candidate sketches write DB → DEL key → next GET refill and treats TTL as safety net."
+    },
+    {
+     "id": "mech4",
+     "point": "When memory is full, eviction choices include LRU (default interview answer), LFU (skewed hot sets), TTL, and random; Redis pairs maxmemory with a policy such as allkeys-lru for pure caches.",
+     "weight": "extended",
+     "evidence_hint": "Candidate names LRU/LFU/TTL and mentions Redis maxmemory + policy."
+    }
+   ],
+   "probes": [
+    "Walk me through cache-aside on a miss, then how you'd invalidate after a DB update — and when would you use write-through or write-back instead?"
+   ],
+   "hints": {
+    "1": "Start with who checks the cache on read, then what happens on write.",
+    "2": "Separate read path (aside vs read-through) from write path (through vs back) and from delete-vs-TTL.",
+    "3": "Aside: miss→DB→populate; invalidate with DB-first then DEL; write-through = sync cache+DB; write-back = async flush with loss risk; LRU + maxmemory for eviction."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Force explicit choices among write strategies, Redis vs Memcached, and CDN vs app cache.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Write-through favors freshness and read-your-writes but slows writes and can pollute the cache with rarely-read keys; write-back favors write speed but risks data loss and fits counters/analytics, not money/passwords.",
+     "weight": "core",
+     "evidence_hint": "Candidate maps freshness vs durability to the two write strategies with concrete unfit examples."
+    },
+    {
+     "id": "tr2",
+     "point": "Memcached is a simple multi-threaded string/object cache without rich types/persistence; Redis adds structures (hashes, sets, sorted sets), optional persistence, replication/cluster, pub/sub, scripting — default unless you only need dumb GET/SET at extreme throughput.",
+     "weight": "core",
+     "evidence_hint": "Candidate picks Redis for structures/HA needs and Memcached for simple high-throughput GET/SET."
+    },
+    {
+     "id": "tr3",
+     "point": "CDN is an edge layer for static (and some dynamic) bytes near users with origin pull on miss and purge on deploy; Redis is objects near services — complementary layers, not substitutes.",
+     "weight": "extended",
+     "evidence_hint": "Candidate assigns media to CDN and session/feed metadata/counters to Redis."
+    }
+   ],
+   "probes": [
+    "Product catalog vs wallet balance vs view counters — which write strategy, and why Redis over Memcached? Where does a CDN fit vs the app cache?"
+   ],
+   "hints": {
+    "1": "Ask what \"wrong\" means: stale, lost write, or slow write.",
+    "2": "Map catalog→aside+TTL, wallet→write-through, counters→write-back; then Redis features vs Memcached simplicity; CDN for media.",
+    "3": "Aside+TTL for minutes-old catalog; write-through for read-your-writes balance; write-back only if loss OK; Redis for structures/replication; CDN for images/video, Redis for feed/session/counters."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply patterns to stampede, invalidation races, outages, and a multi-layer design.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Stampede/thundering herd: hot key expiry triggers many DB loads; mitigations include single-flight/lock (SETNX), probabilistic early refresh, jittered TTLs, and serving stale while one request refills.",
+     "weight": "core",
+     "evidence_hint": "Candidate names the viral-key expiry failure and at least two mitigations from the list."
+    },
+    {
+     "id": "app2",
+     "point": "Cache penetration (repeated misses for missing keys) is mitigated by caching negative/null with short TTL; hot keys hammer one shard; whole-cache outage sends every request to DB — need degrade path, circuit breaker, or small local fallback.",
+     "weight": "core",
+     "evidence_hint": "Candidate distinguishes penetration, hot key, and full outage with a degrade strategy."
+    },
+    {
+     "id": "app3",
+     "point": "Delete-before-DB-write can reintroduce stale data; updating cache before DB commit can leave phantom values on crash — classic fix is DB-first then invalidate.",
+     "weight": "extended",
+     "evidence_hint": "Candidate explains the race/phantom and lands on DB-first + invalidate."
+    }
+   ],
+   "probes": [
+    "A celebrity profile TTL hits zero at peak QPS — what fails, and how do you protect the DB? If Redis is down, how do you avoid melting Postgres?"
+   ],
+   "hints": {
+    "1": "Picture every instance missing at once on the same key.",
+    "2": "Cover stampede mitigations, then outage: fail-open with shedding vs local last-known vs fail-closed.",
+    "3": "Single-flight/SETNX, jittered TTL, serve-stale-while-revalidate; on Redis down use shedding/circuit breaker/local fallback so Postgres is not overwhelmed."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "cache-aside + TTL vs write-through vs write-back",
+   "strong_answer": "Catalog (read-heavy, minutes-old OK) → cache-aside+TTL; wallet balance (read-your-writes) → write-through; view counters (write-heavy, loss OK) → write-back. Wrong pick: aside leaves balance stale, write-through slows counter writes and pollutes cache, write-back risks losing money/password updates on cache crash."
+  },
+  {
+   "topic": "explicit invalidation vs TTL-only",
+   "strong_answer": "Freshness-critical updates: write DB then DEL key so next GET refills; TTL is a backstop. TTL-only is acceptable when minutes-old data is fine or updates bypass the app (batch jobs) and you lack CDC/events. Delete-before-DB-write can reintroduce stale data; set-new-value races are worse than idempotent delete."
+  },
+  {
+   "topic": "Redis vs Memcached",
+   "strong_answer": "Choose Redis for structures (sessions, rate limits, leaderboards), persistence, replication/cluster, pub/sub. Memcached wins for simple multi-threaded GET/SET at extreme throughput with no rich types or persistence needs."
+  },
+  {
+   "topic": "CDN vs app/distributed cache",
+   "strong_answer": "CDN: geo edge for images/video segments, origin pull on miss, purge/versioned URLs on replace. Redis: feed fanout metadata, sessions, counters near services. Different layers — bytes near users vs objects near app."
+  },
+  {
+   "topic": "write-through freshness vs write-back speed",
+   "strong_answer": "Write-through: synchronous cache+DB → stronger freshness, slower writes, possible rarely-read pollution. Write-back: fast writes, async DB flush, data loss if cache dies before flush — not for durable critical data."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating cache invalidation as solved once you have a cache",
+   "correction": "Races between fill and invalidate, multi-writer apps, and updates that bypass the app (batch jobs) still need TTL and/or CDC/event invalidation."
+  },
+  {
+   "trap": "Caching mutable, user-specific, or security-sensitive data without short TTL / auth scoping",
+   "correction": "Wrong user can see wrong data — scope keys to auth and keep TTLs short for sensitive mutable data."
+  },
+  {
+   "trap": "Drawing Redis without key design, TTL, or eviction policy",
+   "correction": "Interviewers probe all three: how keys are named, when they expire, and what happens at maxmemory (e.g. allkeys-lru)."
+  },
+  {
+   "trap": "Updating the cache before the DB commits",
+   "correction": "Crash leaves phantom cache values; write DB first, then invalidate (delete) the key."
+  },
+  {
+   "trap": "Ignoring stampede on the hottest keys because overall hit ratio looks fine",
+   "correction": "One viral key expiry can still overload the DB; add single-flight, jitter, or serve-stale-while-revalidate."
+  },
+  {
+   "trap": "Assuming CDN purge is instant everywhere",
+   "correction": "Edges can lag; versioned URLs (e.g. asset.v3.js) often beat emergency purge."
+  },
+  {
+   "trap": "Assuming write-back is always faster and fine",
+   "correction": "Interviewer will ask about crash before flush — data loss makes it unfit for money/passwords."
+  }
+ ]
+}

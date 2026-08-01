@@ -1,0 +1,238 @@
+{
+ "id": "h12_search",
+ "title": "Search (inverted index, Elasticsearch, ranking, autocomplete indexing)",
+ "type": "CONCEPT",
+ "relevance": "High — keyword/product/tweet search and typeahead appear constantly in HLD rounds; FAANG + Indian product cos (Flipkart, Uber, Atlassian) expect inverted index + ranking, and often a separate autocomplete design.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h04_databases_indexing",
+  "h03_caching",
+  "h08_message_queues"
+ ],
+ "company_notes": "Campus/new-grad staples are Twitter/YouTube/e-commerce search and autocomplete/typeahead (inverted index + basic ranking + cache). Mid-level expects ES/Lucene internals (segments, shards, BM25), async indexing consistency, and autocomplete precompute vs freshness. Frequency is high whenever the product has a search box; autocomplete is often a standalone Google/Amazon/Meta-style question.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what an inverted index is, how analysis feeds it, and why it beats scanning or SQL LIKE for retrieval.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "An inverted index maps term → postings list (doc IDs, often tf + positions); a query looks up terms, intersects/unions postings, then ranks.",
+     "weight": "core",
+     "evidence_hint": "Candidate draws term→postings and says retrieval is intersect/union of postings followed by ranking, not scanning documents."
+    },
+    {
+     "id": "fund2",
+     "point": "A forward index (doc → terms) is for display/snippets, not for retrieval.",
+     "weight": "core",
+     "evidence_hint": "Candidate clearly separates forward index (show/snippet) from inverted index (find matching docs)."
+    },
+    {
+     "id": "fund3",
+     "point": "Analysis (lowercase, stop words, stemming/lemmatization, synonyms) must use agreeing index-time and query-time analyzers or you get silent misses; positions enable phrase/proximity queries.",
+     "weight": "core",
+     "evidence_hint": "Candidate names analyzer agreement and says positions are what make phrase/proximity queries possible."
+    },
+    {
+     "id": "fund4",
+     "point": "SQL LIKE '%foo%' forces full-scan / leading-wildcard pain; an inverted index avoids that, while Postgres tsvector/GIN can be good enough for smaller needs vs a dedicated search system.",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts leading-wildcard full scan with inverted lookup and names when Postgres FTS is enough."
+    }
+   ],
+   "probes": [
+    "For docs {1: \"red fox\", 2: \"fox jumps\", 3: \"red car\"}, draw the inverted index, execute red AND fox by intersection, and say what positions add for the phrase \"red fox\".",
+    "Why is SQL LIKE '%foo%' a bad search plan compared to an inverted index?"
+   ],
+   "hints": {
+    "1": "Start from term → list of doc IDs, then think how AND would combine two lists.",
+    "2": "Build postings for red and fox, intersect them, then mention storing positions beside doc IDs for phrase checks.",
+    "3": "red → [1,3], fox → [1,2], intersection = [1]; positions let you require adjacent tokens for \"red fox\" instead of just both terms present."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain Lucene/ES segment and shard mechanics, near-real-time indexing, BM25 ranking, and how autocomplete indexing differs from full-text search.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Lucene buffers then flushes immutable segments and merges them in the background; deletes are soft until merge (LSM-like write amp vs read amp).",
+     "weight": "core",
+     "evidence_hint": "Candidate describes buffer → immutable segment flush → background merge and soft deletes until merge."
+    },
+    {
+     "id": "mech2",
+     "point": "Elasticsearch layout is cluster → index → primary shards (+ replicas); each shard is a Lucene index; queries scatter-gather and p99 tracks the slowest shard; prefer document-partitioned shards over term-sharding for multi-term queries.",
+     "weight": "core",
+     "evidence_hint": "Candidate names shard=Lucene index, scatter-gather, slowest-shard p99, and document partitioning preference."
+    },
+    {
+     "id": "mech3",
+     "point": "Refresh makes new segments searchable (default ~1s); under bulk reindex/high write load raise refresh_interval; source of truth is usually OLTP DB with async index via queue/CDC — ES is a derived search store.",
+     "weight": "core",
+     "evidence_hint": "Candidate mentions ~1s refresh, tuning refresh_interval, and async/CDC derived-index path rather than ES as system of record."
+    },
+    {
+     "id": "mech4",
+     "point": "BM25 default relevance combines term rarity (IDF), saturated TF (k1), and doc-length normalization (b); interviews often add freshness/popularity/CTR/personalization/business boosts in a multi-stage cascade.",
+     "weight": "core",
+     "evidence_hint": "Candidate explains IDF + saturated TF + length norm and may mention cheaper retrieval then heavier re-rank."
+    },
+    {
+     "id": "mech5",
+     "point": "Autocomplete is not full-text search: latency budget is often <100ms; canonical pattern is a prefix structure (trie/FST) with precomputed top-K per prefix so the online path is a lookup, not subtree scan + sort.",
+     "weight": "core",
+     "evidence_hint": "Candidate cites <100ms and precomputed top-K on a trie/FST as a lookup, not DFS+sort at query time."
+    },
+    {
+     "id": "mech6",
+     "point": "ES autocomplete options: completion suggester (fast in-memory FST, prefix-oriented) vs search_as_you_type / edge n-grams (more flexible matching, larger index).",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts completion suggester FST speed with edge n-gram / search_as_you_type flexibility and index size."
+    }
+   ],
+   "probes": [
+    "Walk the index pipeline after a user creates a product/tweet: where does freshness lag come from?",
+    "Two docs both contain \"elastic\"; one is 20 tokens, one is 2000. Which ranks higher for query elastic and why, and what does raising k1 change?",
+    "Prefix \"app\": why store top-K completions on the trie node instead of DFS+sort at query time?"
+   ],
+   "hints": {
+    "1": "Separate the primary write from when the search replica becomes visible, and think about TF saturation and document length.",
+    "2": "DB commit → queue → indexer → ES; BM25 length norm (b) prefers the shorter doc; autocomplete should precompute top-K at the prefix node.",
+    "3": "Default refresh ~1s (raise refresh_interval under heavy writes); shorter 20-token doc ranks higher via b; raising k1 lessens TF saturation; online typeahead is a top-K lookup on trie/FST, not a scan."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Force clear choices among ES vs lighter search, autocomplete structures, update amplification, and freshness vs precompute.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Do not use ES as the transactional system of record: avoid it when you need strong transactional truth, heavy point updates of single fields, or a tiny corpus where Postgres FTS / a simple Redis inverted map is enough.",
+     "weight": "core",
+     "evidence_hint": "Candidate says ES is a search/analytics secondary index and names when Postgres FTS or Redis postings suffice."
+    },
+    {
+     "id": "tr2",
+     "point": "Autocomplete update path should log queries → aggregate frequencies → rebuild suggestion index → atomic swap; trending uses a short-window overlay (e.g. Redis) merged at serve time — do not mutate the hot trie on every search.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes batch/stream rebuild with atomic swap plus a short-window trending overlay rather than per-query trie mutation."
+    },
+    {
+     "id": "tr3",
+     "point": "Custom trie/FST + cache fits ultra-low latency and simple popularity ranking; ES completion / search-as-you-type fits ops simplicity when fuzzy/infix matter more.",
+     "weight": "core",
+     "evidence_hint": "Candidate picks trie/top-K for custom typeahead latency and ES suggester when already on ES / needing fuzzy-infix."
+    },
+    {
+     "id": "tr4",
+     "point": "Lucene field updates are approximately delete + reindex of the whole document, causing write amplification — denormalize carefully.",
+     "weight": "extended",
+     "evidence_hint": "Candidate states whole-doc reindex on update and links that to careful denormalization."
+    }
+   ],
+   "probes": [
+    "When would you not introduce Elasticsearch and what would you use instead?",
+    "Trie vs Elasticsearch for typeahead — how do you choose?",
+    "How do trending/breaking-news suggestions appear before the next full autocomplete rebuild?"
+   ],
+   "hints": {
+    "1": "Ask whether you need a transactional primary and how hard single-field updates or tiny corpora make ES.",
+    "2": "Contrast derived search store + async indexing with OLTP/Postgres FTS/Redis; contrast precomputed trie top-K with ES completion/search-as-you-type.",
+    "3": "Skip ES for SoT/point-update/tiny corpus; custom trie/FST for <100ms popularity typeahead; ES suggester for ops/fuzzy-infix; serve trends from a short-window Redis overlay merged at read time after atomic swap of the rebuilt index."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply inverted index, async ES indexing, shard fan-out, and autocomplete precompute patterns in concrete HLD designs.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "For product/tweet search, sketch write path primary DB commit → queue → indexer → ES, and call out freshness lag, dual-write failure modes, and how you would reindex.",
+     "weight": "core",
+     "evidence_hint": "Candidate draws async derived indexing and names lag, dual-write risk, and rebuild/reindex strategy."
+    },
+    {
+     "id": "app2",
+     "point": "For typeahead, storing top-5 completions on the trie node beats DFS+sort at query time; rebuild on an aggregate schedule and surface breaking news via a short-window overlay before the next full rebuild.",
+     "weight": "core",
+     "evidence_hint": "Candidate justifies on-node top-5, scheduled rebuild, and overlay for trends before rebuild."
+    },
+    {
+     "id": "app3",
+     "point": "With 64 shards a query that must touch all is dominated by the slowest shard; mitigations include replicas, hedged requests, time-based indices, or routing by user.",
+     "weight": "extended",
+     "evidence_hint": "Candidate says tail latency follows the slowest of 64 shards and names at least one mitigation from that list."
+    },
+    {
+     "id": "app4",
+     "point": "Interview add-on ranking beyond BM25 uses freshness, popularity/CTR, personalization, or business boosts, often as a multi-stage cascade (cheap retrieval → heavier re-rank).",
+     "weight": "extended",
+     "evidence_hint": "Candidate layers business/freshness/popularity signals after BM25-style retrieval rather than one giant score."
+    }
+   ],
+   "probes": [
+    "Design Twitter or e-commerce keyword search end-to-end, including indexing and ranking.",
+    "Design autocomplete for a Google/Amazon-style typeahead with a brutal latency budget.",
+    "If you have 64 shards and every query fans out, what dominates latency and how do you mitigate it?"
+   ],
+   "hints": {
+    "1": "Keep search as a separate derived index path from the primary timeline/catalog store.",
+    "2": "Tokenize → inverted index / ES cluster → scatter-gather → merge/rank; for typeahead use trie/FST + precomputed top-K and async rebuild.",
+    "3": "DB → queue/CDC → indexer → ES (~1s refresh lag); rank with BM25 then freshness/popularity; typeahead top-5 on prefix nodes with Redis trending overlay; 64-shard fan-out limited by slowest shard, mitigated by replicas, hedged requests, time-based indices, or user routing."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Elasticsearch vs Postgres FTS / Redis inverted map",
+   "strong_answer": "Use ES/Lucene when you need distributed full-text search, ranking, and scale; skip it for strong transactional source of truth, heavy single-field point updates, or tiny corpora where Postgres tsvector/GIN or a simple Redis inverted map is enough."
+  },
+  {
+   "topic": "Document-partitioned shards vs term-sharding",
+   "strong_answer": "Prefer document-partitioned shards so multi-term queries fan out cleanly over Lucene shards; term-sharding is a poor default for multi-term interview designs."
+  },
+  {
+   "topic": "Refresh freshness vs write load",
+   "strong_answer": "Default refresh (~1s) makes new segments searchable quickly; under bulk reindex or high write load raise refresh_interval and accept more lag because ES is a derived store fed asynchronously."
+  },
+  {
+   "topic": "Custom trie/FST top-K vs Elasticsearch completion / search-as-you-type",
+   "strong_answer": "Custom trie/FST with precomputed top-K and cache wins for ultra-low latency and simple popularity ranking; ES completion suggester or search_as_you_type/edge n-grams wins when you already run ES and want ops simplicity or fuzzy/infix matching at the cost of a larger or less prefix-specialized index."
+  },
+  {
+   "topic": "Precomputed autocomplete rebuild vs trending freshness",
+   "strong_answer": "Rebuild suggestions offline/stream-aggregate then atomically swap; serve trending via a short-window overlay (e.g. Redis) merged at read time instead of mutating the hot trie on every search."
+  },
+  {
+   "topic": "BM25 retrieval vs multi-stage re-ranking",
+   "strong_answer": "Keep BM25 (IDF + saturated TF via k1 + length norm via b) as the cheap default retriever, then cascade freshness, popularity/CTR, personalization, and business boosts in heavier re-rank stages."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating Elasticsearch as the primary database for money/orders or other transactional truth.",
+   "correction": "ES is a search/analytics secondary index: plan rebuild, lag, and inconsistency with the OLTP primary."
+  },
+  {
+   "trap": "Assuming updating one field in a big document is cheap.",
+   "correction": "Lucene updates are approximately delete + reindex of the whole document, so expect write amplification and denormalize carefully."
+  },
+  {
+   "trap": "Deep pagination with large from/size.",
+   "correction": "It is expensive; prefer search_after / cursor-style pagination."
+  },
+  {
+   "trap": "Hand-waving phrases and typo tolerance as free features.",
+   "correction": "Positions enable phrases; fuzziness, n-grams, and suggesters handle typos but are costly — gate by prefix length."
+  },
+  {
+   "trap": "Using full-text search mechanics for typeahead or mutating a hot trie on every query.",
+   "correction": "Autocomplete needs prefix structures with precomputed top-K and atomic rebuild/swap; use a short-window overlay for trends; choose custom trie/FST for ultra-low latency or ES completion when ops/fuzzy-infix matter more."
+  },
+  {
+   "trap": "Ranking heavily on hot terms / stop words with huge postings.",
+   "correction": "Remove stop words, use champion lists, or avoid ranking on ultra-common terms alone."
+  }
+ ]
+}

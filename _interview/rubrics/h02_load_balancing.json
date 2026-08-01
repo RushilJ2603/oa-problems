@@ -1,0 +1,219 @@
+{
+ "id": "h02_load_balancing",
+ "title": "Load balancing & reverse proxies",
+ "type": "CONCEPT",
+ "relevance": "High — almost every HLD \"design X\" round (campus + experienced); FAANG and Indian product cos probe L4/L7, algorithms, and sticky-session tradeoffs when you draw a horizontally scaled app tier.",
+ "difficulty": "campus",
+ "prereqs": [
+  "h01_networking"
+ ],
+ "company_notes": "Campus/intern/new-grad HLD: expected building block in URL shortener, news feed, chat, e-commerce — adding an LB is table stakes; L4/L7 and sticky depth differentiates. Experienced/mid-level (1–4 YOE): follow-ups on health checks, draining, TLS termination, least-conn vs RR, session store vs stickiness — common at Amazon, Google, Meta, Uber, Atlassian, Flipkart, etc. Near-universal in HLD; rarely a standalone \"design a load balancer\" question outside infra-heavy loops.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a load balancer and reverse proxy do, why a lone LB is a SPOF, and the L4 vs L7 split.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "An LB is the stable front door that distributes traffic across healthy backends for scalability, availability, and even load.",
+     "weight": "core",
+     "evidence_hint": "Candidate names distribution across healthy backends and ties it to scale/availability/even load, not just \"more servers\"."
+    },
+    {
+     "id": "fund2",
+     "point": "A lone LB is a SPOF; mitigate with active-active or active-passive plus DNS (or a managed multi-AZ LB).",
+     "weight": "core",
+     "evidence_hint": "They call out SPOF explicitly and name multi-LB HA patterns (active-active/active-passive + DNS or managed multi-AZ)."
+    },
+    {
+     "id": "fund3",
+     "point": "Reverse proxy sits in front of origin(s) for TLS termination, caching, compression, auth; LB's job is distributing across many identical backends — NGINX/HAProxy often do both.",
+     "weight": "extended",
+     "evidence_hint": "They separate proxy concerns (TLS/cache/auth) from multi-backend distribution and note overlap in common software."
+    },
+    {
+     "id": "fund4",
+     "point": "L4 routes on IP/port (TCP/UDP): fast, protocol-agnostic, connection-oriented stickiness for free, no URL/header routing; L7 terminates TLS and inspects HTTP (host, path, headers, cookies) for content-based routing, sticky cookies, WAF — slower/CPU-heavier.",
+     "weight": "core",
+     "evidence_hint": "Clear L4=IP/port vs L7=HTTP inspection; mentions typical examples like NLB vs ALB/NGINX/HAProxy HTTP mode."
+    }
+   ],
+   "probes": [
+    "What does a load balancer buy you in a horizontally scaled app tier, and how is that different from a reverse proxy?",
+    "When would you choose L4 vs L7, and what can L7 do that L4 cannot?"
+   ],
+   "hints": {
+    "1": "Think about what sits in front of many identical app servers versus what terminates TLS or caches.",
+    "2": "Separate the SPOF/HA story from the layer choice: L4 is IP/port; L7 can see host, path, headers, cookies.",
+    "3": "LB distributes across healthy backends; reverse proxy does TLS/cache/auth; lone LB needs active-active or active-passive + DNS; L7 enables path/cookie routing at higher CPU cost."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Cover how traffic is allocated, how health and draining work, and stickiness/TLS/client-side/GSLB mechanics.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Static algorithms: round robin (homogeneous, short requests), weighted RR (heterogeneous capacity), IP/URL hash (deterministic affinity); dynamic: least connections (long-lived / uneven cost), least response time (latency-aware) — prefer dynamic when backends aren't identical or work is bursty.",
+     "weight": "core",
+     "evidence_hint": "Names at least RR vs least-conn (and ideally weighted/hash) with when each fits."
+    },
+    {
+     "id": "mech2",
+     "point": "Health checks combine active probes (TCP connect or GET /health) and passive signals (errors/timeouts); thresholds matter (fail N times → drain; recover after M successes); shallow \"port open\" is not the same as \"app can serve\".",
+     "weight": "core",
+     "evidence_hint": "Describes active vs passive and warns that port-open checks miss dependency/app failures."
+    },
+    {
+     "id": "mech3",
+     "point": "Sticky sessions pin a client to one server via cookie or source IP for in-memory sessions/WebSockets, but hurt even load, complicate deploys, and fail over badly — prefer an external session store and keep app servers stateless.",
+     "weight": "core",
+     "evidence_hint": "Explains cookie/IP pin, names the downsides, and prefers Redis/DB sessions + stateless apps."
+    },
+    {
+     "id": "mech4",
+     "point": "TLS termination decrypts at the LB so backends speak HTTP and L7 routing works; re-encrypt to backends if you need encryption in the data center (CPU vs security).",
+     "weight": "extended",
+     "evidence_hint": "States terminate-at-LB for L7/HTTP backends and optional backend re-encryption tradeoff."
+    },
+    {
+     "id": "mech5",
+     "point": "Connection draining finishes in-flight requests before removing a node; slow start ramps recovered nodes so they aren't slammed; client-side LB uses service discovery so the client picks a backend (removes a hop, every client must know pool/health); GSLB/geo uses DNS or anycast to nearest healthy region and complements in-region L4/L7.",
+     "weight": "extended",
+     "evidence_hint": "Mentions draining/slow start and either client-side LB or GSLB as complementary patterns."
+    }
+   ],
+   "probes": [
+    "For homogeneous short HTTP vs mixed WebSocket + REST vs heterogeneous VM sizes, which algorithm do you pick and why?",
+    "How would you design health checks and connection draining for a rolling deploy?"
+   ],
+   "hints": {
+    "1": "Match algorithm to request length and backend sameness; think about what happens if a node is sick or leaving.",
+    "2": "Contrast static RR/hash with dynamic least-conn; separate active GET /health from passive errors; draining before cutover.",
+    "3": "RR for homogeneous short work; least-conn for long-lived/uneven; active+passive health with real readiness; drain in-flight; sticky only if needed — prefer shared session store."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Force explicit choices among layer, stickiness, algorithm, and HA approaches with failure modes.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Path-based routing and sticky login cookies need L7; vs L4 NLB you lose some of the raw TCP / extreme throughput / passthrough-TLS advantages — L4 in front of L7 is still valid for throughput/passthrough at the edge.",
+     "weight": "core",
+     "evidence_hint": "Picks L7 for path/cookie needs and can say when L4 remains preferred or sits in front."
+    },
+    {
+     "id": "tr2",
+     "point": "In-memory carts via sticky-cookie LB vs shared Redis sessions: stickiness fails on backend death, user IP change (mobile), uneven VIP traffic, and hot-user scale; shared store keeps servers stateless.",
+     "weight": "core",
+     "evidence_hint": "Draws both options and attacks stickiness with AZ death, IP change, imbalance, hot users."
+    },
+    {
+     "id": "tr3",
+     "point": "Round robin with long-lived connections lets one server accumulate most open sockets — least connections is the better fit; hash affinity remaps when nodes join/leave unless consistent hashing is used for stable mapping.",
+     "weight": "extended",
+     "evidence_hint": "Calls out RR+long-lived failure mode and hash remapping on scale-out / consistent hashing for stable mapping."
+    }
+   ],
+   "probes": [
+    "Product wants in-memory carts — sticky-cookie LB or shared Redis sessions, and what breaks in each design?",
+    "When is consistent hashing the right LB algorithm versus plain round robin?"
+   ],
+   "hints": {
+    "1": "Ask what must be true if a backend dies or the client’s IP changes.",
+    "2": "Compare even load and deploy/failover under stickiness vs external session store; compare RR remapping vs hash-ring stability.",
+    "3": "Prefer shared Redis/DB sessions and stateless apps; use least-conn for long-lived; consistent hashing when you need stable request→server mapping as capacity changes."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply LB design in a full HLD sketch: layer choice, HA of the LB, health/draining, and avoiding LB-everywhere clutter.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "If the diagram has one box labeled Load Balancer, remove the SPOF with an active-active pair, DNS multi-A, cloud managed LB, and health of the LB nodes themselves.",
+     "weight": "core",
+     "evidence_hint": "Does not leave a single LB box; names multi-LB/DNS/managed multi-AZ mitigation."
+    },
+    {
+     "id": "app2",
+     "point": "For a service depending on Postgres + Redis, /health should reflect dependencies, not only process liveness; brief GC pauses and draining interact with rolling deploys — forgetting draining drops in-flight requests and causes flaky 5xxs.",
+     "weight": "core",
+     "evidence_hint": "Sketches dependency-aware health and links draining to deploy safety / avoiding dropped in-flight work."
+    },
+    {
+     "id": "app3",
+     "point": "Prefer one edge LB plus horizontally scaled (or client-side balanced) internal services — do not draw an LB in front of every microservice box without saying what it buys.",
+     "weight": "extended",
+     "evidence_hint": "Uses a single edge LB story and avoids decorative per-service LB boxes."
+    }
+   ],
+   "probes": [
+    "You drew one Load Balancer box — how do you remove that SPOF?",
+    "Sketch path-based routing plus sticky login cookies: which layer, what you lose vs L4, and how health checks plus draining work in a rolling deploy?"
+   ],
+   "hints": {
+    "1": "Interviewers will poke the single LB box and shallow health checks next.",
+    "2": "HA of the LB tier, dependency-aware /health, drain before remove, one edge LB not LB-everywhere.",
+    "3": "Multi-LB + DNS or managed multi-AZ; GET /health that includes Postgres/Redis readiness; drain in-flight on deploy; one edge LB + scaled internals."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "L4 vs L7",
+   "strong_answer": "L4 (e.g. NLB/IPVS) is fast, protocol-agnostic, good for raw TCP, extreme throughput, and passthrough TLS, with connection stickiness for free but no URL/header routing. L7 (e.g. ALB/NGINX/HAProxy HTTP) terminates TLS and routes on host/path/headers/cookies (sticky cookies, WAF) at higher CPU cost. Put L4 in front of L7 when you still want edge throughput/passthrough plus application routing behind it."
+  },
+  {
+   "topic": "Sticky sessions vs shared session store",
+   "strong_answer": "Sticky (cookie or source IP) pins clients for in-memory sessions/WebSockets but hurts even load, complicates deploys, and loses the session if that backend dies; IP affinity also breaks when the user IP changes. Prefer Redis/DB sessions and keep app servers stateless for scale and failover."
+  },
+  {
+   "topic": "Round robin vs least connections",
+   "strong_answer": "RR fits homogeneous short requests; with long-lived or uneven work one server can accumulate most open sockets under RR — use least connections. Prefer dynamic algorithms when backends aren't identical or work is bursty; weighted RR when capacity differs."
+  },
+  {
+   "topic": "TLS terminate-only vs re-encrypt to backends",
+   "strong_answer": "Terminate at the LB so backends speak HTTP and the LB can do L7 routing; re-encrypt to backends when you need encryption in the data center, paying CPU for that security."
+  },
+  {
+   "topic": "Dedicated LB vs client-side LB",
+   "strong_answer": "Dedicated LB is a shared front door with centralized health policy; client-side LB (service discovery, gRPC/Envoy/xDS style) removes a hop but every client must know the pool and health policy."
+  },
+  {
+   "topic": "In-region L4/L7 vs GSLB/geo",
+   "strong_answer": "GSLB via DNS or anycast sends users to the nearest healthy region; it complements in-region L4/L7 load balancing rather than replacing it."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating the load balancer as fine when drawn as a single box.",
+   "correction": "A singular LB is a SPOF — use multiple LBs + DNS, active-active/active-passive, or a managed multi-AZ LB, and consider health of the LB nodes."
+  },
+  {
+   "trap": "Assuming sticky sessions equal high availability.",
+   "correction": "If that backend dies, the in-memory session is gone unless replicated elsewhere; prefer an external session store."
+  },
+  {
+   "trap": "Using round robin with long-lived connections.",
+   "correction": "One server can accumulate most open sockets; use least connections."
+  },
+  {
+   "trap": "Health check that only hits the process, not dependencies.",
+   "correction": "LB keeps sending traffic to a broken app; active checks should reflect real readiness (e.g. dependencies), and shallow port-open is not enough."
+  },
+  {
+   "trap": "Choosing L4 when you need host/path routing or cookie stickiness.",
+   "correction": "Those need L7; keep L4 for raw TCP, extreme throughput, or passthrough TLS."
+  },
+  {
+   "trap": "Forgetting connection draining during deploys.",
+   "correction": "In-flight requests get dropped and you see flaky 5xxs — drain until in-flight work finishes; slow-start recovered nodes."
+  },
+  {
+   "trap": "Drawing an LB in front of every microservice box.",
+   "correction": "Prefer one edge LB and note that internal services are horizontally scaled or client-side balanced — say what each LB buys."
+  }
+ ]
+}

@@ -1,0 +1,223 @@
+{
+ "id": "h01_networking",
+ "title": "Networking (DNS, TCP/IP, HTTP/HTTPS, TLS, WebSockets, long-polling/SSE)",
+ "type": "CONCEPT",
+ "relevance": "High — assumed in nearly every HLD round; real-time protocol choice is probed in chat, notifications, feeds, and collaborative apps (campus + experienced, FAANG and Indian product cos).",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Campus/new-grad HLD: usually unspoken background; explicit “type a URL” or TCP vs UDP still appears at some Indian product cos and mid-tier FAANG-adjacent rounds. Experienced/mid-level HLD: protocol choice is a standard deep dive in chat, notifications, live feeds, multiplayer, and collaborative docs; HTTP/2 vs HTTP/3 and WebSocket scaling separate strong answers. Foundational in every design round; real-time protocol tradeoffs appear when the prompt mentions live, push, or instant.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish DNS, TCP vs UDP, HTTPS/TLS basics, and the end-to-end browser request path.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "DNS maps names to IPs via recursive resolvers over a hierarchy (root → TLD → authoritative); TTL caching speeds lookups but delays IP/record change propagation.",
+     "weight": "core",
+     "evidence_hint": "Walks root → TLD → authoritative and names TTL as both a cache win and a propagation delay."
+    },
+    {
+     "id": "fund2",
+     "point": "TCP is connection-oriented, ordered, and reliable (3-way handshake, ACKs, retransmission, congestion control) and is the default for HTTP, DBs, and most APIs; UDP is connectionless, best-effort, low overhead (DNS queries, VoIP, gaming, QUIC under HTTP/3).",
+     "weight": "core",
+     "evidence_hint": "Contrasts reliability vs low overhead and gives fitting use cases for each transport."
+    },
+    {
+     "id": "fund3",
+     "point": "A browser request path is DNS → TCP (and TLS if HTTPS) → HTTP request/response; keep-alive and multiplexing amortize handshake cost.",
+     "weight": "core",
+     "evidence_hint": "Orders the stages correctly and notes handshake amortization via keep-alive or multiplexing."
+    },
+    {
+     "id": "fund4",
+     "point": "HTTPS is HTTP over TLS: the cert validates identity; asymmetric crypto negotiates a session key, then symmetric encryption carries bulk data.",
+     "weight": "extended",
+     "evidence_hint": "Separates identity (cert), key negotiation (asymmetric), and bulk encryption (symmetric)."
+    }
+   ],
+   "probes": [
+    "What happens when you type https://example.com into a browser?",
+    "When would you choose TCP vs UDP in a system design?"
+   ],
+   "hints": {
+    "1": "Start from name resolution, then connection setup, then the application request.",
+    "2": "Sequence: DNS lookup → TCP handshake → TLS if HTTPS → HTTP GET/response; for transport, ask whether you need ordered reliable delivery or can tolerate loss.",
+    "3": "DNS (root→TLD→authoritative, TTL cache) → TCP 3-way handshake → TLS (cert + session key) → HTTP; TCP for correctness-sensitive paths, UDP for DNS/VoIP/gaming/QUIC."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how HTTP versions, TLS RTTs, and real-time push mechanisms actually work.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "HTTP/1.1 needs many connections because of head-of-line blocking; HTTP/2 multiplexes streams on one TCP connection but still suffers TCP HOL; HTTP/3/QUIC runs over UDP so one lost packet does not stall all streams.",
+     "weight": "core",
+     "evidence_hint": "Names HOL at HTTP/1.1, residual TCP HOL under HTTP/2, and stream-level loss isolation under HTTP/3/QUIC."
+    },
+    {
+     "id": "mech2",
+     "point": "TLS adds RTTs (TLS 1.3 is about 1-RTT; session resumption and 0-RTT help); keep-alive, session tickets, and HTTP/2+ connection reuse mitigate handshake cost.",
+     "weight": "core",
+     "evidence_hint": "Mentions TLS 1.3 ≈ 1-RTT and at least one mitigation (resumption, 0-RTT, keep-alive, or connection reuse)."
+    },
+    {
+     "id": "mech3",
+     "point": "HTTP is request/response and client-initiated—the server cannot freely push without a held or upgraded connection.",
+     "weight": "core",
+     "evidence_hint": "States that plain HTTP cannot server-push without long-held or upgraded connections."
+    },
+    {
+     "id": "mech4",
+     "point": "Short polling asks on an interval; long polling holds until data or timeout; SSE is long-lived HTTP server→client with EventSource auto-reconnect; WebSockets upgrade HTTP to a full-duplex persistent channel.",
+     "weight": "extended",
+     "evidence_hint": "Defines each of the four patterns with directionality and connection lifetime."
+    }
+   ],
+   "probes": [
+    "Why does HTTP/3 exist if HTTP/2 already multiplexes streams?",
+    "How do short polling, long polling, SSE, and WebSockets differ mechanistically?"
+   ],
+   "hints": {
+    "1": "Think about where blocking happens—application layer vs transport layer—and who can send without a new request.",
+    "2": "HTTP/2 multiplexes on TCP so a lost packet still stalls the connection; map each real-time option to interval poll, held request, one-way stream, or upgraded duplex.",
+    "3": "HTTP/3/QUIC over UDP isolates loss per stream; short poll = interval, long poll = hold until event, SSE = server→client EventSource, WebSocket = HTTP upgrade to full-duplex."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose transports and real-time protocols with explicit costs, and apply REST vs RPC and DNS TTL tradeoffs.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Default to HTTP with SSE or long-poll unless you truly need bidirectional low-latency streams; WebSockets add fan-out, reconnect, and sticky-routing cost.",
+     "weight": "core",
+     "evidence_hint": "Prefers HTTP-family push for one-way updates and reserves WebSockets for true bidirectional need, naming scaling costs."
+    },
+    {
+     "id": "tr2",
+     "point": "High DNS TTL means stale IPs after failover/deploy; low TTL means more resolver load and slightly higher p99 latency.",
+     "weight": "core",
+     "evidence_hint": "States both sides of the TTL knob: freshness/failover vs resolver load and latency."
+    },
+    {
+     "id": "tr3",
+     "point": "REST/HTTP wins public APIs and tooling; RPC (e.g. gRPC) is common inside the datacenter; remote calls are not local calls because of network failure, latency, and partial failure.",
+     "weight": "extended",
+     "evidence_hint": "Puts REST at the public boundary and RPC inside, and rejects “remote = local”."
+    },
+    {
+     "id": "tr4",
+     "point": "Domain sharding helped HTTP/1.1 connection limits but can hurt HTTP/2, which wants fewer connections to multiplex efficiently.",
+     "weight": "extended",
+     "evidence_hint": "Explains sharding as an HTTP/1.1 workaround that fights HTTP/2’s single-connection multiplexing model."
+    }
+   ],
+   "probes": [
+    "Why not always use WebSockets for real-time features?",
+    "For a public API vs internal service calls, when do you pick REST vs RPC?"
+   ],
+   "hints": {
+    "1": "Ask whether both sides must push often, and what breaks when connections and DNS records change.",
+    "2": "Compare server→client-only needs (SSE/long-poll) vs duplex (WebSocket); separate public HTTP tooling from internal RPC and TTL freshness vs load.",
+    "3": "Avoid always-on WebSockets due to state, reconnect storms, sticky LB affinity, and scaling pain; REST publicly, RPC internally; high TTL stalls failover, low TTL loads resolvers."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply protocol choice to concrete product scenarios and load-balancer implications.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "For real-time scenarios (e.g. stock ticker, WhatsApp-style chat, unread badge, QR login wait), pick short poll, long poll, SSE, or WebSocket and state one scaling downside of the pick.",
+     "weight": "core",
+     "evidence_hint": "Assigns a fitting protocol per scenario and names a concrete downside (empty polls, held connections, one-way limit, or sticky/fan-out cost)."
+    },
+    {
+     "id": "app2",
+     "point": "Contrast L4 vs L7 load balancing for WebSocket vs plain REST; sticky sessions may be needed for connection state and that hurts failure domains.",
+     "weight": "core",
+     "evidence_hint": "Ties WebSocket affinity/state to L7/sticky needs and notes the failure-domain cost."
+    },
+    {
+     "id": "app3",
+     "point": "HTTPS is non-negotiable for auth cookies and PII; a cert proves server identity; handshake cost is mitigated with keep-alive, session tickets, and HTTP/2+/connection reuse.",
+     "weight": "extended",
+     "evidence_hint": "Links HTTPS to cookie/PII safety, cert identity, and at least one handshake mitigation."
+    },
+    {
+     "id": "app4",
+     "point": "Scaling many open sockets needs connection servers, pub/sub fan-out, heartbeats, timeouts, and regional gateways—estimate RAM/FD cost per connection.",
+     "weight": "extended",
+     "evidence_hint": "Lists connection-server/fan-out/heartbeat patterns rather than “just open sockets on every app box.”"
+    }
+   ],
+   "probes": [
+    "For a stock ticker vs WhatsApp-style chat vs an unread badge, which real-time protocol do you choose and why?",
+    "How would you load-balance WebSockets differently from plain REST, and when do sticky sessions hurt?"
+   ],
+   "hints": {
+    "1": "Classify each feature as client-pull, server→client push, or frequent bidirectional push.",
+    "2": "Unread badge/ticker often SSE or long-poll; chat needs WebSockets; then ask whether the LB must be L7-aware and sticky.",
+    "3": "Ticker/notifications → SSE (or long-poll fallback); chat/collab → WebSocket with sticky/fan-out cost; REST can be L4/L7 without affinity, WebSockets often need sticky L7 and that couples failure domains."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "TCP vs UDP",
+   "strong_answer": "TCP wins when ordered reliable delivery matters (HTTP, DBs, payment APIs, file download); UDP wins when low overhead and loss tolerance matter (DNS queries, VoIP, gaming) and underpins QUIC for HTTP/3."
+  },
+  {
+   "topic": "HTTP/2 vs HTTP/3",
+   "strong_answer": "HTTP/2 multiplexes streams on one TCP connection but still hits TCP head-of-line blocking; HTTP/3/QUIC over UDP isolates loss per stream and adds 0-RTT benefits."
+  },
+  {
+   "topic": "Short polling vs long polling vs SSE vs WebSocket",
+   "strong_answer": "Short polling is simple but wasteful; long polling reduces empty responses but stays HTTP-heavy; SSE fits server→client feeds/dashboards/notifications with EventSource reconnect; WebSockets fit chat/multiplayer/collab where both sides push often, at the cost of fan-out, reconnect, and sticky routing."
+  },
+  {
+   "topic": "REST vs RPC",
+   "strong_answer": "Network failure, latency, and partial failure make remote calls unlike local calls; REST/HTTP wins public APIs and tooling; RPC such as gRPC is common inside the datacenter."
+  },
+  {
+   "topic": "High DNS TTL vs low DNS TTL",
+   "strong_answer": "High TTL speeds cache hits but leaves stale IPs after failover/deploy; low TTL improves freshness at the cost of more resolver load and slightly higher p99 latency."
+  },
+  {
+   "topic": "TLS termination at edge/LB vs at the app",
+   "strong_answer": "Edge/LB termination offloads CPU but moves the trust boundary; mTLS for service-to-service is a separate concern from edge HTTPS termination."
+  },
+  {
+   "topic": "Domain sharding on HTTP/1.1 vs HTTP/2",
+   "strong_answer": "Sharding helped HTTP/1.1 bypass per-host connection limits and HOL pain, but can hurt HTTP/2 which benefits from multiplexing on fewer connections."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Always choosing WebSockets for any real-time feature",
+   "correction": "WebSockets bring connection state, reconnect storms, proxy/LB sticky affinity, and horizontal scaling pain; SSE or long-poll is often enough for server→client push."
+  },
+  {
+   "trap": "Assuming HTTP/2 multiplexing removes head-of-line blocking entirely",
+   "correction": "App-layer multiplexing still suffers TCP head-of-line blocking; HTTP/3/QUIC isolates loss per stream."
+  },
+  {
+   "trap": "Treating millions of open sockets as a non-issue on ordinary app servers",
+   "correction": "Use dedicated connection servers, pub/sub fan-out, heartbeats, timeouts, and regional gateways; account for RAM and file-descriptor cost per connection."
+  },
+  {
+   "trap": "Setting DNS TTL without considering failover vs resolver load",
+   "correction": "TTL too high → stale IPs after failover/deploy; TTL too low → more resolver load and slightly higher p99 latency."
+  },
+  {
+   "trap": "Ignoring where TLS is terminated",
+   "correction": "Termination at edge/LB offloads CPU but moves the trust boundary; app termination keeps crypto closer to the service; mTLS for service-to-service is a separate design."
+  },
+  {
+   "trap": "Conflating long polling with SSE",
+   "correction": "Both are HTTP-friendly, but SSE is a long-lived server→client stream with browser-native EventSource reconnect; long polling reopens a full request per event and is the legacy fallback."
+  }
+ ]
+}

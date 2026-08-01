@@ -1,0 +1,225 @@
+{
+ "id": "h11_storage",
+ "title": "Object/blob storage & file systems (S3-style, chunking, replication, durability)",
+ "type": "CONCEPT",
+ "relevance": "High — almost every media/file HLD (Instagram, YouTube, Dropbox, Pastebin, chat attachments) expects S3/blob + metadata DB + CDN/presigned uploads; Amazon and infra-heavy loops also probe \"design S3\" durability/chunking.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h01_networking",
+  "h03_caching",
+  "h04_databases_indexing"
+ ],
+ "company_notes": "Campus/intern HLD: S3 + CDN + metadata DB is table stakes for paste/newsfeed/Instagram/YouTube/chat/e-commerce images; presigned upload and multipart differentiate. Mid (1–4 YOE): design Dropbox/YouTube/S3 with chunking, ECC vs replication, hot prefixes, consistency, lifecycle — Amazon, Meta, Google, Uber, Flipkart, Cohesity, Databricks. Near-universal for media/files; full object-store build less common than using S3 correctly, but Amazon/infra loops go deeper.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish block vs file vs object, the S3 bucket/key model, and the metadata vs data plane split.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Block storage is raw volumes for DBs/VMs (low latency, mutable); file storage is hierarchical NFS/SMB with shared POSIX-ish semantics; object storage is flat bucket+key with HTTP API and immutable whole-object writes for unstructured blobs.",
+     "weight": "core",
+     "evidence_hint": "Candidate cleanly maps EBS-like volumes vs NFS/SMB dirs vs S3-style blobs and says when each wins."
+    },
+    {
+     "id": "fund2",
+     "point": "S3 model is bucket + key → object (bytes + metadata); \"folders\" are key prefixes; app DB stores pointers/URLs/metadata and must not use multi-MB DB BLOBs as the primary store.",
+     "weight": "core",
+     "evidence_hint": "Says prefixes not real directories, and keeps large bodies out of Postgres/MySQL."
+    },
+    {
+     "id": "fund3",
+     "point": "Two planes: a hot metadata plane (sharded KV/DB: key → size, etag, chunk map, ACLs) and a colder data plane (disk nodes holding chunks) that scale and fail independently.",
+     "weight": "extended",
+     "evidence_hint": "Separates metadata service from chunk/disk fleet and notes independent scaling."
+    },
+    {
+     "id": "fund4",
+     "point": "Durability means bytes are not lost forever; availability means you can read now — S3 markets 11 nines (99.999999999%) durability via multi-device/AZ redundancy and integrity checks, not 100% uptime.",
+     "weight": "core",
+     "evidence_hint": "Explicitly distinguishes durability from availability and cites 11 nines without calling it an uptime SLA."
+    }
+   ],
+   "probes": [
+    "Contrast block, file, and object storage and sketch how an app should store a photo: where do bytes live vs where does metadata live?"
+   ],
+   "hints": {
+    "1": "Think about what a DB volume needs versus a shared filesystem versus a blob HTTP API.",
+    "2": "Name bucket/key, prefixes, and a separate metadata DB pointing at the object.",
+    "3": "Block = EBS/DB/VM disks; file = NFS/SMB dirs; object = flat key, immutable PUT; never put multi-MB JPEG bodies in MySQL — metadata row + object store."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain multipart/chunking, direct client upload via presigned URLs, placement, consistency, and integrity checks.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Multipart upload: initiate → upload parts in parallel with per-part retry → complete (server assembles); abort cleans up; best practice for large objects ≥100 MB; enables resume and bounded retry cost.",
+     "weight": "core",
+     "evidence_hint": "Walks initiate/parts/complete/abort and mentions parallel upload and retrying one part, with ≥100 MB as the large-object practice."
+    },
+    {
+     "id": "mech2",
+     "point": "Prefer presigned URLs (or CDN) so clients upload/download directly to the blob store; app servers stay control-plane for auth and metadata — avoid proxying GB through the API tier.",
+     "weight": "core",
+     "evidence_hint": "Draws client → presigned PUT/GET to S3; app only grants short-lived access and writes metadata."
+    },
+    {
+     "id": "mech3",
+     "point": "Modern S3 provides strong read-after-write consistency for PUT, overwrite, and DELETE; historically LIST could lag — state the consistency assumption for your design.",
+     "weight": "extended",
+     "evidence_hint": "Says strong RAWW for object mutate/delete and does not assume every blob store behaves identically."
+    },
+    {
+     "id": "mech4",
+     "point": "Place chunks across disks, racks, and AZs (optionally regions via CRR) so disk/AZ loss does not mean user-visible data loss; geo-replication is a separate latency/cost/compliance choice.",
+     "weight": "extended",
+     "evidence_hint": "Mentions multi-AZ spread and treats cross-region as a product decision, not automatic."
+    },
+    {
+     "id": "mech5",
+     "point": "Integrity uses per-part/object checksums (CRC/MD5/SHA), scrubbing/bit-rot detection, plus versioning or object lock for accidental delete recovery.",
+     "weight": "extended",
+     "evidence_hint": "Names checksums plus background scrubbing and versioning/lock as delete-protection."
+    }
+   ],
+   "probes": [
+    "Walk multipart upload for a large video on a flaky network, then explain why the client should use a presigned URL instead of streaming bytes through your app servers."
+   ],
+   "hints": {
+    "1": "Separate control plane (auth/metadata) from the byte path.",
+    "2": "Sequence initiate → parallel parts → complete/abort, and say who signs the URL.",
+    "3": "≥100 MB → multipart with per-part retry; orphaned parts cleaned on abort; short-lived presigned PUT so app never proxies GB."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Force a clear choice between replication and erasure coding, and between hot serving patterns and cold durability cost.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "3× replication is simple and fast to repair but costs ~3× storage; erasure coding (e.g. Reed–Solomon/LRC) reconstructs from data+parity shards at ~1.2–1.8× overhead (ECC cited ~1.8× vs naive 3×) — cheaper at bulk scale, costlier CPU/network on repair.",
+     "weight": "core",
+     "evidence_hint": "Compares ~3× storage and fast repair vs ~1.2–1.8× ECC overhead and heavier repair."
+    },
+    {
+     "id": "tr2",
+     "point": "Interview default: replication for hot/small objects; ECC for bulk/cold durability — e.g. hot profile thumbnails vs 100 PB cold backups differ on overhead, repair cost, and latency.",
+     "weight": "core",
+     "evidence_hint": "Picks replication for hot thumbnails and ECC/tiering for 100 PB cold backups with justification."
+    },
+    {
+     "id": "tr3",
+     "point": "Serving public/hot media needs CDN (and often Range requests) plus versioned or cache-busting keys; lifecycle policies move cold data to cheaper classes (IA/Glacier) or expire it.",
+     "weight": "extended",
+     "evidence_hint": "Pairs object store with CDN for reads and mentions lifecycle tiering off hot Standard."
+    },
+    {
+     "id": "tr4",
+     "point": "Partition write load by key prefix; a single sequential prefix can absorb all writes — design keys for fan-out (or rely on store auto-sharding) in DIY systems.",
+     "weight": "extended",
+     "evidence_hint": "Calls out hot-prefix throughput and prefix fan-out in key design."
+    }
+   ],
+   "probes": [
+    "For hot profile thumbnails versus 100 PB of cold backups, would you choose 3× replication or erasure coding, and why?"
+   ],
+   "hints": {
+    "1": "Compare storage overhead and what happens when a disk fails.",
+    "2": "Hot/small wants fast repair and low latency; bulk cold wants lower bytes-on-disk.",
+    "3": "Thumbnails → replication (~3×, fast repair); 100 PB cold → ECC (~1.2–1.8×, heavier repair) plus colder storage classes."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the S3 + metadata + CDN pattern to media upload, large-file sync, and a lite object-store design.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Instagram-style photo upload: client → presigned PUT to S3 → notification/callback → metadata row in DB → CDN URL for reads; do not store JPEG in MySQL or stream every download through the API tier.",
+     "weight": "core",
+     "evidence_hint": "Sketches presigned upload, metadata write, CDN read path, and rejects DB BLOB and API proxying."
+    },
+    {
+     "id": "app2",
+     "point": "For an 8 GB video on flaky mobile: use multipart with per-part retry; if the client dies mid-upload, abort/GC orphaned parts rather than leaving incomplete assemblies.",
+     "weight": "core",
+     "evidence_hint": "Uses the 8 GB flaky-network drill: initiate/parts/complete/abort and orphaned-part cleanup."
+    },
+    {
+     "id": "app3",
+     "point": "Dropbox-style edit that changes 1% of a file should re-upload changed chunks only: chunk/block hashing, metadata mapping file → chunk IDs, and optional cross-user dedupe at a high level.",
+     "weight": "extended",
+     "evidence_hint": "Avoids full-file re-upload; describes chunk IDs in metadata and hashing for dedupe."
+    },
+    {
+     "id": "app4",
+     "point": "Lite design-S3 attack: requirements → estimate objects/QPS → PUT/GET/DELETE/LIST API → metadata service + chunk servers → durability (replication or ECC) → multipart → one deep dive (hot prefix, consistency, or GC of deleted objects).",
+     "weight": "extended",
+     "evidence_hint": "Structures the answer with API, two planes, durability strategy, multipart, and one named deep dive."
+    }
+   ],
+   "probes": [
+    "Design Instagram photo upload end-to-end, then say what changes for an 8 GB video upload and for a Dropbox file edit that only changes 1% of the bytes."
+   ],
+   "hints": {
+    "1": "Start from where bytes go and what the app DB stores.",
+    "2": "Presigned direct path for photos; multipart for multi-GB; chunk hashes for partial edits.",
+    "3": "Photo: presigned PUT → metadata → CDN; 8 GB: multipart + abort orphans; 1% edit: re-upload changed chunks only via file→chunk-ID metadata."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "3× replication vs erasure coding",
+   "strong_answer": "Replication (~3× storage) is simple with fast repair — prefer for hot/small. ECC (Reed–Solomon/LRC, ~1.2–1.8× overhead, ~1.8× vs naive 3×) saves capacity at cold/warm bulk scale but costs more CPU/network to repair."
+  },
+  {
+   "topic": "App-server proxy vs direct client↔blob",
+   "strong_answer": "Proxying GB through app servers for \"security\" is wrong; use short-lived presigned URLs/STS and enforce auth on the grant so the app stays control-plane."
+  },
+  {
+   "topic": "Origin-only S3 reads vs CDN",
+   "strong_answer": "Public/hot media should sit behind a CDN (and Range requests where useful) with versioned or cache-busting keys; origin alone is a poor geo-latency story."
+  },
+  {
+   "topic": "Durability vs availability vs consistency",
+   "strong_answer": "Durability is not losing bytes (e.g. 11 nines via multi-AZ redundancy + scrubbing); availability is being reachable now; consistency is whether a read sees the latest write — modern S3 is strong RAWW for PUT/overwrite/DELETE, but do not assume every store."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Putting large blobs in the primary DB",
+   "correction": "Backups, replicas, and queries melt; use object store + thin metadata pointers."
+  },
+  {
+   "trap": "Proxying uploads through app servers \"for security\"",
+   "correction": "Use short-lived presigned URLs/STS; still enforce auth when granting access."
+  },
+  {
+   "trap": "Confusing durability with availability or consistency",
+   "correction": "Durability = won't lose data; availability = reachable now; consistency = read sees latest write — treat them separately."
+  },
+  {
+   "trap": "Drawing S3 folders as real directories",
+   "correction": "They are key prefixes; LIST and permissions differ from a POSIX filesystem."
+  },
+  {
+   "trap": "Ignoring multipart for multi-GB objects",
+   "correction": "Single PUT risks timeouts and full restarts under network loss; use multipart with per-part retry (≥100 MB practice)."
+  },
+  {
+   "trap": "Forgetting CDN (or Range requests) on the public media read path",
+   "correction": "Origin S3 alone is the wrong geo latency story; pair with CDN and cache-busting/versioned keys."
+  },
+  {
+   "trap": "Assuming every cloud blob store is eventually consistent forever",
+   "correction": "S3 is strongly consistent for object PUT/overwrite/DELETE now; state what your design guarantees."
+  },
+  {
+   "trap": "Naive 3× replication of everything at EB scale",
+   "correction": "Interviewers expect ECC and tiering cost awareness for bulk/cold data."
+  }
+ ]
+}

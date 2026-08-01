@@ -1,0 +1,237 @@
+{
+ "id": "h15_building_blocks",
+ "title": "Core building blocks: consistent hashing, bloom filters, quorum, gossip, HLL, geohash",
+ "type": "CONCEPT",
+ "relevance": "High — these are the “name the primitive” follow-ups in almost every HLD round (distributed cache/DB, crawler, analytics, proximity/Uber-Yelp); campus + experienced; FAANG and Indian product cos.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h02_load_balancing",
+  "h03_caching",
+  "h05_db_scaling",
+  "h06_consistency_cap"
+ ],
+ "company_notes": "Campus/new-grad HLD: consistent hashing on cache/URL shortener/chat; Bloom on crawler or username-taken checks; geohash on Yelp/Uber-lite; light quorum wording on Cassandra/Dynamo. Experienced (1–4+ YOE): R+W>N tuning, sloppy quorum, gossip failure detection, HLL analytics counters, H3 vs geohash — Meta, Google, Amazon, Uber, Flipkart, Atlassian infra. High as toolkit follow-ups inside larger designs; rare as standalone “design HyperLogLog”; interviewers want correct tool choice and tradeoffs, not paper proofs.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Name each primitive, what question it answers, and the one invariant interviewers expect.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Consistent hashing places nodes and keys on a ring; a key maps to the first node clockwise; add/remove moves about K/N keys, not almost all as with hash % N.",
+     "weight": "core",
+     "evidence_hint": "Draws or narrates the ring, clockwise owner lookup, and contrasts minimal remapping with mod-N thrash."
+    },
+    {
+     "id": "fund2",
+     "point": "A Bloom filter is probabilistic set membership: answers “definitely not” or “probably yes”; false positives are OK, false negatives never.",
+     "weight": "core",
+     "evidence_hint": "States the definitely-not / probably-yes contract and that false negatives are forbidden."
+    },
+    {
+     "id": "fund3",
+     "point": "Dynamo-style quorum: with replication factor N, require W write acks and R read responses; R + W > N means the read set overlaps a successful write; typical N=3, R=W=2.",
+     "weight": "core",
+     "evidence_hint": "Defines N/R/W, states R+W>N for recency overlap, and cites the typical N=3, R=W=2 setting."
+    },
+    {
+     "id": "fund4",
+     "point": "Gossip is epidemic peer-to-peer dissemination of membership/heartbeats (not agreeing on one value); HyperLogLog approximates cardinality in tiny fixed memory; geohash encodes (lat, lon) to a base32 string where shared prefix means same/nearby cell.",
+     "weight": "extended",
+     "evidence_hint": "Separates gossip-as-membership from consensus, HLL-as-count-distinct, and geohash prefix locality."
+    }
+   ],
+   "probes": [
+    "Name the six primitives and, for each, the one question it answers in an HLD (placement, membership test, replica freshness, cluster membership, count distinct, nearby)."
+   ],
+   "hints": {
+    "1": "Think toolkit labels: ring, set-maybe, R/W, epidemic membership, approx distinct, geo cells.",
+    "2": "For each: what it guarantees (or deliberately does not)—especially Bloom FN vs FP and gossip vs consensus.",
+    "3": "Ring + clockwise owner (~K/N moves); Bloom definitely-not/probably-yes (no FN); R+W>N with typical N=3,R=W=2; gossip disseminates membership; HLL≈cardinality; geohash base32 prefix⇒nearby."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how each primitive works enough to defend the usual follow-up knobs (vnodes, Bloom ops, sloppy quorum, gossip cadence, HLL merge, neighbor query).",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Virtual nodes put many ring positions on one physical node to smooth load and spread failover; consistent hashing does not fix celebrity hot keys—those need salt or replication.",
+     "weight": "core",
+     "evidence_hint": "Mentions many vnodes per node for balance/failover and separately calls out hot-key salting/replication."
+    },
+    {
+     "id": "mech2",
+     "point": "Bloom filter = bit array + k hashes; cannot delete (unless counting Bloom); interview uses include crawl “seen?” gates, cache negative lookups, and LSM/SSTable “key might be here?” before disk.",
+     "weight": "core",
+     "evidence_hint": "Describes bit vector + k hashes, no ordinary delete, and at least one of crawl/cache-negative/LSM skip-disk uses."
+    },
+    {
+     "id": "mech3",
+     "point": "Sloppy quorum + hinted handoff keeps writes available when home replicas are down (weaker overlap guarantee); quorum also trades latency (wait for the slowest of R/W) against durability/freshness.",
+     "weight": "core",
+     "evidence_hint": "Explains writing to reachable replicas with later hint replay, and that R/W waits cost latency for stronger freshness."
+    },
+    {
+     "id": "mech4",
+     "point": "Gossip converges in O(log n) rounds with no central registry SPOF; Cassandra-style ~1s exchange to a few peers plus Phi accrual suspicion—contrast ZooKeeper/etcd consensus used for coordination, not membership gossip.",
+     "weight": "extended",
+     "evidence_hint": "States epidemic convergence, ~1s peer gossip + Phi suspicion, and that ZK/etcd is for coordination agreement not membership flood."
+    },
+    {
+     "id": "mech5",
+     "point": "HLL hashes into registers tracking max leading zeros, is mergeable (e.g. PFMERGE), and in Redis is about 12 KB with about 0.81% standard error; geohash nearby queries use the center cell plus 8 neighbors then an exact distance (Haversine) post-filter—H3 hex k-rings are the Uber-style alternative.",
+     "weight": "extended",
+     "evidence_hint": "Mentions leading-zeros registers, mergeability, ~12 KB/~0.81%, and 8-neighbor (or 3×3) + exact refine / H3 k-ring."
+    }
+   ],
+   "probes": [
+    "How do virtual nodes change failover on a hash ring, and how does a Dynamo-style store combine preference lists, R/W quorum, and gossip membership?"
+   ],
+   "hints": {
+    "1": "Start from one physical node owning many ring points, then ask what happens when it dies.",
+    "2": "Add Bloom’s bit-array mechanics, then sloppy quorum when home replicas are down, then gossip vs ZK.",
+    "3": "Vnodes spread load/failover (not hot keys); Bloom=bits+k hashes, no delete; sloppy+hints for availability; gossip O(log n)/~1s+Phi vs ZK coordination; HLL leading zeros/~12KB/~0.81% mergeable; geo=center+8 neighbors then Haversine, or H3."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose the right primitive and tuning (R/W, Bloom size, gossip vs consensus, HLL vs exact, geohash vs H3) for the design constraint.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "hash % N remaps almost all keys when N changes; consistent hashing moves about K/N; drawing a ring without vnodes invites load skew and “dead node dumps all traffic on one neighbor.”",
+     "weight": "core",
+     "evidence_hint": "Contrasts mod-N thrash with ~K/N moves and explains why vnodes matter for skew/failover dump."
+    },
+    {
+     "id": "tr2",
+     "point": "Bloom sizing: lower target FPR (e.g. 1% vs 0.01%) needs a larger bit array; undersizing raises false positives; you still never get a false negative; “yes” must hit the source of truth.",
+     "weight": "core",
+     "evidence_hint": "Links bit-array size to FPR, forbids FN, and says positives are verified against the real store."
+    },
+    {
+     "id": "tr3",
+     "point": "For N=3, (R=1,W=1) is weak on freshness; (R=2,W=2) is the common balanced choice; (R=3,W=1) or W=N strengthens durability/freshness at higher write latency and write availability cost when nodes are down.",
+     "weight": "core",
+     "evidence_hint": "Compares those N=3 configurations on stale reads, surviving a down node for writes, and when W=N is chosen."
+    },
+    {
+     "id": "tr4",
+     "point": "Pick tools by job: gossip for membership dissemination vs ZooKeeper/etcd for coordination; Bloom ≠ HLL (membership filter vs cardinality); HLL is wrong for exact billing/invoices; square geohash neighbor rings vs H3 hex k-rings for marketplace/dispatch edge cases.",
+     "weight": "extended",
+     "evidence_hint": "States each pair’s job boundary and refuses HLL for exact invoice distincts / Bloom for counting."
+    }
+   ],
+   "probes": [
+    "N=3: compare (R=1,W=1), (R=2,W=2), and (R=3,W=1)—which can return stale reads, which survives one node down for writes, and when do you set W=N?"
+   ],
+   "hints": {
+    "1": "Use R+W>N as the freshness rule of thumb, then stress availability when replicas are down.",
+    "2": "Map each (R,W) to stale-read risk and write availability; separately say Bloom size↔FPR and gossip≠consensus.",
+    "3": "R+W>N⇒overlap; typical R=W=2; W=N for strongest write durability; undersized Bloom↑FP never FN; gossip membership vs ZK coordination; HLL≠exact billing; H3 when hex k-rings beat square neighbors."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Compose the primitives into Dynamo-family, analytics, and location paths and attack the standard ≤2 min drills.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Dynamo-family stack = consistent hashing (placement) + quorum (consistency knobs) + gossip (membership); analytics path = Bloom (filter) + HLL (count); location path = geohash/H3 index + post-filter.",
+     "weight": "core",
+     "evidence_hint": "Names the three composition recipes and assigns each primitive to placement, consistency, membership, filter, count, or geo index."
+    },
+    {
+     "id": "app2",
+     "point": "Cache cluster 4→5 nodes: explain why hash % N thrashes, walk a key’s ring owner before/after adding a vnode-rich node, and state that roughly K/N keys move.",
+     "weight": "core",
+     "evidence_hint": "Narrates mod-N remapping storm, one key’s clockwise owner change, and ~K/N movement with vnodes."
+    },
+    {
+     "id": "app3",
+     "point": "Product drills: unique-visitors dashboard prefers HLL over a Redis SET (merge hourly HLLs into daily); user on a geohash cell edge can miss a place 50 m away if only one cell is queried—use 9-cell (center+8) + Haversine, or name H3 for hex k-rings.",
+     "weight": "extended",
+     "evidence_hint": "Rejects SET for huge uniques, mentions mergeable HLLs, and sketches boundary miss → 9-cell/Haversine or H3."
+    }
+   ],
+   "probes": [
+    "Design a Cassandra-like KV vs a Kafka controller election: where do you use gossip for membership, and where do you need consensus? What goes wrong if gossip is briefly partitioned?",
+    "Nearby restaurants: user sits on a geohash edge—why does one-cell query miss a place 50 m away, and how do you fix it?"
+   ],
+   "hints": {
+    "1": "Ask which subsystem needs membership gossip versus a single agreed leader/value.",
+    "2": "Compose hashing+quorum+gossip for the KV; contrast controller election; for geo expand to neighbors then exact distance.",
+    "3": "KV: ring placement + R/W + gossip membership; controller election needs consensus; split gossip⇒split UP/DOWN view; geo: 9-cell/3×3 + Haversine (or H3); HLL for DAU-style uniques, mergeable, not invoices."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Consistent hashing vs hash % N",
+   "strong_answer": "mod-N remaps almost all keys when the cluster size changes; a hash ring moves about K/N keys on add/remove—use consistent hashing (or equivalent minimal-remap slot schemes) for caches, partitions, and sticky LBs."
+  },
+  {
+   "topic": "Virtual nodes vs single position per node",
+   "strong_answer": "Vnodes smooth load and spread failover so a dead node does not dump all traffic onto one clockwise neighbor; they still do not fix celebrity hot keys—salt or replicate those."
+  },
+  {
+   "topic": "Quorum latency vs durability/freshness (R/W tuning)",
+   "strong_answer": "Higher R/W waits for the slowest replica and improves overlap/freshness when R+W>N (typical N=3, R=W=2); lower R/W cuts latency but risks stale reads; W=N maximizes write durability at availability cost."
+  },
+  {
+   "topic": "Strict quorum vs sloppy quorum + hinted handoff",
+   "strong_answer": "Strict home-replica quorum preserves stronger R/W overlap; sloppy quorum writes to reachable nodes and hints handoff later to keep writes available when home replicas are down, with a weaker overlap guarantee."
+  },
+  {
+   "topic": "Gossip membership vs ZooKeeper/etcd consensus",
+   "strong_answer": "Gossip eventually disseminates membership/heartbeats without a registry SPOF; coordination that must agree on one value/leader (e.g. Kafka controller election) needs a consensus store—gossip does not give strong data consistency by itself."
+  },
+  {
+   "topic": "Bloom filter vs exact set/DB for membership",
+   "strong_answer": "Bloom saves memory/IOPS as a “definitely not / probably yes” gate (crawl seen?, cache negatives, LSM skip-disk); positives must check the source of truth; exact sets/DBs when you need certainty or deletes."
+  },
+  {
+   "topic": "HLL vs Redis SET for cardinality",
+   "strong_answer": "HLL gives approximate distinct counts in tiny fixed memory (~12 KB, ~0.81% error) and merges cleanly; a SET stores members exactly but will not scale the same way for huge uniques—never use HLL for exact billing or enumerating IDs."
+  },
+  {
+   "topic": "Geohash neighbor ring vs H3 hex k-ring",
+   "strong_answer": "Geohash: prefix lookup on center cell + 8 neighbors then Haversine refine; H3’s hex k-rings handle marketplace/surge/dispatch neighbor geometry more cleanly than square geohash edges."
+  },
+  {
+   "topic": "Bloom filter vs HyperLogLog",
+   "strong_answer": "Bloom answers set membership (filter); HLL answers how many distinct (cardinality)—pick the probabilistic structure that matches the question; they are not interchangeable."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Drawing a hash ring without virtual nodes",
+   "correction": "Interviewer will probe load skew and “all traffic from a dead node dumps onto one neighbor”—add vnodes; still salt/replicate celebrity hot keys."
+  },
+  {
+   "trap": "Treating Bloom “yes” as proof of existence",
+   "correction": "Hit the source of truth on positives; Bloom only reliably saves work on definite negatives."
+  },
+  {
+   "trap": "Confusing consensus quorum (Raft majority for one log) with Dynamo quorum (R/W overlap for replica freshness)",
+   "correction": "Say which you mean: majority agreement on one value/order versus R/W overlap for recency across replicas."
+  },
+  {
+   "trap": "Claiming gossip guarantees strong consistency",
+   "correction": "Gossip eventually spreads membership; data consistency still needs R/W quorums or a consensus store."
+  },
+  {
+   "trap": "Using HLL for exact distinct users for invoices",
+   "correction": "Wrong tool—HLL is approximate and does not store IDs; use an exact store when billing requires precise distincts."
+  },
+  {
+   "trap": "Forgetting the geohash boundary problem (or poles/±180°)",
+   "correction": "Always expand to neighbors (or use an H3 k-ring), then apply exact distance filtering."
+  },
+  {
+   "trap": "Saying “consistent hashing” when the system uses fixed hash slots (e.g. Redis Cluster 16384)",
+   "correction": "The principle is minimal remapping; implementations may use fixed slots—note the DDIA partitioning naming caveat."
+  }
+ ]
+}

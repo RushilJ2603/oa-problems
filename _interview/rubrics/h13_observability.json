@@ -1,0 +1,248 @@
+{
+ "id": "h13_observability",
+ "title": "Observability (logging, metrics, distributed tracing, alerting, SLO/SLA)",
+ "type": "CONCEPT",
+ "relevance": "High — almost every HLD ends with \"how do you know it's healthy / on fire?\"; interviewers probe golden signals, p99 vs avg, structured logs + trace IDs, and SLI/SLO/SLA vs error budget. Full \"design Datadog/Prometheus\" is common in mid/senior loops.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h01_networking",
+  "h02_load_balancing"
+ ],
+ "company_notes": "Near-universal closing reliability discussion on any HLD. Campus/new-grad: light—monitoring, latency/errors/QPS, maybe centralized logs; SLO vocabulary is a plus. Mid (1–4 YOE): SLO/error budget, p99, cardinality, microservice tracing, design-metrics-platform common at Meta, Google, Uber, Amazon, Stripe, Atlassian, Flipkart. Standalone design Datadog/CloudWatch/Prometheus is a frequent senior/infra question; depth is tradeoffs and incident workflow, not building a TSDB.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish observability vs monitoring, the three pillars, golden signals, and why percentiles beat averages.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Monitoring asks known questions from alerts/dashboards; observability lets you ask new questions from correlated logs, metrics, and traces.",
+     "weight": "core",
+     "evidence_hint": "Contrasts 'is error rate above a threshold?' with 'why is this checkout slow for this user?' via linked telemetry."
+    },
+    {
+     "id": "fund2",
+     "point": "Three pillars: logs are discrete high-context events; metrics are aggregatable time series cheap to store/alert; traces are one request as a tree of spans.",
+     "weight": "core",
+     "evidence_hint": "Names logs/metrics/traces and default interview stack: structured logs + Prometheus-style metrics + OTel/Jaeger, linked by trace_id."
+    },
+    {
+     "id": "fund3",
+     "point": "Four golden signals for user-facing systems: latency (success vs failure), traffic, errors (explicit + wrong answers), saturation.",
+     "weight": "core",
+     "evidence_hint": "Lists latency, traffic, errors, saturation and notes separating success vs failure latency."
+    },
+    {
+     "id": "fund4",
+     "point": "Prefer p50/p95/p99 over average latency because averages hide the tail.",
+     "weight": "extended",
+     "evidence_hint": "Says avg hides outliers and that p99 vs SLO is a common alert/interview answer."
+    }
+   ],
+   "probes": [
+    "What is the difference between monitoring and observability, and what are the three pillars?",
+    "Name the four golden signals and say why you track percentiles instead of average latency."
+   ],
+   "hints": {
+    "1": "Think about what you can ask after an alert fires versus only knowing if a known threshold breached.",
+    "2": "Logs = events, metrics = numbers over time, traces = request path as spans; golden signals are latency/traffic/errors/saturation.",
+    "3": "Observability = new questions from correlated telemetry; track p50/p95/p99 because averages hide the tail."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain SLI/SLO/SLA, error budgets, structured logs, tracing propagation/sampling, cardinality, and symptom-based alerting.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "SLI is the measured indicator; SLO is the internal target over a window; SLA is the customer contract and is usually looser than the SLO.",
+     "weight": "core",
+     "evidence_hint": "Walks indicator → internal target → contractual promise and says never set SLA equal to SLO with no buffer."
+    },
+    {
+     "id": "mech2",
+     "point": "Error budget is 1 − SLO (e.g. 99.9% → 0.1% bad events / ~43 min downtime per month); spent budget throttles releases toward reliability work.",
+     "weight": "core",
+     "evidence_hint": "Defines budget as remaining unreliability, ties it to change velocity, and mentions freeze/reliability work when exhausted."
+    },
+    {
+     "id": "mech3",
+     "point": "Structured logs (JSON-like) carry level, service, timestamp, request_id/trace_id and business ids so you can search and jump pillars.",
+     "weight": "core",
+     "evidence_hint": "Rejects printf spaghetti; names fields that make ELK/Loki correlation possible."
+    },
+    {
+     "id": "mech4",
+     "point": "Distributed tracing propagates context across HTTP/RPC/queue boundaries; sample aggressively because 100% traces at scale is usually unaffordable.",
+     "weight": "extended",
+     "evidence_hint": "Mentions W3C/OTel propagation, span waterfalls for latency, and head/tail sampling with keep-errors/slow."
+    },
+    {
+     "id": "mech5",
+     "point": "Each unique metric label combo is a time series; high-cardinality labels like user_id cause metric explosion—identity belongs in logs/traces.",
+     "weight": "core",
+     "evidence_hint": "Explains Prometheus-style cardinality failure and where user identity should live instead."
+    },
+    {
+     "id": "mech6",
+     "point": "Page on user symptoms and error-budget burn rate, not every CPU blip; use grouping/inhibition and runbooks so pages mean act now.",
+     "weight": "extended",
+     "evidence_hint": "Separates pages vs tickets/dashboards and cites burn-rate / symptom-based alerting."
+    }
+   ],
+   "probes": [
+    "Define SLI, SLO, and SLA for a login API and what the error budget buys you.",
+    "Someone puts user_id on a Prometheus counter label—what breaks, and where should that identity live?"
+   ],
+   "hints": {
+    "1": "Separate the measured thing, the internal target, and the customer contract.",
+    "2": "Budget = 1 − SLO; alerts should fire on user pain or budget burn; labels must stay low-cardinality.",
+    "3": "SLO tighter than SLA; 99.9% leaves 0.1% budget (~43 min/month); user_id on metrics explodes series—put it in logs/traces with trace_id."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare RED vs USE, black-box vs white-box, sampling cost, and Prometheus-fit vs billing-grade exactness.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "RED (Rate, Errors, Duration) for services/APIs; USE (Utilization, Saturation, Errors) for resources—use both layers in an incident.",
+     "weight": "core",
+     "evidence_hint": "Assigns RED to request path and USE to CPU/disk/NIC-style resources and says both are needed."
+    },
+    {
+     "id": "tr2",
+     "point": "Black-box probes like a user (uptime); white-box exposes internals (queue depth, saturation)—need both because white-box explains why and black-box catches external failures.",
+     "weight": "core",
+     "evidence_hint": "Gives an example like DNS fine but cert expired for black-box value."
+    },
+    {
+     "id": "tr3",
+     "point": "Prometheus fits ops metrics (pull, labels, PromQL, Alertmanager) but is not for exact billing or 'exactly once' accounting.",
+     "weight": "extended",
+     "evidence_hint": "Says reliable-enough ops data, not perfect accounting/billing."
+    }
+   ],
+   "probes": [
+    "When would you use RED versus USE during an incident?",
+    "Why run both black-box probes and white-box saturation metrics?"
+   ],
+   "hints": {
+    "1": "One checklist is about the service's requests; the other is about the machine/resource.",
+    "2": "RED = rate/errors/duration; USE = utilization/saturation/errors; black-box ≈ user probe, white-box ≈ internals.",
+    "3": "Use RED on APIs and USE on CPU/disk/NIC; black-box catches cert/DNS-class failures white-box may miss."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Close an HLD with golden signals/SLOs, walk an incident across pillars, and sketch a metrics platform with correlation.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Closing a design: name golden signals, pick availability/latency SLIs, state one SLO sentence, and show where logs/metrics/traces attach on the diagram.",
+     "weight": "core",
+     "evidence_hint": "For Instagram/URL shortener/chat-style design, ties signals + SLI/SLO + three pillars into the whiteboard."
+    },
+    {
+     "id": "app2",
+     "point": "Incident path for p99 checkout spike: metrics → traces (slow span) → logs via trace_id → fix; do not page on every non-user-facing blip.",
+     "weight": "core",
+     "evidence_hint": "Narrates pillar-hopping investigation and what stays ticket/dashboard-only."
+    },
+    {
+     "id": "app3",
+     "point": "Across async boundaries (e.g. OrderPlaced on a queue), propagate trace context; consumer lag is a metric, while the trace shows where latency was spent.",
+     "weight": "extended",
+     "evidence_hint": "Separates lag/saturation metrics from span waterfall across producer/consumer."
+    },
+    {
+     "id": "app4",
+     "point": "Design metrics platform (senior): agents → buffer → TSDB → query/alert; call out cardinality, retention/downsampling, and alert freshness vs dashboard eventual consistency.",
+     "weight": "extended",
+     "evidence_hint": "Sketches Datadog-style path and names scale traps without claiming to invent a TSDB."
+    }
+   ],
+   "probes": [
+    "You just designed a chat system—close it with golden signals, two SLIs, one SLO, and where each pillar plugs in.",
+    "p99 checkout latency spiked—walk the investigation, then sketch ingest→TSDB→alert for a metrics platform."
+   ],
+   "hints": {
+    "1": "End every HLD with how you know it's healthy: signals, an SLO sentence, and correlated telemetry.",
+    "2": "Investigation order is usually metrics → trace spans → logs by trace_id; platform sketch is agents, buffer, TSDB, dashboards/alerts.",
+    "3": "Availability + latency SLIs, p99 vs SLO, shared trace_id across pillars; for Datadog-style, mention cardinality, retention tiers, and freshness vs eventual dashboards."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Monitoring vs observability",
+   "strong_answer": "Monitoring answers known threshold questions; observability uses correlated logs/metrics/traces to answer novel 'why this user/request' questions."
+  },
+  {
+   "topic": "Averages vs percentiles (p50/p95/p99)",
+   "strong_answer": "Averages hide the tail; interview default is track p50/p95/p99 and alert when p99 breaches the SLO."
+  },
+  {
+   "topic": "RED vs USE",
+   "strong_answer": "RED for every service/API (rate, errors, duration); USE for every resource (utilization, saturation, errors); use both in an incident."
+  },
+  {
+   "topic": "Black-box vs white-box monitoring",
+   "strong_answer": "Black-box probes user-visible health; white-box exposes internals that explain why—you need both."
+  },
+  {
+   "topic": "Symptom/budget-burn alerts vs raw CPU alerts",
+   "strong_answer": "Page on user symptoms and error-budget burn; CPU blips without user impact are tickets/dashboards, with grouping/inhibition/runbooks."
+  },
+  {
+   "topic": "High-cardinality labels on metrics vs identity in logs/traces",
+   "strong_answer": "Unbounded labels (user_id, raw URL paths) explode time series; put high-cardinality identity in structured logs/traces linked by trace_id."
+  },
+  {
+   "topic": "100% trace sampling vs aggressive sampling",
+   "strong_answer": "Full sampling at high QPS blows cost/collectors; sample (head or tail) and always retain errors/slow requests."
+  },
+  {
+   "topic": "SLA vs SLO tightness",
+   "strong_answer": "SLO is the tighter internal target; SLA is the looser contract—setting them equal means the first SLO miss is already a breach."
+  },
+  {
+   "topic": "Prometheus for ops metrics vs exact billing",
+   "strong_answer": "Prometheus is for reliable-enough operational metrics and alerting, not exact billing or exactly-once accounting."
+  },
+  {
+   "topic": "Three disconnected tools vs correlated observability",
+   "strong_answer": "Separate log/metric/trace tools without shared IDs fail interviews; want one investigation path via trace_id/correlation (e.g. LGTM-style)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Quoting five nines without knowing ~5 min downtime/year, or confusing durability (S3 11 nines) with availability SLOs.",
+   "correction": "Know what each nines figure means in downtime, and keep durability promises separate from availability SLOs."
+  },
+  {
+   "trap": "Alerting on CPU alone while user-facing error rate is fine, or ignoring saturation until OOM.",
+   "correction": "Alert on user symptoms and saturation trends that predict pain; CPU without user impact should not page."
+  },
+  {
+   "trap": "Logging PII/secrets, or unstructured logs with no trace_id so pillars cannot be joined.",
+   "correction": "Use structured logs with safe fields plus request_id/trace_id; scrub secrets/PII."
+  },
+  {
+   "trap": "Claiming exactly-once metrics or using Prometheus for billing.",
+   "correction": "Treat Prometheus as ops telemetry—reliable enough for alerts, not perfect accounting."
+  },
+  {
+   "trap": "100% trace sampling 'for correctness' at high QPS.",
+   "correction": "Sample aggressively; always keep errors and slow requests to preserve debuggability without melting collectors."
+  },
+  {
+   "trap": "Setting SLA == SLO with zero buffer.",
+   "correction": "Keep SLO stricter than SLA so internal misses do not immediately become contract breaches."
+  },
+  {
+   "trap": "Drawing three tools with no correlation story.",
+   "correction": "Show shared trace_id/request_id and one path: metrics → traces → logs."
+  }
+ ]
+}

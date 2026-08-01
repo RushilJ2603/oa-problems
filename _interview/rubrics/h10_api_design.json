@@ -1,0 +1,220 @@
+{
+ "id": "h10_api_design",
+ "title": "API design (REST vs gRPC vs GraphQL, pagination, idempotency, versioning, webhooks)",
+ "type": "CONCEPT",
+ "relevance": "High — nearly every HLD \"design X\" round starts with sketching APIs; FAANG and Indian product cos probe protocol choice, pagination, retries/idempotency, and (for payments/integrations) webhooks + versioning.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h01_networking"
+ ],
+ "company_notes": "Campus/new-grad HLD almost always includes the define-APIs step (REST + pagination table stakes; naming GraphQL/gRPC separates strong candidates). Mid-level (1–4 YOE) deep-dives cover idempotency, cursor pagination, webhook reliability, and versioning at Stripe-like, marketplace, and platform cos (Amazon, Uber, Atlassian, Flipkart, etc.). Universal building block every design round; dedicated Stripe API/webhook prompts are rarer but patterns appear inside payments, notifications, and marketplaces.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish REST, gRPC, and GraphQL models and the interview rule of thumb for where each belongs.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "REST models resources as nouns with HTTP verbs for CRUD, stateless requests, status codes, and cacheable GETs; interview default for public, browser, and mobile APIs.",
+     "weight": "core",
+     "evidence_hint": "Candidate sketches paths like /users/{id}/orders, maps verbs to CRUD, and names REST as the public/edge default."
+    },
+    {
+     "id": "fund2",
+     "point": "RPC/gRPC is action-oriented (e.g. GetUser, ChargeCard); gRPC uses protobuf + HTTP/2 + codegen with unary/streaming and is the default for internal service-to-service when latency, typing, and streaming matter; browsers need gRPC-Web or a gateway.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts method-style RPCs with REST resources and places gRPC inside the datacenter, noting browser/gateway caveats."
+    },
+    {
+     "id": "fund3",
+     "point": "GraphQL lets the client declare response shape on one endpoint, avoiding over/under-fetch for heterogeneous clients, while shifting cost to the server via resolvers, N+1, query cost limits, and harder HTTP caching/rate limits.",
+     "weight": "core",
+     "evidence_hint": "Candidate explains single-endpoint client-shaped queries and names server-side costs (N+1, caching, rate limits)."
+    },
+    {
+     "id": "fund4",
+     "point": "Rule of thumb: REST at the edge, gRPC inside the datacenter, GraphQL when flexible multi-client fetching (mobile + dashboard) is emphasized — justify rather than cargo-cult.",
+     "weight": "extended",
+     "evidence_hint": "Candidate assigns protocols by hop with a brief justification instead of picking one protocol for everything."
+    }
+   ],
+   "probes": [
+    "For a mobile feed, an admin dashboard, and an internal OrderService, which protocol would you put on each hop and why?",
+    "When would you reach for GraphQL or gRPC instead of the usual REST public API?"
+   ],
+   "hints": {
+    "1": "Start from who the client is and whether the call is public/browser or internal service-to-service.",
+    "2": "Map: resource nouns + HTTP at the edge; method/protobuf/streaming inside; client-shaped queries when many clients need different fields.",
+    "3": "Say REST for public/browser/mobile, gRPC for internal low-latency typed/streaming hops, GraphQL when mobile + dashboard need flexible fetching — and name one downside of each wrong pick."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Check concrete mechanics of pagination, idempotency keys, versioning strategies, and webhook delivery hygiene.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Offset/page pagination is simple and supports jump-to-page, but deep OFFSET gets slow and concurrent inserts can cause duplicates/skips; fine for small admin lists.",
+     "weight": "core",
+     "evidence_hint": "Candidate picks offset for admin page jumps and names slow deep OFFSET plus duplicate/skip risk under concurrent writes."
+    },
+    {
+     "id": "mech2",
+     "point": "Cursor/keyset pagination uses an opaque cursor encoding last sort key(s), seeks with indexed WHERE/ORDER BY/LIMIT, stays stable for feeds/infinite scroll, cannot random-jump pages, should cap limit, and prefer has_next over expensive COUNT(*).",
+     "weight": "core",
+     "evidence_hint": "Candidate describes cursor encoding last keys, index seek query shape, and has_next instead of COUNT(*) for feeds."
+    },
+    {
+     "id": "mech3",
+     "point": "GET/PUT/DELETE are naturally retry-safe; POST create/charge needs a client idempotency key (UUID) so timeout retries do not double-charge; server stores first status+body by key (+ request fingerprint); same key with different body is a conflict.",
+     "weight": "core",
+     "evidence_hint": "Walks Idempotency-Key lookup → replay first success → same key different body → conflict (e.g. 409)."
+    },
+    {
+     "id": "mech4",
+     "point": "Prefer additive versioning (new optional fields/endpoints); strategies include URL /v1, header (Accept / Stripe-Version), or date-pinned account versions; breaking changes need a new version plus deprecation window rather than a light big-bang /v2 rewrite.",
+     "weight": "extended",
+     "evidence_hint": "Names additive-first changes and at least one of URL, header, or Stripe-style date-pinned versions with a deprecation path for breaks."
+    },
+    {
+     "id": "mech5",
+     "point": "Webhooks push events to subscriber URLs (vs polling); must HMAC-verify signatures over HTTPS, return fast 2xx then process async, retry with backoff, dedupe on delivery/event id, and ignore unknown event types gracefully.",
+     "weight": "core",
+     "evidence_hint": "Sequences verify signature → fast 2xx → enqueue/async → dedupe by event/delivery id → retries/backoff."
+    }
+   ],
+   "probes": [
+    "News feed vs admin page 47 of users — cursor or offset, and what does the cursor DB query look like?",
+    "Client POSTs /payments, times out, retries — how does Idempotency-Key prevent double-charge, and what if the retry body differs?",
+    "Stripe payment_intent.succeeded hits your endpoint — what is the correct verify → respond → process sequence?"
+   ],
+   "hints": {
+    "1": "Separate read-list UX (jump to page vs infinite scroll) from write-safety (retries) and push delivery (webhooks).",
+    "2": "Offset for small admin jumps; cursor for feeds; Idempotency-Key store for POST; HMAC + fast 2xx + async for webhooks.",
+    "3": "Cursor: opaque last sort keys + indexed seek + has_next. Idempotency: store first response; same key different body → 409. Webhooks: verify → 2xx → queue → dedupe; handler failure after 2xx is covered by provider retries + your dedupe."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Force justified protocol and pagination choices and surface why GraphQL/gRPC are not universal defaults.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "GraphQL everywhere is a weak default because of caching difficulty, per-field authz, abusive nested queries, and operational complexity; REST is often enough.",
+     "weight": "core",
+     "evidence_hint": "Candidate argues against GraphQL-by-default citing caching, authz, nested-query abuse, and ops cost."
+    },
+    {
+     "id": "tr2",
+     "point": "gRPC is not always faster in designs: protobuf/HTTP/2 help, but most systems are not serialization-bound; public API ergonomics and CDN caching often favor REST/JSON.",
+     "weight": "core",
+     "evidence_hint": "Candidate separates wire efficiency from end-to-end bottlenecks and keeps REST/JSON at the public/CDN edge."
+    },
+    {
+     "id": "tr3",
+     "point": "On a hot write-heavy feed, offset pagination is the wrong default; interviewers expect cursor plus an explanation of duplicates/skips under concurrent writes.",
+     "weight": "extended",
+     "evidence_hint": "Rejects offset for hot feeds and explains concurrent-insert duplicate/skip behavior favoring cursor/keyset."
+    }
+   ],
+   "probes": [
+    "Why not use GraphQL for every client-facing API?",
+    "Is gRPC always the faster choice for public APIs?",
+    "Why is offset pagination risky on a write-heavy feed?"
+   ],
+   "hints": {
+    "1": "Ask what becomes harder once you leave plain HTTP resource GETs.",
+    "2": "Compare caching/CDN and public ergonomics vs flexible queries and binary internal RPCs.",
+    "3": "GraphQL: caching, field authz, nested abuse, ops. gRPC: not serialization-bound; REST/JSON wins at public CDN edge. Offset on hot feeds: duplicates/skips → use cursor."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply protocol choice, REST sketching, idempotency, versioning, and webhooks inside a concrete design round.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Protocol pick drill: assign REST / GraphQL / gRPC across mobile feed, admin dashboard, and internal OrderService and name one downside of picking wrong on a hop.",
+     "weight": "core",
+     "evidence_hint": "Gives a hop-by-hop assignment with at least one concrete failure mode for a wrong protocol."
+    },
+    {
+     "id": "app2",
+     "point": "REST sketch for Ticketmaster-lite: noun resources and methods for search events, hold seat, confirm payment, including status codes such as 201, 409 hold conflict, and 429.",
+     "weight": "core",
+     "evidence_hint": "Sketches resource paths/verbs and uses 201 on create, 409 on hold conflict, 429 on rate limit."
+    },
+    {
+     "id": "app3",
+     "point": "Versioning drill: renaming verified: bool to status: enum breaks old clients; Stripe-style version transforms or a /v2 path can keep old clients working during evolution.",
+     "weight": "extended",
+     "evidence_hint": "Explains the break, then either date/header version transforms or dual /v1 vs /v2 with deprecation rather than silent field removal."
+    },
+    {
+     "id": "app4",
+     "point": "Webhook failure after 200: provider will retry; correct design still dedupes on event id so processing stays once-only despite post-ack handler failure.",
+     "weight": "extended",
+     "evidence_hint": "States fast 200/2xx then async, and that retries plus event-id dedupe handle failure after ack."
+    }
+   ],
+   "probes": [
+    "Design Ticketmaster-lite booking APIs — resources, methods, and key status codes for hold conflicts and rate limits.",
+    "You rename verified: bool to status: enum — what breaks, and how do Stripe-style transforms or /v2 help?",
+    "If your webhook handler fails after returning 200, how do you still process the event exactly once?"
+   ],
+   "hints": {
+    "1": "Sketch contracts before boxes: nouns/verbs first, then retries and evolution.",
+    "2": "Use REST nouns for booking; Idempotency-Key on payment confirm; additive or versioned fields for renames; verify+ack+dedupe for webhooks.",
+    "3": "Hold conflict → 409, create → 201, throttle → 429; bool→enum needs /v2 or version transforms; after 200, provider retries + event-id dedupe give at-least-once delivery with once-only side effects."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "REST vs GraphQL",
+   "strong_answer": "REST is the interview default for public/browser/mobile APIs with cacheable GETs and simpler ops; GraphQL wins when heterogeneous clients (mobile + dashboard) need flexible shapes and you accept server costs: resolvers, N+1, query cost limits, and harder HTTP caching/rate limits. Not GraphQL everywhere — caching, per-field authz, abusive nested queries, and operational complexity often make REST enough."
+  },
+  {
+   "topic": "REST vs gRPC",
+   "strong_answer": "REST/JSON at the edge for public ergonomics and CDN caching; gRPC (protobuf + HTTP/2 + codegen + streaming) inside the datacenter for typed, low-latency service-to-service calls. gRPC is not always faster end-to-end because most designs are not serialization-bound; browsers need gRPC-Web or a gateway."
+  },
+  {
+   "topic": "Offset/page vs cursor/keyset pagination",
+   "strong_answer": "Offset/page is simple and supports jump to page N (e.g. admin lists) but deep OFFSET slows down and concurrent inserts cause duplicates/skips — bad on hot write-heavy feeds. Cursor/keyset encodes last sort keys, seeks via index, stabilizes feeds/infinite scroll, forgoes random page jumps, caps limit, and prefers has_next over expensive COUNT(*)."
+  },
+  {
+   "topic": "Polling vs webhooks",
+   "strong_answer": "Webhooks push events to subscriber URLs instead of client polling; require HMAC signature verification, HTTPS, fast 2xx then async work, retries with backoff, and dedupe on delivery/event id, while ignoring unknown event types gracefully."
+  },
+  {
+   "topic": "Additive evolution vs breaking /v2 rewrite",
+   "strong_answer": "Prefer additive changes (new optional fields/endpoints). Version via URL /v1, headers (Accept / Stripe-Version), or date-pinned account versions; breaking changes get a new version plus deprecation window — do not force big-bang /v2 rewrites lightly or silently remove fields from mobile clients."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Defaulting to GraphQL everywhere for client APIs",
+   "correction": "Call out caching difficulty, per-field authz, abusive nested queries, and operational complexity; REST is often enough unless flexible multi-client fetching is a real requirement."
+  },
+  {
+   "trap": "Assuming gRPC is always faster",
+   "correction": "Protobuf/HTTP/2 help, but most designs are not serialization-bound; public ergonomics and CDN caching often favor REST/JSON at the edge."
+  },
+  {
+   "trap": "Using offset pagination on a hot write-heavy feed",
+   "correction": "Expect cursor/keyset and an explanation of duplicates/skips under concurrent writes; reserve offset for small admin jump-to-page lists."
+  },
+  {
+   "trap": "Retrying non-idempotent POSTs without idempotency keys",
+   "correction": "Classic double-charge / double-booking mode; require client Idempotency-Key (UUID), store first status+body, and conflict when the same key arrives with a different body."
+  },
+  {
+   "trap": "Webhooks without signature checks or with heavy sync work in the request path",
+   "correction": "Verify HMAC signatures over HTTPS, return fast 2xx then enqueue/async process; otherwise you get spoofing and timeout-driven retry storms."
+  },
+  {
+   "trap": "Breaking mobile clients with silent field removals",
+   "correction": "Evolve additively or version deliberately (header/URL/date-pinned) and sunset old versions on purpose rather than renaming/removing fields in place."
+  }
+ ]
+}

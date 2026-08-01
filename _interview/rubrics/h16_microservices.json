@@ -1,0 +1,226 @@
+{
+ "id": "h16_microservices",
+ "title": "Microservices foundation (monolith vs microservices, service discovery, API gateway, saga, circuit breaker)",
+ "type": "CONCEPT",
+ "relevance": "High — almost every HLD \"design X\" that grows past a single app box (e-commerce, ride-hailing, feeds); FAANG and Indian product cos probe when to split, how clients find instances, edge gateway vs LB, and how you keep consistency / survive dependency failure without claiming 2PC across services.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h01_networking",
+  "h02_load_balancing",
+  "h06_consistency_cap",
+  "h08_message_queues"
+ ],
+ "company_notes": "Campus/intern/new-grad HLD: mention services, a gateway, and async boundaries in e-commerce, Uber/Ola, food delivery, Netflix — depth usually stops at tradeoffs plus one consistency/resilience pattern (saga or circuit breaker). Experienced/mid-level (1–4 YOE): discovery mode, BFF, saga choreography vs orchestration, breaker + timeout budgets, strangler migration, domain boundaries — common at Amazon, Uber, Meta, Flipkart, Atlassian. Frequency: near-universal as the shape of a scaled design; depth is tradeoffs and failure modes, not implementing Eureka or writing Hystrix.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish monolith vs microservices, when to split, and the microservice premium before any pattern talk.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A monolith is one deployable unit with simpler transactions, debugging, and ops; microservices are independently deployable services around business capabilities, each often with its own datastore.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts single deployable unit vs independently deployable capability-aligned services with separate datastores."
+    },
+    {
+     "id": "fund2",
+     "point": "Microservices incur a microservice premium: ops, networking, observability, and distributed failure.",
+     "weight": "core",
+     "evidence_hint": "Candidate names ops/networking/observability/distributed-failure cost rather than only listing benefits."
+    },
+    {
+     "id": "fund3",
+     "point": "Default interview stance: start with a modular monolith; split when team/ownership/scale of change demands it — not when QPS alone spikes or as a fashion statement.",
+     "weight": "core",
+     "evidence_hint": "Candidate says start modular monolith and ties split to org/ownership/change cadence, not QPS fashion."
+    },
+    {
+     "id": "fund4",
+     "point": "Do not split when the team is small, domains are unclear, or there is no CI/CD or tracing — you get a distributed monolith.",
+     "weight": "extended",
+     "evidence_hint": "Candidate lists small team, unclear domains, missing CI/CD/tracing as reasons to stay monolith."
+    }
+   ],
+   "probes": [
+    "For a startup checkout with 5 engineers versus Flipkart-scale catalog/orders/payments with separate teams, which architecture would you choose and what ops prerequisites would you demand before splitting?"
+   ],
+   "hints": {
+    "1": "Think about team size and ownership first, not just traffic.",
+    "2": "Name the microservice premium and what CI/CD, monitoring, and provisioning you need before independent deploys.",
+    "3": "Start modular monolith for the small team; split only with clear bounded contexts, independent deploy cadence, and ops readiness — otherwise you ship a distributed monolith."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how gateway, discovery, database-per-service, sagas, and circuit breakers actually work.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "API gateway is an L7 edge single entry for clients doing routing, authn/authz, rate limit, TLS, and sometimes aggregation/BFF — keep domain logic out of it.",
+     "weight": "core",
+     "evidence_hint": "Candidate places a thin L7 edge gateway with routing/auth/limits and refuses to put business workflows there."
+    },
+    {
+     "id": "mech2",
+     "point": "Service discovery: instances have dynamic IPs/ports; a registry holds healthy endpoints. Client-side: client queries registry and picks an instance. Server-side: client hits a stable router/LB/K8s Service that picks an instance; cloud default is server-side with health checks.",
+     "weight": "core",
+     "evidence_hint": "Candidate distinguishes client-side registry lookup vs server-side stable VIP/DNS (e.g. K8s Service) and mentions health checks."
+    },
+    {
+     "id": "mech3",
+     "point": "Database per service means private data behind APIs — no shared tables and no cross-service ACID; cross-service reads use API composition or CQRS views; cross-service writes use sagas.",
+     "weight": "core",
+     "evidence_hint": "Candidate forbids shared DB/joins/2PC and routes cross-service writes to sagas (or boundary rethink)."
+    },
+    {
+     "id": "mech4",
+     "point": "A saga is a sequence of local transactions; on failure run compensating transactions. Choreography uses events with no central boss; orchestration uses a central saga coordinator. Sagas are ACD with weak isolation — design for visible intermediate states and idempotent steps.",
+     "weight": "core",
+     "evidence_hint": "Candidate walks local tx + compensations, names choreography vs orchestration, and notes weak isolation / intermediate states."
+    },
+    {
+     "id": "mech5",
+     "point": "Circuit breaker wraps remote calls: Closed (pass through, count failures) → Open (fail fast / fallback) → Half-Open (probe); stops cascading failure and thread/connection pile-up on timeouts.",
+     "weight": "core",
+     "evidence_hint": "Candidate sketches Closed → Open → Half-Open and links it to fail-fast and preventing cascade/resource exhaustion."
+    }
+   ],
+   "probes": [
+    "Walk place-order as reserve inventory → charge payment → create shipment: if payment succeeds and a later step fails, how do choreography vs orchestration run compensating actions, and why isn't this distributed 2PC?"
+   ],
+   "hints": {
+    "1": "Each service only does a local transaction — what undoes a completed step?",
+    "2": "Contrast event-driven next steps versus a central coordinator commanding steps; name compensations like refund or release inventory.",
+    "3": "Say local txs + compensations (saga), not cross-service rollback; mention ACD/weak isolation and idempotent steps instead of 2PC ACID across services."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Force clear choices among gateway vs LB, discovery modes, sync vs async, and coordination styles.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "API gateway is not an L4 load balancer: the gateway understands HTTP semantics (path routing, auth, aggregation); an LB spreads identical backends — a plain LB is enough when you only need to spread identical instances.",
+     "weight": "core",
+     "evidence_hint": "Candidate separates L7 gateway concerns from L4 LB fan-out and says when LB alone suffices."
+    },
+    {
+     "id": "tr2",
+     "point": "Sync RPC (HTTP/gRPC) fits request/response on the critical path; async messaging fits fan-out, decoupling, and long workflows — do not turn every call into Kafka.",
+     "weight": "core",
+     "evidence_hint": "Candidate picks sync for critical-path request/response and async for fan-out/long workflows without making everything a queue."
+    },
+    {
+     "id": "tr3",
+     "point": "Saga choreography can get tangled without a central boss; orchestration is clearer for complex flows but the coordinator is a failure/ops concern.",
+     "weight": "core",
+     "evidence_hint": "Candidate trades choreography tangle risk against orchestration clarity and coordinator as a single ops/failure point."
+    },
+    {
+     "id": "tr4",
+     "point": "Retries without a circuit breaker can amplify outages; pair breakers with timeouts, retries with jitter, and bulkheads.",
+     "weight": "extended",
+     "evidence_hint": "Candidate warns that bare retries amplify load and names timeouts, jittered retries, and bulkheads alongside the breaker."
+    }
+   ],
+   "probes": [
+    "A mobile app needs auth, path routing (/orders vs /payments), and response aggregation — draw edge boxes and say what sits where; when is a plain LB enough?"
+   ],
+   "hints": {
+    "1": "Separate the client-facing edge from spreading identical backends.",
+    "2": "Put auth, path routing, and aggregation on an L7 gateway; put instance fan-out on an LB or service layer.",
+    "3": "Gateway = L7 single entry (routing/auth/limits/aggregation/BFF); LB = spread identical backends — plain LB enough when you only need that fan-out."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply strangler migration, discovery under churn, and resilience patterns in concrete HLD scenarios.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Migrate with Strangler Fig: put a facade/gateway in front of the monolith, peel routes to new services gradually, retire the old path when traffic is gone — prefer over big-bang rewrite.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes gateway-fronted incremental route extraction and rollback by sending traffic back to the old path."
+    },
+    {
+     "id": "app2",
+     "point": "For many pods with changing IPs (e.g. 50 order-service pods), prefer cloud-default server-side discovery (K8s Service / cloud LB) plus health checks; on a bad deploy, unhealthy instances are removed from the pool.",
+     "weight": "core",
+     "evidence_hint": "Candidate picks server-side discovery with health checks and explains bad instances dropping out of the healthy set."
+    },
+    {
+     "id": "app3",
+     "point": "If a payment provider's p95 latency spikes to 30s, without a breaker threads/connections and upstream latency die first; with Closed → Open → Half-Open, fail fast and use a fallback such as queue for retry, pay later, or a cached quote.",
+     "weight": "core",
+     "evidence_hint": "Candidate names thread/connection pile-up, sketches breaker states, and gives a concrete payment fallback."
+    },
+    {
+     "id": "app4",
+     "point": "Blast-radius lesson: one service down should degrade (cached/default response), not take the product down; at Uber scale, manage domains of related services with gateways — not thousands of orphan nanoservices.",
+     "weight": "extended",
+     "evidence_hint": "Candidate talks degrade-not-die and domain-oriented grouping rather than infinite nanoservices."
+    }
+   ],
+   "probes": [
+    "Extract notifications from a monolith with Strangler Fig: where does the gateway route before, during, and after cutover, and how do you roll back?"
+   ],
+   "hints": {
+    "1": "Something sits in front of the monolith before any code moves.",
+    "2": "Route only the notifications path to the new service while other paths still hit the monolith.",
+    "3": "Before: all via facade to monolith; during: notifications route to new service, rest to monolith; after: old notifications path retired; rollback = point that route back to the monolith."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Monolith vs microservices",
+   "strong_answer": "Monolith: one deployable unit, simpler tx/debugging/ops. Microservices: independent deploy around business capabilities and often private datastores, but pay the microservice premium (ops, networking, observability, distributed failure). Start modular monolith; split for independent deploy cadence, different scaling profiles, clear bounded contexts, and blast-radius isolation — not for small teams, unclear domains, or missing CI/CD/tracing."
+  },
+  {
+   "topic": "API gateway vs L4 load balancer",
+   "strong_answer": "Gateway is L7 single entry: routing, authn/authz, rate limit, TLS, sometimes aggregation/BFF; keep domain logic out. LB spreads identical backends. Use gateway when clients need HTTP-aware edge behavior; plain LB when you only need to fan out to identical instances."
+  },
+  {
+   "topic": "Client-side vs server-side discovery",
+   "strong_answer": "Client-side: client queries the registry and picks a healthy instance (Ribbon/Eureka-style). Server-side: client calls a stable router/LB/K8s Service that chooses an instance. Cloud interview default is server-side discovery with health checks."
+  },
+  {
+   "topic": "Saga choreography vs orchestration",
+   "strong_answer": "Both: local transactions plus compensating transactions on failure (not cross-service DB rollback). Choreography: events trigger next steps, no central boss, can get tangled. Orchestration: central coordinator commands steps — clearer for complex flows, but the coordinator is a failure/ops concern. Expect ACD with weak isolation and visible intermediate states."
+  },
+  {
+   "topic": "Sync RPC vs async messaging",
+   "strong_answer": "Sync HTTP/gRPC for request/response on the critical path; async messaging for fan-out, decoupling, and long workflows. Do not turn every inter-service call into a queue."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Drawing many microservices (e.g. 12) for a campus URL shortener / over-engineering a Netflix clone.",
+   "correction": "Interviewers want judgment: start modular monolith; split only when ownership and change demand it."
+  },
+  {
+   "trap": "Shared database \"for convenience\" while calling the design microservices.",
+   "correction": "That is a distributed monolith — you paid the network cost without deploy/data independence; use database per service."
+  },
+  {
+   "trap": "Claiming exactly-once delivery or full ACID across Order + Payment + Inventory via 2PC.",
+   "correction": "Prefer saga + idempotency + eventual consistency; 2PC across services is painful."
+  },
+  {
+   "trap": "API gateway that embeds business workflows.",
+   "correction": "It becomes a new monolith and deploy bottleneck; keep the gateway thin (routing, auth, limits)."
+  },
+  {
+   "trap": "Retries without idempotency keys and without a circuit breaker.",
+   "correction": "Risk of double charges and thundering herds; pair idempotency with breaker, timeouts, and jittered retries."
+  },
+  {
+   "trap": "Forgetting observability (correlation IDs, tracing, metrics) across N services.",
+   "correction": "Debugging is otherwise hopeless — treat observability as part of the microservice premium."
+  },
+  {
+   "trap": "Equating Kubernetes with microservices.",
+   "correction": "K8s runs whatever you package; choosing monolith vs microservices is a separate architecture decision."
+  }
+ ]
+}

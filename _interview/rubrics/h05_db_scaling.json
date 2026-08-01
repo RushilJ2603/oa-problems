@@ -1,0 +1,223 @@
+{
+ "id": "h05_db_scaling",
+ "title": "DB scaling: replication, sharding, partitioning, federation, read replicas, hot-key",
+ "type": "CONCEPT",
+ "relevance": "High — the usual deep-dive after you draw a single Postgres/MySQL box in any HLD \"design X\" round (campus + experienced); FAANG and Indian product cos probe read replicas vs sharding, shard-key choice, and hot-key mitigations.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h01_networking",
+  "h02_load_balancing"
+ ],
+ "company_notes": "Campus/intern HLD (URL shortener, Twitter/Instagram, chat, e-commerce, ticket booking): read replicas are table stakes; shard-key and hot-key talk differentiate. Mid-level (1–4 YOE) at Amazon, Google, Meta, Uber, Flipkart, Atlassian: lag SLAs, resharding, federation boundaries, Vitess/Citus-style routing, celebrity/hot-key designs. Near-universal in data-heavy designs after the first architecture sketch; rarely the whole prompt alone.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the scaling ladder and the distinct jobs of replication, federation, partitioning, and sharding.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Interview scaling ladder: vertical scale and indexes, then caching, then read replicas, then federation by service/domain, then sharding rows across machines — do not jump to shards at 10K QPS / 100GB without capacity math.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists the ladder in order and says sharding is last, gated by capacity math rather than default boxes."
+    },
+    {
+     "id": "fund2",
+     "point": "Default interview replication model is single-leader: primary takes writes, replicas serve reads for durability, failover, and read scale; multi-leader and leaderless (quorum W/R) are alternatives.",
+     "weight": "core",
+     "evidence_hint": "Candidate names single-leader primary/replica roles and briefly distinguishes multi-leader and leaderless."
+    },
+    {
+     "id": "fund3",
+     "point": "Read replicas offload read-heavy traffic but do not fix write throughput or storage size.",
+     "weight": "core",
+     "evidence_hint": "Candidate explicitly says replicas help reads only; writes and disk growth still hit the primary unless you multi-leader or shard."
+    },
+    {
+     "id": "fund4",
+     "point": "Partitioning often means splitting a table inside one DB (e.g. Postgres declarative partitions for prune/drop); sharding is a horizontal split across machines/instances — clarify which you mean.",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts in-instance partitions vs multi-machine shards and notes interviewers use the words loosely."
+    }
+   ],
+   "probes": [
+    "Walk the DB scaling ladder you'd use after drawing a single Postgres/MySQL box — when do you add replicas vs federation vs shards?"
+   ],
+   "hints": {
+    "1": "Start with vertical scale, indexes, and caching before any distribution pattern.",
+    "2": "Order: read replicas for read scale, federation to split by domain, sharding to split rows across machines.",
+    "3": "Say: vertical + indexes → cache → read replicas → federation (users/orders/payments) → sharding; don't shard at 10K QPS / 100GB without proving a storage, write-QPS, or primary-CPU ceiling."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain sync/async replication behavior, shard-key and placement rules, hot-key mitigations, and rebalancing.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Sync waits for follower ack before commit (stronger durability, higher write latency; a slow replica stalls writes); async returns fast but replication lag causes stale reads; semi-sync acks from at least one replica.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts sync stall vs async lag and mentions semi-sync as ack from ≥1 replica."
+    },
+    {
+     "id": "mech2",
+     "point": "For read-your-writes, route must-see-my-write traffic to the primary; tolerate lag on feeds/analytics.",
+     "weight": "core",
+     "evidence_hint": "Candidate sends post-write reads to primary (or sticky/N-seconds-after-write) and allows stale replicas for non-critical reads."
+    },
+    {
+     "id": "mech3",
+     "point": "Shard key must be high-cardinality, evenly distributed, and present in most queries so you hit one shard; good examples user_id/tenant_id; bad is_premium (2 buckets), skewed country, or created_at alone (all writes hit today's shard).",
+     "weight": "core",
+     "evidence_hint": "Candidate states the three rules and names good vs bad keys including created_at alone as a write hotspot."
+    },
+    {
+     "id": "mech4",
+     "point": "Placement: hash gives even load but weak range scans; range helps range queries but risks hotspots; directory is flexible but adds lookup SPOF/latency — prefer hash(user_id) unless you need ranges.",
+     "weight": "extended",
+     "evidence_hint": "Candidate names hash/range/directory tradeoffs and defaults to hash(user_id) when ranges are not required."
+    },
+    {
+     "id": "mech5",
+     "point": "Hot key mitigations: cache hot reads, key salting/write sharding (id#0…N then aggregate on read), isolate celebs on dedicated shards, avoid time-only shard keys, hybrid fan-out for social feeds.",
+     "weight": "extended",
+     "evidence_hint": "Candidate lists cache, salt/write-shard, and dedicated-shard (plus avoiding time-only keys) as concrete mitigations."
+    },
+    {
+     "id": "mech6",
+     "point": "hash % N reshuffles almost everything on scale-out; use consistent hashing or fixed many virtual partitions mapped to nodes, and treat online reshard (Vitess-style) as an ops problem.",
+     "weight": "extended",
+     "evidence_hint": "Candidate rejects naive mod-N rebalance and names consistent hashing / virtual partitions / planned online reshard."
+    }
+   ],
+   "probes": [
+    "User updates a profile then immediately GETs it while replicas lag 800ms — where do you send the GET, and how do stickiness or primary-for-N-seconds-after-write change the design?",
+    "What makes a good shard key, and why is created_at alone a bad one?"
+   ],
+   "hints": {
+    "1": "Think about whether the client must see its own write or can tolerate staleness.",
+    "2": "Async replicas can be behind; route read-your-writes to the primary (or sticky for a window after write).",
+    "3": "With 800ms lag: send the immediate GET to the primary; optionally sticky session or primary-for-N-seconds-after-write; sync/semi-sync reduces lag at write-latency cost."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare federation vs sharding, hash vs range placement, and the costs of cross-shard work vs denormalization.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Federation splits DBs by domain so each scales and fails independently; joins become app-level or are avoided, and schema coupling is the tax.",
+     "weight": "core",
+     "evidence_hint": "Candidate explains domain-split DBs (users/orders/payments) and names join/schema-coupling cost."
+    },
+    {
+     "id": "tr2",
+     "point": "Cross-shard joins, transactions, unique constraints, and global secondary indexes get hard; prefer denormalization / co-locate related rows on one shard; accept scatter-gather for rare global queries.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists cross-shard pains and prefers co-location/denormalization over routine cross-shard transactions."
+    },
+    {
+     "id": "tr3",
+     "point": "Each shard usually has its own primary plus replicas — replication is not partitioning; you almost always want both at scale.",
+     "weight": "extended",
+     "evidence_hint": "Candidate draws per-shard HA (primary+replicas) and says replication and sharding solve different problems."
+    },
+    {
+     "id": "tr4",
+     "point": "Range-by-time feels natural for time-series but creates a hot write shard; a hybrid key like hash(metric_id) + time spreads writes while keeping time locality per metric.",
+     "weight": "extended",
+     "evidence_hint": "Candidate explains the time-range write hotspot and why hashing the metric id then time fixes it."
+    }
+   ],
+   "probes": [
+    "For e-commerce users/catalog/orders: when is federation enough, and when do orders still need horizontal shards by customer_id?",
+    "For a time-series metrics store, why does range-by-time create a hot write shard, and what does hash(metric_id)+time buy you?"
+   ],
+   "hints": {
+    "1": "Separate functional split (different domains) from horizontal split (same table across machines).",
+    "2": "Federation helps when domains fail/scale independently; shard a domain when one table's writes/storage still overwhelm a single primary.",
+    "3": "users/catalog/orders federated first; orders still shard by customer_id when order volume/storage exceeds one instance — and time-only range sharding hotspots today's partition."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply ladder choice, shard-key debate, and hot-key incident response to concrete HLD scenarios.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "URL shortener at 50K reads/s, 5K writes/s, 200GB: justify replicas and cache before sharding; force a shard only when a metric like storage ceiling, write QPS, or single-primary CPU demands it.",
+     "weight": "core",
+     "evidence_hint": "Candidate keeps replicas+cache first for that load shape and names the metric that would force sharding."
+    },
+    {
+     "id": "app2",
+     "point": "Instagram-like shard-key debate: user_id vs post_id vs time changes which queries are single-shard vs fan-out; global trending breaks as a cross-shard/scatter problem.",
+     "weight": "core",
+     "evidence_hint": "Candidate maps query patterns to each key and calls out global trending as fan-out or separate store."
+    },
+    {
+     "id": "app3",
+     "point": "Hot-key incident: celebrity shard at 95% CPU while others idle — mitigate with cache, salt writes, and dedicated shard, and state the read-path cost of each.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists those three mitigations and notes aggregation/extra hops or isolation cost on the read path."
+    }
+   ],
+   "probes": [
+    "URL shortener at 50K reads/s, 5K writes/s, 200GB — do you shard? What metric would force it?",
+    "Taylor Swift's shard is at 95% CPU and others are idle — give three mitigations and the read-path cost of each."
+   ],
+   "hints": {
+    "1": "Compare read vs write load before drawing shard boxes.",
+    "2": "Read-heavy → replicas and cache; shard when storage, write QPS, or primary CPU is the ceiling.",
+    "3": "For 50K reads/s and 5K writes/s at 200GB: replicas+cache first; shard only if storage/write-QPS/CPU forces it. For the 95% CPU celeb shard: cache hot reads, salt id#0…N writes (aggregate on read), or dedicated shard."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Sync vs async replication",
+   "strong_answer": "Sync: follower ack before commit — stronger durability, higher write latency, one slow replica stalls writes. Async: primary returns fast but replication lag yields stale reads. Semi-sync: ack from ≥1 replica as a middle ground."
+  },
+  {
+   "topic": "Hash vs range vs directory sharding",
+   "strong_answer": "Hash: even load, weak range scans. Range: great range queries, hotspot risk. Directory: flexible mapping, lookup SPOF/latency. Prefer hash(user_id) unless you need ranges."
+  },
+  {
+   "topic": "Federation vs sharding",
+   "strong_answer": "Federation (functional split by domain) lets each DB scale/fail independently with app-level joins and schema-coupling tax. Sharding splits one domain's rows across machines when a single primary still hits storage/write/CPU limits; each shard still usually has its own primary+replicas."
+  },
+  {
+   "topic": "Co-location/denormalization vs cross-shard joins and transactions",
+   "strong_answer": "Cross-shard joins, transactions, unique constraints, and global secondary indexes are hard. Prefer denormalize/co-locate related rows on one shard; use scatter-gather for rare globals, or admit saga/2PC/app-merge cost if you cannot avoid cross-shard work."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming read replicas fix write throughput or storage size.",
+   "correction": "Writes still serialize on the primary unless you multi-leader or shard; replicas only offload reads."
+  },
+  {
+   "trap": "Premature sharding as the default box after the first sketch.",
+   "correction": "Huge operational tax; interviewers reward sharding when a named metric (storage ceiling, write QPS, single-primary CPU) forces it — after replicas and cache."
+  },
+  {
+   "trap": "Reading a replica immediately after a write without addressing staleness.",
+   "correction": "Call out read-your-writes: route to primary, session stickiness, or primary-for-N-seconds-after-write."
+  },
+  {
+   "trap": "Bad shard key such as created_at alone or low-cardinality status.",
+   "correction": "Creates a permanent hot partition; adding nodes will not fix that key — need high cardinality, even distribution, and presence in most queries."
+  },
+  {
+   "trap": "Hand-waving cross-shard transactions and joins.",
+   "correction": "Either avoid via denormalization/saga/co-location or admit 2PC/app-merge cost."
+  },
+  {
+   "trap": "Forgetting per-shard HA — shards without replicas.",
+   "correction": "A shard without replicas is a bigger blast radius than one big primary with replicas; each shard usually needs its own primary+replicas."
+  },
+  {
+   "trap": "Confusing Postgres table partitions with shards.",
+   "correction": "Table partitions are in-instance (one machine); shards span many instances — both can coexist, but they are not the same."
+  }
+ ]
+}

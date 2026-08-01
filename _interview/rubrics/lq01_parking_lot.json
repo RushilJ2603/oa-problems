@@ -1,0 +1,289 @@
+{
+ "id": "lq01_parking_lot",
+ "title": "Design a Parking Lot",
+ "type": "LLD",
+ "relevance": "High — the canonical first LLD / machine-coding question (campus + experienced); Flipkart, Uber, Swiggy, Amazon, Microsoft, Atlassian, Walmart, Adobe, and most Indian product cos use it to probe OOP, SOLID, Strategy/Factory, and concurrency.",
+ "difficulty": "campus",
+ "prereqs": [
+  "l01_oop_solid",
+  "l02_patterns_creational",
+  "l03_patterns_structural"
+ ],
+ "company_notes": "Extremely common first campus/new-grad LLD or timed CLI machine-coding round in India (Flipkart, Uber, Swiggy, Amazon, Walmart, Razorpay, Atlassian-style); experienced/SDE-2 keeps the same domain with harder concurrency, Strategy vs inheritance, payment, Observer boards, and allocation follow-ups; FAANG OOD whiteboard (Google/Meta lore) emphasizes clarifying questions and clean class model over CLI I/O; among the most asked LLD problems and a template for later ones (elevator, Splitwise, booking).",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock mandatory park/unpark/display flows, common extensions, NFRs, and stated assumptions before designing classes.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Mandatory FR: multi-floor lot; park assigns a typed spot and ticket; unpark by ticket; show free/occupied counts (optionally slot lists) per floor × type.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists create multi-floor lot, park→typed spot+ticket, unpark by ticket, and display free/occupied per floor and vehicle type."
+    },
+    {
+     "id": "req2",
+     "point": "State common extensions to ask: hourly fee + payment, multiple gates, EV/handicapped spots, reject when full, admin add floor/slot.",
+     "weight": "extended",
+     "evidence_hint": "Candidate asks whether fees/payment, multi-gate, EV/accessible spots, full-lot rejection, and admin floor/slot add are in scope."
+    },
+    {
+     "id": "req3",
+     "point": "NFR: correct under concurrent park/unpark; extensible for new vehicle types and allocation/pricing strategies; modular files; working demo/CLI.",
+     "weight": "core",
+     "evidence_hint": "Candidate calls out concurrency correctness, strategy extensibility, no god class, and a working demo."
+    },
+    {
+     "id": "req4",
+     "point": "Assumptions: one physical lot (or inject lot id); spot↔vehicle type mapping fixed unless told otherwise; no reservations unless asked.",
+     "weight": "extended",
+     "evidence_hint": "Candidate explicitly states single-lot (or lot id), fixed type mapping, and no reservations by default."
+    }
+   ],
+   "probes": [
+    "Before drawing classes, what functional and non-functional requirements would you clarify for this parking lot?",
+    "Which use cases must the system support on day one versus only if asked?"
+   ],
+   "hints": {
+    "1": "Start by listing customer enter/exit and admin/display flows before naming classes.",
+    "2": "Separate mandatory FR (multi-floor park/unpark/display) from optional fee, gates, EV, and admin extensions.",
+    "3": "Mandatory: multi-floor, park→typed spot+ticket, unpark by ticket, free/occupied per floor×type; NFR: concurrency, strategy extensibility, modular CLI demo; assume one lot, fixed type mapping, no reservations."
+   }
+  },
+  {
+   "phase": "entities",
+   "goal": "Name the core domain objects and their relationships (composition vs inheritance) without jumping into full API detail.",
+   "must_hit": [
+    {
+     "id": "ent1",
+     "point": "Core composition: ParkingLot (one) contains many ParkingFloor, each containing many ParkingSpot.",
+     "weight": "core",
+     "evidence_hint": "Candidate draws ParkingLot → ParkingFloor → ParkingSpot as a HAS-A hierarchy."
+    },
+    {
+     "id": "ent2",
+     "point": "Vehicle hierarchy plus Ticket holding entry time, spot, and vehicle; optional Gate, Payment, DisplayBoard.",
+     "weight": "core",
+     "evidence_hint": "Candidate names Vehicle subtypes, Ticket fields (entry time/spot/vehicle), and may mention Gate/Payment/DisplayBoard as optional."
+    },
+    {
+     "id": "ent3",
+     "point": "IS-A vs HAS-A: inherit Vehicle (and optionally typed ParkingSpot); compose floors into the lot; inject strategies rather than subclass ParkingLot per pricing rule.",
+     "weight": "extended",
+     "evidence_hint": "Candidate says Vehicle is inheritance, floors are composition, and pricing/allocation are injected strategies not ParkingLot subclasses."
+    }
+   ],
+   "probes": [
+    "What are the core entities and how do they relate—composition versus inheritance?",
+    "What belongs on a Ticket versus on ParkingLot or ParkingSpot?"
+   ],
+   "hints": {
+    "1": "Name the nouns first: lot, floor, spot, vehicle, ticket.",
+    "2": "Show ParkingLot owns floors owns spots; Vehicle is a type hierarchy; Ticket links vehicle, spot, and entry time.",
+    "3": "ParkingLot (1) → ParkingFloor (many) → ParkingSpot (many); Vehicle hierarchy; Ticket(entry time, spot, vehicle); optional Gate/Payment/DisplayBoard; inject strategies, don't subclass the lot per pricing rule."
+   }
+  },
+  {
+   "phase": "class_design",
+   "goal": "Produce a class model with Facade-style ParkingLot, strategies, and clear ownership of spots, tickets, and optional observers/gates.",
+   "must_hit": [
+    {
+     "id": "cd1",
+     "point": "ParkingLot is the Facade entry point holding floors, SpotAllocationStrategy, PricingStrategy, and the active ticket registry.",
+     "weight": "core",
+     "evidence_hint": "Candidate shows ParkingLot.park/unpark orchestrating floors and strategies with an active tickets map."
+    },
+    {
+     "id": "cd2",
+     "point": "ParkingFloor owns spots and free lists/heaps per type; ParkingSpot is a free↔occupied state machine with type check on assign.",
+     "weight": "core",
+     "evidence_hint": "Candidate assigns free-slot tracking to the floor and free/occupied + type check to the spot."
+    },
+    {
+     "id": "cd3",
+     "point": "Patterns that earn points: Strategy (fee + allocation), Factory (Vehicle/Spot from type), Facade (park/unpark), optional Singleton for one lot, Observer for display boards.",
+     "weight": "extended",
+     "evidence_hint": "Candidate names Strategy, Factory, Facade, and optionally Singleton/Observer with the right responsibility each."
+    },
+    {
+     "id": "cd4",
+     "point": "SOLID: OCP for new vehicle/fee/allocation without editing ParkingLot; SRP split lot/floor/strategy; DIP on PricingStrategy and SpotAllocationStrategy.",
+     "weight": "extended",
+     "evidence_hint": "Candidate ties OCP/SRP/DIP to strategies and not putting billing logic inside ParkingLot."
+    }
+   ],
+   "probes": [
+    "Sketch the class diagram and where Strategy, Factory, and Facade sit.",
+    "Who owns free-slot tracking, and who calculates fees?"
+   ],
+   "hints": {
+    "1": "Think of ParkingLot as a thin orchestrator, not a god class.",
+    "2": "Wire ParkingLot to SpotAllocationStrategy and PricingStrategy; floors own spots; tickets stay in an active map.",
+    "3": "ParkingLot Facade holds floors + strategies + tickets; Floor maintains free lists/heaps per type; Spot assign/release with type check; name Strategy/Factory/Facade (and optional Singleton/Observer)."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Define the park/unpark/display API, default allocation rule, ticket lifecycle, and availability query behavior.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "API surface: create_parking_lot; park_vehicle → Ticket or FULL; unpark_vehicle → VehicleInfo or INVALID; display free_count | free_slots | occupied_slots by vehicleType.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists create/park/unpark/display with FULL and INVALID outcomes matching the machine-coding CLI shape."
+    },
+    {
+     "id": "impl2",
+     "point": "Default allocation: same type, lowest floor, lowest slot number; ticket lifecycle park → issue id → active map → unpark by id → fee → free spot → invalidate; ticket format often {lotId}_{floor}_{slot}.",
+     "weight": "core",
+     "evidence_hint": "Candidate states lowest-floor/lowest-slot same-type allocation and the full ticket issue/lookup/invalidate flow, optionally with lotId_floor_slot ids."
+    },
+    {
+     "id": "impl3",
+     "point": "Maintain free counts or free-slot lists/heaps per floor × vehicle type so display/park do not scan all spots when claiming scale.",
+     "weight": "extended",
+     "evidence_hint": "Candidate keeps per floor×type free counts or free-slot structures instead of rescanning every spot."
+    },
+    {
+     "id": "impl4",
+     "point": "If scale is pushed: spot count can be hundreds to tens of thousands (Educative cites ~40k); allocation should be O(log n) per type via heap/TreeSet, not an O(n) full scan.",
+     "weight": "extended",
+     "evidence_hint": "Candidate mentions in-memory is fine at that scale and free-slot heap/TreeSet for O(log n) allocation."
+    }
+   ],
+   "probes": [
+    "Walk through park and unpark end to end, including what the ticket stores.",
+    "How do you choose a spot by default, and how does display stay cheap?"
+   ],
+   "hints": {
+    "1": "Implement the mandatory CLI happy path before optional fees or fancy allocation.",
+    "2": "Park finds same-type lowest floor/slot, issues a ticket into an active map; unpark looks up by id, frees the spot, invalidates the ticket.",
+    "3": "create/park/unpark/display API; default same type + lowest floor + lowest slot; ticket {lotId}_{floor}_{slot}; free structures per floor×type; O(log n) heap/TreeSet if scale is discussed (~40k spots)."
+   }
+  },
+  {
+   "phase": "extensibility",
+   "goal": "Show Strategy-based allocation and pricing so new vehicle types, fees, and policies plug in without editing ParkingLot.",
+   "must_hit": [
+    {
+     "id": "ext1",
+     "point": "SpotAllocationStrategy so nearest-entrance or even-fill is a new class, not an if inside ParkingLot; default remains same type, lowest floor, lowest slot.",
+     "weight": "core",
+     "evidence_hint": "Candidate extracts allocation behind a strategy interface and gives nearest-entrance/even-fill as alternate implementations."
+    },
+    {
+     "id": "ext2",
+     "point": "PricingStrategy.calculate(ticket, exitTime) for hourly/flat/vehicle-type/EV surcharge — never hardcode rates inside unpark.",
+     "weight": "core",
+     "evidence_hint": "Candidate puts fee calculation on PricingStrategy and refuses to embed rates in unpark."
+    },
+    {
+     "id": "ext3",
+     "point": "Enum vs hierarchy for Vehicle/Spot: enum is faster; abstract subtypes win OCP when behavior diverges (e.g. EV charging); prefer hierarchy in OOD, enum OK if timeboxed with centralized mapping.",
+     "weight": "extended",
+     "evidence_hint": "Candidate compares enum speed vs hierarchy OCP and picks based on round type/timebox."
+    },
+    {
+     "id": "ext4",
+     "point": "Singleton ParkingLot is common in tutorials but prefer injecting a single instance for testability unless the interviewer wants classic Singleton; multi-lot needs a repository keyed by id, not a process-wide Singleton.",
+     "weight": "extended",
+     "evidence_hint": "Candidate criticizes process-wide Singleton for testability/multi-lot and suggests DI or ParkingLotRepository."
+    }
+   ],
+   "probes": [
+    "How would you change allocation to nearest-to-entrance without rewriting ParkingLot?",
+    "Where should hourly vs flat vs weekend pricing live, and how do you add EV spots?"
+   ],
+   "hints": {
+    "1": "Anything that might change—how we pick spots or how we price—should not be an if-ladder in the lot.",
+    "2": "Introduce SpotAllocationStrategy and PricingStrategy plugged at construction (OCP).",
+    "3": "New allocation/pricing = new strategy class; EV/handicapped = new spot subtype + allocation filter; prefer DI over Singleton for multi-lot/testability."
+   }
+  },
+  {
+   "phase": "concurrency",
+   "goal": "Prevent double-booking under multi-gate park/unpark and keep locks off the fee-calculation hot path where possible.",
+   "must_hit": [
+    {
+     "id": "conc1",
+     "point": "Two gates must not assign the same spot: race on read-then-write; need synchronized assign or atomic find+occupy under one critical section.",
+     "weight": "core",
+     "evidence_hint": "Candidate names the double-booking race and protects find+occupy as one critical section."
+    },
+    {
+     "id": "conc2",
+     "point": "Prefer fine-grained locks (per floor / per spot type) or ConcurrentHashMap for active tickets; coarse synchronized on the whole lot works for demos but bottlenecks under multi-gate load.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts whole-lot synchronized with per-floor/per-type locks and a concurrent ticket map."
+    },
+    {
+     "id": "conc3",
+     "point": "Multi-gate scaling: do not lock the entire lot for fee calculation; only for assign/release and ticket map update; free-slot heap/TreeSet per floor×type under contention.",
+     "weight": "extended",
+     "evidence_hint": "Candidate scopes locks to assign/release/ticket updates and keeps fee calc outside the global lock."
+    }
+   ],
+   "probes": [
+    "Two cars enter at once — how do you ensure they cannot get the same spot?",
+    "What would you lock under multi-gate load, and what would you leave unlocked?"
+   ],
+   "hints": {
+    "1": "Think about the race between checking a spot is free and marking it occupied.",
+    "2": "Make find-and-occupy atomic; mention per-floor locks as better than locking the whole lot.",
+    "3": "Atomic find+occupy (or synchronized assign); ConcurrentHashMap for tickets; fine-grained per-floor/per-type locks; fee calculation outside the global lock; free-slot heap/TreeSet under contention."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Enum vs class hierarchy for Vehicle/Spot",
+   "strong_answer": "Enum is faster to code; abstract class/subtypes win OCP when behavior diverges (e.g. EV charging). Prefer hierarchy in OOD rounds; enum OK if timeboxed with centralized mapping."
+  },
+  {
+   "topic": "Allocation Strategy vs hardcoded lowest-floor scan",
+   "strong_answer": "Hardcoded lowest-floor/lowest-slot scan passes tests; SpotAllocationStrategy is the expected extensibility answer when allocation policy must change (nearest entrance, even fill)."
+  },
+  {
+   "topic": "Global lock vs fine-grained concurrency",
+   "strong_answer": "synchronized park() is correct but serializes gates; per-floor/per-type locks or compare-and-set on spot occupancy show senior thinking — call out the double-booking race explicitly."
+  },
+  {
+   "topic": "Singleton ParkingLot vs dependency injection",
+   "strong_answer": "Singleton is common in tutorials; prefer injecting a single instance for testability unless the interviewer wants classic Singleton; multi-lot drops process-wide Singleton for a repository keyed by id."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming a car can take a truck spot (or vice versa) without asking",
+   "correction": "Product rule; default is exact type match; size hierarchy is a deliberate extension."
+  },
+  {
+   "trap": "Ignoring the two-cars-same-spot race under concurrent entry",
+   "correction": "Race on read-then-write; show synchronized assign or atomic occupy."
+  },
+  {
+   "trap": "Adding EV charging / handicapped spots via endless switch inside ParkingLot",
+   "correction": "New spot subtype plus allocation filter; do not switch forever inside ParkingLot."
+  },
+  {
+   "trap": "Hardcoding hourly vs flat vs weekend pricing in unpark",
+   "correction": "Swap PricingStrategy; receipt can include breakdown."
+  },
+  {
+   "trap": "Using a process-wide Singleton when asked for multiple parking lots / multi-city",
+   "correction": "Drop process-wide Singleton; use ParkingLotRepository keyed by id."
+  },
+  {
+   "trap": "Implementing nearest-to-entrance by editing ParkingLot conditionals",
+   "correction": "New SpotAllocationStrategy using spot distance/id order; heap by distance."
+  },
+  {
+   "trap": "God-class ParkingLot that also bills, prints, and persists",
+   "correction": "Split by SRP or the interviewer docks design score."
+  },
+  {
+   "trap": "Finishing optional extensibility but failing mandatory park/unpark/display",
+   "correction": "Mandatory first: park, unpark, and display before optional features."
+  }
+ ]
+}

@@ -1,0 +1,340 @@
+{
+ "id": "hq03_chat_whatsapp",
+ "title": "Design a chat / messaging system (WhatsApp / Messenger)",
+ "type": "HLD",
+ "relevance": "High — classic 45-min HLD round at FAANG + Indian product cos (Meta, WhatsApp/Meta infra, Uber, Flipkart, Atlassian, PhonePe, etc.); probes WebSockets, stateful gateways, offline delivery, fan-out, and presence.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h01_networking",
+  "h02_load_balancing",
+  "h08_message_queues",
+  "h14_estimation"
+ ],
+ "company_notes": "Campus/intern/new-grad: very common WhatsApp/chat prompt covering WS vs polling, online path, offline store, and simple group fan-out. Mid-senior (1–4+ YOE): Redis pub/sub vs sticky hash, per-device sync, heartbeat/ACK failures, media pipeline, connection and write-QPS estimation — Meta/WhatsApp, Uber, Flipkart, Atlassian. Among top HLD prompts with URL shortener, news feed, rate limiter; depth stops at tradeoffs, not E2EE or Erlang OTP.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Scope 1:1/small-group chat vs Slack/Discord, lock functional NFRs, and park out-of-scope work.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "In scope: 1:1 + small group text, online/offline delivery, sent/delivered/read receipts, presence/last-seen, media via separate upload; optional typing indicators.",
+     "weight": "core",
+     "evidence_hint": "Lists 1:1 and small groups, offline delivery, receipt ladder, presence, and media off the chat path; may mention typing as optional."
+    },
+    {
+     "id": "req2",
+     "point": "Explicitly out of scope: voice/video calls, Stories/channels at Discord scale, full E2EE crypto design, spam/abuse ML.",
+     "weight": "core",
+     "evidence_hint": "Says voice/video, Discord-scale channels, crypto implementation, and spam ML are deferred."
+    },
+    {
+     "id": "req3",
+     "point": "NFRs: p99 delivery latency ≪ 500 ms when online; no silent message loss; high availability of gateways; store offline messages for days–weeks (e.g. 30d TTL) unless product says otherwise.",
+     "weight": "core",
+     "evidence_hint": "Cites sub-500 ms online latency, no silent loss, gateway HA, and multi-day offline retention such as 30d TTL."
+    },
+    {
+     "id": "req4",
+     "point": "Clarify product framing: history forever on server (Messenger-like) vs store-until-delivered / client-primary (classic WhatsApp); cap group size early (e.g. 100 / 256 / 1024).",
+     "weight": "extended",
+     "evidence_hint": "Asks whether server keeps forever history or client-primary store-until-delivered, and proposes a small group size cap like 100, 256, or 1024."
+    }
+   ],
+   "probes": [
+    "What product are we designing—WhatsApp/Messenger small groups or Slack/Discord large channels—and what is explicitly out of scope?"
+   ],
+   "hints": {
+    "1": "Start by naming the product flavor before drawing boxes.",
+    "2": "Separate functional (1:1, groups, receipts, presence, media) from NFRs (latency, durability, offline TTL) and call out Discord-scale and E2EE crypto as out of scope.",
+    "3": "State: 1:1 + small groups, offline store for days–weeks (e.g. 30d), p99 ≪ 500 ms online, no silent loss; clarify Messenger forever-history vs WhatsApp store-until-delivered; cap groups at 100/256/1024."
+   }
+  },
+  {
+   "phase": "estimation",
+   "goal": "Agree round-number DAU, concurrent sockets, message and fan-out QPS, gateway count, and storage/presence load.",
+   "must_hit": [
+    {
+     "id": "est1",
+     "point": "Example scale: 500M DAU, ~25% concurrent online → ~125M open sockets.",
+     "weight": "core",
+     "evidence_hint": "Uses 500M DAU and ~25% concurrent to land ~125M open sockets."
+    },
+    {
+     "id": "est2",
+     "point": "~40 msgs/user/day → ~20B msgs/day ≈ ~230K msg/s average; peak 5–10×; with avg recipients ≈ 2–3 after 1:1 dominance, delivery QPS is a few× send QPS.",
+     "weight": "core",
+     "evidence_hint": "Walks ~40 msgs/user/day to ~20B/day ≈ ~230K msg/s, peak 5–10×, and delivery a few× send given ~2–3 recipients."
+    },
+    {
+     "id": "est3",
+     "point": "Gateways at 100K–1M conns/box → hundreds–thousands of chat servers; WhatsApp Erlang lore includes millions/box (2M+ TCP connections/box).",
+     "weight": "extended",
+     "evidence_hint": "Divides concurrent sockets by 100K–1M conns/box into hundreds–thousands of servers, optionally citing millions/box or 2M+ folklore."
+    },
+    {
+     "id": "est4",
+     "point": "Storage: avg 100 B ciphertext + metadata; 20B/day → ~2 TB/day raw before replication/indexes; media dwarfs text → object store + CDN; presence heartbeats (e.g. every 30s) can dominate QPS—keep presence off the message DB write path.",
+     "weight": "extended",
+     "evidence_hint": "Estimates ~2 TB/day from 100 B × 20B msgs, points media to object store/CDN, and warns 30s heartbeats must not hit the message DB."
+    }
+   ],
+   "probes": [
+    "Walk me through concurrent connections, average/peak message QPS, and how many chat gateways you need."
+   ],
+   "hints": {
+    "1": "Pick DAU and percent online with the interviewer first.",
+    "2": "Derive open sockets from concurrent users, then msg/s from msgs/user/day, then gateway count from conns/box.",
+    "3": "Example: 500M DAU × ~25% → ~125M sockets; ~40 msgs/user/day → ~20B/day ≈ ~230K msg/s (peak 5–10×); 100K–1M conns/box → hundreds–thousands of servers; ~2 TB/day text at 100 B/msg; keep 30s presence heartbeats off the message DB."
+   }
+  },
+  {
+   "phase": "api",
+   "goal": "Split HTTP control-plane from WebSocket chat commands and define ACK/sync on reconnect.",
+   "must_hit": [
+    {
+     "id": "api1",
+     "point": "REST/HTTP for signup/login, profile, create group, pre-signed media URL, and history pagination (if server history).",
+     "weight": "core",
+     "evidence_hint": "Lists HTTP endpoints for auth/profile/groups, pre-signed media URL, and optional history pagination."
+    },
+    {
+     "id": "api2",
+     "point": "WebSocket commands (JSON/Protobuf): sendMessage {chatId, clientMsgId, ciphertext, attachmentRefs} → {serverMsgId, seq}; ack {messageId}; receipt {messageId, type}; presence / typing.",
+     "weight": "core",
+     "evidence_hint": "Names sendMessage with clientMsgId/ciphertext, ack, receipt types, and presence/typing over WS."
+    },
+    {
+     "id": "api3",
+     "point": "Server → client: newMessage, receiptUpdate, chatUpdate; client must ACK so inbox can clear; auth token on WS handshake; reconnect with last seq / inbox sync.",
+     "weight": "extended",
+     "evidence_hint": "Describes server pushes, client ACK clearing inbox, handshake token, and reconnect catch-up via last seq or inbox sync."
+    }
+   ],
+   "probes": [
+    "What goes over HTTP vs WebSocket, and how does a client reconnect without losing messages?"
+   ],
+   "hints": {
+    "1": "Think control-plane HTTP vs bidirectional chat transport.",
+    "2": "HTTP for auth/groups/media URLs/history; WS for send/ack/receipt/presence; reconnect carries last seq.",
+    "3": "REST: login, create group, pre-signed media URL, history; WS: sendMessage→{serverMsgId,seq}, ack, receipt, presence/typing; server pushes newMessage/receiptUpdate; token on handshake; reconnect syncs from last seq/inbox."
+   }
+  },
+  {
+   "phase": "data_model",
+   "goal": "Model users/devices, chats/members, append-only messages, per-recipient inbox, and session/presence keys.",
+   "must_hit": [
+    {
+     "id": "dm1",
+     "point": "User/Device: user_id with devices[device_id, push_token, last_seq]; Chat: chat_id, type (dm/group); ChatMember (chat_id, user_id) plus reverse index user_id → chat_id.",
+     "weight": "core",
+     "evidence_hint": "Shows device rows with push_token/last_seq and chat membership with a reverse user→chats index."
+    },
+    {
+     "id": "dm2",
+     "point": "Message: PK chat_id, SK seq or timestamp+id; fields sender_id, client_msg_id (unique), ciphertext, media_refs; wide-column/KV (Cassandra/Dynamo) fits append + time-range reads.",
+     "weight": "core",
+     "evidence_hint": "Uses chat_id + seq (or timestamp+id) with client_msg_id uniqueness and ciphertext/media_refs in an append-friendly store."
+    },
+    {
+     "id": "dm3",
+     "point": "Inbox (undelivered): PK user_id or device_id, SK message_id/time; TTL; delete on ACK; for small N, fan-out-on-write copies inbox rows per recipient.",
+     "weight": "core",
+     "evidence_hint": "Describes per-user or per-device inbox with TTL, delete-on-ACK, and per-recipient copies for small groups."
+    },
+    {
+     "id": "dm4",
+     "point": "Session: user_id → gateway_id (Redis); Presence: user_id → online|last_seen with TTL refreshed by heartbeat.",
+     "weight": "extended",
+     "evidence_hint": "Puts session map and presence/last-seen with heartbeat TTL in Redis (or equivalent), separate from durable messages."
+    }
+   ],
+   "probes": [
+    "How do you store messages, undelivered inbox rows, and which gateway a user is connected to?"
+   ],
+   "hints": {
+    "1": "Separate durable chat history from undelivered inbox and ephemeral session/presence.",
+    "2": "Append messages by chat_id+seq; inbox keyed by user/device; session and presence in Redis with TTL.",
+    "3": "Message PK chat_id SK seq with client_msg_id; inbox PK user_id/device_id deleted on ACK with TTL; fan-out-on-write for small N; Redis user_id→gateway_id and presence TTL from heartbeats."
+   }
+  },
+  {
+   "phase": "architecture",
+   "goal": "Draw clients, L4 LB, stateful WS gateways, durable message path, pub/sub routing, push, and media offload.",
+   "must_hit": [
+    {
+     "id": "arch1",
+     "point": "Clients ↔ L4 LB ↔ chat gateway cluster (WS; local user→conn map); separate stateless API/Auth over HTTP.",
+     "weight": "core",
+     "evidence_hint": "Shows L4 LB into stateful WS gateways with local connection maps plus a separate HTTP auth/API service."
+    },
+    {
+     "id": "arch2",
+     "point": "Message service: validate → assign seq/id → durable write (messages + inboxes) then publish to pub/sub or Kafka; durability before best-effort realtime publish.",
+     "weight": "core",
+     "evidence_hint": "Persists message and per-recipient inbox first, then publishes; does not rely on pub/sub alone for durability."
+    },
+    {
+     "id": "arch3",
+     "point": "Routing backplane: Redis pub/sub sharded by user_id (or Kafka + workers that look up session and RPC/push to the right gateway); Session + Presence in Redis; Push service → APNs/FCM when offline.",
+     "weight": "core",
+     "evidence_hint": "Routes via sharded Redis pub/sub or Kafka+session lookup to the owning gateway; offline path uses APNs/FCM."
+    },
+    {
+     "id": "arch4",
+     "point": "Media: client → object storage via pre-signed URL; CDN for download; chat carries URL/hash, not blobs over WS. Happy path online 1:1: A→gateway → persist → pub/sub to B’s channel → B’s gateway → WS push → B ACK → clear inbox → delivery receipt to A.",
+     "weight": "extended",
+     "evidence_hint": "Offloads media to pre-signed object storage/CDN and narrates persist→pub/sub→WS→ACK→receipt for online 1:1."
+    }
+   ],
+   "probes": [
+    "Walk the online 1:1 path end-to-end when sender and receiver are on different gateways."
+   ],
+   "hints": {
+    "1": "Sender and receiver rarely share a host—something must route across gateways.",
+    "2": "Persist first, then pub/sub or Kafka to the receiver’s gateway via session registry; push if offline.",
+    "3": "A→gateway→message service durable write (messages+inbox)→Redis pub/sub (user-sharded)→B’s gateway→WS→ACK clears inbox→delivery receipt; offline uses APNs/FCM; media via pre-signed object storage."
+   }
+  },
+  {
+   "phase": "deep_dives",
+   "goal": "Defend cross-gateway scale-out, group fan-out model, multi-device sync, flaky WS, ordering, and E2EE depth limits.",
+   "must_hit": [
+    {
+     "id": "dd1",
+     "point": "Scale beyond one gateway: prefer sharded Redis pub/sub by user_id (durable inbox first) over Kafka topic-per-user; consistent-hash sticky users works but is painful on rebalance; naive LB without routing breaks delivery.",
+     "weight": "core",
+     "evidence_hint": "Rejects topic-per-user Kafka, favors user-sharded Redis pub/sub after durable inbox, and notes sticky hash rebalance pain."
+    },
+    {
+     "id": "dd2",
+     "point": "Group fan-out-on-write vs fan-out-on-read: write-amplification OK for ≤100–1K members; large channels store one log and let clients pull/cursor—different design from WhatsApp small groups.",
+     "weight": "core",
+     "evidence_hint": "Uses fan-out-on-write for ≤100–1K; switches to fan-out-on-read/log+cursor for Discord-scale channels."
+    },
+    {
+     "id": "dd3",
+     "point": "Multi-device: inbox/cursor per device; pub/sub still per user; all devices get copies; cap linked device count. WS death: app-level ping/pong; ACK timeout → close → reconnect → inbox catch-up; exponential backoff + jitter (thundering herd).",
+     "weight": "core",
+     "evidence_hint": "Per-device inbox/cursor, cap devices; ping/pong, ACK-driven reconnect with backoff+jitter, then inbox catch-up."
+    },
+    {
+     "id": "dd4",
+     "point": "Ordering & retries: per-conversation (or per-sender-in-chat) sequence—not global total order; client_msg_id dedupe; at-least-once + idempotent apply; exactly-once end-to-end is not the interview default. E2EE: mention Signal Protocol—server stores ciphertext + metadata; defer crypto.",
+     "weight": "extended",
+     "evidence_hint": "Argues per-chat seq + client_msg_id idempotency and at-least-once; mentions Signal/ciphertext only, no Double Ratchet deep dive."
+    }
+   ],
+   "probes": [
+    "How do you deliver when users are on different gateways, and when would you switch from fan-out-on-write to fan-out-on-read?"
+   ],
+   "hints": {
+    "1": "Cross-gateway routing and group size drive most of the hard tradeoffs.",
+    "2": "Durable inbox + user-sharded pub/sub; fan-out-on-write only while groups stay small; per-device sync.",
+    "3": "Sharded Redis pub/sub by user_id after inbox write; fan-out-on-write for ≤100–1K, fan-out-on-read for large channels; per-device inbox; ping/pong + backoff reconnect; per-chat seq + client_msg_id; mention Signal, don’t implement."
+   }
+  },
+  {
+   "phase": "bottlenecks",
+   "goal": "Name connection, hot-key, write-path, presence, push, regional, and gateway-failure limits and mitigations.",
+   "must_hit": [
+    {
+     "id": "bn1",
+     "point": "Connection count / FD limits on gateways → more boxes, efficient runtime (evented / Erlang-style), tune kernel socket limits; modern boxes hold 10⁴–10⁶ connections (WhatsApp lore: millions/box).",
+     "weight": "core",
+     "evidence_hint": "Cites FD/connection limits, horizontal scale, evented/Erlang-style runtimes, and 10⁴–10⁶ or millions/box lore."
+    },
+    {
+     "id": "bn2",
+     "point": "Hot users / large groups → adaptive pub/sub key (user vs chat), rate limits, degrade receipts/typing first; inbox/message DB write QPS → partition by user_id/chat_id, TTL compaction, don’t store media in DB.",
+     "weight": "core",
+     "evidence_hint": "Adaptive pub/sub keys, rate limits, degrade receipts/typing; partition writes; TTL; media out of DB."
+    },
+    {
+     "id": "bn3",
+     "point": "Presence heartbeat storm → separate store, coarser TTL, fan-out presence only to open chats/friends subset; push provider quotas → batch, quiet hours, collapse notifications.",
+     "weight": "extended",
+     "evidence_hint": "Keeps presence off the message write path with separate store/coarser TTL/scoped fan-out; batches/collapses pushes."
+    },
+    {
+     "id": "bn4",
+     "point": "Regional latency → regional gateway pools + local session; cross-region for roaming. Failure: gateway death → clients reconnect elsewhere, re-subscribe pub/sub, drain inbox; no single gateway is source of truth for history.",
+     "weight": "extended",
+     "evidence_hint": "Regional gateway/session pools; on gateway death, reconnect, re-subscribe, drain inbox—history is not on the gateway."
+    }
+   ],
+   "probes": [
+    "What breaks first under load—connections, presence heartbeats, or inbox writes—and how do you scale each?"
+   ],
+   "hints": {
+    "1": "List connection FDs, write QPS, and presence storms separately.",
+    "2": "Scale gateways horizontally; partition inbox/message writes; isolate presence; regionalize.",
+    "3": "More evented gateways for 10⁴–10⁶ conns/box; partition by user_id/chat_id; presence in separate store with coarser TTL; adaptive pub/sub for hot groups; regional pools; gateway death → reconnect + inbox drain, not history on the box."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Sharded Redis pub/sub by user_id vs Kafka topic-per-user vs sticky consistent-hash",
+   "strong_answer": "Durable inbox first, then sharded Redis pub/sub keyed by user_id for cross-gateway delivery. Kafka topic-per-user will not scale operationally at WhatsApp scale. Consistent-hash sticky users can work but rebalance is painful; naive LB without routing breaks delivery when sender and receiver are on different hosts."
+  },
+  {
+   "topic": "Fan-out-on-write vs fan-out-on-read",
+   "strong_answer": "For WhatsApp-style small groups, fan-out-on-write (copy inbox rows per recipient) is fine while write-amplification stays OK for ≤100–1K members. Large Discord-style channels should store one log and let clients pull/cursor (fan-out-on-read)—do not mix the two after the interviewer scoped small groups."
+  },
+  {
+   "topic": "Per-device inbox vs shared user inbox",
+   "strong_answer": "Inbox/cursor per device; pub/sub can still be per user so all devices get copies; cap linked devices. Clearing a shared inbox when only one device ACKed drops messages for other devices."
+  },
+  {
+   "topic": "E2EE (Signal) vs server-side features",
+   "strong_answer": "Mention Signal Protocol: server stores ciphertext + metadata; server-side search/moderation and multi-device key management get hard. In a 45-min HLD, mention E2EE and defer crypto rather than deriving Double Ratchet."
+  },
+  {
+   "topic": "WebSocket vs polling / SSE",
+   "strong_answer": "HTTP for auth/profile/media URLs; WebSocket (or custom TCP) for bidirectional chat. Polling wastes battery; SSE is server→client only, so it is a poor fit for chat send path."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Drawing WebSockets then forgetting cross-server routing when users land on different gateways.",
+   "correction": "Add a session registry (user_id → gateway_id) and/or sharded pub/sub so the receiver’s gateway gets the message."
+  },
+  {
+   "trap": "Using a Kafka topic-per-user for inbox/routing.",
+   "correction": "That is operationally impossible at WhatsApp scale; use durable inbox plus user-sharded Redis pub/sub (or Kafka with session lookup workers), not one topic per user."
+  },
+  {
+   "trap": "Claiming exactly-once delivery without client idempotency / ACK.",
+   "correction": "Default is at-least-once to devices plus client ACK and idempotent message_id (client UUID); exactly-once end-to-end is not the interview default."
+  },
+  {
+   "trap": "Putting images on the WS path or as DB BLOBs.",
+   "correction": "Pre-signed upload to object storage; chat message carries a URL/hash only."
+  },
+  {
+   "trap": "Requiring global message ordering across all chats.",
+   "correction": "Order per-conversation (or per-sender-in-chat) with a sequence/partition key—not a global total order."
+  },
+  {
+   "trap": "Treating presence as strongly consistent or writing every heartbeat to Cassandra.",
+   "correction": "Presence is eventual/lossy via heartbeats + Redis TTL/last-seen; keep it off the message DB write path."
+  },
+  {
+   "trap": "Designing Discord-sized channels with WhatsApp fan-out-on-write (or vice versa) after small groups were scoped.",
+   "correction": "Cap group size early; use fan-out-on-write for small N and a different fan-out-on-read design for large channels."
+  },
+  {
+   "trap": "Ignoring multi-device or clearing a shared inbox when only one device ACKed.",
+   "correction": "Per-device inbox or sync cursor; do not clear undelivered state for all devices on a single device ACK."
+  },
+  {
+   "trap": "Reconnect thundering herd with synchronized retries after a regional outage.",
+   "correction": "Exponential backoff + jitter on reconnect; app-level ping/pong and inbox catch-up after ACK timeout."
+  },
+  {
+   "trap": "Spending half the interview on Signal Protocol math.",
+   "correction": "Mention E2EE/ciphertext-at-rest on server; spend the round on delivery, storage, fan-out, and failure modes."
+  }
+ ]
+}

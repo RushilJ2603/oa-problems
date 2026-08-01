@@ -1,0 +1,352 @@
+{
+ "id": "hq07_web_crawler",
+ "title": "Design a Web Crawler",
+ "type": "HLD",
+ "relevance": "High — canonical 45-min HLD (Alex Xu Vol.1 ch.9); FAANG + Indian product cos (Google, Meta, Amazon, Microsoft); probes pipelines, politeness, dedup, and scheduling more than a public REST API.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h01_networking",
+  "h08_message_queues",
+  "h09_rate_limiting",
+  "h03_caching",
+  "h11_storage",
+  "h14_estimation",
+  "h15_building_blocks"
+ ],
+ "company_notes": "Campus/new-grad: seed→frontier→fetch→parse with robots + basic dedup; Bloom and Mercator queues differentiate. Experienced/FAANG (1–5+ YOE): same prompt with deep probes on two-tier frontier, host sharding, DNS, retry/DLQ, content dedup, traps, and re-crawl scheduling. Top-tier canonical HLD (with URL shortener, rate limiter, chat, news feed, YouTube); in ByteByteGo Vol.1, Hello Interview, and system-design-primer.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Scope crawl+store vs search/LLM training, lock functional/non-functional needs, and state scale framing aloud.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Functional in-scope: seed URLs, fetch HTML, extract text and links, store content, discover new URLs, respect robots.txt, avoid duplicate URL work.",
+     "weight": "core",
+     "evidence_hint": "Lists seed→fetch→extract→store→discover with robots and URL dedup as must-haves."
+    },
+    {
+     "id": "req2",
+     "point": "Park out of scope unless asked: training the LLM / building search ranker, images/video, JS-rendered SPAs, authenticated pages.",
+     "weight": "core",
+     "evidence_hint": "Explicitly parks indexing/ranking, media, headless JS, and login walls."
+    },
+    {
+     "id": "req3",
+     "point": "Non-functional: politeness, fault tolerance (resume without losing frontier), scalability to billions of pages, robustness to bad HTML, traps, and timeouts.",
+     "weight": "core",
+     "evidence_hint": "Names politeness, resumable frontier, billion-page scale, and trap/timeout robustness."
+    },
+    {
+     "id": "req4",
+     "point": "Pick a framing and state assumptions — e.g. Hello Interview ~10B pages, ~2 MB/page, finish in ~5 days; or primer ~1B links with weekly refresh.",
+     "weight": "extended",
+     "evidence_hint": "States one concrete framing with those page/size/time assumptions out loud."
+    }
+   ],
+   "probes": [
+    "What are we building — a crawler that stores pages, or a full search engine?",
+    "What stays out of scope unless I pull you there?"
+   ],
+   "hints": {
+    "1": "Start by listing what the crawler must do versus what search/LLM systems do downstream.",
+    "2": "Separate functional (seed, fetch, parse, store, robots, dedup) from non-functional (politeness, resume, scale, traps).",
+    "3": "Say: crawl+store in; indexing/ranking parked; pick ~10B pages / ~5 days or primer ~1B links and stick to it."
+   }
+  },
+  {
+   "phase": "estimation",
+   "goal": "Derive order-of-magnitude throughput, bandwidth, and storage, and explain why many hosts × low per-host QPS still scales.",
+   "must_hit": [
+    {
+     "id": "est1",
+     "point": "Throughput: 10B pages / 5 days ≈ ~23k pages/s average (order-of-magnitude; peak higher).",
+     "weight": "core",
+     "evidence_hint": "States ~23k pages/s from 10B over 5 days as average OM."
+    },
+    {
+     "id": "est2",
+     "point": "Bandwidth: 23k × 2 MB ≈ tens of GB/s aggregate — drives fleet size and NIC class, not API QPS.",
+     "weight": "core",
+     "evidence_hint": "Ties aggregate tens of GB/s to fleet/NICs rather than public API QPS."
+    },
+    {
+     "id": "est3",
+     "point": "Storage: 10B × (HTML or extracted text) → multi-PB; compression and content dedup matter.",
+     "weight": "extended",
+     "evidence_hint": "Calls multi-PB storage and why compression/content dedup help."
+    },
+    {
+     "id": "est4",
+     "point": "Insight: per-host ~1 req/s still yields huge global QPS because you crawl many hosts in parallel.",
+     "weight": "core",
+     "evidence_hint": "Explains global QPS comes from host parallelism, not raising per-host rate."
+    }
+   ],
+   "probes": [
+    "Walk me through back-of-envelope for pages/s, bandwidth, and storage.",
+    "How do you get high global throughput if you only do about one request per host per second?"
+   ],
+   "hints": {
+    "1": "Use the framing numbers you already stated (pages, days, size per page).",
+    "2": "Compute pages/s, then bandwidth, then storage order of magnitude; call out parallel hosts.",
+    "3": "Say ~23k pages/s, tens of GB/s, multi-PB, and many hosts × ~1 req/s."
+   }
+  },
+  {
+   "phase": "api",
+   "goal": "Clarify this is an internal pipeline with a thin control plane, not a public product API.",
+   "must_hit": [
+    {
+     "id": "api1",
+     "point": "Crawler is mostly an internal pipeline; sketch control-plane ops, not a public product API.",
+     "weight": "core",
+     "evidence_hint": "Says data pipeline + control plane; not a user-facing REST product."
+    },
+    {
+     "id": "api2",
+     "point": "POST /seeds submits seed URL list with priority and max_depth; GET status/counts for crawled, queued, failed.",
+     "weight": "core",
+     "evidence_hint": "Mentions seed submit and status/count endpoints."
+    },
+    {
+     "id": "api3",
+     "point": "Workers pull next URL from frontier (or consume queue), write blobs, ack on success; DLQ after N fetch failures; optional POST recrawl.",
+     "weight": "extended",
+     "evidence_hint": "Describes worker pull/ack, DLQ on repeated fetch failures, optional force refresh."
+    }
+   ],
+   "probes": [
+    "Where is the API for this system?",
+    "How do operators seed a crawl and see progress?"
+   ],
+   "hints": {
+    "1": "Ask whether they expect a public API or an internal control plane.",
+    "2": "Sketch seeds, status, optional recrawl; workers consume frontier/queues.",
+    "3": "POST /seeds, GET /status, worker pull+ack+DLQ; clarify pipeline not product API."
+   }
+  },
+  {
+   "phase": "data_model",
+   "goal": "Model URL/host metadata, seen-sets, blob keys, and where frontier/scheduling state lives.",
+   "must_hit": [
+    {
+     "id": "dm1",
+     "point": "Url record: url_id, canonical_url, host, status (queued|fetched|parsed|skipped|failed), depth, priority, content_hash, html/text blob keys, last_crawled_at, next_fetch_at, http_status.",
+     "weight": "core",
+     "evidence_hint": "Lists canonical URL fields including status, depth, priority, hashes, blob keys, and fetch times."
+    },
+    {
+     "id": "dm2",
+     "point": "Host record caches robots_txt, crawl_delay_s, last_fetch_at, robots_fetched_at for politeness.",
+     "weight": "core",
+     "evidence_hint": "Has a Host entity holding robots cache and crawl-delay/last-fetch timing."
+    },
+    {
+     "id": "dm3",
+     "point": "SeenUrl / Bloom of canonical URL hashes; optional SeenContent / Bloom or indexed content hashes; blobs like raw/{url_id}.html.gz and text/{url_id}.txt.gz.",
+     "weight": "extended",
+     "evidence_hint": "Separates URL-seen and content-seen from object-store blob keys."
+    },
+    {
+     "id": "dm4",
+     "point": "Metadata in Dynamo/Cassandra/Postgres sharded by url_id or host; frontier via Redis/SQS/Kafka plus per-host scheduling state.",
+     "weight": "extended",
+     "evidence_hint": "Places metadata store and frontier/queue tech with per-host schedule state."
+    }
+   ],
+   "probes": [
+    "What tables or records do you need for URLs, hosts, and seen checks?",
+    "Where does raw HTML live versus crawl metadata?"
+   ],
+   "hints": {
+    "1": "You need URL state, host politeness/robots, and seen-sets separate from blobs.",
+    "2": "Sketch Url + Host + SeenUrl/SeenContent + object-store keys + frontier store.",
+    "3": "Url with status/depth/priority/blob keys; Host with robots/crawl_delay; Bloom/DB seen; S3 keys; Redis/SQS/Kafka frontier."
+   }
+  },
+  {
+   "phase": "architecture",
+   "goal": "Draw the closed seed→frontier→fetch→parse→re-enqueue loop with queued stages and clear system boundary.",
+   "must_hit": [
+    {
+     "id": "arch1",
+     "point": "Closed loop: seed URLs → URL frontier → DNS → fetch HTML → optional content-seen → parse text+links → URL filter/canonicalize → URL-seen → re-enqueue survivors; output is blob store + metadata.",
+     "weight": "core",
+     "evidence_hint": "Draws the full closed crawl loop ending in blobs/metadata, not a search UI."
+    },
+    {
+     "id": "arch2",
+     "point": "URL frontier balances priority with politeness via Mercator-style front queues (priority) and back queues per host (or host-hash); scheduler releases next URL when host delay allows (~1 in-flight request/host + crawl-delay).",
+     "weight": "core",
+     "evidence_hint": "Names two-tier frontier and per-host release with delay / ~1 in-flight."
+    },
+    {
+     "id": "arch3",
+     "point": "Pipeline fetch vs parse with queues between stages; put IDs/blob keys on the queue, not raw HTML; fetcher writes object storage then enqueues parse.",
+     "weight": "core",
+     "evidence_hint": "Splits fetch/parse, queues blob keys, fetch writes object store then parse queue."
+    },
+    {
+     "id": "arch4",
+     "point": "Optional continuous mode: re-crawl scheduler scans next_fetch_at and re-enqueues; shard by hostname so politeness stays local.",
+     "weight": "extended",
+     "evidence_hint": "Mentions next_fetch_at scheduler and host-hash frontier shards."
+    }
+   ],
+   "probes": [
+    "Draw the high-level components and the closed crawl loop.",
+    "How does the frontier enforce both priority and politeness?"
+   ],
+   "hints": {
+    "1": "Start from seeds and follow one URL through fetch, store, parse, and re-enqueue.",
+    "2": "Call out frontier (priority + per-host back queues), fetcher, parser, queues, blob store.",
+    "3": "Seed injector → Mercator frontier → fetcher (DNS/robots/GET/blob) → parse queue → parser (links/seen) → frontier; optional re-crawl scheduler."
+   }
+  },
+  {
+   "phase": "deep_dives",
+   "goal": "Defend 2–3 tradeoffs: politeness vs throughput, frontier design, Bloom vs exact seen, pipeline vs monolith.",
+   "must_hit": [
+    {
+     "id": "dd1",
+     "point": "Politeness vs throughput: stricter per-host delay protects sites/avoids bans but stretches wall-clock; win by parallelizing across hosts, not raising per-host QPS.",
+     "weight": "core",
+     "evidence_hint": "Argues host parallelism as the lever, not higher per-host rate."
+    },
+    {
+     "id": "dd2",
+     "point": "Two-tier Mercator frontier localizes politeness; single priority queue + Redis host locks is simpler ops but hotter coordination — name both.",
+     "weight": "core",
+     "evidence_hint": "Compares Mercator queues vs shared queue + host locks."
+    },
+    {
+     "id": "dd3",
+     "point": "Bloom vs exact DB for URL-seen: Bloom is tiny memory with false positives that skip some new URLs (usually OK); exact store has no false skip but is heavier.",
+     "weight": "core",
+     "evidence_hint": "States FP-only Bloom tradeoff vs exact store cost."
+    },
+    {
+     "id": "dd4",
+     "point": "Pipelined fetch/parse isolates I/O failures and allows re-parse without re-fetch vs monolithic crawler with fewer moving parts.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts pipeline retry/reparse benefits with monolith simplicity."
+    },
+    {
+     "id": "dd5",
+     "point": "BFS is simple; production mixes importance (PageRank-like / seed distance) + freshness deficit; host-hash sharding makes local politeness = global politeness with approximate cross-shard priority.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts BFS vs priority+freshness and notes sharding priority approximation."
+    }
+   ],
+   "probes": [
+    "How do you keep the crawler polite without killing throughput?",
+    "Bloom filter or exact store for URL-seen — which and why?"
+   ],
+   "hints": {
+    "1": "Pick two tradeoffs from frontier, seen-set, and fetch/parse split.",
+    "2": "For each: name both options, cost of each, and what you’d ship in an interview design.",
+    "3": "Prefer Mercator two-tier + Bloom URL-seen + pipelined fetch/parse; scale via many hosts, not higher per-host QPS."
+   }
+  },
+  {
+   "phase": "bottlenecks",
+   "goal": "Identify DNS, frontier hotspots, fetch/parse lag, dedup size, bandwidth/sockets, and crawler traps — and how to scale each.",
+   "must_hit": [
+    {
+     "id": "bn1",
+     "point": "DNS is a real bottleneck at high QPS: cache resolutions aggressively and/or use multi-provider/custom resolver; don’t block the fleet on uncached lookups.",
+     "weight": "core",
+     "evidence_hint": "Calls DNS a bottleneck and answers with caching / multi-provider / custom resolver."
+    },
+    {
+     "id": "bn2",
+     "point": "Frontier hotspot: shard by host and keep per-host state with the shard owner so politeness stays local.",
+     "weight": "core",
+     "evidence_hint": "Shards frontier by hostname with owner-local per-host state."
+    },
+    {
+     "id": "bn3",
+     "point": "Fetcher failures: retries with exponential backoff + jitter, DLQ, don’t block other hosts; parser lag: autoscale off queue depth, HTML stays in blob store.",
+     "weight": "extended",
+     "evidence_hint": "Separates flaky-host retry/DLQ from parser autoscaling on queue depth."
+    },
+    {
+     "id": "bn4",
+     "point": "Traps/spam: max hop depth, per-host page budget, URL pattern filters/regex denylist, timeouts; also bandwidth/sockets via high concurrency, pooling, timeouts, max page size guards.",
+     "weight": "extended",
+     "evidence_hint": "Lists depth/budget/pattern/timeouts plus connection/page-size guards."
+    }
+   ],
+   "probes": [
+    "What bottlenecks show up first at scale, and how do you address them?",
+    "How do you handle crawler traps and flaky hosts?"
+   ],
+   "hints": {
+    "1": "Think DNS, frontier contention, fetch vs parse imbalance, and traps.",
+    "2": "For each bottleneck: cache/shard/retry/autoscale/cap — map one fix.",
+    "3": "DNS cache; host-sharded frontier; backoff+DLQ; parser autoscaling on blobs; depth/budget/denylist."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Politeness vs throughput",
+   "strong_answer": "Stricter per-host delay protects sites and avoids bans but stretches wall-clock; achieve high global throughput by crawling many hosts in parallel, not by raising per-host QPS."
+  },
+  {
+   "topic": "Two-tier Mercator frontier vs single priority queue + Redis host locks",
+   "strong_answer": "Mercator front (priority) + back (per-host) queues localize politeness; shared queue + host locks is simpler operationally but creates hotter coordination — name both."
+  },
+  {
+   "topic": "Bloom vs exact DB for URL-seen",
+   "strong_answer": "Bloom uses tiny memory with false positives that may skip some never-seen URLs (usually acceptable); exact DB avoids false skips but is heavier. Same idea for content-seen."
+  },
+  {
+   "topic": "Monolithic crawler vs pipelined fetch/parse",
+   "strong_answer": "Pipeline isolates I/O failures and lets you re-parse without re-fetch, at the cost of more moving parts; monolith is simpler."
+  },
+  {
+   "topic": "BFS vs priority crawl",
+   "strong_answer": "BFS is simple; production mixes importance (PageRank-like / seed distance) with freshness deficit."
+  },
+  {
+   "topic": "Host-hash sharding locality vs cross-shard priority",
+   "strong_answer": "Sharding by hostname keeps politeness local (local = global for a host); cross-shard priority is approximate unless you add coordination."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Enforcing global politeness across many fetcher machines by letting any worker hit any host.",
+   "correction": "Shard the frontier by hostname (or use a distributed per-host lock); never let two shards own the same host."
+  },
+  {
+   "trap": "Assuming URL-seen alone prevents duplicate work.",
+   "correction": "Same article on two hosts needs content hash / SimHash as well as URL canonicalization + URL-seen."
+  },
+  {
+   "trap": "Treating a simple HTML GET as enough for JS-heavy SPAs.",
+   "correction": "HTML fetch can miss body content; headless browser path is expensive and usually out of scope unless asked."
+  },
+  {
+   "trap": "Fixed weekly re-crawl for all pages in a continuous crawler.",
+   "correction": "Use adaptive next_fetch_at from observed change rate and importance (news more often than static docs)."
+  },
+  {
+   "trap": "Looking for a public product API as the center of the design.",
+   "correction": "Clarify it’s a data pipeline; seeds/status are control-plane only."
+  },
+  {
+   "trap": "Inventing Googlebot-specific robots myths or ignoring Crawl-delay nuances.",
+   "correction": "Stick to robots.txt Disallow plus courtesy Crawl-delay; cache robots.txt per host; don’t invent bot-specific folklore."
+  },
+  {
+   "trap": "Misstating Bloom filter error modes for URL-seen.",
+   "correction": "False positive means you skip a never-seen URL (completeness tradeoff); false negatives don’t happen on membership."
+  },
+  {
+   "trap": "Dragging indexing, ranking, or PageRank into the crawler design unprompted.",
+   "correction": "Those are a separate system consuming your store — park unless the interviewer pulls you there."
+  }
+ ]
+}

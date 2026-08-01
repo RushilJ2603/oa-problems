@@ -1,0 +1,211 @@
+{
+ "id": "h07_consensus",
+ "title": "Consensus & coordination (leader election, Raft/Paxos idea, ZooKeeper, quorums)",
+ "type": "CONCEPT",
+ "relevance": "Medium–High — rarely “implement Raft”; often a follow-up when you draw a primary, Kafka controller, etcd/ZooKeeper box, or say “strong consistency / no split-brain” (experienced more than campus; FAANG + infra-heavy product cos).",
+ "difficulty": "mid",
+ "prereqs": [
+  "h06_consistency_cap",
+  "h05_db_scaling",
+  "h01_networking"
+ ],
+ "company_notes": "Campus/new-grad HLD: light touch on primary+failover, majority, maybe naming ZooKeeper/etcd for Kafka/K8s designs; deep Raft uncommon. Experienced (2+ YOE) / infra-leaning: leader election, split-brain, quorum sizing, ZK recipes vs etcd/Raft, fencing tokens at Meta, Google, Amazon, Uber, Atlassian, Flipkart infra, etc. Frequency medium as a named topic, high as a follow-up when claiming strong consistency, single-leader replication, or a coordination dependency; full “design Raft” rare outside specialized DS rounds.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what consensus is for, quorum/majority math, and that coordination stores are not bulk data planes.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Consensus means several nodes agree on one value or one order of values despite crashes and message loss; safety forbids deciding two different values, while liveness eventually decides if a majority is up (timeouts break FLP in practice).",
+     "weight": "core",
+     "evidence_hint": "Candidate separates safety (never two values) from liveness (majority up) and frames consensus as agreement under failures/loss."
+    },
+    {
+     "id": "fund2",
+     "point": "With N = 2f+1 nodes, you need f+1 votes to elect or commit and can tolerate f failures; any two majorities intersect so a committed value cannot be lost on leadership change; prefer odd sizes (3, 5) because even wastes a vote.",
+     "weight": "core",
+     "evidence_hint": "States the 2f+1 / f+1 / f relationship, majority intersection, and preference for odd cluster sizes like 3 or 5."
+    },
+    {
+     "id": "fund3",
+     "point": "Use consensus for leader election, replicated config, unique IDs, shard ownership, and metadata that must not split-brain—not for bulk user data, which belongs in a DB/queue while coordination sits in ZK/etcd/Consul-sized stores.",
+     "weight": "extended",
+     "evidence_hint": "Names coordination use cases and explicitly rejects putting bulk user data in the consensus store."
+    }
+   ],
+   "probes": [
+    "What is consensus in an interview sense, and why do we put coordination in ZooKeeper/etcd rather than storing bulk user data there?",
+    "Cluster of 5: how many failures can you survive, can a 2-node partition accept writes, and why prefer 5 over 4?"
+   ],
+   "hints": {
+    "1": "Start from ‘agree on one value/order’ and what fails if two leaders write.",
+    "2": "Tie N = 2f+1 to majority votes, intersecting majorities, and odd sizes (3, 5).",
+    "3": "Safety never decides two values; f+1 of 2f+1 elects/commits and tolerates f failures; coordination metadata in ZK/etcd, bulk data in DB/queue."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain leader election, Raft’s three parts, Paxos at one-liner depth, and ZooKeeper recipes/ZAB without implementing algorithms.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Leader election picks at most one active leader for a term/epoch for safety (no dual writers) plus recovery when the leader dies; production uses quorum voting (Raft) or coordination-service recipes (ZK), not naive Bully ‘highest ID wins’ folklore.",
+     "weight": "core",
+     "evidence_hint": "Emphasizes at-most-one leader per term/epoch and quorum/ZK over Bully teaching folklore."
+    },
+    {
+     "id": "mech2",
+     "point": "Raft has three parts: election (randomized timeouts → candidate → majority RequestVote), log replication (leader appends, followers ACK, commit when majority durable), and safety (only elect leaders whose log is at least as up-to-date; terms as logical clocks)—powers etcd, Consul, Cockroach/TiKV-style ranges.",
+     "weight": "core",
+     "evidence_hint": "Walks election → replication → safety with majority commit and up-to-date-log election rule."
+    },
+    {
+     "id": "mech3",
+     "point": "Paxos: proposers/acceptors; a value is chosen only after a majority accepts; Multi-Paxos ≈ stable leader for a stream of decisions—same power as Raft but harder to implement; say that and move on unless asked.",
+     "weight": "extended",
+     "evidence_hint": "Gives prepare/accept + majority in one breath, then pivots to Raft’s clearer decomposition."
+    },
+    {
+     "id": "mech4",
+     "point": "ZooKeeper: small in-memory hierarchical znodes, watches, sessions; ensemble runs ZAB (atomic broadcast), not Raft; ephemeral sequential nodes for leader election/locks with delete on session loss for failover—coordination, not a general DB.",
+     "weight": "extended",
+     "evidence_hint": "Mentions znodes/watches/sessions, ZAB (not Raft), and ephemeral sequential election/lock recipes."
+    }
+   ],
+   "probes": [
+    "Leader dies mid-heartbeat: narrate follower timeout → candidate → term bump → votes → new leader, and what stops the new leader from wiping committed data.",
+    "Isn’t Paxos enough—how do you contrast prepare/accept + majority with why industry mostly ships Raft?"
+   ],
+   "hints": {
+    "1": "Separate ‘pick one leader’ from ‘replicate and commit via majority’.",
+    "2": "Raft story: randomized timeout, RequestVote majority, majority-durable commit, elect only up-to-date logs; terms as clocks.",
+    "3": "Paxos = majority accept; Raft = same job with election/log/safety decomposition; ZK = ZAB + ephemeral sequential under /election, lowest sequence leads, watch predecessor."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Make CP partition behavior, single-leader throughput limits, etcd vs ZooKeeper, and odd vs even cluster sizing explicit.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Consensus is CP under partition: the minority side goes unavailable for writes; prevention of split-brain is quorum (minority cannot elect/commit) plus leases/epochs plus fencing tokens so a stale leader’s writes are rejected downstream.",
+     "weight": "core",
+     "evidence_hint": "Says minority refuses writes under partition and links quorum + leases/epochs + fencing to no dual writers."
+    },
+    {
+     "id": "tr2",
+     "point": "Single-leader Raft concentrates write throughput on one node; scale by sharding ranges, not by adding more Raft peers for QPS.",
+     "weight": "core",
+     "evidence_hint": "Rejects ‘more peers = more QPS’ and points to sharding ranges instead."
+    },
+    {
+     "id": "tr3",
+     "point": "etcd vs ZooKeeper: both CP-style coordination KVs; etcd ≈ Raft + gRPC/JSON and K8s default; ZK ≈ ZAB + znodes/watches, classic Hadoop/Kafka-ZK era (Kafka moving to KRaft); interview framing is a small strongly consistent store for metadata/locks/election.",
+     "weight": "extended",
+     "evidence_hint": "Compares Raft/etcd vs ZAB/znodes and names the shared ‘small strongly consistent coordination store’ role."
+    },
+    {
+     "id": "tr4",
+     "point": "Odd vs even cluster size: even N does not improve fault tolerance vs N-1 and makes majority harder—stick to 3 or 5.",
+     "weight": "extended",
+     "evidence_hint": "States even N wastes relative to N-1 and recommends 3 or 5."
+    }
+   ],
+   "probes": [
+    "If the network partitions your consensus cluster, what happens on the minority side and how do you prevent split-brain?",
+    "Why doesn’t adding Raft peers increase write QPS, and when would you choose etcd versus ZooKeeper?"
+   ],
+   "hints": {
+    "1": "Think CAP: consensus chooses consistency over availability on the minority.",
+    "2": "Minority cannot elect/commit; stale leaders need fencing; throughput scales by sharding ranges.",
+    "3": "CP: minority unavailable for writes; etcd=Raft/K8s, ZK=ZAB/znodes; prefer odd sizes 3 or 5 over even N."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Place consensus correctly in a design and apply ZK election recipes and fencing against classic lock/split-brain traps.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "In design, a multi-writer config service uses etcd/ZK; a user photo store uses object store + DB—storing photo blobs in ZK breaks because ZK/etcd are coordination stores (small keys, watch fans, limited write QPS), not a high-throughput data plane.",
+     "weight": "core",
+     "evidence_hint": "Assigns config/locks/election to etcd/ZK and photos to object store+DB, citing coordination-store limits."
+    },
+    {
+     "id": "app2",
+     "point": "ZK leader election recipe: ephemeral sequential children under /election, lowest sequence = leader, watch the next-lower node to avoid herd; if the leader process GC-pauses but the session is still alive, failover may not happen yet because the ephemeral node remains.",
+     "weight": "core",
+     "evidence_hint": "Sketches ephemeral+sequential, lowest wins, watch predecessor, and session-still-alive pause caveat."
+    },
+    {
+     "id": "app3",
+     "point": "Fencing: if an old primary paused 30s, a new primary is elected, then the old wakes and writes to shared storage, a monotonically increasing fencing token (ZK zxid / lease generation) lets the resource reject the stale leader’s writes—Redis SETNX without fencing is unsafe under GC pauses / slow holders.",
+     "weight": "extended",
+     "evidence_hint": "Uses the paused-old-primary story and requires token/epoch checks on the resource, not just lock acquisition."
+    }
+   ],
+   "probes": [
+    "Design a multi-writer config service versus a user photo store—which uses etcd/ZK, and what breaks if you put photo blobs in ZK?",
+    "Old primary paused 30s, new primary elected, old wakes and writes—how does a fencing token stop corruption?"
+   ],
+   "hints": {
+    "1": "Ask whether the data is coordination metadata or bulk user payloads.",
+    "2": "Sketch /election ephemeral sequential + watch predecessor; separate lock hold from resource-side token check.",
+    "3": "Config/locks → etcd/ZK; photos → object store+DB; fencing token (zxid/lease generation) rejects stale writes after a 30s pause/re-election."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "CP availability vs split-brain safety under partition",
+   "strong_answer": "Consensus is CP under partition: minority cannot elect or commit, so that side is unavailable for writes; that is the cost of preventing two leaders and divergent writes via quorum, leases/epochs, and fencing tokens."
+  },
+  {
+   "topic": "Single-leader Raft throughput vs scaling by peers",
+   "strong_answer": "Write throughput concentrates on the leader; you scale by sharding ranges, not by adding more Raft peers for QPS."
+  },
+  {
+   "topic": "etcd/Raft vs ZooKeeper/ZAB for coordination",
+   "strong_answer": "Both are CP-style small strongly consistent stores for metadata/locks/election; etcd is Raft + gRPC/JSON and the K8s default, ZK is ZAB + znodes/watches from the Hadoop/Kafka-ZK era (Kafka moving to KRaft)."
+  },
+  {
+   "topic": "Odd vs even consensus cluster size",
+   "strong_answer": "Prefer odd sizes (3, 5); even N does not improve fault tolerance versus N-1 and makes majority harder, so even wastes a vote."
+  },
+  {
+   "topic": "Paxos vs Raft in interviews",
+   "strong_answer": "Same power: majority must accept a value (Multi-Paxos ≈ stable leader for many decisions); industry mostly ships Raft because it is more understandable with an explicit leader and log decomposition—do not implement either unless a specialized senior infra loop asks."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Drawing ZooKeeper or Raft without saying majority quorum and what happens on partition",
+   "correction": "Interviewers expect CP behavior: the minority refuses writes."
+  },
+  {
+   "trap": "Treating Raft/Paxos as something to implement in the interview",
+   "correction": "Discuss at box+tradeoff level; leave proofs and joint-consensus membership changes unless it is a senior infra loop."
+  },
+  {
+   "trap": "Confusing an app-level leader (your service’s primary) with the consensus cluster (etcd/ZK ensemble that helps elect it)",
+   "correction": "Separate the elected application primary from the coordination ensemble that provides election/locks/metadata."
+  },
+  {
+   "trap": "Calling a Redis lock a distributed lock without fencing",
+   "correction": "Kleppmann’s classic trap: always mention token/epoch checks on the resource; SETNX without fencing is unsafe under GC pauses / slow holders."
+  },
+  {
+   "trap": "Using ZK/etcd as a high-throughput data plane",
+   "correction": "They are coordination stores for small keys, watches, and limited write QPS—not for bulk blobs or user data."
+  },
+  {
+   "trap": "Assuming two leaders are briefly OK for money/inventory/metadata",
+   "correction": "That is split-brain; explain how quorum plus fencing prevent divergent writes."
+  },
+  {
+   "trap": "Choosing an even-sized cluster for better fault tolerance",
+   "correction": "Even N does not improve fault tolerance vs N-1 and makes majority harder—stick to 3 or 5."
+  }
+ ]
+}

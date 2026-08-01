@@ -1,0 +1,224 @@
+{
+ "id": "h08_message_queues",
+ "title": "Message queues & streaming (Kafka, RabbitMQ, pub/sub, delivery semantics, backpressure)",
+ "type": "CONCEPT",
+ "relevance": "High — almost every HLD \"design X\" that needs async work, fan-out, or spike buffering (notifications, feeds, orders, video pipelines, chat fanout); FAANG and Indian product cos expect you to place a queue/stream, name delivery semantics, and pick Kafka vs RabbitMQ/SQS for the use case.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h01_networking",
+  "h02_load_balancing"
+ ],
+ "company_notes": "Campus/intern/new-grad HLD: queue is table stakes in news feed, chat, notifications, URL-shortener async analytics, e-commerce orders, and upload pipelines; naming Kafka vs Rabbit plus at-least-once and idempotency differentiates. Mid (1–4 YOE): consumer lag, partition-key design, DLQ, backpressure, SNS→SQS fanout, event vs command, and when EDA is overkill — common at Amazon, Meta, Uber, Flipkart, Atlassian. Near-universal async building block; full design-Kafka/SQS loops are rarer (experienced/infra); depth stops at tradeoffs, not broker internals or Raft.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish why queues/streams exist and distinguish point-to-point queues, pub/sub, and log-based streams.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A queue/stream gives temporal decoupling (producer does not wait on consumer), buffers spikes, provides retry/durability when a worker is down, enables fan-out to many downstreams, and lets producers and consumers scale horizontally independently.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists several of: decoupling, spike buffer, durability/retry, fan-out, independent scale — not just \"async is faster.\""
+    },
+    {
+     "id": "fund2",
+     "point": "Queue (point-to-point) = competing consumers, one winner per message (task/job); pub/sub = one publish, many subscribers; log/stream (Kafka) = append-only retained events where many consumer groups each get a full copy and track their own offset.",
+     "weight": "core",
+     "evidence_hint": "Clear three-way contrast; Kafka described as retained log with per-group offsets, not \"a queue that deletes on consume.\""
+    },
+    {
+     "id": "fund3",
+     "point": "Do not use a queue when you need a sync reply on the critical path, when a tiny system can use a DB transaction plus worker table, or when services only need one RPC — do not invent Kafka for a nightly cron.",
+     "weight": "extended",
+     "evidence_hint": "Names at least one anti-case: sync checkout/auth path, overkill for simple worker table, or Kafka-for-every-RPC skepticism."
+    }
+   ],
+   "probes": [
+    "Why would you put a message queue or stream in an HLD, and how is a work queue different from a Kafka-style log?"
+   ],
+   "hints": {
+    "1": "Think about what the producer waits on, and what happens if a downstream is slow or down.",
+    "2": "Separate competing consumers (one message, one worker) from many subscribers, then from a retained append-only log with offsets.",
+    "3": "Say: decoupling + spike buffer + retry + fan-out + independent scale; queue = one winner; pub/sub = many subscribers; Kafka log = retained events, each consumer group tracks its own offset."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain RabbitMQ vs Kafka models, delivery semantics, ack/offset timing, per-key ordering, idempotency, backpressure, and DLQs.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "RabbitMQ mental model: smart broker — producer → exchange (direct / topic / fanout) → queues → push to consumers; ack then delete; strong for work queues, complex routing, moderate throughput.",
+     "weight": "core",
+     "evidence_hint": "Mentions exchange → queue, push, ack-then-delete, and work-queue/routing fit."
+    },
+    {
+     "id": "mech2",
+     "point": "Kafka mental model: dumb broker / smart consumer — producer appends to topic partitions; retention by time/size (not by consumed); consumers pull and commit offsets; strong for event backbone, replay, analytics, CDC, multi-team read.",
+     "weight": "core",
+     "evidence_hint": "Says retention independent of consume, pull + offsets, and stream/event-backbone use — not delete-on-ack."
+    },
+    {
+     "id": "mech3",
+     "point": "Delivery semantics: at-most-once (may lose, never dup); at-least-once (no loss, may dup — the default real answer); exactly-once is hard (Kafka EOS mostly Kafka→Kafka); once you write a DB/API you still need app-level idempotency.",
+     "weight": "core",
+     "evidence_hint": "Names all three; treats at-least-once as practical default; refuses end-to-end exactly-once without app idempotency."
+    },
+    {
+     "id": "mech4",
+     "point": "Ack/visibility/offset: Rabbit ack, SQS visibility timeout, or Kafka offset commit after successful side effects for at-least-once; commit-before-process is roughly at-most-once and can lose work.",
+     "weight": "extended",
+     "evidence_hint": "Ties commit/ack timing to semantics; mentions at least one of Rabbit ack, SQS visibility timeout, Kafka offset commit."
+    },
+    {
+     "id": "mech5",
+     "point": "Idempotent consumers are required with at-least-once — dedupe key / unique constraint / upsert (e.g. process payment idempotency_key once); never assume the broker alone prevents double charges.",
+     "weight": "core",
+     "evidence_hint": "Links at-least-once → duplicates → app idempotency with a concrete mechanism."
+    },
+    {
+     "id": "mech6",
+     "point": "Ordering: global total order is expensive; interview default is order per key (e.g. user_id / order_id) via the same Kafka partition or FIFO message-group, with parallelism across keys.",
+     "weight": "extended",
+     "evidence_hint": "Rejects global FIFO as default; explains per-key partition/message-group ordering."
+    },
+    {
+     "id": "mech7",
+     "point": "Backpressure: unbounded queues hide overload until latency hockey-sticks or OOM; bound depth, reject (HTTP 503), shed, slow producers, or scale consumers; Rabbit prefetch and Kafka consumer lag are signals. After N failed receives, move poison messages to a dead-letter queue for inspect/replay so they do not block the main queue forever.",
+     "weight": "core",
+     "evidence_hint": "Rejects infinite buffer; names bound/reject/503/scale and lag or prefetch; mentions DLQ for poison messages."
+    }
+   ],
+   "probes": [
+    "Walk through at-most-once vs at-least-once vs exactly-once, and how Rabbit ack / SQS visibility timeout / Kafka offset commit timing changes what you get."
+   ],
+   "hints": {
+    "1": "Start from whether messages can be lost or duplicated, then where ack/commit happens relative to side effects.",
+    "2": "Map Rabbit push+ack-delete vs Kafka pull+retain+offset; say at-least-once needs idempotent consumers.",
+    "3": "At-most-once = may lose/never dup; at-least-once = no loss/may dup (default); exactly-once hard beyond Kafka→Kafka — still idempotency for DB/API; ack/commit after success; bound queues or 503; DLQ after repeated failures."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose Kafka vs RabbitMQ/SQS (and queue vs sync) from retention, routing, throughput, and whether EDA is overkill.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Choose RabbitMQ for work queues, priority/complex routing, push-delete semantics and moderate throughput; choose Kafka for pull-retain event backbones, replay, high multi-consumer read (clickstream, CDC, analytics); \"use both\" is valid.",
+     "weight": "core",
+     "evidence_hint": "Gives a decision by use case — task/routing vs retained multi-reader stream — not a blanket \"Kafka is better.\""
+    },
+    {
+     "id": "tr2",
+     "point": "Distinguish commands vs events and when not to sprinkle Kafka on every microservice call; keep sync answers (checkout total, auth) on RPC and queue only side effects.",
+     "weight": "core",
+     "evidence_hint": "Says EDA/queue is optional; sync critical path stays RPC; side effects can be async."
+    },
+    {
+     "id": "tr3",
+     "point": "For one OrderPlaced that must update inventory and send email: prefer one topic with two consumer groups (each gets a full copy) over one queue with two competing workers (only one would process each message).",
+     "weight": "extended",
+     "evidence_hint": "Picks fan-out via pub/sub or multiple consumer groups, and explains why competing consumers on one queue are wrong here."
+    }
+   ],
+   "probes": [
+    "For (a) email/SMS workers with priority routing, (b) clickstream for fraud + analytics + ML, (c) order.placed fan-out — pick Kafka or RabbitMQ/SQS and say why."
+   ],
+   "hints": {
+    "1": "Ask whether you need delete-after-consume task delivery or retained replay for many independent readers.",
+    "2": "Map (a) routing/work queue → Rabbit; (b) multi-team stream → Kafka; (c) fan-out → topic/consumer groups or SNS→SQS.",
+    "3": "Rabbit = smart broker, push-delete, routing; Kafka = pull-retain log, offsets, replay; competing queue ≠ multi-subscriber fan-out; sync path stays RPC."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Place queues in designs and defend delivery, ordering, and backpressure under concrete HLD drills.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Instagram-like upload: API returns 202, workers resize/transcode off a queue; if a worker dies mid-job, rely on acks + retries + DLQ rather than assuming the job finished.",
+     "weight": "core",
+     "evidence_hint": "Places queue behind async accept (202), and names ack/retry/DLQ for mid-job failure."
+    },
+    {
+     "id": "app2",
+     "point": "Payment charge on OrderPlaced: choose at-least-once plus an idempotency key; claiming exactly-once because Kafka transactions exist still fails if the consumer writes Postgres — app-level idempotency remains required.",
+     "weight": "core",
+     "evidence_hint": "Refuses broker-only exactly-once across DB writes; pairs at-least-once with idempotency_key."
+    },
+    {
+     "id": "app3",
+     "point": "Chat messages for a room or trades for a ticker: get per-entity order and scale by partitioning on the entity key; random partitioning breaks per-entity order; a hot partition (e.g. one celebrity user_id) can melt one consumer.",
+     "weight": "extended",
+     "evidence_hint": "Per-key partition for order; calls out random keying and hot-key skew."
+    },
+    {
+     "id": "app4",
+     "point": "Flash sale where producers enqueue much faster than payment workers: draw bound queue, 503 or waiting room, scale workers, DLQ for poison; \"just add a bigger unbounded Redis list\" fails because it hides overload without lag alert, DLQ, or reject path.",
+     "weight": "core",
+     "evidence_hint": "Shows bound + reject/waiting room + scale + DLQ; explains why unbounded buffer is a trap."
+    }
+   ],
+   "probes": [
+    "Design an upload or order pipeline: where does the queue sit, what happens if the worker dies, and how do you handle a flash-sale enqueue spike?"
+   ],
+   "hints": {
+    "1": "Return success to the client before heavy work finishes — then ask what retry and overload look like.",
+    "2": "Sketch API → queue → workers; add ack/retry/DLQ; for spikes bound the queue and shed with 503 or a waiting room.",
+    "3": "202 to client, workers behind queue; at-least-once + idempotency for payments; per-key partitions for order; bound queue / 503 / scale / DLQ — not an unbounded Redis list."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Kafka vs RabbitMQ",
+   "strong_answer": "RabbitMQ is a smart broker (exchange → queue, push, ack-then-delete) suited to work queues, complex routing, and moderate throughput. Kafka is a dumb broker / smart consumer (topic partitions, pull, time/size retention, offsets) suited to event backbones, replay, analytics, CDC, and multi-team readers. Decide on retention, ordering, throughput, routing, delivery, and ops; using both is valid."
+  },
+  {
+   "topic": "at-most-once vs at-least-once vs exactly-once",
+   "strong_answer": "At-most-once may lose messages but never duplicates; at-least-once does not lose but may duplicate (practical default); exactly-once is hard — Kafka EOS is mostly Kafka→Kafka, and writing to a DB or external API still requires application idempotency."
+  },
+  {
+   "topic": "queue (competing consumers) vs pub/sub vs log",
+   "strong_answer": "A point-to-point queue has competing consumers and one winner per message (tasks). Pub/sub delivers one publish to many subscribers. A log/stream retains append-only events so each consumer group gets a full copy and tracks its own offset."
+  },
+  {
+   "topic": "async queue vs sync RPC on the critical path",
+   "strong_answer": "Keep immediate user answers (checkout total, auth) on RPC; queue side effects. Skip a dedicated broker for tiny DB+worker-table setups, single-RPC service pairs, or a once-a-night cron — do not sprinkle Kafka on every call."
+  },
+  {
+   "topic": "bound queue / reject vs unbounded buffer",
+   "strong_answer": "Bound depth, reject with HTTP 503, shed load, slow producers, or scale consumers (Rabbit prefetch; Kafka lag as signal). Unbounded queues hide overload until latency hockey-sticks or OOM — an infinite Redis list without lag alerts, DLQ, or reject is not a plan."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Drawing Kafka then saying the message is deleted after consume.",
+   "correction": "That is Rabbit/SQS ack-then-delete behavior; Kafka retains by time/size and consumers advance offsets."
+  },
+  {
+   "trap": "Saying \"exactly-once\" without saying where the guarantee applies.",
+   "correction": "Distinguish broker-log / Kafka→Kafka EOS from end-to-end including DB or email — the latter still needs app-level idempotency."
+  },
+  {
+   "trap": "Ignoring duplicates on retry (double email / double charge).",
+   "correction": "At-least-once implies duplicates; consumers need dedupe keys, unique constraints, or upserts."
+  },
+  {
+   "trap": "Treating an unbounded queue as an infinite buffer with no lag alert, DLQ, or reject path.",
+   "correction": "Bound the queue, reject or shed (e.g. HTTP 503), watch lag, and dead-letter poison messages."
+  },
+  {
+   "trap": "Forcing global FIFO at very high message rates.",
+   "correction": "Order only where the product needs it — typically per key (same partition / FIFO group), with parallelism across keys."
+  },
+  {
+   "trap": "Using a queue when the user needs an immediate sync answer (checkout total, auth).",
+   "correction": "Keep that path RPC; queue only the side effects."
+  },
+  {
+   "trap": "Hot partition: all events keyed by one celebrity user_id.",
+   "correction": "One partition / one consumer becomes the bottleneck; key design must consider skew, not only ordering."
+  }
+ ]
+}

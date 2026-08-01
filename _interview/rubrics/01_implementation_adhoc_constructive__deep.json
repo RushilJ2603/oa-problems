@@ -1,0 +1,256 @@
+{
+ "id": "01_implementation_adhoc_constructive__deep",
+ "title": "Implementation, Ad-hoc & Constructive (Depth Pass)",
+ "type": "CP",
+ "relevance": "High — second ladder for post-basics CF fluency: the “any valid construction / find the invariant” skill that separates green from cyan–blue in contests and still shows up as OA twist questions.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Google/Meta phone screens: construct any array/string under constraints (Game-With-Array or Balance-the-Bits — existence check + simple builder). Amazon OA variants: prefix-sum/cut “split so no subarray sums to 0” ≡ Non-zero Segments. Microsoft-style scheduling/load balance: Phoenix and Towers / Grid-00100 — next job to lightest bin. Harder onsite graph twists: Coloring Edges-style 1 or 2 labels depending on cycles.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot constructive/ad-hoc depth problems that ask for any valid object, a short sequence, or an impossibility proof rather than a heavy algorithm.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Statement cues are “construct any”, “minimum length sequence”, or “prove impossible”; constraints usually allow O(n log n) or O(n·alphabet), not heavy algorithms.",
+     "weight": "core",
+     "evidence_hint": "Candidate names those phrasing cues and says fancy DS is usually unnecessary under the stated complexity band."
+    },
+    {
+     "id": "rec2",
+     "point": "You win by discovering a small certificate — parity, first vs last, max frequency gap, degree ≥ 3 vertex, or Hamming-1 candidate — not by simulating a complex process first.",
+     "weight": "core",
+     "evidence_hint": "Lists certificate examples like first-vs-last, parity, max-frequency gap, or a high-degree vertex before proposing code."
+    },
+    {
+     "id": "rec3",
+     "point": "Classic OA/interview shapes include Game-With-Array / Balance-the-Bits existence+builder, Non-zero Segments prefix cuts, and lightest-bin assignment (Phoenix and Towers / Grid-00100).",
+     "weight": "extended",
+     "evidence_hint": "Maps the prompt to one of those named patterns: half-sum dodge, double RBS from a mask, prefix-set cuts, or always assign to shortest tower."
+    }
+   ],
+   "probes": [
+    "What in the statement tells you this is a constructive/ad-hoc problem rather than a DP or graph-algorithm problem?",
+    "Which small invariant or certificate would you hunt for before writing any builder?"
+   ],
+   "hints": {
+    "1": "Look at the ask: any valid object, shortest sequence, or prove impossible.",
+    "2": "Constraints and phrasing usually point to O(n log n) / O(n·alphabet) builders driven by a tiny certificate.",
+    "3": "Name certificates like parity, first vs last, max frequency, degree ≥ 3, or Hamming-1 and match to Game-With-Array, Non-zero Segments, or lightest-bin scheduling."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Turn the certificate into a canonical skeleton construction and know when to rephrase reversible ops instead of simulating them.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "After the certificate, build the simplest object that meets it — zig-zag permutations, powers-of-two arrays, two RBS from a 0/1 mask, MEX placements, or difference-array rewrites.",
+     "weight": "core",
+     "evidence_hint": "Picks a named skeleton (zig-zag, powers of two, twin RBS, MEX loop, diff-array) tied to the certificate."
+    },
+    {
+     "id": "appr2",
+     "point": "Prefer canonical skeletons from the checklist: all-1s + leftover, powers of two, zig-zag permute, wrapped diagonals, two RBS twins.",
+     "weight": "core",
+     "evidence_hint": "Explicitly prefers one of those skeletons over an ad-hoc search or full simulation."
+    },
+    {
+     "id": "appr3",
+     "point": "When ops are reversible, rephrase as reach sorted / zero / equal and count the rewritten form; don’t simulate each op.",
+     "weight": "extended",
+     "evidence_hint": "Says to rewrite the ops (e.g. difference-array / gather-then-redistribute) and argue reachability instead of stepping every update."
+    },
+    {
+     "id": "appr4",
+     "point": "Tree/path label problems: concentrate extreme labels on a high-degree or endpoint edge set (e.g. put 0,1,2 on edges of a deg≥3 vertex).",
+     "weight": "extended",
+     "evidence_hint": "Mentions concentrating small labels on a deg≥3 vertex’s edges, or path ends if none exists."
+    }
+   ],
+   "probes": [
+    "Once you have the invariant, what is the simplest object you would actually emit?",
+    "If the operations are reversible, how do you rephrase the goal before coding?"
+   ],
+   "hints": {
+    "1": "Don’t start by simulating; name the certificate first.",
+    "2": "Match certificate → skeleton: all-1s+leftover, powers of two, zig-zag, wrapped diagonals, twin RBS, MEX placement, diff-array.",
+    "3": "For trees, put 0,1,2 on a deg≥3 vertex’s edges; for reversible ops, rewrite to sorted/zero/equal and count that form."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Show concrete builders for the core constructions and the important case splits the ladder trains.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "“No subset sums to S/2” → dump almost-all 1s and one big leftover (Game With Array), with OA-style case split on S≥2N.",
+     "weight": "core",
+     "evidence_hint": "Describes nearly all 1s plus one leftover and mentions the S≥2N case split."
+    },
+    {
+     "id": "impl2",
+     "point": "Prefix-sum collision → insert a cut / reset the running sum set (Non-zero Segments).",
+     "weight": "core",
+     "evidence_hint": "Maintains a set of seen prefixes and on a repeat cuts and restarts the set."
+    },
+    {
+     "id": "impl3",
+     "point": "Balance the Bits: two bracket strings from a 0/1 mask using parity of zeros plus leading/trailing ones; Bracket Coloring colors by sign of balance with 1 vs 2 colors from global regularity.",
+     "weight": "core",
+     "evidence_hint": "Explains mask→two RBS with zero-parity and end ones, or coloring by balance sign with a 1-vs-2 regularity check."
+    },
+    {
+     "id": "impl4",
+     "point": "Ehab the Xorcist: XOR+sum reconstruct with length ≤ 3 always via cases on u⊕s and bit carries; Special Permutation builds consecutive diffs in {2,3,4} and is impossible for n≤3.",
+     "weight": "extended",
+     "evidence_hint": "Caseworks length 1/2/3 for XOR+sum, or builds diffs in {2,3,4} and rejects n≤3."
+    },
+    {
+     "id": "impl5",
+     "point": "Make Them Equal: ops move mass in multiples of indices — gather then redistribute; impossible if sum ∤ n. Matrix fills check n·a = m·b and use cyclic shifts / wrapped diagonals so row/col loads differ by at most one.",
+     "weight": "extended",
+     "evidence_hint": "States gather-to-index-1 then redistribute multiples of i with the divisibility check, or cites n·a = m·b before cyclic/diagonal placement."
+    }
+   ],
+   "probes": [
+    "Walk through how you would construct an array so no subset sums to half the total.",
+    "How do you place cuts so no subarray sum is zero using prefix sums?"
+   ],
+   "hints": {
+    "1": "Pick one core builder: half-sum dodge, prefix cuts, or twin RBS.",
+    "2": "Game With Array ≈ almost-all 1s + leftover with S≥2N; Non-zero Segments ≈ seen-prefix set + cut on repeat.",
+    "3": "Also mention XOR+sum length ≤ 3 casework, diffs in {2,3,4} with n≤3 impossible, or gather/redistribute when sum ∤ n blocks."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Anchor expected runtime in the constructive band and the light structures these solutions use.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Constraints usually allow O(n log n) or O(n·alphabet), not heavy algorithms.",
+     "weight": "core",
+     "evidence_hint": "States the solution should fit O(n log n) or O(n·alphabet) rather than advanced algo machinery."
+    },
+    {
+     "id": "cx2",
+     "point": "The “DS” of constructive here is prefix-sum sets, difference arrays, and MEX-placement loops — plus set/heap for always assigning to the current shortest tower.",
+     "weight": "core",
+     "evidence_hint": "Names prefix-sum sets, diff arrays, MEX loops, and optionally a heap/set for lightest-tower assignment."
+    },
+    {
+     "id": "cx3",
+     "point": "Sage's Birthday-style zig-zag may binary-search the count of local minima, but the interleaving construction itself is the core; Replace by MEX sorts via ≤2n MEX placements.",
+     "weight": "extended",
+     "evidence_hint": "Mentions optional binary search on zig-zag count and/or a ≤2n MEX-placement bound for sorting."
+    }
+   ],
+   "probes": [
+    "What time bound should your construction target on typical CF/OA constraints for these problems?",
+    "Which lightweight structures replace a “real” heavy DS here?"
+   ],
+   "hints": {
+    "1": "Think linearithmic or linear in n times alphabet, not flow/segtree-heavy.",
+    "2": "Prefix-sum sets, difference arrays, MEX loops, and a heap for shortest tower are enough.",
+    "3": "Quote O(n log n) or O(n·alphabet); mention ≤2n MEX placements or optional binary search only as stretch detail."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch the edge cases and false starts the depth ladder repeatedly punishes.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Always hunt an invariant/certificate before coding a simulation — Element Extermination reduces to a[1] < a[n] (“simulate mentally, not literally”).",
+     "weight": "core",
+     "evidence_hint": "Refuses blind simulation and cites a first-vs-last style check such as a[1] < a[n]."
+    },
+    {
+     "id": "pit2",
+     "point": "Binary String Reconstruction needs care on the n1=0 edge; Omkar and Baseball answers only 0/1/2 from the single unsorted contiguous segment pattern.",
+     "weight": "core",
+     "evidence_hint": "Calls out n1=0 stitching and the 0/1/2 segment trichotomy."
+    },
+    {
+     "id": "pit3",
+     "point": "Make Them Equal is impossible if sum ∤ n; Special Permutation is impossible for n≤3; A/B Matrix needs n·a = m·b before building.",
+     "weight": "extended",
+     "evidence_hint": "States the divisibility/existence guards before describing any construction."
+    },
+    {
+     "id": "pit4",
+     "point": "Coloring Edges: 1 color if DAG, else 2 (back-edge vs tree-edge by DFS timestamp) — chromatic number of conflict is 1 or 2 by directed-cycle parity; do not over-color.",
+     "weight": "extended",
+     "evidence_hint": "Says 1 color on a DAG and 2 otherwise via DFS back-edge vs tree-edge, tied to directed-cycle parity."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you simulate Element Extermination instead of finding the invariant?",
+    "Which impossibility checks must you run before emitting a construction?"
+   ],
+   "hints": {
+    "1": "Name one brittle edge: n1=0, n≤3, or sum not divisible by n.",
+    "2": "Invariant-first: a[1] < a[n], single unsorted segment → 0/1/2, existence equalities before matrix fill.",
+    "3": "Also: DAG → 1 color else 2 by DFS timestamps; don’t invent more colors than the cycle-parity argument needs."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Mental invariant vs literal simulation",
+   "strong_answer": "For problems like Element Extermination, reduce to a certificate such as a[1] < a[n] and reason about the process mentally; coding a full simulation is slower and obscures the real condition."
+  },
+  {
+   "topic": "Canonical skeleton vs bespoke search",
+   "strong_answer": "Prefer fixed skeletons (all-1s + leftover, nearest powers of two under a sum bound, zig-zag interleaving, wrapped diagonals, twin RBS) once the certificate is known; searching for any feasible object is unnecessary when a standard builder is complete."
+  },
+  {
+   "topic": "Rewrite reversible ops vs simulate each update",
+   "strong_answer": "When ops are reversible (difference-array range fixes, index-multiple mass moves), rephrase as reaching sorted/zero/equal and count or construct the rewritten form; per-op simulation hides impossibility checks like sum ∤ n."
+  },
+  {
+   "topic": "Direct zig-zag count vs binary-searching the answer",
+   "strong_answer": "Sage's Birthday maximizes local minima by small/large interleaving; binary-searching the count is optional — the interleaving construction is the core."
+  },
+  {
+   "topic": "1 vs 2 (or few) labels on graphs",
+   "strong_answer": "Coloring Edges needs 1 color iff the digraph is a DAG, else 2 via back-edge vs tree-edge; Edge Weight Assignment uses leaf-parity for min colors 1 or 3 and a max from n−1 minus extra leaf edges at the same vertex — pick the theorem-shaped case split instead of a general chromatic solver."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Building a Binary String from (n0,n1,n2) without handling n1=0.",
+   "correction": "Stitch runs from the pair counts carefully; the n1=0 edge is a special case called out on the ladder."
+  },
+  {
+   "trap": "Assuming a Special Permutation with consecutive diffs in {2,3,4} exists for every n.",
+   "correction": "Impossibility for n≤3; only build that diff set when n is large enough."
+  },
+  {
+   "trap": "Redistributing with Make Them Equal ops without checking total sum.",
+   "correction": "Impossible if sum ∤ n; otherwise gather total sum to index 1, then redistribute multiples of i."
+  },
+  {
+   "trap": "Forgetting Game With Array’s case split when forcing no subset sum equal to S/2.",
+   "correction": "Use almost-all 1s and one big leftover, with the OA-style case split on S≥2N."
+  },
+  {
+   "trap": "Balance the Bits from a 0/1 mask without end/parity constraints.",
+   "correction": "Two RBS strings need the parity of zeros plus leading/trailing ones conditions."
+  },
+  {
+   "trap": "Path-etic MEX labeling without using a high-degree vertex.",
+   "correction": "Put 0,1,2 on edges of a deg≥3 vertex; if none, use path ends — that maximises path MEXs."
+  },
+  {
+   "trap": "Over-coloring a digraph’s edges.",
+   "correction": "1 color if DAG, else 2 (back-edge vs tree-edge by DFS timestamp); conflict chromatic number is 1 or 2 by directed-cycle parity."
+  },
+  {
+   "trap": "Starting matrix construction before the global balance check.",
+   "correction": "For A/B Matrix, existence requires n·a = m·b; then use cyclic column shifts (or wrapped diagonals in Grid-00100) so loads differ by ≤1."
+  }
+ ]
+}

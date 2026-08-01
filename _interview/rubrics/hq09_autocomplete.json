@@ -1,0 +1,329 @@
+{
+ "id": "hq09_autocomplete",
+ "title": "Design search autocomplete / typeahead",
+ "type": "HLD",
+ "relevance": "High — Alex Xu Vol.1 ch.13 classic; asked standalone and as the suggestion box inside Search / e-commerce / Maps designs (campus + experienced; Google, Meta, Amazon, LinkedIn, Uber, Flipkart, Databricks).",
+ "difficulty": "mid",
+ "prereqs": [
+  "h03_caching",
+  "h08_message_queues",
+  "h14_estimation"
+ ],
+ "company_notes": "Campus/intern/new-grad: very common as Design autocomplete / typeahead / Google search suggestions, and as the suggestion box inside Amazon / Flipkart / YouTube designs. Experienced (1–4+ YOE): deeper on sharding, atomic index swap, trending overlay, personalization vs cache, ES/FST vs custom trie, multi-locale — Meta, Google, Amazon, LinkedIn, Uber, Databricks. High frequency Alex Xu Vol.1 ch.13 staple and standard top-K + prefix index probe.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Clarify product scope (prefix suggestions vs full search), FRs/NFRs, and what is out of MVP.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Functional MVP: as the user types, return top 5 queries that start with the prefix, ranked by historical search frequency.",
+     "weight": "core",
+     "evidence_hint": "States prefix-start match, top 5, and frequency ranking as the Alex Xu-style MVP."
+    },
+    {
+     "id": "req2",
+     "point": "NFR: perceived p99 under ~100 ms (UI stutters above ~100 ms), high availability; eventual consistency OK so suggestions can lag hours.",
+     "weight": "core",
+     "evidence_hint": "Names ~100 ms latency / stutter folklore and accepts hours of suggestion lag."
+    },
+    {
+     "id": "req3",
+     "point": "Clarify first: prefix-only vs infix, K, typo/spellcheck, personalization, languages, case/charset; English lowercase-only and no spellcheck in MVP unless asked.",
+     "weight": "extended",
+     "evidence_hint": "Lists the clarifying questions and parks typo/personalization/multi-locale for later."
+    },
+    {
+     "id": "req4",
+     "point": "Out of scope unless asked: full web search ranking, ads, rich entity cards, Maps geocode — this is the suggestion box, not the results page.",
+     "weight": "extended",
+     "evidence_hint": "Draws a hard line between typeahead suggestions and full search / Maps / ads."
+    }
+   ],
+   "probes": [
+    "What are you building — Google-bar query suggestions or full search — and which FRs/NFRs are in the MVP?",
+    "Is ranking frequency-only, and are typos or personalization in scope?"
+   ],
+   "hints": {
+    "1": "Separate the suggestion box from the full search results page before listing features.",
+    "2": "Lock top-K prefix completions, frequency rank, ~100 ms latency, and eventual consistency.",
+    "3": "MVP: top 5 prefix-start completions by historical frequency, English lowercase, no spellcheck; p99 < ~100 ms; lag of hours OK; park full ranking/ads/Maps."
+   }
+  },
+  {
+   "phase": "estimation",
+   "goal": "State Alex Xu–style DAU/QPS assumptions aloud and note how debounce changes load.",
+   "must_hit": [
+    {
+     "id": "est1",
+     "point": "Example scale: ~10M DAU, ~10 searches per user per day, ~20 AJAX calls per search without debounce → ~24k average QPS and ~48k peak QPS (~2×).",
+     "weight": "core",
+     "evidence_hint": "Says 10M DAU → ~24k / ~48k QPS with the searches-per-day and chars-per-query assumptions."
+    },
+    {
+     "id": "est2",
+     "point": "Client debounce (~100–300 ms) cuts QPS a lot; still design for tens of kQPS.",
+     "weight": "core",
+     "evidence_hint": "Mentions debounce as a QPS reducer while keeping tens-of-kQPS in the design target."
+    },
+    {
+     "id": "est3",
+     "point": "New unique query storage ~0.4 GB/day raw strings; serving index size is dominated by trie / prefix→top-K, not raw logs.",
+     "weight": "extended",
+     "evidence_hint": "Separates warehouse log growth (~0.4 GB/day) from the in-memory serving index."
+    }
+   ],
+   "probes": [
+    "Walk through DAU to QPS for typeahead — what happens if the client does not debounce?",
+    "Where does storage actually go — logs or the serving index?"
+   ],
+   "hints": {
+    "1": "Start from DAU × searches/day × keystrokes, then peak multiplier.",
+    "2": "Call out debounce vs raw keystroke QPS, and serving index vs log warehouse.",
+    "3": "10M DAU × 10 × ~20 / day → ~24k avg / ~48k peak; debounce drops QPS; ~0.4 GB/day raw strings; serving trie dominates memory."
+   }
+  },
+  {
+   "phase": "api",
+   "goal": "Define a public suggest read API and keep analytics off the hot path.",
+   "must_hit": [
+    {
+     "id": "api1",
+     "point": "Public suggest API: GET /v1/suggest?prefix=...&limit=...&locale=... returning suggestions as {query, score} list.",
+     "weight": "core",
+     "evidence_hint": "Sketches REST suggest with prefix, limit, locale and a scored suggestions array."
+    },
+    {
+     "id": "api2",
+     "point": "Optional Authorization/session for personalized re-rank; If-None-Match / short Cache-Control for CDN.",
+     "weight": "extended",
+     "evidence_hint": "Mentions cache validators/CDN headers and optional auth for personalization."
+    },
+    {
+     "id": "api3",
+     "point": "Search submit / click-through analytics are async log pipeline events — not on the suggest path; admin rebuild/blocklist is not the interview focus.",
+     "weight": "core",
+     "evidence_hint": "Keeps logging and admin APIs off the keystroke critical path."
+    }
+   ],
+   "probes": [
+    "What does the suggest endpoint look like, and what stays off that path?",
+    "How would CDN caching interact with personalized suggestions?"
+   ],
+   "hints": {
+    "1": "One read API for suggestions; logging is separate.",
+    "2": "Include prefix/limit/locale and scored results; mention CDN cache headers.",
+    "3": "GET /v1/suggest?prefix&limit&locale → {suggestions:[{query,score}]}; analytics async; optional session + Cache-Control."
+   }
+  },
+  {
+   "phase": "data_model",
+   "goal": "Separate append-only logs, aggregated frequencies, and a versioned serving index (trie or KV).",
+   "must_hit": [
+    {
+     "id": "dm1",
+     "point": "Query log event (append-only): {query, user_id?, locale, ts, session_id?}; frequency table: {normalized_query, count_window, locale}.",
+     "weight": "core",
+     "evidence_hint": "Names an append-only log and an aggregated frequency table after batch/stream aggregate."
+    },
+    {
+     "id": "dm2",
+     "point": "Serving index: trie node with children[char] and topK:[(query,score)] size ≤ K at build time, OR KV key=prefix (or locale:prefix) → ordered top-K.",
+     "weight": "core",
+     "evidence_hint": "Picks trie-with-topK-per-node or materialized prefix→top-K and sticks to it."
+    },
+    {
+     "id": "dm3",
+     "point": "Version with index_version / snapshot id and atomic pointer flip so servers never serve a half-built trie.",
+     "weight": "extended",
+     "evidence_hint": "Describes snapshot versioning and atomic swap for safe deploys."
+    },
+    {
+     "id": "dm4",
+     "point": "Optional: trending:{prefix} Redis ZSET speed-layer overlay; user_recent_queries for personalization.",
+     "weight": "extended",
+     "evidence_hint": "Adds optional overlay/personalization structures without putting them on every write."
+    }
+   ],
+   "probes": [
+    "What data do you store for logs vs what the suggest servers actually read?",
+    "How do you roll out a new trie without serving a half-built index?"
+   ],
+   "hints": {
+    "1": "Logs and frequency aggregates are not the online lookup structure.",
+    "2": "Serving = trie top-K per node or prefix→top-K KV, plus a versioned atomic flip.",
+    "3": "Append-only log → frequency table → immutable trie/KV with top-K; index_version + atomic pointer; optional trending ZSET."
+   }
+  },
+  {
+   "phase": "architecture",
+   "goal": "Split online suggest path from offline aggregate/rebuild, with caching layers on the hot path.",
+   "must_hit": [
+    {
+     "id": "arch1",
+     "point": "Two timelines: online read path (keystroke → suggestions) vs offline/async write path (logs → aggregate → rebuild index); never mutate a shared trie on every search under read load.",
+     "weight": "core",
+     "evidence_hint": "Explicitly separates read and write timelines and forbids sync trie mutation on search."
+    },
+    {
+     "id": "arch2",
+     "point": "Online path: client debounce → CDN/edge → Suggest API/LB → in-memory trie/prefix servers (sharded by prefix) → Redis for hot prefixes; walk trie then return precomputed top-K.",
+     "weight": "core",
+     "evidence_hint": "Draws debounce → CDN → API → RAM trie shards → Redis and a walk+return (no DFS sort)."
+    },
+    {
+     "id": "arch3",
+     "point": "Cold path: search submit → Kafka → aggregator (Spark/Flink batch ± stream) → frequency table → trie builder → object-storage snapshot → push/pull → atomic swap on suggest servers (+ optional Redis trending overlay).",
+     "weight": "core",
+     "evidence_hint": "Describes Kafka→aggregate→build→snapshot→atomic swap, pipeline never blocking keystrokes."
+    },
+    {
+     "id": "arch4",
+     "point": "Path-B alternative: Elasticsearch completion suggester (in-memory FST) instead of a custom trie — simpler ops, slightly higher latency.",
+     "weight": "extended",
+     "evidence_hint": "Names ES completion / FST as the managed alternative to owning trie sharding."
+    }
+   ],
+   "probes": [
+    "Sketch the online path vs the offline rebuild path.",
+    "Where do CDN, Redis, and the in-memory trie sit relative to each other?"
+   ],
+   "hints": {
+    "1": "Keystrokes never wait on log aggregation.",
+    "2": "Debounce + CDN/Redis in front of sharded RAM tries; Kafka rebuild with atomic swap.",
+    "3": "Client debounce→CDN→API→sharded trie (+Redis hot); Kafka→aggregate→immutable trie snapshot→atomic swap; optional ES completion Path-B."
+   }
+  },
+  {
+   "phase": "deep_dives",
+   "goal": "Defend precomputed top-K, freshness hybrid, personalization vs cache, and custom trie vs ES.",
+   "must_hit": [
+    {
+     "id": "dd1",
+     "point": "Query-time DFS + heap on every keystroke blows p99 on short prefixes; store top-K on every trie node (or materialize prefix→top-K) at build time so the read path is walk + return.",
+     "weight": "core",
+     "evidence_hint": "Rejects subtree DFS on the hot path and commits to precomputed top-K per node/prefix."
+    },
+    {
+     "id": "dd2",
+     "point": "Freshness vs latency: do not update the trie on every search; batch rebuild alone goes stale on viral trends; hybrid = immutable trie for >99% + streaming trending overlay merge at query time.",
+     "weight": "core",
+     "evidence_hint": "States batch vs realtime and the immutable-trie + streaming overlay hybrid."
+    },
+    {
+     "id": "dd3",
+     "point": "Personalization: global top-K is CDN-friendly; personalized results fragment caches — fetch global top-N then re-rank with user history in a few ms, or only on miss / logged-in path.",
+     "weight": "extended",
+     "evidence_hint": "Explains cache fragmentation and re-rank-after-global-fetch pattern."
+    },
+    {
+     "id": "dd4",
+     "point": "Custom trie: lowest latency and full control but you own sharding/deploy; ES completion FST: faster to ship with fuzzy/context options if the cluster already exists.",
+     "weight": "extended",
+     "evidence_hint": "Compares latency/control of custom trie vs ship-speed of ES completion."
+    }
+   ],
+   "probes": [
+    "What happens to latency if you DFS the subtree under prefix \"a\" on every keystroke?",
+    "How do you get trending freshness without mutating the trie on every search?",
+    "Custom in-memory trie or Elasticsearch completion — when would you pick each?"
+   ],
+   "hints": {
+    "1": "The hot path should not sort a large subtree.",
+    "2": "Precompute top-K; use batch + optional stream overlay; keep personalization off the CDN path.",
+    "3": "Top-K on every node; immutable trie + Kafka/Flink/Redis trending overlay; global then light re-rank; custom trie vs ES FST Path-B."
+   }
+  },
+  {
+   "phase": "bottlenecks",
+   "goal": "Scale QPS and memory, handle hot short prefixes, and deploy rebuilds safely.",
+   "must_hit": [
+    {
+     "id": "bn1",
+     "point": "QPS: debounce + CDN/Redis for power-law head prefixes; horizontally scale the stateless suggest tier.",
+     "weight": "core",
+     "evidence_hint": "Names debounce/CDN/Redis for popular prefixes and horizontal suggest scaling."
+    },
+    {
+     "id": "bn2",
+     "point": "Hot prefixes (1–2 chars) almost always cached; optionally require min prefix length (e.g. 2–3) before hitting origin; full English query trie can be tens of GB → shard by prefix range and replicate.",
+     "weight": "core",
+     "evidence_hint": "Handles short-prefix heat and memory via caching, min length, and prefix sharding."
+    },
+    {
+     "id": "bn3",
+     "point": "Rebuild deploy: blue/green or versioned snapshot + atomic flip; rolling reload so not all hosts GC at once.",
+     "weight": "extended",
+     "evidence_hint": "Describes safe index cutover without fleet-wide GC spike."
+    },
+    {
+     "id": "bn4",
+     "point": "Pipeline lag / poison trends: windowed counts + uniqueness checks; kill switch to disable overlay; multi-region serve nearest snapshot replica (global exact ranking not required).",
+     "weight": "extended",
+     "evidence_hint": "Covers trending abuse controls and multi-region replica serving."
+    }
+   ],
+   "probes": [
+    "What saturates first — QPS on short prefixes or trie memory — and how do you shard?",
+    "How do you roll a new index without taking the fleet down?"
+   ],
+   "hints": {
+    "1": "Short prefixes and trie RAM are the usual pain points.",
+    "2": "Cache/min-length for hot prefixes; shard by prefix; atomic snapshot flip.",
+    "3": "Debounce+CDN/Redis; cache 1–2 char prefixes; shard tens-of-GB trie by prefix; blue/green atomic flip; overlay kill switch."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Query-time traversal vs precomputed top-K",
+   "strong_answer": "Naive DFS subtree + heap on every keystroke blows p99 on short prefixes. Interview answer: store top-K on every node (or materialize prefix→top-K) at build time; read path is walk + return."
+  },
+  {
+   "topic": "Freshness vs latency (batch vs realtime)",
+   "strong_answer": "Updating the trie on every search causes write contention and will not scale. Batch rebuild alone leaves trends stale. Hybrid: immutable trie for >99% of traffic plus a streaming trending overlay merged at query time."
+  },
+  {
+   "topic": "Personalization vs CDN / cacheability",
+   "strong_answer": "Global top-K is cacheable and CDN-friendly. Personalized results fragment caches — fetch global top-N, re-rank with user history in a few ms, or personalize only after cache miss / on the logged-in path."
+  },
+  {
+   "topic": "Custom trie vs Elasticsearch / FST",
+   "strong_answer": "Custom trie gives lowest latency and full control but you own sharding and deploy. ES completion suggester (in-memory FST) ships faster with fuzzy/context options and is a good Path-B when a cluster already exists."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Just SELECT … LIKE 'pre%'",
+   "correction": "Too slow and not ranked; needs a prefix index plus precomputed top-K."
+  },
+  {
+   "trap": "Forgetting top-K on trie nodes",
+   "correction": "Interviewer will ask complexity under prefix \"a\"; without per-node top-K, short prefixes explode."
+  },
+  {
+   "trap": "Updating the trie synchronously on every search",
+   "correction": "Couples write amplification to the latency path; prefer async rebuild and/or a streaming overlay."
+  },
+  {
+   "trap": "No client debounce",
+   "correction": "QPS can jump 5–10×; clients must debounce (~100–300 ms) and abort stale in-flight responses."
+  },
+  {
+   "trap": "Personalizing every response through the edge cache",
+   "correction": "Personalized responses rarely edge-cached; separate global vs personalized paths."
+  },
+  {
+   "trap": "Putting typos / fuzzy matching in the MVP",
+   "correction": "Out of MVP; add edit-distance / a separate spell service or ES fuzzy completion only if asked."
+  },
+  {
+   "trap": "Analytics poisoning of ranking counts",
+   "correction": "Bots can inflate counts; need rate limits and trusted-session filters on the ranking pipeline, plus velocity/uniqueness checks on trending."
+  },
+  {
+   "trap": "Reaching for WebSockets for suggest",
+   "correction": "REST/HTTP AJAX is fine; WebSocket is rarely needed for typeahead."
+  }
+ ]
+}

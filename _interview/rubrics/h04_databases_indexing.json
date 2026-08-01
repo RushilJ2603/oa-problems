@@ -1,0 +1,204 @@
+{
+ "id": "h04_databases_indexing",
+ "title": "Databases & indexing (SQL vs NoSQL, B-tree vs LSM, indexes, query planning)",
+ "type": "CONCEPT",
+ "relevance": "High — almost every HLD round picks a store and justifies indexes for access patterns; FAANG + Indian product cos (Atlassian, Uber, Flipkart, DE Shaw) probe SQL vs NoSQL and B-tree vs LSM tradeoffs on write-heavy designs.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Campus/new-grad HLD almost always asks SQL vs NoSQL and what to index on user/feed/order tables (Indian product cos and FAANG-adjacent). Mid-level rounds separate strong answers via B-tree vs LSM, composite/covering indexes, and reading plans on write-heavy vs read-heavy designs. Expect follow-ups whenever a DB box is drawn or “just shard NoSQL” is claimed.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish SQL vs NoSQL families, when each fits, and what an index is.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "SQL/relational uses tables + schema, joins, and ACID/strong consistency; good for multi-entity integrity and ad-hoc queries, but horizontal scale is harder (replica/shard/denormalize).",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts relational integrity and joins with harder horizontal scale via replicas, shards, or denormalization."
+    },
+    {
+     "id": "fund2",
+     "point": "NoSQL families are key-value, document, wide-column, and graph; they optimize for known access patterns, are often schema-flexible and easier to shard, with joins usually in the app and consistency often tunable/eventual.",
+     "weight": "core",
+     "evidence_hint": "Names the four families and ties them to access-pattern design, app-side joins, and tunable/eventual consistency."
+    },
+    {
+     "id": "fund3",
+     "point": "Choose store by access pattern + consistency + scale: payments/inventory → SQL; session/KV, social graphs, write-heavy time-series/messaging → specialized NoSQL; polyglot is normal.",
+     "weight": "extended",
+     "evidence_hint": "Gives concrete domain→store mappings and rejects fashion-based picks in favor of access pattern, consistency, and scale."
+    },
+    {
+     "id": "fund4",
+     "point": "An index is a redundant structure derived from the table that speeds lookups/sorts/joins; every write updates data + indexes, and unused indexes waste space and slow writes.",
+     "weight": "core",
+     "evidence_hint": "Calls index a redundant derived structure and states the write+space cost of unused indexes."
+    }
+   ],
+   "probes": [
+    "For a payments ledger versus an Instagram-like feed, which store type would you pick and what consistency/query tradeoff are you accepting?"
+   ],
+   "hints": {
+    "1": "Think about multi-entity integrity and ad-hoc queries versus known access patterns and easier sharding.",
+    "2": "Map payments/inventory to SQL (ACID/joins) and feed/session/time-series/messaging toward specialized NoSQL; mention polyglot.",
+    "3": "SQL: tables, joins, ACID; NoSQL: KV/document/wide-column/graph, app-side joins, tunable consistency — choose by access pattern + consistency + scale."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain B-tree and LSM write/read paths, composite/covering indexes, and cost-based planning.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "B-tree/B+ tree (default RDBMS index) is a balanced tree of disk pages supporting O(log n) point and range queries (=, <, BETWEEN, ORDER BY); Postgres/MySQL InnoDB default.",
+     "weight": "core",
+     "evidence_hint": "Describes balanced page tree, O(log n) point/range/order support, and names it as the usual RDBMS default."
+    },
+    {
+     "id": "mech2",
+     "point": "LSM-tree (Cassandra, RocksDB, LevelDB, …): write to memtable → flush immutable SSTables → background compaction; sequential writes give high write throughput; reads may touch memtable + several SSTables (bloom filters help); compaction causes write amp and latency variance.",
+     "weight": "core",
+     "evidence_hint": "Narrates memtable → SSTable → compaction, bloom filters on read path, and compaction write amp / p99 variance."
+    },
+    {
+     "id": "mech3",
+     "point": "Composite indexes follow leftmost prefix: (user_id, created_at) helps user_id and user_id + created_at, not created_at alone; column order equals query order.",
+     "weight": "core",
+     "evidence_hint": "States leftmost-prefix rule with a composite example and that leading-column-only predicates work, trailing-alone do not."
+    },
+    {
+     "id": "mech4",
+     "point": "Covering/index-only scan: if the index holds all needed columns, skip the heap (fewer I/Os); don’t over-INCLUDE wide columns.",
+     "weight": "extended",
+     "evidence_hint": "Explains index-only/covering avoids heap I/O and warns against bloating the index with wide INCLUDE columns."
+    },
+    {
+     "id": "mech5",
+     "point": "Declarative SQL goes parser → cost-based optimizer → executor; optimizer picks scan/join order from stats + indexes; EXPLAIN shows Seq Scan vs Index Scan; planner may correctly prefer seq scan on small/hot tables.",
+     "weight": "extended",
+     "evidence_hint": "Walks parse → cost-based plan → execute and notes Seq vs Index Scan plus legitimate seq-scan on small/hot tables."
+    }
+   ],
+   "probes": [
+    "Walk a point lookup and a write on a B-tree versus an LSM; where do write amplification and compaction show up?",
+    "Index (a, b, c): which of WHERE a=?, WHERE b=?, WHERE a=? AND c=?, WHERE a=? AND b=? can use it efficiently, and why?"
+   ],
+   "hints": {
+    "1": "Separate the on-disk structure (pages vs memtable/SSTables) from how secondary/composite keys are matched.",
+    "2": "B-tree: in-place page updates + WAL; LSM: append memtable, flush SSTables, compact. Composite keys need the leftmost prefix.",
+    "3": "Leftmost prefix: a and a+b work; b alone and a+c (skipping b) do not use the full composite efficiently. LSM compaction = write amp and latency variance."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare B-tree vs LSM and free secondary indexes vs query-driven NoSQL keys under real workloads.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Interview mnemonic: B-tree ≈ read-friendly / predictable lookups; LSM ≈ write-friendly / append + compact; workload (read:write, p99) picks the engine more than SQL vs NoSQL branding.",
+     "weight": "core",
+     "evidence_hint": "Picks engine from read:write and p99 needs, not from SQL/NoSQL labels, using the read-friendly vs write-friendly mnemonic."
+    },
+    {
+     "id": "tr2",
+     "point": "NoSQL “indexing” is not free secondary indexes: design partition key + sort key (and optional GSI) for the query; wrong key means full partition scan or fan-out.",
+     "weight": "core",
+     "evidence_hint": "Designs partition/sort keys (optional GSI) from queries and names full-partition-scan/fan-out as the failure mode."
+    },
+    {
+     "id": "tr3",
+     "point": "LSM usually has higher sustained write throughput than B-tree, but compaction, tombstones, and read amp can erase the win — measure for the workload.",
+     "weight": "extended",
+     "evidence_hint": "Affirms typical write-throughput edge then qualifies with compaction/tombstones/read amp and “measure the workload.”"
+    }
+   ],
+   "probes": [
+    "On a write-heavy chat or metrics design, when would you still prefer a B-tree engine over LSM?",
+    "Why isn’t adding a global secondary index on sharded NoSQL “just like” a Postgres secondary index?"
+   ],
+   "hints": {
+    "1": "Compare read predictability and p99 against sustained write throughput and background compaction.",
+    "2": "LSM wins writes until compaction/tombstones/read amp hurt; GSIs are another distributed store with lag/cost/failure modes.",
+    "3": "Prefer query-driven primary keys over GSIs; choose B-tree when reads/p99 matter more than append-heavy write throughput."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply store choice, composite indexing to an API, and EXPLAIN literacy to concrete designs.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "For GET /users/{id}/posts?limit=20 sorted by time: design table + composite index on (user_id, created_at); indexing only created_at breaks per-user time-ordered lookup.",
+     "weight": "core",
+     "evidence_hint": "Proposes composite (user_id, created_at) for the API and explains why created_at-only fails the access pattern."
+    },
+    {
+     "id": "app2",
+     "point": "For SELECT * FROM orders WHERE user_id = ?, sketch when Index Scan vs Seq Scan appears; EXPLAIN ANALYZE adds actual runtime vs EXPLAIN’s estimated plan.",
+     "weight": "core",
+     "evidence_hint": "Ties Index vs Seq Scan to selectivity/size/stats and states ANALYZE adds measured execution vs estimate-only EXPLAIN."
+    },
+    {
+     "id": "app3",
+     "point": "On a write-heavy logs table, avoid unused/low-selectivity secondary indexes; “no secondary index” can be right because every write updates data + indexes.",
+     "weight": "extended",
+     "evidence_hint": "Refuses blanket indexing on logs, cites write amplification/space, and accepts no secondary index as valid."
+    }
+   ],
+   "probes": [
+    "Design the table and indexes for GET /users/{id}/posts?limit=20 ordered by time — what breaks if you only index created_at?",
+    "When would EXPLAIN show a Seq Scan for WHERE user_id = ? even if an index exists, and what does EXPLAIN ANALYZE add?"
+   ],
+   "hints": {
+    "1": "Start from the API’s filter and sort columns, then ask what the planner needs to justify an index.",
+    "2": "Composite (user_id, created_at) matches the path; created_at-only violates leftmost/access-pattern fit; seq scan can win on small/hot or low-selectivity cases.",
+    "3": "Index-only when it matches predicates; EXPLAIN = estimated plan (Seq vs Index); EXPLAIN ANALYZE = actual timings; skip low-value indexes on write-heavy logs."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "SQL vs NoSQL",
+   "strong_answer": "SQL wins for joins, ACID, structured multi-entity integrity and ad-hoc queries; NoSQL wins for flexible schema, known access patterns, and easier sharding — pick by access pattern + consistency + scale; polyglot is normal."
+  },
+  {
+   "topic": "B-tree vs LSM",
+   "strong_answer": "B-tree is read-friendly with predictable lookups; LSM is write-friendly via append + compaction. Workload (read:write, p99) picks the engine more than SQL vs NoSQL branding; compaction/tombstones/read amp can erase LSM’s write advantage."
+  },
+  {
+   "topic": "Hash index vs B-tree",
+   "strong_answer": "Hash supports equality only; B-tree also does ranges and ordering — default to B-tree unless you know you need hash."
+  },
+  {
+   "topic": "RDBMS secondary indexes vs NoSQL partition/sort keys (and GSIs)",
+   "strong_answer": "RDBMS secondary indexes are maintained structures on the table; NoSQL often requires designing partition key + sort key (optional GSI) for the query — wrong key means full partition scan or fan-out; GSIs are another distributed store (lag, cost, failure mode)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Index every column for safety.",
+   "correction": "Every write updates data + indexes; unused indexes waste space and slow writes, and the planner may ignore low-selectivity indexes anyway."
+  },
+  {
+   "trap": "NoSQL is always more scalable than SQL.",
+   "correction": "Many products scale Postgres far; NoSQL wins when the data model + partitioning match the queries, not from magic."
+  },
+  {
+   "trap": "LSM always beats B-tree on writes.",
+   "correction": "Usually higher sustained write throughput, but compaction, tombstones, and read amp can erase the win — measure for the workload."
+  },
+  {
+   "trap": "Reach for a hash index by default.",
+   "correction": "Hash is equality-only; B-tree also does ranges and ordering — default to B-tree unless you know you need hash."
+  },
+  {
+   "trap": "Treat global secondary indexes on sharded NoSQL like cheap local secondary indexes.",
+   "correction": "GSIs are another distributed store with lag, cost, and failure modes; prefer query-driven primary keys."
+  },
+  {
+   "trap": "Assume EXPLAIN using your index means the design is wrong if it doesn’t.",
+   "correction": "Planner may ignore the index due to stale stats, low selectivity, wrong column order, a function on the column (e.g. WHERE LOWER(email)=…), or a table small enough that seq scan is cheaper."
+  }
+ ]
+}
