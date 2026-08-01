@@ -1,0 +1,295 @@
+{
+ "id": "lq07_snake_ladder",
+ "title": "Design Snake and Ladder",
+ "type": "LLD",
+ "relevance": "High — the canonical Flipkart/Uber-style machine-coding starter (campus + SDE-1/2); also a common OOD whiteboard warm-up. Tests OOP modeling, turn loops, Strategy/Builder, and (optionally) concurrent game sessions.",
+ "difficulty": "campus",
+ "prereqs": [
+  "L01",
+  "L02",
+  "L03"
+ ],
+ "company_notes": "Extremely common campus/machine-coding first LLD at Flipkart, Uber, Swiggy, Amazon new-grad and Indian product cos (timed CLI ~90–120 min via workat.tech). SDE-2 adds Strategy, chaining edges, concurrent sessions, RNG testability. FAANG OOD whiteboard is lighter coding, heavier clarifying Qs and class model. Among the top machine-coding LLD problems with parking lot, Splitwise, and Tic-Tac-Toe.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock mandatory FR/NFR, clarifying questions, and stated assumptions before any coding.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Mandatory path: read snakes/ladders/players from CLI or file; fair d6 turns; print each move and the winner; start at 0; exact reach 100; overshoot stays put; apply snakes/ladders with chaining.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists exact-land-on-100, overshoot=stay, start at 0, print moves/winner, and chaining as the workat happy path."
+    },
+    {
+     "id": "req2",
+     "point": "Clarify extensions before coding: multi-dice, custom board size, extra turn on 6, cancel after 3 consecutive sixes, play until one left, whether same cell is allowed for multiple players.",
+     "weight": "core",
+     "evidence_hint": "Asks about multi-dice, board size, extra turn on 6 / 3 sixes, continue-until-last, and co-located players instead of assuming defaults."
+    },
+    {
+     "id": "req3",
+     "point": "State assumptions: unique jump starts; no snake on final cell; no infinite jump cycles; at least 2 players; same cell OK unless product says capture.",
+     "weight": "extended",
+     "evidence_hint": "Explicitly calls out unique starts, no snake at 100, no infinite cycles, ≥2 players, and same-cell allowed."
+    },
+    {
+     "id": "req4",
+     "point": "Out of scope until asked: UI, persistence, online multiplayer networking, AI bots.",
+     "weight": "extended",
+     "evidence_hint": "Names UI/persistence/networking/bots as deferred and stays on core loop first."
+    }
+   ],
+   "probes": [
+    "What must be true for a player to win, and what happens if the roll would go past the last cell?",
+    "Which optional rules will you support now versus defer?"
+   ],
+   "hints": {
+    "1": "Start from the workat mandatory path before optional rules.",
+    "2": "Separate exact-win + chaining + print format from multi-dice / extra-turn / continue-until-last.",
+    "3": "Mandatory: start 0, exact 100, overshoot stay, chain jumps, print moves and winner; ask about 6 / 3 sixes / board size next."
+   }
+  },
+  {
+   "phase": "entities",
+   "goal": "Name the core domain objects and how jumps and turns are represented.",
+   "must_hit": [
+    {
+     "id": "ent1",
+     "point": "Core entities: Board (size + jump map), Player (name, position), Dice (roll), Snake/Ladder or unified Jump/BoardEntity, Game or SnakeAndLadderService (turn loop + win).",
+     "weight": "core",
+     "evidence_hint": "Lists Board, Player, Dice, Snake/Ladder or Jump, and Game/Service without collapsing them into one god object."
+    },
+    {
+     "id": "ent2",
+     "point": "Prefer one Map from start to end (or destinations array) so landing resolves in O(1); inheritance is for validation, not per-move list scans.",
+     "weight": "core",
+     "evidence_hint": "Says jump lookup is a map/array keyed by start cell, not scanning snake and ladder lists each move."
+    },
+    {
+     "id": "ent3",
+     "point": "Snake and ladder can share one Jump abstraction when behavior is identical; data (start/end direction) differs, not move logic.",
+     "weight": "extended",
+     "evidence_hint": "Unifies snake/ladder as Jump/BoardEntity and notes only validation differs (start>end vs start<end)."
+    },
+    {
+     "id": "ent4",
+     "point": "Optional GameManager owns concurrent sessions; one game remains a single-threaded turn machine with GameStatus NOT_STARTED|RUNNING|FINISHED.",
+     "weight": "extended",
+     "evidence_hint": "Mentions GameManager only for multi-session and GameStatus for lifecycle, not for single-game core."
+    }
+   ],
+   "probes": [
+    "What objects do you need, and how do you represent snakes and ladders on the board?",
+    "Why not keep separate lists and search them on every move?"
+   ],
+   "hints": {
+    "1": "Think Board, Player, Dice, jumps, and something that runs the turn loop.",
+    "2": "Board holds size plus a start→end jump structure; Game/Service owns the queue and win check.",
+    "3": "Map/array jump resolve is O(1); Snake/Ladder subclasses optional for validation; GameManager is optional for sessions."
+   }
+  },
+  {
+   "phase": "class_design",
+   "goal": "Sketch classes, relationships, and the patterns interviewers expect to hear.",
+   "must_hit": [
+    {
+     "id": "cd1",
+     "point": "Turn rotation is a Queue of players: poll, roll, move, and if not won offer back — scales to N players without index math.",
+     "weight": "core",
+     "evidence_hint": "Uses Queue poll/offer for round-robin instead of a manual index modulo."
+    },
+    {
+     "id": "cd2",
+     "point": "Builder constructs Game from board + players + dice; Facade entry is play() or startGame(); Strategy covers dice count, win condition, and extra-turn-on-6 policy.",
+     "weight": "core",
+     "evidence_hint": "Names Builder for construction, Facade for play/startGame, Strategy for pluggable dice/win/turn rules."
+    },
+    {
+     "id": "cd3",
+     "point": "SRP split: Driver does I/O only; Service/Game orchestrates; Board is pure position resolution; Dice is injectable/mockable randomness.",
+     "weight": "extended",
+     "evidence_hint": "Draws Driver → Service/Game → Board/Dice boundaries and refuses a single god class."
+    },
+    {
+     "id": "cd4",
+     "point": "Singleton only for a multi-game GameManager if used; prefer DI — do not force State/Observer unless asked.",
+     "weight": "extended",
+     "evidence_hint": "Limits Singleton to GameManager and says DI is preferred; skips State/Observer unless prompted."
+    }
+   ],
+   "probes": [
+    "Walk me through your class diagram and which patterns you would use.",
+    "Where does the turn loop live versus jump resolution?"
+   ],
+   "hints": {
+    "1": "Separate who builds the game, who plays turns, and who resolves cells.",
+    "2": "Queue for turns; Builder for Game wiring; Strategy for optional rules; Board owns the jump map.",
+    "3": "Game/Service Facade + Queue<Player> + Board jumps + Dice; Builder/Strategy for construction and rule knobs; Singleton only if GameManager."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Describe the turn algorithm, exact-win handling, and chain resolution correctly.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Per turn: poll player → Dice.roll → tentative = pos + roll; if tentative > size stay; else pos = Board.resolve(tentative) with chain jumps; if pos == size win/remove, else enqueue (or re-turn on 6).",
+     "weight": "core",
+     "evidence_hint": "Narrates poll → roll → overshoot check → resolve/chain → win or enqueue in that order."
+    },
+    {
+     "id": "impl2",
+     "point": "Default exact-win: pos + roll > size skips the move; first to pos == size wins — state this early.",
+     "weight": "core",
+     "evidence_hint": "States stay-put on overshoot and win only on exact last cell."
+    },
+    {
+     "id": "impl3",
+     "point": "Chaining is mandatory in workat: after a jump, if landing is another head/start keep resolving until stable; detect cycles (no infinite loop, no snake at 100, unique starts).",
+     "weight": "core",
+     "evidence_hint": "Loops jump resolution until stable and mentions a cycle/visited guard under the usual assumptions."
+    },
+    {
+     "id": "impl4",
+     "point": "API surface: Dice.roll, Board.getFinalPosition(pos), Game.play / startGame, takeTurn(Player); Driver only reads snakes, ladders, players and starts the game.",
+     "weight": "extended",
+     "evidence_hint": "Sketches those method names and keeps parsing out of the service core."
+    }
+   ],
+   "probes": [
+    "Trace one full turn when a player lands on a ladder that leads to a snake head.",
+    "What do you print and when does the game end on the mandatory path?"
+   ],
+   "hints": {
+    "1": "Write the move as tentative position, then apply jumps, then check win.",
+    "2": "Overshoot leaves position unchanged; resolve may apply multiple jumps; queue rotates unless won.",
+    "3": "tentative>size → stay; else resolve with chain+cycle guard; pos==size → winner; else offer back to queue."
+   }
+  },
+  {
+   "phase": "extensibility",
+   "goal": "Show how optional rules plug in without rewriting the core turn loop.",
+   "must_hit": [
+    {
+     "id": "ext1",
+     "point": "Hardcoded exact-win + single die passes mandatory; Strategy or flags win optional multi-dice, continue-until-last, and extra-turn follow-ups without rewriting startGame.",
+     "weight": "core",
+     "evidence_hint": "Keeps mandatory path simple and points optional rules at Strategy/setters rather than forking the loop."
+    },
+    {
+     "id": "ext2",
+     "point": "OCP/DIP signal: new win/dice/turn rules without editing the game loop; depend on Dice/strategy abstractions for testability.",
+     "weight": "core",
+     "evidence_hint": "Says WinningStrategy/MovementStrategy (or equivalent) and injectable Dice so rules change at the edges."
+    },
+    {
+     "id": "ext3",
+     "point": "Extra turn on 6 is optional; three consecutive sixes often cancel the whole turn (return to turn-start position) — prefer a loop with consecutive-6 counter over recursion.",
+     "weight": "extended",
+     "evidence_hint": "Describes optional re-roll on 6 and a consecutive-6 counter that can void the turn instead of recursive re-entry."
+    },
+    {
+     "id": "ext4",
+     "point": "Multi-dice and custom board size via noOfDices and boardSize params — do not hardcode 100 and 6 inside the loop.",
+     "weight": "extended",
+     "evidence_hint": "Constructor/Builder knobs for dice count and board size; loop uses those values."
+    }
+   ],
+   "probes": [
+    "How would you add extra turn on 6 and cancel after 3 sixes without rewriting play()?",
+    "Where would multi-dice and custom board size live?"
+   ],
+   "hints": {
+    "1": "Treat optional rules as policies, not if-else sprawl in the middle of play.",
+    "2": "WinningStrategy / turn Strategy / setters on the service; Builder passes boardSize and dice count.",
+    "3": "Mandatory first; then Strategy for win/extra-turn; loop+counter for 3 sixes; noOfDices and boardSize instead of hardcoded 100/6."
+   }
+  },
+  {
+   "phase": "concurrency",
+   "goal": "Explain multi-session isolation and safe randomness without shared mutable game state.",
+   "must_hit": [
+    {
+     "id": "conc1",
+     "point": "One game is single-threaded; multi-session means independent Game instances on separate threads — never share mutable board/player state across games.",
+     "weight": "core",
+     "evidence_hint": "Says each lobby gets its own Game/board/players; no cross-game shared cells."
+    },
+    {
+     "id": "conc2",
+     "point": "GameManager.startNewGame spawns independent games; synchronize only the manager’s game list, not board cells.",
+     "weight": "core",
+     "evidence_hint": "Locks or syncs the session registry only; each Game runs without board-level locking."
+    },
+    {
+     "id": "conc3",
+     "point": "Prefer ThreadLocalRandom or an injected RNG over a shared Random; inject a seed for deterministic tests.",
+     "weight": "extended",
+     "evidence_hint": "Avoids one shared Random across threads and mentions injectable/seeded RNG for tests."
+    }
+   ],
+   "probes": [
+    "How would you support many concurrent games safely?",
+    "What would you synchronize, and what must remain unshared?"
+   ],
+   "hints": {
+    "1": "Think one game object per session, not one shared board.",
+    "2": "Manager tracks games; each Game is isolated on its own thread or executor task.",
+    "3": "startNewGame → new Game per thread; sync only the manager list; ThreadLocalRandom or injected RNG; no shared mutable board."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Separate Snake/Ladder classes vs unified Jump",
+   "strong_answer": "Separate classes encode validation (start > end vs start < end); unified Jump avoids duplicate lookup. Strong answer: one map for resolve plus optional subclasses for validation only."
+  },
+  {
+   "topic": "List scan vs O(1) map/array",
+   "strong_answer": "Lists are fine for tiny boards; map/array is the expected clean answer and makes chaining trivial — avoid O(S+L) scans per move if claiming polish."
+  },
+  {
+   "topic": "Hardcoded rules vs Strategy",
+   "strong_answer": "Hardcoding exact-win + single die passes the mandatory path; Strategy/flags win optional multi-dice / continue-until-last / extra-turn follow-ups without rewriting startGame."
+  },
+  {
+   "topic": "Recursive roll-6-again vs loop with counters",
+   "strong_answer": "Recursion is short; a loop with a consecutive-6 counter is safer for the three-sixes-cancel rule."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Forgetting snake/ladder chaining when one jump lands on another head/start",
+   "correction": "In workat, keep resolving until stable and mention a cycle guard under no-infinite-loop assumptions."
+  },
+  {
+   "trap": "Moving past 100 instead of staying put",
+   "correction": "Default interview rule is exact win: overshoot stays; bounce-back is an alternate WinningStrategy/movement rule."
+  },
+  {
+   "trap": "Ignoring three consecutive sixes when offering extra turn on 6",
+   "correction": "Extra turn is optional; three consecutive often cancel the whole turn and return to turn-start position."
+  },
+  {
+   "trap": "Assuming two players on the same cell is illegal",
+   "correction": "Usually allowed; no capture unless the product says otherwise."
+  },
+  {
+   "trap": "Hardcoding board size 100 and die face 6 in the loop",
+   "correction": "Pass noOfDices and boardSize so multi-dice and custom boards do not require loop rewrites."
+  },
+  {
+   "trap": "Sharing mutable board/player state across concurrent games",
+   "correction": "Independent Game per session; synchronize only the manager’s game list, not cells."
+  },
+  {
+   "trap": "God-class that parses input, rolls dice, and prints in one file",
+   "correction": "Interviewers dock design score — split Driver I/O, service orchestration, and board jump map."
+  },
+  {
+   "trap": "Finishing optional extensibility but failing mandatory move print / win",
+   "correction": "Ship the mandatory happy path first; optional Strategy/flags come after."
+  }
+ ]
+}

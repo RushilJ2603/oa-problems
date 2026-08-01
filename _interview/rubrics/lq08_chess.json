@@ -1,0 +1,297 @@
+{
+ "id": "lq08_chess",
+ "title": "Design a Chess / Tic-Tac-Toe Game",
+ "type": "LLD",
+ "relevance": "High — flagship board-game LLD pair; Tic-Tac-Toe is the warm-up / machine-coding staple (Flipkart, Uber, Amazon, Microsoft), Chess is the harder OOD probe (piece polymorphism, legality, Command undo) at Amazon/Microsoft/Meta-style loops.",
+ "difficulty": "mid",
+ "prereqs": [
+  "l01_oop_solid",
+  "l02_patterns_creational",
+  "l03_patterns_structural"
+ ],
+ "company_notes": "Campus/new-grad machine-coding opener as Tic-Tac-Toe (Flipkart, Uber, Swiggy, Amazon, Razorpay); experienced/SDE-2 probes Chess or TTT with N×N + Strategy + Bot; FAANG OOD whiteboard for Design Chess / Design Tic-Tac-Toe; among the most asked game LLDs.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock functional scope for TTT and/or Chess, plus NFRs and clarifying assumptions before design.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Tic-Tac-Toe mandatory FR: N×N board (default 3), two players X/O alternate, reject occupied/OOB cells, detect win (row/col/diag) and draw (full board), print board after valid moves.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists place-mark, validation, win/draw detection, and board print without jumping to class names."
+    },
+    {
+     "id": "req2",
+     "point": "Chess mandatory FR: 8×8 board, White/Black with White first, place standard 16+16 pieces, validate piece moves, alternate turns, at least sketch checkmate/stalemate detection.",
+     "weight": "core",
+     "evidence_hint": "Candidate states two-color turn loop, piece placement, move validation, and terminal check/mate/stale outcomes."
+    },
+    {
+     "id": "req3",
+     "point": "Clarify before coding: TTT size/win-length/players/Bot/undo/CLI I/O; Chess full FIDE vs subset, specials (castling, en passant, promotion), clocks, undo, resign/draw.",
+     "weight": "core",
+     "evidence_hint": "Asks scoping questions and explicitly calls out which specials or extensions are in/out of scope."
+    },
+    {
+     "id": "req4",
+     "point": "NFR: modular files (not one god class), extensible rules, correct under concurrent move attempts if multi-client, working CLI demo.",
+     "weight": "extended",
+     "evidence_hint": "Mentions modularity/extensibility and optionally concurrent-move correctness without overbuilding product features."
+    }
+   ],
+   "probes": [
+    "What are the mandatory functional requirements for Tic-Tac-Toe vs Chess, and which extensions will you defer?",
+    "Will you implement full FIDE specials, or a subset with hooks—and how does that affect the CLI demo?"
+   ],
+   "hints": {
+    "1": "Start by listing what must work in a happy-path CLI before optional Bot or castling.",
+    "2": "Separate TTT place/validate/win-draw/print from Chess place/validate/turn/terminal-status checklists.",
+    "3": "Mandatory TTT: N×N (default 3), X/O alternate, reject bad cells, win/draw, print; mandatory Chess: 8×8, White first, 16+16 pieces, validate moves, sketch mate/stalemate."
+   }
+  },
+  {
+   "phase": "entities",
+   "goal": "Name the shared turn-based skeleton and the distinct TTT vs Chess domain objects.",
+   "must_hit": [
+    {
+     "id": "ent1",
+     "point": "Shared skeleton: Game orchestrator + Board + Player + Move + terminal status for both turn-based board games.",
+     "weight": "core",
+     "evidence_hint": "Names Game, Board, Player, Move, and a status concept before diving into piece types."
+    },
+    {
+     "id": "ent2",
+     "point": "Core TTT entities: Board (grid + place/validate), Player (name + symbol), PlayingPiece/Symbol, Game (turns + outcome); optional WinningStrategy and Deque of Player for round-robin.",
+     "weight": "core",
+     "evidence_hint": "Lists Board/Player/Symbol/Game and may mention WinningStrategy or Deque for multi-player turns."
+    },
+    {
+     "id": "ent3",
+     "point": "Core Chess entities: abstract Piece → King/Queen/Rook/Bishop/Knight/Pawn; Board as 8×8 of Square/Box; Move (from/to + captured + flags); Player (color); Game/ChessGame (turn, status, history).",
+     "weight": "core",
+     "evidence_hint": "Shows Piece hierarchy, Square/Box cells, Move with capture/flags, and Game owning turn/status/history."
+    },
+    {
+     "id": "ent4",
+     "point": "Status models: TTT GameStatus IN_PROGRESS | WIN | DRAW; Chess ACTIVE | CHECK | CHECKMATE | STALEMATE | RESIGNED | DRAW.",
+     "weight": "extended",
+     "evidence_hint": "Enumerates terminal/in-progress statuses for the game being designed rather than inventing unrelated states."
+    }
+   ],
+   "probes": [
+    "What objects appear in both games, and what is unique to Chess’s Piece hierarchy?",
+    "How do you model Move and GameStatus differently for TTT undo vs Chess capture/special flags?"
+   ],
+   "hints": {
+    "1": "Both games are turn-based—name the shared orchestrator pieces first.",
+    "2": "Map TTT to Board/Player/Symbol/Game(+WinningStrategy); Chess to Piece subclasses, Square/Box, Move, colored Player.",
+    "3": "Say: Game+Board+Player+Move+status for both; Chess adds abstract Piece→six concretes and Move flags for castle/en passant/promotion."
+   }
+  },
+  {
+   "phase": "class_design",
+   "goal": "Assign responsibilities and patterns so Game stays a facade and movement/win rules stay swappable.",
+   "must_hit": [
+    {
+     "id": "cd1",
+     "point": "Game is facade/controller: owns turn, status, history, public makeMove; does not embed piece geometry or win-line formulas inline when Strategy is expected.",
+     "weight": "core",
+     "evidence_hint": "Describes Game coordinating makeMove while Board/Piece/Strategy own grid and rules."
+    },
+    {
+     "id": "cd2",
+     "point": "Do not put movement switch(pieceType) in Board/Game—each Piece subclass owns geometry (OCP for fairy pieces / Chess960 stretch).",
+     "weight": "core",
+     "evidence_hint": "Puts canMove/getPseudoLegalMoves on Piece hierarchy instead of a central type switch."
+    },
+    {
+     "id": "cd3",
+     "point": "Patterns that earn points: Strategy (win/AI/Human vs Bot), Command (Move execute/undo + history), State/status enum, Factory (pieces/players), Template Method or polymorphism on Piece.canMove, Observer (UI/scoreboard).",
+     "weight": "core",
+     "evidence_hint": "Names at least Strategy and Command (or Piece polymorphism) and where they plug into Game."
+    },
+    {
+     "id": "cd4",
+     "point": "API surface: TTT create_game/make_move/get_board/undo; LeetCode-shaped TicTacToe(n)/move→0|1|2; Chess Game.start/makeMove, Piece.canMove, Board.isSquareAttacked, Game.isInCheck/isCheckmate/isStalemate, Move.execute/undo.",
+     "weight": "extended",
+     "evidence_hint": "Sketches makeMove-style APIs and Chess legality helpers without inventing unrelated endpoints."
+    }
+   ],
+   "probes": [
+    "Where does piece movement validation live, and why not a switch in Game?",
+    "Which patterns would you use for win rules, Human vs Bot, and undoable moves?"
+   ],
+   "hints": {
+    "1": "Think facade Game vs grid Board vs rule owners.",
+    "2": "WinningStrategy/PlayerStrategy and Piece.canMove keep Game thin; Command backs undo history.",
+    "3": "Game.makeMove orchestrates; Piece subclasses own geometry; Strategy for win/AI input; Command stack for undo."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Explain TTT win detection and the Chess legality pipeline including check filtering.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "TTT win detection: naive scan all lines after each move is fine for 3×3; senior bar is O(1) with +1/−1 row/col/diag counters (LeetCode 348); for N×N with K-in-a-row check lines through last move (O(N) or O(K)).",
+     "weight": "core",
+     "evidence_hint": "Describes either full-line scan for 3×3 or incremental counters, and last-move line check for larger boards."
+    },
+    {
+     "id": "impl2",
+     "point": "Chess move pipeline: (1) own piece + turn, (2) piece geometry canMove, (3) path clear for sliders, (4) destination empty or enemy, (5) simulate and reject if own king remains in check, (6) commit + evaluate check/mate/stalemate.",
+     "weight": "core",
+     "evidence_hint": "Walks ordered validation ending in simulate-for-self-check then terminal evaluation."
+    },
+    {
+     "id": "impl3",
+     "point": "Separate pseudo-legal from legal moves; geometry-only validators miss self-check—always simulate-or-filter.",
+     "weight": "core",
+     "evidence_hint": "Defines pseudo-legal as geometry/path and legal as surviving the king-safety filter."
+    },
+    {
+     "id": "impl4",
+     "point": "Checkmate = in check + zero legal moves; stalemate = not in check + zero legal moves.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts mate vs stalemate solely by whether the side to move is currently in check."
+    }
+   ],
+   "probes": [
+    "How would you detect a TTT win in O(1), and what changes for K-in-a-row on N×N?",
+    "Walk through validating a Chess move from turn check through rejecting moves that leave your king in check."
+   ],
+   "hints": {
+    "1": "TTT: scanning lines is fine on a small board; Chess: geometry alone is not enough.",
+    "2": "Mention row/col/diag counters for TTT and a simulate step before committing Chess moves.",
+    "3": "Pipeline: turn+ownership → canMove → path clear → capture rules → simulate self-check → commit and classify mate/stalemate."
+   }
+  },
+  {
+   "phase": "extensibility",
+   "goal": "Show how new board sizes, players, bots, pieces, and undo plug in without editing Game’s core.",
+   "must_hit": [
+    {
+     "id": "ext1",
+     "point": "SOLID signal: OCP = new piece / win strategy / bot without editing Game; SRP = Board holds cells, Piece validates geometry, Game owns turns + legality filter; DIP on Piece/WinningStrategy/PlayerStrategy.",
+     "weight": "core",
+     "evidence_hint": "Explains adding a piece or Bot via subclass/strategy without rewriting Game’s turn loop."
+    },
+    {
+     "id": "ext2",
+     "point": "Extensions: parameterize N×N / K-in-a-row / P players with Deque turns; PlayerStrategy Human vs Bot (random/minimax); Command undo reversing board cells and TTT counters or Chess captured piece & flags.",
+     "weight": "core",
+     "evidence_hint": "Avoids hardcoding 2 players or fixed 3×3 in Game and describes Strategy/Command hooks for Bot/undo."
+    },
+    {
+     "id": "ext3",
+     "point": "Chess specials as Move subtypes or flags tracking hasMoved, lastMove, promote on last rank; implement promotion + castling hooks if time; en passant needs lastMove metadata—don’t claim full FIDE if only basics done.",
+     "weight": "extended",
+     "evidence_hint": "Hooks specials via Move flags/metadata and is honest about subset vs full rules."
+    }
+   ],
+   "probes": [
+    "How do you support N×N, three players, and a Bot without rewriting Game?",
+    "How would undo and castling/en passant/promotion attach to your Move model?"
+   ],
+   "hints": {
+    "1": "Ask what should change when board size or player count grows.",
+    "2": "WinningStrategy, Deque turns, and PlayerStrategy keep Game stable; Command restores prior board state.",
+    "3": "Parameterize size/players; Strategy for win/Bot; Command stack for undo; special Move flags with hasMoved/lastMove for chess specials."
+   }
+  },
+  {
+   "phase": "concurrency",
+   "goal": "State single-threaded CLI default and how shared online game objects serialize moves.",
+   "must_hit": [
+    {
+     "id": "conc1",
+     "point": "Local CLI is single-threaded; concurrency matters when framing online/shared game object.",
+     "weight": "core",
+     "evidence_hint": "Says CLI demo needs no locks, then addresses shared-instance races if multi-client is in scope."
+    },
+    {
+     "id": "conc2",
+     "point": "If online/shared game object: serialize makeMove (one lock per game / synchronized makeMove); never let two clients mutate the same board.",
+     "weight": "core",
+     "evidence_hint": "Proposes per-game locking around makeMove and server-side validation rather than client-trusted boards."
+    },
+    {
+     "id": "conc3",
+     "point": "Multi-game server: one Game instance per match id; lock per game, not global; Chess clocks/network are product stretch—mention server-side validation, don’t implement mid-round.",
+     "weight": "extended",
+     "evidence_hint": "Scopes concurrency to per-match Game locks and defers clocks/network implementation."
+    }
+   ],
+   "probes": [
+    "Does your CLI need synchronization, and what changes if two clients share one Game?",
+    "Where do you put the lock in a multi-match server?"
+   ],
+   "hints": {
+    "1": "Local demo vs shared online object are different concurrency stories.",
+    "2": "Think one lock around makeMove for a shared Game, not a process-wide lock.",
+    "3": "CLI single-threaded; shared Game uses synchronized/per-game lock on makeMove; one Game per match id."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Scan vs incremental win check (TTT)",
+   "strong_answer": "Full scan is OK for 3×3 demos; row/col/diag counters or last-move line checks show you scale when N grows (LeetCode 348 / N×N with K-in-a-row) without changing the Game API."
+  },
+  {
+   "topic": "Inheritance vs Strategy for Chess movement",
+   "strong_answer": "Subclass-per-piece is the classic answer; Strategy-per-movement-style (slide/leap/pawn) reduces duplication for Queen as Rook∪Bishop—either is fine if justified and Board/Game stay free of piece-type switches."
+  },
+  {
+   "topic": "Pseudo-legal vs legal moves",
+   "strong_answer": "Geometry-only validators miss self-check; always simulate-or-filter. Checkmate = in check + zero legal moves; stalemate = not in check + zero legal moves."
+  },
+  {
+   "topic": "Enum status vs State pattern",
+   "strong_answer": "Enum plus guarded transitions is enough for interviews; full State objects only if behavior per status grows (e.g. reject moves after mate)."
+  },
+  {
+   "topic": "Special moves scope vs basics",
+   "strong_answer": "Implement promotion + castling hooks if time; note en passant needs lastMove metadata; do not claim full FIDE if only basics were coded—mandatory validate, alternate turns, and terminal detection come first."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Hardcoding 2 players or 3×3 constants in Game when asked for N×N / 3 players",
+   "correction": "Parameterize board size; use Deque for turns; keep player count and win length configurable."
+  },
+  {
+   "trap": "Cannot explain O(1) win detection",
+   "correction": "Maintain +1/−1 row/col/diag counters; win when abs equals N (or winLength)."
+  },
+  {
+   "trap": "Adding a Bot by editing Game’s turn loop",
+   "correction": "Introduce PlayerStrategy / BotPlayer (e.g. minimax); Game only asks nextMove(board)."
+  },
+  {
+   "trap": "Undo that only clears a cell",
+   "correction": "Use a Command stack; reverse board cell plus TTT counters or Chess captured piece and special-move flags."
+  },
+  {
+   "trap": "Skipping king-safety after a geometrically valid move",
+   "correction": "Simulate on a copy (or make/unmake); reject if own king remains in check."
+  },
+  {
+   "trap": "Treating checkmate and stalemate as the same",
+   "correction": "Both mean zero legal moves; mate additionally requires currently being in check."
+  },
+  {
+   "trap": "God-class Game with giant switch on piece type / win lines",
+   "correction": "Docks OCP—push geometry to Piece subclasses and win rules to WinningStrategy."
+  },
+  {
+   "trap": "Finishing optional AI/specials but failing mandatory validate + alternate turns + terminal detection",
+   "correction": "Ship mandatory path first; specials and AI are stretch."
+  },
+  {
+   "trap": "workat.tech wrong print format or continuing after win",
+   "correction": "Read the I/O contract carefully; stop announcing further turns once the game is over."
+  }
+ ]
+}

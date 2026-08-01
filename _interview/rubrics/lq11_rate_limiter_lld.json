@@ -1,0 +1,306 @@
+{
+ "id": "lq11_rate_limiter_lld",
+ "title": "Design a Rate Limiter",
+ "type": "LLD",
+ "relevance": "High — the canonical Strategy + concurrency LLD / machine-coding problem (campus + experienced); Uber, Stripe, Amazon, Google, Meta, Atlassian, Flipkart, and API-platform loops use it to probe algorithm choice, OCP, per-key locking, and the bridge to distributed Redis.",
+ "difficulty": "mid",
+ "prereqs": [
+  "l01_oop_solid",
+  "l02_patterns_creational",
+  "l04_patterns_behavioral",
+  "l05_concurrency_lld",
+  "h09_rate_limiting",
+  "hq02_rate_limiter"
+ ],
+ "company_notes": "Campus/new-grad machine-coding or LLD (India and FAANG-style): often implement Token Bucket plus one other algorithm with Strategy + concurrency. SDE-2+ keeps the same OOP surface with harder probes—per-key locking, injectable Clock/Store, Redis Lua stretch, fail-open, header contract, algorithm choice by traffic shape (Stripe/Uber/Amazon/Meta/Google, API gateway teams). Sibling of HLD hq02 and foundation h09; high-frequency systems-flavored LLD alongside LRU cache and logger.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Clarify in-memory LLD scope, mandatory allow/deny contract, multi-algorithm FR, and what stays HLD stretch.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Scope as single-process in-memory LLD (classes, Strategy, per-key state, thread-safety, Factory) unless told otherwise; Redis / multi-DC / fail-open are stretch, not built mid-round unless asked.",
+     "weight": "core",
+     "evidence_hint": "States single JVM in-memory default and names gateway/Redis/fail-open as HLD stretch distinct from hq02."
+    },
+    {
+     "id": "req2",
+     "point": "Mandatory FR: given identity key (often plus endpoint), allow/deny under a configured rule; support at least two algorithms behind one interface; return remaining quota and a retry hint on deny.",
+     "weight": "core",
+     "evidence_hint": "Lists key(+endpoint), rule-based allow/deny, ≥2 strategies, remaining + retryAfter on deny."
+    },
+    {
+     "id": "req3",
+     "point": "Result contract is RateLimitResult {allowed, remaining, retryAfterMs} (retryAfterMs null when allowed), mapping to HTTP 429 + Retry-After / X-RateLimit-* when asked.",
+     "weight": "core",
+     "evidence_hint": "Names allowed/remaining/retryAfterMs and ties deny to 429 + Retry-After headers."
+    },
+    {
+     "id": "req4",
+     "point": "NFR: correct under concurrent checks; low latency in-process; extensible algorithms and storage; deterministic tests via injectable Clock.",
+     "weight": "core",
+     "evidence_hint": "Calls out concurrency correctness, latency, OCP for algos/store, and FakeClock for tests."
+    },
+    {
+     "id": "req5",
+     "point": "Common extensions to ask first: per-tier limits (free/pro), multi-permit cost, default rule for unknown endpoints, admin hot-update of rules.",
+     "weight": "extended",
+     "evidence_hint": "Proactively asks about tiers, permit costs, default endpoint rule, and admin rule updates."
+    }
+   ],
+   "probes": [
+    "Is this in-memory single process or distributed, and what does allow() return beyond a boolean?",
+    "Which algorithms are mandatory in v1, and is the key user, IP, API key, or (clientId, endpoint)?"
+   ],
+   "hints": {
+    "1": "Ask process vs distributed and bool vs rich result before drawing classes.",
+    "2": "Separate mandatory FR (key, multi-algo interface, remaining/retry) from tier/multi-permit extensions.",
+    "3": "State: single JVM; allow(clientId, endpoint) → {allowed, remaining, retryAfterMs}; ≥2 algorithms behind Strategy; Clock injectable; Redis as stretch."
+   }
+  },
+  {
+   "phase": "entities",
+   "goal": "Name the core domain objects: facade, strategy, config/rule, result, and per-key state store.",
+   "must_hit": [
+    {
+     "id": "ent1",
+     "point": "RateLimitConfig / RateLimitRule carries limit, window/rate, capacity, refill rate, and algorithm type for an endpoint.",
+     "weight": "core",
+     "evidence_hint": "Describes a config/rule object with those fields rather than hardcoding rates in the facade."
+    },
+    {
+     "id": "ent2",
+     "point": "RateLimitResult holds allowed, remaining, and retryAfterMs (null if allowed).",
+     "weight": "core",
+     "evidence_hint": "Shows a result type with those three fields returned from allow()."
+    },
+    {
+     "id": "ent3",
+     "point": "Per-key state is keyed by identity such as composite \"userId:endpoint\" (or API key) so policies can differ per route; unknown endpoints can fall back to a default config.",
+     "weight": "core",
+     "evidence_hint": "Names composite keying and default config for unknown endpoints."
+    },
+    {
+     "id": "ent4",
+     "point": "Optional LimitResolver selects tiered quotas (free vs pro) from plan/config rather than hardcoding rates inside the strategy.",
+     "weight": "extended",
+     "evidence_hint": "Mentions a resolver or per-plan config sitting above the strategy math."
+    }
+   ],
+   "probes": [
+    "What fields belong on RateLimitConfig and RateLimitResult?",
+    "How do you key per-client state so /search and /login can have different policies?"
+   ],
+   "hints": {
+    "1": "Think config/rule, result DTO, and a map of per-key buckets—not only a boolean.",
+    "2": "Composite clientId:endpoint key; config map by endpoint; optional LimitResolver for tiers.",
+    "3": "RateLimitConfig(limit/window/capacity/refill/algorithmType); RateLimitResult(allowed, remaining, retryAfterMs); key=\"userId:endpoint\"."
+   }
+  },
+  {
+   "phase": "class_design",
+   "goal": "Sketch RateLimiter facade, RateLimitAlgorithm Strategy hierarchy, Factory, and DIP for Clock/Store.",
+   "must_hit": [
+    {
+     "id": "cd1",
+     "point": "RateLimiter facade resolves endpoint config, gets/creates per-key algorithm state, delegates allow, and returns RateLimitResult—callers never switch on algorithm type.",
+     "weight": "core",
+     "evidence_hint": "Draws facade orchestration: config lookup → per-key strategy/state → allow → result."
+    },
+    {
+     "id": "cd2",
+     "point": "RateLimitAlgorithm / RateLimitStrategy interface with concrete TokenBucket, FixedWindow, SlidingWindowLog, SlidingWindowCounter, and LeakyBucket—Strategy swaps algos without editing the facade.",
+     "weight": "core",
+     "evidence_hint": "Shows interface plus multiple concrete strategies; facade depends on the abstraction."
+    },
+    {
+     "id": "cd3",
+     "point": "LimiterFactory maps config algorithm string/enum plus algoConfig to a concrete strategy instance (Factory Method).",
+     "weight": "core",
+     "evidence_hint": "Factory branch from \"TokenBucket\" (etc.) + algoConfig creates the right class."
+    },
+    {
+     "id": "cd4",
+     "point": "DIP: inject Clock (SystemClock / FakeClock) and optional Storage (InMemoryStore ConcurrentHashMap / RedisStore stretch); avoid cargo-cult Singleton on the limiter.",
+     "weight": "extended",
+     "evidence_hint": "Constructor-injects Clock and Store; FakeClock for tests; Redis behind Storage only as stretch."
+    }
+   ],
+   "probes": [
+    "Which patterns does this problem exist to test, and where does each sit in the diagram?",
+    "How does the facade stay closed when you add Sliding Window Counter tomorrow?"
+   ],
+   "hints": {
+    "1": "Name Strategy and Factory before coding concrete buckets.",
+    "2": "Facade → Factory + config map + per-key strategy/state; Clock/Store injected.",
+    "3": "RateLimiter uses LimiterFactory and RateLimitAlgorithm; TokenBucket…LeakyBucket implement the interface; Storage/Clock abstractions for DIP."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Verbalize algorithm tradeoffs, implement lazy-refill Token Bucket (and a second algo) with O(1) hot path where claimed.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Token Bucket: capacity and refill rate; lazy refill on each request as tokens += elapsed * rate capped at capacity—no background refill thread; controlled bursts; O(1); industry default.",
+     "weight": "core",
+     "evidence_hint": "Explains lazy refill formula, burst allowance, O(1), and rejects a timer refill thread for the interview default."
+    },
+    {
+     "id": "impl2",
+     "point": "Algorithm cheat-sheet: Fixed window is simple but has 2× burst at boundary; Sliding window log is accurate but O(n) memory; Sliding window counter is approximate ~O(1); Leaky bucket smooths with constant drain / no burst out.",
+     "weight": "core",
+     "evidence_hint": "Contrasts fixed-window boundary spike, log memory, counter approximation, and leaky smoothness vs token bucket."
+    },
+    {
+     "id": "impl3",
+     "point": "Store per-key state in ConcurrentHashMap via computeIfAbsent for cold keys; hot path is one key’s allow() and must stay O(1) for token/fixed/sliding-counter—do not scan all keys.",
+     "weight": "core",
+     "evidence_hint": "Uses ConcurrentHashMap.computeIfAbsent; argues O(1) allow for those algos and sparse seen-key storage."
+    },
+    {
+     "id": "impl4",
+     "point": "Factory/config shape includes endpoint, algorithm string, and algoConfig such as capacity and refillRatePerSecond; optional idle-key TTL/eviction for memory follow-up.",
+     "weight": "extended",
+     "evidence_hint": "Shows JSON-like config driving Factory and mentions TTL/eviction for idle clients."
+    }
+   ],
+   "probes": [
+    "Walk through Token Bucket allow() including when tokens refill—do you need a background thread?",
+    "Why might Fixed Window allow a 2× burst, and when would you pick Sliding Log instead of Token Bucket?"
+   ],
+   "hints": {
+    "1": "Lazy refill on the request path is the interview default.",
+    "2": "Compare fixed-window boundary spike, log O(n) memory, and token-bucket O(1) bursts.",
+    "3": "tokens += elapsed * rate capped at capacity; ConcurrentHashMap.computeIfAbsent; Fixed Window 2× boundary; Sliding Log accurate but O(n)."
+   }
+  },
+  {
+   "phase": "extensibility",
+   "goal": "Show OCP for new algorithms and DIP so storage/clock can change without rewriting the facade.",
+   "must_hit": [
+    {
+     "id": "ext1",
+     "point": "Add a new algorithm = new RateLimitAlgorithm class plus one Factory branch; zero edits to RateLimiter call sites (OCP).",
+     "weight": "core",
+     "evidence_hint": "Adds a class + Factory case; facade and callers stay unchanged."
+    },
+    {
+     "id": "ext2",
+     "point": "SRP split: strategy owns rate math, store owns persistence, facade owns orchestration; depend on RateLimitAlgorithm / Storage / Clock abstractions (DIP).",
+     "weight": "core",
+     "evidence_hint": "Assigns math/persistence/orchestration to separate types and names the injected abstractions."
+    },
+    {
+     "id": "ext3",
+     "point": "Storage interface enables InMemoryStore today and RedisStore later; tiered limits via LimitResolver/config per plan—not hardcoded rates inside strategies.",
+     "weight": "extended",
+     "evidence_hint": "Shows Storage swap path and plan-based LimitResolver for free vs pro."
+    }
+   ],
+   "probes": [
+    "How do you add Sliding Window Counter without editing RateLimiter callers?",
+    "Where would Redis or FakeClock plug in without rewriting strategies?"
+   ],
+   "hints": {
+    "1": "OCP means new class + Factory branch, not a growing facade switch of math.",
+    "2": "Strategy math, Store persistence, Facade orchestration; inject Clock/Store.",
+    "3": "New algorithm class + Factory branch; Storage/Clock DIP; LimitResolver for tiers."
+   }
+  },
+  {
+   "phase": "concurrency",
+   "goal": "Eliminate check-then-consume races with per-key locking (or CAS), not one global lock on the map.",
+   "must_hit": [
+    {
+     "id": "conc1",
+     "point": "Check-then-consume is a race: two threads with one token left can both be allowed on naive read-modify-write—prefer per-key lock / synchronized on the bucket object, or AtomicReference+CAS / Redis Lua for distributed.",
+     "weight": "core",
+     "evidence_hint": "Names the double-allow race and fixes it with per-bucket sync, CAS, or Lua—not unlocked read-then-write."
+    },
+    {
+     "id": "conc2",
+     "point": "Never one global lock on the whole map/facade under load: ConcurrentHashMap.computeIfAbsent for cold keys, then lock the bucket not the map; global synchronized allow() is correct but serializes unrelated users.",
+     "weight": "core",
+     "evidence_hint": "Rejects facade-wide lock as the senior answer; locks per key after computeIfAbsent."
+    },
+    {
+     "id": "conc3",
+     "point": "Distributed across N pods: shared Redis with atomic Lua for token-bucket check-and-consume; local in-memory under-enforces by replica count; fail-open vs fail-closed is a product call.",
+     "weight": "extended",
+     "evidence_hint": "Escalates to Redis+Lua atomicity, replica under-enforcement, and fail-open/closed tradeoff."
+    }
+   ],
+   "probes": [
+    "Two threads, one token left—both allowed? Where is the race and how do you fix it?",
+    "Is synchronized on the whole RateLimiter enough, and what changes for multiple pods?"
+   ],
+   "hints": {
+    "1": "The bug is read-modify-write on tokens, not missing a concurrent map.",
+    "2": "Lock or CAS the per-key bucket; computeIfAbsent then synchronize the bucket.",
+    "3": "Per-key lock/CAS; avoid global facade lock; Redis Lua for multi-instance; mention fail-open/closed."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Strategy + Factory vs giant switch",
+   "strong_answer": "A switch compiles faster in a timebox, but Strategy + Factory is the expected OCP answer for adding Sliding Window Counter tomorrow without editing callers."
+  },
+  {
+   "topic": "Token Bucket vs Sliding Log",
+   "strong_answer": "Token Bucket allows controlled bursts with O(1) memory; Sliding Log is exact but memory grows with request rate—pick consciously for the traffic shape."
+  },
+  {
+   "topic": "Global lock vs per-key lock",
+   "strong_answer": "synchronized allow() on the facade is correct but serializes unrelated users; locking the per-key bucket (or CAS) is the senior concurrency signal."
+  },
+  {
+   "topic": "Lazy refill vs timer thread",
+   "strong_answer": "Background refill timers add complexity and races; lazy refill on each request (tokens += elapsed * rate capped at capacity) is the interview default."
+  },
+  {
+   "topic": "In-memory vs Redis",
+   "strong_answer": "Local memory under-enforces by replica count; Redis + Lua gives atomic check-and-consume across instances; fail-open vs fail-closed is a product call (Stripe often fail-open for request limiters)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Two threads see one token left and both are allowed.",
+   "correction": "Race on read-modify-write—use per-key lock, CAS, or Redis Lua for atomic check-and-consume."
+  },
+  {
+   "trap": "Adding a new algorithm by editing RateLimiter call sites or a giant math switch in the facade.",
+   "correction": "New class implementing Strategy plus one Factory branch; zero edits to RateLimiter callers."
+  },
+  {
+   "trap": "Ignoring Fixed Window’s boundary spike.",
+   "correction": "Draw the 2× burst at the window edge; fix with sliding counter/log or switch to token bucket."
+  },
+  {
+   "trap": "Claiming multi-pod correctness with only local in-memory maps.",
+   "correction": "Shared Redis with atomic Lua for token bucket; discuss fail-open vs fail-closed."
+  },
+  {
+   "trap": "Memory grows forever as clients accumulate.",
+   "correction": "TTL/idle eviction on keys; Sliding Log is the worst offender versus token bucket or sliding counter."
+  },
+  {
+   "trap": "Hardcoding free vs pro rates inside the strategy.",
+   "correction": "Use LimitResolver or config per plan so strategies stay pure rate math."
+  },
+  {
+   "trap": "Background refill thread plus Thread.sleep in tests.",
+   "correction": "Prefer lazy refill on request plus injected Clock/FakeClock so tests advance time without sleeping."
+  },
+  {
+   "trap": "Locking the entire ConcurrentHashMap or RateLimiter facade.",
+   "correction": "Correct but fails the concurrency follow-up—lock the per-key bucket, not the whole map."
+  },
+  {
+   "trap": "Shipping only HLD Redis boxes when the round is LLD.",
+   "correction": "Draw classes and a working allow() first; Redis is stretch after the in-memory design."
+  }
+ ]
+}

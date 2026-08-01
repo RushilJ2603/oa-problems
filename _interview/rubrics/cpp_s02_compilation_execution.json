@@ -1,0 +1,149 @@
+{
+ "id": "cpp_s02_compilation_execution",
+ "title": "Compilation and program execution",
+ "type": "FUND",
+ "relevance": "Interviewers use the compile–link–load–execute pipeline and basic run-time memory layout to check whether candidates understand how C++ source becomes a running program before diving into language features.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that a C++ program is not run from source text and must pass through a fixed pipeline into an executable image that is loaded and executed.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A C++ program is not run directly from the text a programmer types; it passes through stages that transform source into a machine-executable image, which is then brought into memory and run.",
+     "weight": "core",
+     "evidence_hint": "Candidate says source is transformed into an executable image first, then that image is loaded into memory and run—not interpreted as typed text."
+    },
+    {
+     "id": "fund2",
+     "point": "A program reaches execution through five ordered stages: editing, compiling, linking the library, loading, and execution.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists the five stages in order: edit → compile → link → load → execute."
+    },
+    {
+     "id": "fund3",
+     "point": "Editing produces source in a file (for example first.cpp); the pipeline’s goal is to turn that into an executable image (for example first.exe).",
+     "weight": "extended",
+     "evidence_hint": "Candidate distinguishes the source file from the built executable as the pipeline’s output."
+    }
+   ],
+   "probes": [
+    "Walk me through what happens between writing a C++ source file and seeing the program’s output.",
+    "Is a C++ program executed directly from the source text you type? Why or why not?"
+   ],
+   "hints": {
+    "1": "Think about whether the CPU runs your .cpp file as you wrote it.",
+    "2": "Name the ordered stages between editing source and the CPU running instructions.",
+    "3": "Source becomes an executable image via edit → compile → link; that image is loaded from disk into main memory, then the CPU executes it."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain compiling (including the preprocessor and headers), linking, loading versus disk storage, and the code/stack/heap division of the loaded address space.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Before translation proper, the preprocessor expands directives such as #include <iostream>, pulling the named header’s contents into the source so declared names (for example cout and cin) become known to the compiler.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes #include as textual inclusion of a header’s declarations before the compiler translates."
+    },
+    {
+     "id": "mech2",
+     "point": "A header file is a file whose declarations are made available wherever it is included; declaring a name is not the same as providing its implementation.",
+     "weight": "core",
+     "evidence_hint": "Candidate separates declarations (headers) from implementations that must still be supplied."
+    },
+    {
+     "id": "mech3",
+     "point": "Linking combines compiled code with library implementations it depends on (for example standard-library code behind cout and cin), resolving every referenced symbol and producing the final executable.",
+     "weight": "core",
+     "evidence_hint": "Candidate says the linker resolves symbols by combining object code with library implementations into the executable."
+    },
+    {
+     "id": "mech4",
+     "point": "The finished executable lives on the hard disk; to run, it must be loaded into main memory; the hard disk holds files persistently, while main memory holds the program only while it runs.",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts persistent disk storage of first.cpp/first.exe with loading into main memory for the run."
+    },
+    {
+     "id": "mech5",
+     "point": "When loaded, the address space includes a code section (instructions), a stack (function-call data), and a heap (dynamically allocated data); the CPU reads instructions from the code section and operates on data in the stack and heap.",
+     "weight": "core",
+     "evidence_hint": "Candidate names code section, stack, and heap and assigns instructions vs call data vs dynamic data correctly, with the CPU driving from the code section."
+    }
+   ],
+   "probes": [
+    "What does the preprocessor do with #include <iostream>, and what is a header file?",
+    "After compiling, why is linking still needed for something like cout?",
+    "Where do the executable and the running program live, and what regions does the loaded address space introduce?"
+   ],
+   "hints": {
+    "1": "Separate what #include makes visible from what still has to be found in libraries.",
+    "2": "Trace: preprocessor → compiler translation → linker resolves library symbols → load from HDD into main memory → CPU runs.",
+    "3": "Headers supply declarations; linking supplies implementations; disk holds first.exe; memory holds code section, stack, and heap while the CPU executes."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the pipeline and memory model to the sample max/main program from source file through executable and run-time layout.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "For the sample with max and main in first.cpp, compiling translates the source (after preprocessing includes such as iostream) toward machine code, and linking resolves library symbols so the result is first.exe.",
+     "weight": "core",
+     "evidence_hint": "Candidate maps the sample file through compile (with iostream preprocessing) and link to first.exe."
+    },
+    {
+     "id": "app2",
+     "point": "When that executable runs, instructions for functions such as max and main live in the code section, while function-call data for calls like max(a, b) uses the stack (with the heap reserved for dynamic allocation, not required by this sample’s locals).",
+     "weight": "core",
+     "evidence_hint": "Candidate places instructions in the code section and call-related data on the stack for the max/main call, without inventing heap use the sample does not need."
+    }
+   ],
+   "probes": [
+    "Using the sample max/main program in first.cpp, walk from editing through to cout printing the result—what happens at each stage?",
+    "When main calls max(a, b), which part of memory holds the instructions and which holds the call data?"
+   ],
+   "hints": {
+    "1": "Start from first.cpp and name the artifact after each stage.",
+    "2": "Call out preprocessing of iostream, linking of cout, then load and the code versus stack roles for max/main.",
+    "3": "Edit first.cpp → compile (preprocessor pulls iostream) → link to first.exe with cout’s library code → load into memory → CPU runs code-section instructions; the max call uses the stack for call data."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Declaration vs implementation",
+   "strong_answer": "Including a header only makes declarations available to the compiler; linking is still required to combine compiled code with the library implementations behind names such as cout and cin and to resolve every referenced symbol into the final executable."
+  },
+  {
+   "topic": "Hard disk vs main memory",
+   "strong_answer": "The hard disk holds source and executable files persistently (for example first.cpp and first.exe); main memory holds the program only while it runs, after the executable is loaded from disk so the CPU can execute it."
+  },
+  {
+   "topic": "Code section vs stack vs heap",
+   "strong_answer": "The code section holds the program’s instructions; the stack holds function-call data; the heap holds dynamically allocated data—the CPU reads instructions from the code section and operates on data in the stack and heap."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming a C++ program runs directly from the source text the programmer typed.",
+   "correction": "Source passes through a fixed sequence of stages that produce a machine-executable image, which is then loaded into memory and run."
+  },
+  {
+   "trap": "Treating a successful #include / header declaration as enough for names like cout and cin to work in the final program.",
+   "correction": "Declaring a name is not providing its implementation; linking must combine compiled code with library implementations and resolve referenced symbols."
+  },
+  {
+   "trap": "Confusing where the executable “lives” with where the running program lives.",
+   "correction": "The finished executable lives on the hard disk; it must be loaded into main memory to run, and main memory holds the program only while it runs."
+  },
+  {
+   "trap": "Mixing up the roles of the code section, stack, and heap.",
+   "correction": "The code section holds instructions; the stack is for function-call data; the heap is for dynamically allocated data—the CPU reads from the code section and operates on stack and heap data."
+  }
+ ]
+}

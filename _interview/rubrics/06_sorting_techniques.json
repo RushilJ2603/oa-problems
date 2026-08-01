@@ -1,0 +1,219 @@
+{
+ "id": "06_sorting_techniques",
+ "title": "Sorting-based Techniques, Custom Comparators & Coordinate Compression",
+ "type": "CP",
+ "relevance": "sort-then-scan, custom order, and rank-compressing values underpin a huge share of OA array/interval problems",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "OA/interview themes: merge overlapping meetings/bookings (sort by start); leaderboard ranking with multi-key order (score then name/time); arrange tokens for maximal concatenation (Largest Number–style cmp); sparse timelines with values up to 1e9 where only n distinct points matter (compress then prefix/Fenwick).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Candidate spots sort-then-scan, custom order, event sweep, or coordinate compression from the statement cues.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Pattern applies when the statement cares about relative order, says “after sorting…”, needs multi-key ranking, or involves interval nesting/sweep.",
+     "weight": "core",
+     "evidence_hint": "They name relative order / after-sorting / multi-key / interval sweep as the trigger, not a random DP/graph guess."
+    },
+    {
+     "id": "rec2",
+     "point": "Coordinate compression is the tell when you must index by values up to 1e9 but only n ≤ 1e5 distinct points matter.",
+     "weight": "core",
+     "evidence_hint": "They contrast huge value domain with few distinct points and say rank-map before array/Fenwick/segtree indexing."
+    },
+    {
+     "id": "rec3",
+     "point": "Custom-comparator problems show up as multi-key ranking (e.g. points then time) or concatenation/fraction order rather than plain numeric sort.",
+     "weight": "extended",
+     "evidence_hint": "They mention Rank List–style multi-key or Largest Number / fraction cmp, not only std::sort ascending."
+    }
+   ],
+   "probes": [
+    "Looking at this statement, what makes you reach for a sort (maybe with a custom key) or for coordinate compression instead of working on the raw values?"
+   ],
+   "hints": {
+    "1": "What does the problem care about—absolute values, or only relative order / ranks?",
+    "2": "If values go up to 1e9 but n is only up to 1e5, what usually breaks without remapping?",
+    "3": "Say: sort (often custom key) so the hard part is a linear scan/greedy/sweep; if values are huge but few, map to ranks 0..k-1."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Candidate outlines sort-then-scan / greedy / event sweep and when to rank-compress.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Sort (often with a custom key) so the hard part becomes a linear scan, a greedy choice, or an event sweep.",
+     "weight": "core",
+     "evidence_hint": "They state sort first, then scan/greedy/sweep—not sort as the whole answer with no follow-on plan."
+    },
+    {
+     "id": "appr2",
+     "point": "Interval/activity keys: sort by end for greedy selection; by start (with end tie-break) for merge / nesting scans.",
+     "weight": "core",
+     "evidence_hint": "They pick end-key for activity selection (Movie Festival family) vs start (+ end tie-break) for merge/nesting."
+    },
+    {
+     "id": "appr3",
+     "point": "Event sweep: emit (time, +1/−1) events (open before close via secondary key), sort, then scan a running counter.",
+     "weight": "extended",
+     "evidence_hint": "They describe +1/−1 events sorted by time with a running counter (Restaurant Customers style)."
+    },
+    {
+     "id": "appr4",
+     "point": "When values are huge but few, map them to ranks 0..k-1 so arrays / Fenwick / segment trees fit in memory.",
+     "weight": "extended",
+     "evidence_hint": "They say compress to ranks then put structures on 0..k-1, not allocate by raw 1e9."
+    }
+   ],
+   "probes": [
+    "How would you choose the sort key for activity selection versus merging intervals, and when would you compress coordinates first?"
+   ],
+   "hints": {
+    "1": "After sorting, what linear pass or greedy step do you expect?",
+    "2": "Separate three templates: end-time greedy, start-time merge/nest scan, and +1/−1 event sweep.",
+    "3": "State: sort by end for selection; by start (+ end tie-break) for merge/nesting; emit (time,+1/−1), sort, scan; compress huge sparse values to 0..k-1."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Candidate can describe concrete comparator, multi-key, sweep, and compression templates.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Custom comparator / lambda must be a strict weak ordering: cmp(a,a)==false, transitive, and avoid float keys when possible.",
+     "weight": "core",
+     "evidence_hint": "They mention irreflexive/transitive ordering and warn against float keys."
+    },
+    {
+     "id": "impl2",
+     "point": "Multi-key sorts use primary then tie-break (e.g. points desc, penalty asc) via pair/tuple or explicit if.",
+     "weight": "core",
+     "evidence_hint": "They show primary key then secondary tie-break, not a single scrambled key."
+    },
+    {
+     "id": "impl3",
+     "point": "Coordinate compression template: copy → sort → unique → lower_bound ranks (or map for sparse offline use).",
+     "weight": "extended",
+     "evidence_hint": "They recite copy/sort/unique/lower_bound (or map) for ranks."
+    },
+    {
+     "id": "impl4",
+     "point": "Concatenation / fraction order: compare a+b vs b+a, or cross-multiply fractions, instead of floating ratios.",
+     "weight": "extended",
+     "evidence_hint": "They reject float ratio sort and name concat compare or cross-multiply."
+    }
+   ],
+   "probes": [
+    "Walk me through how you’d implement the comparator and the compression pipeline you’d use before a Fenwick on value indices."
+   ],
+   "hints": {
+    "1": "What must be true of cmp(a,a), and how do you encode two keys?",
+    "2": "Compression is not a black box—list the array steps that produce ranks.",
+    "3": "Say: strict weak order comparator; multi-key via pair/tuple; compress with sort/unique/lower_bound; concat or cross-multiply, not floats."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Candidate explains when raw value domains force compression for indexing structures.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Compression is needed when values are used as Fenwick/seg-tree indices with a[i] ≤ 1e9 but n ≤ 1e5.",
+     "weight": "core",
+     "evidence_hint": "They cite the 1e9 value vs n ≤ 1e5 distinct-points mismatch as the reason to rank."
+    },
+    {
+     "id": "cx2",
+     "point": "After compression, structures index ranks in 0..k-1 so arrays / Fenwick / segment trees fit in memory.",
+     "weight": "core",
+     "evidence_hint": "They say memory/index space follows k distinct ranks, not the raw value ceiling."
+    }
+   ],
+   "probes": [
+    "Why can’t you just use the raw values as Fenwick indices here, and what size domain do you index after compression?"
+   ],
+   "hints": {
+    "1": "What goes wrong if the index domain is the full value range up to 1e9?",
+    "2": "Relate n ≤ 1e5 distinct points to the size of the ranked domain.",
+    "3": "Say: a[i] ≤ 1e9 can’t be Fenwick indices directly; map to ranks 0..k-1 with k tied to the distinct count (n ≤ 1e5 setting)."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Candidate anticipates comparator, float, stability, and sweep-ordering traps.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Fractional custom comparators that use floats (e.g. a/(a+b)) are a float WA trap; compare via cross-multiply instead.",
+     "weight": "core",
+     "evidence_hint": "They name Standings-style float WA and switch to cross-multiply."
+    },
+    {
+     "id": "pit2",
+     "point": "Comparator must satisfy strict weak ordering (cmp(a,a)==false; transitive); broken orders cause undefined sort behavior.",
+     "weight": "core",
+     "evidence_hint": "They can state irreflexivity/transitivity requirements, not only “return a < b”."
+    },
+    {
+     "id": "pit3",
+     "point": "Event sweeps need a secondary key so opens are ordered before closes at the same time when required.",
+     "weight": "extended",
+     "evidence_hint": "They mention secondary key for +1/−1 ties at equal time."
+    },
+    {
+     "id": "pit4",
+     "point": "Stable vs unstable sort matters; prefer explicit keys over ad-hoc swaps when reconstructing permutations/indices.",
+     "weight": "extended",
+     "evidence_hint": "They prefer keyed sort for index recovery rather than relying on stability or swaps."
+    }
+   ],
+   "probes": [
+    "What breaks if your fraction comparator uses doubles, or if two events share a timestamp with no tie-break?"
+   ],
+   "hints": {
+    "1": "Where do floating comparisons usually fail in custom order problems?",
+    "2": "At equal times in a sweep, does +1 before −1 (or the reverse) change the answer?",
+    "3": "Say: no float keys—cross-multiply; enforce strict weak order; secondary event key; prefer keys over unstable/ad-hoc permutation rebuilds."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Sort by end vs sort by start",
+   "strong_answer": "End-time order for greedy activity selection; start-time order (with end tie-break) for merge and nesting scans."
+  },
+  {
+   "topic": "Concat/cross-multiply compare vs floating ratios",
+   "strong_answer": "Order by a+b vs b+a or cross-multiply fractions; floating ratios invite WA and break reliable ordering."
+  },
+  {
+   "topic": "sort/unique/lower_bound ranks vs map for compression",
+   "strong_answer": "Canonical compress is copy→sort→unique→lower_bound ranks; map is the sparse offline alternative."
+  },
+  {
+   "topic": "Explicit sort keys vs ad-hoc swaps for permutations/indices",
+   "strong_answer": "Prefer keys over ad-hoc swaps when reconstructing permutations/indices; stay aware of stable vs unstable sort."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Sorting fractions like a/(a+b) with floating keys.",
+   "correction": "Compare via cross-multiply (or equivalent integer order); float keys are a WA trap."
+  },
+  {
+   "trap": "Custom comparator that is not a strict weak ordering (e.g. cmp(a,a) true, or non-transitive).",
+   "correction": "Require cmp(a,a)==false, transitivity, and avoid float keys when avoidable."
+  },
+  {
+   "trap": "Event sweep with equal timestamps and no secondary ordering of +1/−1.",
+   "correction": "Emit (time, +1/−1) and use a secondary key so opens/closes order correctly before scanning the running counter."
+  },
+  {
+   "trap": "Relying on unstable sort or ad-hoc swaps to rebuild original indices/permutations.",
+   "correction": "Prefer explicit keys (and know stable vs unstable behavior) when reconstructing permutations/indices."
+  }
+ ]
+}

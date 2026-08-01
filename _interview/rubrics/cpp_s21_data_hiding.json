@@ -1,0 +1,171 @@
+{
+ "id": "cpp_s21_data_hiding",
+ "title": "Data hiding",
+ "type": "FUND",
+ "relevance": "SDE interviews check whether candidates can separate encapsulation from data hiding and design class interfaces that keep object state valid.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Define encapsulation vs data hiding and name the three C++ access levels and their defaults.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Encapsulation bundles data and functions into one class; data hiding is the security policy that restricts who can access or modify internal state.",
+     "weight": "core",
+     "evidence_hint": "States bundling as encapsulation and access restriction via access specifiers as data hiding, not treating them as synonyms."
+    },
+    {
+     "id": "fund2",
+     "point": "By default, members of a class are private; members of a struct are public.",
+     "weight": "core",
+     "evidence_hint": "Explicitly contrasts class private default with struct public default."
+    },
+    {
+     "id": "fund3",
+     "point": "C++ visibility is controlled by the three access specifiers public, private, and protected, written as labels followed by a colon.",
+     "weight": "extended",
+     "evidence_hint": "Names all three specifiers and that they label sections of the class body."
+    }
+   ],
+   "probes": [
+    "What is the difference between encapsulation and data hiding?",
+    "What is the default access for members of a C++ class versus a struct?"
+   ],
+   "hints": {
+    "1": "Think about bundling versus who is allowed to touch the internals.",
+    "2": "Encapsulation is the single-entity package; data hiding uses access specifiers like private.",
+    "3": "A class with entirely public members is still encapsulated, but its data is not hidden; class defaults to private, struct to public."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain what each specifier allows and how getters/setters mediate private state.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "private members are reachable only by the class's own member functions; public members form the interface reachable by anyone; protected members act like private to the outside world but like public to derived classes.",
+     "weight": "core",
+     "evidence_hint": "Gives the three reachability rules, including protected as inheritance middle ground."
+    },
+    {
+     "id": "mech2",
+     "point": "An accessor (getter) retrieves a member and should be marked const to promise it will not modify the object; a mutator (setter) changes a value and can validate or update related state.",
+     "weight": "core",
+     "evidence_hint": "Pairs getter with trailing const and setter with validation or related-state updates."
+    },
+    {
+     "id": "mech3",
+     "point": "An access specifier applies to all members declared below it until the next specifier or the end of the class.",
+     "weight": "extended",
+     "evidence_hint": "Describes section-scoped labels rather than per-member keywords only."
+    }
+   ],
+   "probes": [
+    "Who can access private, public, and protected members?",
+    "Why mark a getter const, and what does a setter give you that direct field access does not?"
+   ],
+   "hints": {
+    "1": "Map each specifier to outside code, the class itself, and derived classes.",
+    "2": "private = own methods only; public = anyone; protected = derived like public, outsiders like private.",
+    "3": "Getters end with const and only read; setters are the place to reject invalid values before assigning private fields."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Explain why data is hidden and how getter/setter choices set property permissions.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "If data is public, external code can break invariants, couple to internals so implementations cannot change, and prevent easy access tracking when values change anywhere.",
+     "weight": "core",
+     "evidence_hint": "Names the three problems: broken invariants, coupling to internals, and no access tracking."
+    },
+    {
+     "id": "tr2",
+     "point": "Property permissions are chosen by which public methods you expose: both get and set for read-write, only get for read-only, only set for write-only.",
+     "weight": "core",
+     "evidence_hint": "Lists read-write, read-only, and write-only in terms of providing getters and/or setters."
+    },
+    {
+     "id": "tr3",
+     "point": "Python data hiding is mainly a naming convention such as _variable, while C++ enforces access control at compile-time.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts convention-only hiding with compile-time enforcement in C++."
+    }
+   ],
+   "probes": [
+    "What goes wrong if all fields are public?",
+    "How would you make a field read-only versus write-only using accessors and mutators?"
+   ],
+   "hints": {
+    "1": "Consider validity rules, future refactors, and debugging who changed a value.",
+    "2": "Public balance can be set invalid; public raw storage locks the implementation; direct writes are hard to intercept.",
+    "3": "Read-only = getter only; write-only = setter only (e.g. password hash); C++ rejects illegal access at compile time unlike Python underscores."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply hiding with validated setters and controlled account operations, and nail the classic interview distinction.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A Rectangle can keep length and breadth private and reject invalid setter input so a negative breadth is not stored as a negative size.",
+     "weight": "core",
+     "evidence_hint": "Describes private dimensions plus setters that only accept non-negative values (or reset invalid input)."
+    },
+    {
+     "id": "app2",
+     "point": "A BankAccount can expose accountNumber as read-only via a getter with no setter, and change balance only through controlled actions like deposit rather than a free public field.",
+     "weight": "core",
+     "evidence_hint": "Mentions getAccountNumber without a setter and deposit-style updates instead of public balance writes."
+    },
+    {
+     "id": "app3",
+     "point": "A class whose members are all public is still encapsulated as a bundle, but its data is not hidden.",
+     "weight": "extended",
+     "evidence_hint": "Uses the all-public class as the precise counterexample separating encapsulation from data hiding."
+    }
+   ],
+   "probes": [
+    "How would you design Rectangle or BankAccount so clients cannot put the object into an invalid state?",
+    "Is a class with only public members encapsulated? Is its data hidden?"
+   ],
+   "hints": {
+    "1": "Put state private and route changes through methods that check rules.",
+    "2": "Use setters or domain methods for writes; omit setters when a value should not change after construction.",
+    "3": "Encapsulation = bundled class; data hiding = private/protected with controlled public interface—all-public members fail the hiding part."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Public data members vs private members with accessors/mutators",
+   "strong_answer": "Public fields let callers break invariants, freeze the internal representation, and scatter writes with no single place to log or breakpoint; private fields plus getters/setters keep a stable interface while validation and implementation can change behind it."
+  },
+  {
+   "topic": "Read-write vs read-only vs write-only properties",
+   "strong_answer": "Expose get and set for read-write; expose only get for values set once or computed internally; expose only set in rare cases like passwords where plaintext must not be readable back."
+  },
+  {
+   "topic": "Encapsulation without data hiding vs encapsulation with access control",
+   "strong_answer": "Bundling alone (even all-public members) is encapsulation; adding access specifiers such as private supplies the security policy that actually hides and protects state."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating encapsulation and data hiding as the same concept.",
+   "correction": "Encapsulation is bundling data and behaviour into one entity; data hiding is the benefit of restricting access with specifiers like private. An all-public class is encapsulated but not data-hidden."
+  },
+  {
+   "trap": "Assuming C++ hides members the way Python does with a leading underscore.",
+   "correction": "In Python, underscore naming is a convention; C++ access control is enforced at compile-time."
+  },
+  {
+   "trap": "Making data members public and treating that as the class interface.",
+   "correction": "Reserve public for the interface methods clients should call; keep almost all data members private so invariants and internals stay under the class's control."
+  }
+ ]
+}

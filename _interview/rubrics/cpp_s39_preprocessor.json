@@ -1,0 +1,191 @@
+{
+ "id": "cpp_s39_preprocessor",
+ "title": "The Preprocessor",
+ "type": "FUND",
+ "relevance": "Interviewers probe whether candidates understand that the preprocessor is dumb text substitution—explaining #include, macro pitfalls, include guards/ODR, and why modern C++ prefers constexpr/inline over macros.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that the preprocessor runs before compilation as pure text substitution and how #include and #define work.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "The preprocessor does not understand C++ syntax; it performs pure text substitution on the source before compilation begins.",
+     "weight": "core",
+     "evidence_hint": "Says the preprocessor manipulates source text and runs before the compiler translates to machine instructions."
+    },
+    {
+     "id": "fund2",
+     "point": "#include literally copy-pastes another file's contents at the directive; angle brackets search system include paths, quotes search the local directory first then system paths.",
+     "weight": "core",
+     "evidence_hint": "Contrasts #include <...> (system paths) vs #include \"...\" (local first, then system)."
+    },
+    {
+     "id": "fund3",
+     "point": "#define creates a macro that replaces subsequent occurrences of an identifier with replacement text; #undef removes a macro definition.",
+     "weight": "core",
+     "evidence_hint": "Describes object-like macros as simple replacements and notes #undef clears the definition."
+    },
+    {
+     "id": "fund4",
+     "point": "Function-like macros take arguments that the preprocessor substitutes into the replacement text without evaluating them first.",
+     "weight": "extended",
+     "evidence_hint": "Mentions argument substitution into the body with no prior evaluation, e.g. MIN-style macros."
+    }
+   ],
+   "probes": [
+    "What does the preprocessor do, and how does #include differ between angle brackets and quotes?"
+   ],
+   "hints": {
+    "1": "Think about what happens to your source file before the compiler proper runs.",
+    "2": "Cover text substitution, #include search rules, and what #define/#undef do.",
+    "3": "Preprocessor: pure text sub before compile; #include pastes files (<> system, \"\" local then system); #define replaces identifiers, #undef removes them."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain macro pitfalls, conditional compilation, include guards, predefined macros, and # / ## operators.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Function-like macros need parentheses around every parameter and the whole body to avoid operator-precedence bugs when complex expressions are passed.",
+     "weight": "core",
+     "evidence_hint": "Cites BAD_SQ(x) x * x vs SQ(x) ((x)*(x)), and that BAD_SQ(i+1) can expand with wrong precedence."
+    },
+    {
+     "id": "mech2",
+     "point": "If a macro argument has side effects (e.g. i++), it can be evaluated multiple times, which can cause undefined behaviour.",
+     "weight": "core",
+     "evidence_hint": "Explains SQ(i++) expanding to ((i++)*(i++)) with double increment / UB."
+    },
+    {
+     "id": "mech3",
+     "point": "Conditional compilation (#ifdef/#ifndef/#if/#elif/#else/#endif) includes or excludes code based on whether macros are defined or what values they hold.",
+     "weight": "core",
+     "evidence_hint": "Walks through DEBUG_MODE-style #ifdef/#ifndef/#if ... #elif defined(...) #else blocks."
+    },
+    {
+     "id": "mech4",
+     "point": "Include guards (#ifndef/#define/#endif) or #pragma once ensure a header's contents are processed only once when headers include other headers.",
+     "weight": "core",
+     "evidence_hint": "Says multiple inclusion can cause multiple definitions of the same class/struct; guards or #pragma once prevent that."
+    },
+    {
+     "id": "mech5",
+     "point": "The stringise operator (#) turns a macro argument into a string literal; the token-paste operator (##) concatenates two tokens into one.",
+     "weight": "extended",
+     "evidence_hint": "Gives PRINT_VAR_NAME(var) with #var and MAKE_VAR(name,num) with name##num."
+    },
+    {
+     "id": "mech6",
+     "point": "__FILE__, __LINE__, __DATE__, and __TIME__ are predefined object-like macros; __func__ is a compiler-provided implicitly defined local variable (static array of char), not a preprocessor macro.",
+     "weight": "extended",
+     "evidence_hint": "Lists the predefined macros for compilation state and corrects that __func__ is not a macro."
+    }
+   ],
+   "probes": [
+    "What goes wrong with function-like macros, and how do include guards differ from #pragma once?"
+   ],
+   "hints": {
+    "1": "Macros are text replacement—think precedence, repeated arguments, and headers included twice.",
+    "2": "Cover parentheses, side-effect re-evaluation, #if family, guards vs #pragma once, then # and ##.",
+    "3": "No parens → precedence bugs; side effects re-evaluated; guards/#pragma once once-only; # stringises, ## pastes; __func__ is not a macro."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast preprocessor macros with modern type-safe language features and include-guard styles.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Modern C++ discourages macros for almost everything except #include and conditional compilation because the preprocessor is outside the type system and ignores namespaces and scope.",
+     "weight": "core",
+     "evidence_hint": "States macros lack type safety/scope/namespaces and should be limited to include and conditional compilation."
+    },
+    {
+     "id": "tr2",
+     "point": "Prefer const/constexpr variables over #define constants, inline functions and templates over function-like macros, and enum/enum class over #define flags.",
+     "weight": "core",
+     "evidence_hint": "Maps each modern feature to the macro use it replaces, citing type checking, single evaluation, and debugability."
+    },
+    {
+     "id": "tr3",
+     "point": "Include guards are portable conditional-compilation patterns; #pragma once is a widely supported single-line alternative that achieves the same once-only inclusion.",
+     "weight": "extended",
+     "evidence_hint": "Notes most modern compilers support #pragma once as a one-line equivalent to the guard pattern."
+    }
+   ],
+   "probes": [
+    "When would you still use the preprocessor, and what should replace #define constants and function-like macros?"
+   ],
+   "hints": {
+    "1": "Ask what macros cannot see that the language can (types, scope, namespaces).",
+    "2": "Separate still-OK uses (#include, conditionals) from replacements (constexpr, inline/templates, enum).",
+    "3": "Keep macros for include/conditionals; use constexpr, inline/templates, and enum/enum class instead of #define constants, function macros, and flags."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply preprocessor knowledge to ODR/include-guard questions and justify preferring language features over macros.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Include guards prevent violating the One Definition Rule (ODR) by stopping a header's contents (e.g. class definitions) from being pasted multiple times into the same compilation unit.",
+     "weight": "core",
+     "evidence_hint": "Answers 'What do include guards prevent?' with ODR / multiple definition of the same class in one translation unit."
+    },
+    {
+     "id": "app2",
+     "point": "Prefer constexpr or inline over macros because macros lack type safety, ignore scope/namespaces, are hard to debug (debugger sees substituted text), and function-like macros risk double-evaluation.",
+     "weight": "core",
+     "evidence_hint": "Lists type safety, scope/namespaces, debug difficulty, and double-evaluation as reasons to prefer constexpr/inline."
+    },
+    {
+     "id": "app3",
+     "point": "Macros have no type safety, so incompatible arguments can yield obscure compile errors or unexpected logic.",
+     "weight": "extended",
+     "evidence_hint": "Mentions absence of type checking as a distinct pitfall alongside precedence and re-evaluation."
+    }
+   ],
+   "probes": [
+    "What do include guards prevent, and why prefer constexpr or inline over macros?"
+   ],
+   "hints": {
+    "1": "Connect repeated #include of the same header to definitions appearing more than once.",
+    "2": "Name ODR for guards; for macros vs constexpr/inline, list type safety, scope, debugging, and evaluation count.",
+    "3": "Guards stop ODR violations from multi-pasted headers; constexpr/inline win on types, scope/namespaces, debug, and single evaluation."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Include guards vs #pragma once",
+   "strong_answer": "Both stop a header from being processed more than once in a compilation unit. Guards use portable #ifndef/#define/#endif; #pragma once is a single-line form supported by most modern compilers with the same once-only effect."
+  },
+  {
+   "topic": "#define macros vs const/constexpr, inline/templates, and enum",
+   "strong_answer": "Macros are untyped text outside namespaces/scope and can double-evaluate arguments. Prefer constexpr (or const) for constants, inline functions/templates for function-like macros (single evaluation, type-checked, debuggable), and enum/enum class for related named integer constants; keep macros mainly for #include and conditional compilation."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "A function-like macro without parentheses around parameters and the whole body causes catastrophic operator-precedence bugs (e.g. BAD_SQ(i+1) expanding like 5+1*5+1).",
+   "correction": "Wrap every parameter and the entire macro body in parentheses, e.g. #define SQ(x) ((x)*(x))."
+  },
+  {
+   "trap": "Passing arguments with side effects (like i++) into a macro causes double-evaluation bugs and can lead to undefined behaviour.",
+   "correction": "Avoid side-effect arguments in macros; prefer inline functions or templates that evaluate each argument once."
+  },
+  {
+   "trap": "Treating __func__ as a preprocessor macro like __FILE__ or __LINE__.",
+   "correction": "__func__ is a compiler-provided implicitly defined local variable (a static array of char), not a preprocessor macro."
+  },
+  {
+   "trap": "Relying on macros for constants, function-like helpers, or flags in modern C++.",
+   "correction": "Use constexpr/const, inline functions/templates, and enum/enum class instead; reserve the preprocessor mainly for #include and conditional compilation."
+  }
+ ]
+}

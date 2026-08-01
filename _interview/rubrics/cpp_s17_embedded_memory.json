@@ -1,0 +1,187 @@
+{
+ "id": "cpp_s17_embedded_memory",
+ "title": "Embedded Memory, Startup & the Build",
+ "type": "FUND",
+ "relevance": "Bare-metal interviews probe whether you understand how Flash/RAM, crt0, and the linker script make C globals valid before main—and where const, stack, and heap actually land.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the on-chip memory map and that C does not start at main with globals already valid.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Flash/ROM is non-volatile and holds compiled code, .rodata, and initial templates for initialized variables; RAM is volatile and holds .data, .bss, the stack, and the heap.",
+     "weight": "core",
+     "evidence_hint": "Separates Flash (survives power loss; code/constants/init images) from RAM (live workspace that is garbage after power-up)."
+    },
+    {
+     "id": "fund2",
+     "point": "Peripherals are mapped into memory addresses; writing those addresses configures hardware.",
+     "weight": "extended",
+     "evidence_hint": "Mentions MMIO: timers/serial ports appear as addresses you write to configure."
+    },
+    {
+     "id": "fund3",
+     "point": "On reset, RAM holds random garbage, so jumping straight into main would leave initialized globals wrong and uninitialized arrays as noise.",
+     "weight": "core",
+     "evidence_hint": "Uses the idea that without startup copy/zero, values like an initialized global are not yet correct in RAM."
+    }
+   ],
+   "probes": [
+    "Walk the Flash vs RAM vs peripherals map, then explain why a C program on a microcontroller cannot safely start at main immediately after reset."
+   ],
+   "hints": {
+    "1": "Think about what still exists after power loss versus what does not.",
+    "2": "Name the three regions, then say what would be wrong if the CPU entered main with untouched RAM.",
+    "3": "Flash: code/.rodata/init images; RAM: .data/.bss/stack/heap (volatile/garbage at power-up); peripherals at MMIO addresses—startup must fix globals before main."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain crt0 startup (.data copy, .bss zero), linker MEMORY/SECTIONS, VMA vs LMA, and the vector table handoff.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "After reset the CPU reads a hardcoded address for the initial stack pointer and Reset Handler; crt0 copies .data from Flash into RAM, zeroes .bss, then calls main.",
+     "weight": "core",
+     "evidence_hint": "Orders reset → SP/Reset Handler → copy initialized globals → zero .bss → main."
+    },
+    {
+     "id": "mech2",
+     "point": ".data holds explicitly non-zero static-duration variables (LMA in Flash, VMA in RAM); .bss holds zero-initialized statics; crt0 copies LMA→VMA for .data.",
+     "weight": "core",
+     "evidence_hint": "Ties sections to storage duration rules and states LMA Flash / VMA RAM for .data."
+    },
+    {
+     "id": "mech3",
+     "point": "The linker script’s MEMORY and SECTIONS map merge object-file sections into chip regions and export boundary symbols (e.g. _sdata) that startup uses as copy bookmarks.",
+     "weight": "core",
+     "evidence_hint": "Describes MEMORY regions, SECTIONS placement, and linker symbols consumed by Reset_Handler."
+    },
+    {
+     "id": "mech4",
+     "point": "VMA is the execution address; LMA is the permanent storage address—for .data, LMA is Flash and VMA is RAM.",
+     "weight": "extended",
+     "evidence_hint": "Defines both terms and applies them specifically to .data."
+    },
+    {
+     "id": "mech5",
+     "point": "The vector table is an array of function pointers at a fixed address; earliest entries are initial SP and Reset Handler, forced to the start of FLASH via a section like .isr_vector.",
+     "weight": "extended",
+     "evidence_hint": "Links vector table placement to FLASH start and reset entry."
+    }
+   ],
+   "probes": [
+    "What is the difference between VMA and LMA, and how do the Reset Handler and linker symbols use that for .data and .bss?"
+   ],
+   "hints": {
+    "1": "Startup is a restaurant opening: unlock, arrange from the blueprint, wipe empty counters, then let customers in.",
+    "2": "Name SP + Reset Handler, then the .data copy and .bss zero using linker bookmarks; define VMA vs LMA for .data.",
+    "3": "crt0: copy Flash LMA→RAM VMA for .data, zero .bss via _sbss/_ebss-style symbols, then main; linker MEMORY/SECTIONS place .isr_vector at FLASH start."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Connect declaration site to Flash/RAM cost and argue static budgeting vs stack/heap collision risk.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "const goes in Flash (.rodata); initialized globals consume both Flash and RAM; zero-initialized globals use only RAM (.bss).",
+     "weight": "core",
+     "evidence_hint": "Lists the three placements and stresses dual Flash+RAM cost for initialized globals."
+    },
+    {
+     "id": "tr2",
+     "point": "On bare metal, const lookup tables/string literals save RAM by keeping data exclusively in Flash.",
+     "weight": "core",
+     "evidence_hint": "Says const is a physical RAM saver, not only type safety."
+    },
+    {
+     "id": "tr3",
+     "point": "Stack typically grows downward from high RAM while .data/.bss sit low; deep locals/recursion can silently overwrite globals (stack overflow)—prefer static allocation so budgets are compile-time proven.",
+     "weight": "extended",
+     "evidence_hint": "Describes opposite growth directions, silent overwrite, and static allocation preference."
+    }
+   ],
+   "probes": [
+    "Where do const, initialized globals, .bss, locals, and malloc land, and why do embedded systems prefer static allocation over deep stacks or a heap?"
+   ],
+   "hints": {
+    "1": "Ask what each declaration costs in Flash versus RAM.",
+    "2": "Contrast .rodata-only const with .data’s dual residency, then stack-down vs globals-up collision.",
+    "3": "const→Flash only; initialized globals→Flash+RAM; .bss→RAM; stack down / heap up from end of .bss—static allocation proves limits at link/compile time."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the build path—cross toolchain, objcopy image, printf retargeting, and Reset_Handler copy/zero loops.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Cross-compilation uses a target-prefixed toolchain (e.g. arm-none-eabi-gcc), -mcpu for the ISA, -T for the linker script, then objcopy to produce a raw .bin/.hex to flash.",
+     "weight": "core",
+     "evidence_hint": "Names host≠target, toolchain prefix, -mcpu, -T, and objcopy stripping to flashable image."
+    },
+    {
+     "id": "app2",
+     "point": "Bare-metal printf needs retargeting (often implementing _write to a UART); without it, linking printf can pull huge I/O handlers that exhaust memory—audit with a .map file.",
+     "weight": "core",
+     "evidence_hint": "Mentions newlib/_write UART retarget and .map as the size audit tool."
+    },
+    {
+     "id": "app3",
+     "point": "Reset_Handler copies words from &_sidata to &_sdata until &_edata, then (separately) zeroes from &_sbss until &_ebss before main.",
+     "weight": "extended",
+     "evidence_hint": "Sketches the Flash→RAM copy loop bounds and the .bss zero loop bounds from the worked examples."
+    }
+   ],
+   "probes": [
+    "Trace int counter = 42 from linker script through Reset_Handler into RAM, then say what else you must implement for printf on bare metal."
+   ],
+   "hints": {
+    "1": "Follow one initialized global from LMA in Flash to VMA in RAM.",
+    "2": "Point at _sidata/_sdata/_edata for the copy, then _sbss/_ebss for zeroing; separately name _write/UART retarget.",
+    "3": "Linker sets .data > RAM AT > FLASH and LOADADDR; Reset_Handler copies then zeroes .bss; arm-none-eabi + -T + objcopy; retarget _write or printf bloats the image."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "const (.rodata in Flash) vs initialized globals (.data)",
+   "strong_answer": "const stays only in Flash and saves RAM; initialized non-const globals keep an init image in Flash and a live copy in RAM, so they cost both."
+  },
+  {
+   "topic": "static allocation vs stack/heap growth",
+   "strong_answer": "Static globals make Flash/RAM needs visible at link time; deep stacks or malloc risk silent collision or runtime OOM, so bare metal prefers proven static budgets."
+  },
+  {
+   "topic": "printf / newlib I/O vs retargeted lightweight path",
+   "strong_answer": "Unretargeted printf can pull massive generic handlers that blow the memory budget; implementing _write to UART (and checking the .map) keeps I/O sized for the chip."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming a software soft reset that jumps straight to main reinitializes globals.",
+   "correction": "Without re-running crt0, .data and .bss keep stale values—bizarre bugs until copy/zero runs again."
+  },
+  {
+   "trap": "Custom bootloader handoff or deep-sleep RAM power-down without re-init.",
+   "correction": "If RAM was not restored or startup was skipped, you must re-execute the initialization loop before trusting statics."
+  },
+  {
+   "trap": "Code or data larger than MEMORY LENGTH.",
+   "correction": "The linker errors that a region overflowed; fix size or the LENGTH/layout, not runtime."
+  },
+  {
+   "trap": "Linking printf without retargeting on bare metal.",
+   "correction": "Implement the low-level syscall (often _write to UART) or you pull huge I/O and exhaust Flash/RAM."
+  },
+  {
+   "trap": "Huge locals or deep recursion on a downward-growing stack.",
+   "correction": "Stack can overwrite .data/.bss silently; prefer static allocation and keep stack depth bounded."
+  }
+ ]
+}

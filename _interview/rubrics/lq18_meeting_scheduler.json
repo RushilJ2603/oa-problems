@@ -1,0 +1,293 @@
+{
+ "id": "lq18_meeting_scheduler",
+ "title": "Design a Meeting Scheduler / Calendar",
+ "type": "LLD",
+ "relevance": "High — staple LLD / OOD whiteboard (and occasional machine-coding) question; Amazon, Microsoft, Google/Meta-style loops, Qualcomm, Atlassian, and Indian product cos use it to probe interval conflict detection, room allocation Strategy, Observer notifications, recurrence, and the double-booking race.",
+ "difficulty": "mid",
+ "prereqs": [
+  "l01_oop_solid",
+  "l02_patterns_creational",
+  "l03_patterns_structural",
+  "l04_patterns_behavioral",
+  "l05_concurrency_lld"
+ ],
+ "company_notes": "Campus / machine-coding (Flipkart, Uber, Swiggy, Amazon new-grad, Indian product cos): meeting-room booking CLI where working conflict-free book/cancel + capacity beats unfinished recurrence. Experienced LLD (FAANG / Microsoft / Atlassian / Qualcomm-style): same domain with deeper probes — per-room concurrency, Strategy vs switch, Observer notifications, find-common-slot, recurrence parent/instance, tentative holds. Among the top ~15 canonical LLD problems; template for interval-resource booking.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Clarify interview flavor and lock FR/NFR before inventing scope.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "State which flavor is in scope: (A) meeting-room booking with scarce rooms and no double-book, and/or (B) personal calendar with per-user calendars, invites, recurrence, and find mutual free time.",
+     "weight": "core",
+     "evidence_hint": "Candidate asks rooms-only vs people calendars vs both, then names the shared Interval/conflict logic either flavor needs."
+    },
+    {
+     "id": "req2",
+     "point": "List typical room-scheduler FRs: list rooms; book [start, end) if free and capacity covers attendees; cancel/release; list free rooms; notify participants; meeting history.",
+     "weight": "core",
+     "evidence_hint": "They walk a FR checklist covering capacity, booking rules, participants, and notifications before coding."
+    },
+    {
+     "id": "req3",
+     "point": "List typical calendar FRs: create/update/cancel events; invite + RSVP (ACCEPT/DECLINE/TENTATIVE); conflict checks; optional recurring series; find earliest common slot.",
+     "weight": "extended",
+     "evidence_hint": "They distinguish organizer/participant flows: schedule/invite/RSVP/cancel/calendar-update."
+    },
+    {
+     "id": "req4",
+     "point": "State NFRs: no double-booking under concurrent requests; OCP for assignment/notify/recurrence; modular packages; demonstrable main/CLI.",
+     "weight": "core",
+     "evidence_hint": "They call out concurrency safety and extensibility as first-class, not afterthoughts."
+    }
+   ],
+   "probes": [
+    "Are we designing room booking, personal calendars, or both — and do we need RSVP, recurrence, find-common-slot, timezones, and concurrency?"
+   ],
+   "hints": {
+    "1": "Ask what scarce resource you are protecting first.",
+    "2": "Separate room-scheduler FRs from calendar FRs, then share conflict assumptions.",
+    "3": "Rooms + people? capacity? RSVP? recurrence? mutual free time? multi-TZ? concurrent book?"
+   }
+  },
+  {
+   "phase": "entities",
+   "goal": "Name core entities and the conflict/overlap rules they own.",
+   "must_hit": [
+    {
+     "id": "ent1",
+     "point": "Name core entities: User (organizer/participant), Calendar (per user and/or per room), Meeting/Event, MeetingRoom (id, capacity, amenities), Interval/TimeSlot (start, end), optional RecurrenceRule, Notification, MeetingScheduler facade.",
+     "weight": "core",
+     "evidence_hint": "Whiteboard lists these types with Calendar attached to users and/or rooms."
+    },
+    {
+     "id": "ent2",
+     "point": "Treat Calendar as a conflict detector: primary ops isAvailable(interval) / getConflicts(interval), not a dumb meeting dump; prefer sorted intervals or an interval tree; give each user and each room its own calendar.",
+     "weight": "core",
+     "evidence_hint": "They say Calendar answers free/busy and mutates bookings, not MeetingScheduler scanning a global list."
+    },
+    {
+     "id": "ent3",
+     "point": "State the overlap rule: intervals A and B conflict iff A.start < B.end && B.start < A.end; prefer half-open [start, end) so touching edges are not conflicts.",
+     "weight": "core",
+     "evidence_hint": "They write the predicate and note adjacent end==next-start is allowed under half-open."
+    },
+    {
+     "id": "ent4",
+     "point": "Model booking lifecycle states when probed: TENTATIVE (short hold) → CONFIRMED → CANCELLED / EXPIRED rather than only booked/free.",
+     "weight": "extended",
+     "evidence_hint": "They mention holds before confirm when the interviewer asks about tentative booking."
+    }
+   ],
+   "probes": [
+    "What objects own capacity, free/busy, and RSVP — and when do two intervals conflict?"
+   ],
+   "hints": {
+    "1": "Start from people, rooms, time ranges, and the thing that detects conflicts.",
+    "2": "Give User and MeetingRoom each a Calendar; Meeting holds Interval plus RSVP map.",
+    "3": "Conflict iff A.start < B.end && B.start < A.end; use half-open [start, end)."
+   }
+  },
+  {
+   "phase": "class_design",
+   "goal": "Sketch facade, calendars, strategies, and observers with clear responsibilities.",
+   "must_hit": [
+    {
+     "id": "cd1",
+     "point": "MeetingScheduler is a Facade orchestrating schedule/cancel/respond/getAvailableRooms/findEarliestSlot over rooms, users, meetings maps and a RoomAssignmentStrategy — no overlap math inlined if Calendar owns it.",
+     "weight": "core",
+     "evidence_hint": "Class diagram shows Scheduler calling calendars/strategy/observers, not embedding interval scans."
+    },
+    {
+     "id": "cd2",
+     "point": "RoomAssignmentStrategy interface (e.g. FirstAvailable / MinCapacityFit) picks a room; RecurrenceRule (+ Factory from DAILY/WEEKLY/MONTHLY) is optional Strategy for occurrencesIn(window).",
+     "weight": "core",
+     "evidence_hint": "They draw Strategy interfaces instead of switch/if for room pick and recurrence expand."
+    },
+    {
+     "id": "cd3",
+     "point": "Meeting notifies Observers (NotificationService / User) on CREATED|UPDATED|CANCELLED|REMINDER; Singleton scheduler is optional for demos — prefer DI in production.",
+     "weight": "extended",
+     "evidence_hint": "They name Observer for invites and caveat Singleton vs constructor injection."
+    },
+    {
+     "id": "cd4",
+     "point": "Name key APIs: addRoom; bookMeeting(organizer, participants, interval, minCapacity?) → Meeting|Conflict; cancelMeeting; respondToInvite; getAvailableRooms; findEarliestSlot; optional reschedule/getHistory.",
+     "weight": "core",
+     "evidence_hint": "They list these methods on the facade before coding."
+    }
+   ],
+   "probes": [
+    "Walk the class diagram: who owns conflict checks, who picks the room, who sends notifications?"
+   ],
+   "hints": {
+    "1": "Facade + Calendar + Strategy + Observer is the expected pattern set.",
+    "2": "Scheduler orchestrates; Calendar.isAvailable/add/remove; Strategy.pickRoom; Observer.update.",
+    "3": "Sketch MeetingScheduler, User+Calendar, MeetingRoom+Calendar, Meeting, Interval, RoomAssignmentStrategy, RecurrenceRule, Notification."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Implement conflict-free book/cancel and stretch algorithms without inventing scope.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "bookMeeting filters by capacity then assignment strategy, checks room (and people if in scope) calendars for conflicts, inserts booking, then notifies — cancel frees the room calendar and notifies.",
+     "weight": "core",
+     "evidence_hint": "Happy-path walk: capacity → pick room → isAvailable → add → notify; cancel reverses."
+    },
+    {
+     "id": "impl2",
+     "point": "Find earliest common slot: union busy intervals across attendees in the window, merge overlaps, walk gaps, take first gap that fits the requested duration.",
+     "weight": "extended",
+     "evidence_hint": "They describe merge-busy-then-walk-gaps, not brute nested loops over every minute without a plan."
+    },
+    {
+     "id": "impl3",
+     "point": "Prefer sorted free/busy structures so conflict check is not a full O(n) scan of history; for machine coding, in-memory sorted lists are fine at tens–hundreds of rooms with meetings/day per room in the dozens.",
+     "weight": "core",
+     "evidence_hint": "They justify sorted list/interval tree and keep domain logic out of the CLI driver."
+    },
+    {
+     "id": "impl4",
+     "point": "Store times as UTC instants internally; display in user TZ; expand recurrence in one IANA zone when multi-TZ is in scope.",
+     "weight": "extended",
+     "evidence_hint": "They say UTC storage + organizer IANA zone for RRULE expand, matching the Google-style model."
+    }
+   ],
+   "probes": [
+    "How do you book without double-booking, and how would you find the earliest mutual free slot?"
+   ],
+   "hints": {
+    "1": "Implement room book/cancel + conflict detection before recurrence polish.",
+    "2": "Capacity filter, then Strategy pick, then Calendar check+insert, then Observer notify.",
+    "3": "Common slot = merge attendee busy unions in window, walk gaps for first fit ≥ duration."
+   }
+  },
+  {
+   "phase": "extensibility",
+   "goal": "Show OCP via Strategy/Observer/Factory and lazy recurrence rather than god-classes.",
+   "must_hit": [
+    {
+     "id": "ext1",
+     "point": "New room-pick policies (FCFS, min-capacity-fit, nearest) swap RoomAssignmentStrategy without editing the facade; hardcoded first-free passes demos but Strategy is the expected answer.",
+     "weight": "core",
+     "evidence_hint": "They point at the Strategy interface when asked to prefer smallest fitting room or a floor preference."
+    },
+    {
+     "id": "ext2",
+     "point": "Add Slack + email by new Observer/notifier channels — do not branch if (channel == …) inside Meeting; Calendar owns conflicts, Strategy owns pick, Observer owns notify, Scheduler orchestrates (SRP/OCP).",
+     "weight": "core",
+     "evidence_hint": "They refuse to grow Meeting into a god-class holding reminders, channels, and room search."
+    },
+    {
+     "id": "ext3",
+     "point": "Recurrence: store a rule (+ optional exceptions); expand only inside the query/book window — do not materialize years up front; declining/editing one instance uses exception/EXDATE, not mutating the whole RRULE (parent + instances).",
+     "weight": "extended",
+     "evidence_hint": "They cite rule + lazy windowed expand and instance exceptions, optionally naming RFC 5545 RRULE/RDATE/EXDATE."
+    }
+   ],
+   "probes": [
+    "How would you add a new room-assignment policy or notification channel without rewriting MeetingScheduler?"
+   ],
+   "hints": {
+    "1": "Ask what should change by adding a class versus editing a switch.",
+    "2": "Strategy for pick/recurrence expand; Observer for notify; Factory for rule creation.",
+    "3": "Lazy RRULE expand in window + EXDATE for one declined occurrence; new notifier implements Observer."
+   }
+  },
+  {
+   "phase": "concurrency",
+   "goal": "Protect the no-overlap invariant under concurrent book/accept without over-serializing.",
+   "must_hit": [
+    {
+     "id": "conc1",
+     "point": "Invariant: no two ACTIVE bookings for a room overlap; check-then-act is a race — make check-free + insert one critical section under a per-room lock (or optimistic version / DB exclusion constraint).",
+     "weight": "core",
+     "evidence_hint": "They show synchronized/locked book path or version conflict when two organizers book the same room for overlapping times."
+    },
+    {
+     "id": "conc2",
+     "point": "Per-user calendar locks for invite accept that must block conflicts; ConcurrentHashMap catalogs alone are not an atomic book — still lock per room/calendar on check+insert.",
+     "weight": "core",
+     "evidence_hint": "They separate safe maps from the book critical section and mention personal-calendar locking for ACCEPT."
+    },
+    {
+     "id": "conc3",
+     "point": "Coarse global lock is correct but over-serializes unrelated rooms; do not hold the lock while sending emails — notify async / after commit.",
+     "weight": "extended",
+     "evidence_hint": "They choose per-room granularity and move notification outside the critical section."
+    }
+   ],
+   "probes": [
+    "Two organizers book Room A for overlapping times at once — how do you prevent double-booking?"
+   ],
+   "hints": {
+    "1": "Correct overlap math is not enough under concurrency.",
+    "2": "Atomic check+insert; prefer per-room lock over one global lock.",
+    "3": "Lock room calendar for isAvailable+add; unlock before Observer notify; optimistic version is an alternative."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Room-centric vs people-centric calendars",
+   "strong_answer": "Room-only ships faster for machine coding; composing per-user calendars behind the same Calendar abstraction unlocks RSVP conflict checks and find-common-slot without duplicating overlap logic."
+  },
+  {
+   "topic": "Strategy vs hardcoded first free room",
+   "strong_answer": "Hardcoded first-free passes demos; Strategy is the expected answer when product rules prefer smallest fit, nearest room, or floor constraints without editing the facade."
+  },
+  {
+   "topic": "Check-then-book race vs atomic book",
+   "strong_answer": "Correct overlap code still double-books under concurrency unless check+insert is one critical section (per-room lock) or DB/optimistic version enforces the no-overlap invariant."
+  },
+  {
+   "topic": "Materialize recurrence vs lazy expand",
+   "strong_answer": "Materializing simplifies conflict checks but explodes storage; lazy expand inside the query/book window plus exceptions (EXDATE / overridden instances) is the production answer (RFC 5545 / Google parent+instances)."
+  },
+  {
+   "topic": "Singleton MeetingScheduler vs dependency injection",
+   "strong_answer": "Singleton is fine for demos; prefer constructor injection for tests — same caveat as parking lot / Splitwise."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Two organizers book Room A 10:00–11:00 at once and both succeed.",
+   "correction": "Classic check-then-act race; synchronize the book path with per-room lock or optimistic version so check-free + insert is atomic."
+  },
+  {
+   "trap": "Meeting ends at 11:00 and next starts at 11:00 treated as conflict.",
+   "correction": "Use half-open [start, end) so adjacent slots are allowed."
+  },
+  {
+   "trap": "10 people with rooms of capacity 6 and 12 — wrong room chosen or capacity ignored.",
+   "correction": "Capacity-filter before assignment; MinCapacityFit (or smallest-fit) as Strategy encodes the product rule."
+  },
+  {
+   "trap": "Decline one occurrence of a weekly standup by editing the whole series rule.",
+   "correction": "Add an exception on that instance (EXDATE / overridden instance); do not mutate the whole RRULE."
+  },
+  {
+   "trap": "Find a 30-min slot for Alice, Bob, Carol this week with ad-hoc nested loops and no merge plan.",
+   "correction": "Union/merge busy intervals across attendees in the window, then walk gaps for the first fit."
+  },
+  {
+   "trap": "Add Slack + email by if-channel branches inside Meeting.",
+   "correction": "New Observer/notifier implementations; keep Meeting free of channel switches."
+  },
+  {
+   "trap": "Timezone/DST bugs from storing local wall times or expanding recurrence across mixed zones casually.",
+   "correction": "Store UTC instants; expand recurrence in organizer IANA TZ (Google model)."
+  },
+  {
+   "trap": "God-class Meeting holding recurrence strings, reminder prefs, and room search.",
+   "correction": "Split SRP: Calendar conflicts, Strategy pick, Observer notify, Scheduler orchestration."
+  },
+  {
+   "trap": "Finishing recurrence UML but failing mandatory book/cancel without double-booking.",
+   "correction": "Mandatory first: conflict-free book/cancel + capacity; recurrence is stretch."
+  }
+ ]
+}

@@ -1,0 +1,222 @@
+{
+ "id": "cpp_s13_std_string",
+ "title": "The std::string class",
+ "type": "FUND",
+ "relevance": "Interviewers use std::string to check ownership, I/O traps, capacity/SSO, C-interop, and safe building/parsing of text in OAs and SDE rounds.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what std::string is, how it is created and read, and that length differs from capacity.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "std::string (from <string>) is a typedef for std::basic_string<char>; it manages its own storage, grows/shrinks, tracks length, and provides members for searching, editing, and combining text.",
+     "weight": "core",
+     "evidence_hint": "Names <string>, says it owns storage unlike a fixed char array, and mentions length bookkeeping / member functions."
+    },
+    {
+     "id": "fund2",
+     "point": "cin >> str reads a single word (stops at whitespace); getline(cin, str) reads an entire line including spaces; prefer getline into a std::string over C-style cin.getline(buf, n).",
+     "weight": "core",
+     "evidence_hint": "Contrasts word vs full-line read and states getline is preferred when you already have a std::string."
+    },
+    {
+     "id": "fund3",
+     "point": "size()/length() is characters in use; capacity() is the allocated block size; empty() is true when there are no characters; clear() erases characters so length becomes 0.",
+     "weight": "core",
+     "evidence_hint": "Separates logical length from allocated capacity and names empty/clear correctly."
+    },
+    {
+     "id": "fund4",
+     "point": "Common construction includes empty, count-and-fill like string(5, 'x') → \"xxxxx\", from a C-string/literal, copy, substring ctor like string(c, 1, 3) → \"ell\", and initializer_list.",
+     "weight": "extended",
+     "evidence_hint": "Gives at least two distinct ctor forms with the file's fill or substring examples."
+    }
+   ],
+   "probes": [
+    "What is std::string, and how do cin >> and getline differ when reading into one?",
+    "How do size/length and capacity differ on a std::string?"
+   ],
+   "hints": {
+    "1": "Think of it as an owning object from <string>, not a bare char array.",
+    "2": "Contrast whitespace-stopping extraction with whole-line getline, then size vs allocated block.",
+    "3": "std::string is basic_string<char>; cin >> stops at whitespace, getline keeps spaces; size/length count used chars, capacity is the block, clear sets length to 0."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain SSO, contiguous null-terminated storage, resize/reserve semantics, mutation, search, and numeric conversion APIs.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "SSO embeds short strings in the object (no heap); beyond an implementation-defined threshold (commonly around 15 chars for char on 64-bit libstdc++) the object holds a heap pointer; sizeof(std::string) is larger than a pointer (often 24 or 32 on 64-bit libstdc++/libc++); the standard does not mandate SSO but major libraries use it.",
+     "weight": "core",
+     "evidence_hint": "Says short strings avoid heap allocation, explains why sizeof exceeds a pointer, and may cite the ~15 / 24-or-32 figures from the file."
+    },
+    {
+     "id": "mech2",
+     "point": "Since C++11, characters are contiguous and null-terminated: '\\0' at data()[size()] is not counted in size(); c_str() and const data() are interchangeable for reading; C++17 adds non-const data(); pointers invalidate after non-const ops that may reallocate.",
+     "weight": "core",
+     "evidence_hint": "States contiguous + trailing '\\0' not in size, distinguishes c_str/data use, and mentions invalidation on reallocation."
+    },
+    {
+     "id": "mech3",
+     "point": "resize(n) changes logical length (pad/truncate; shrinking length does not free capacity); reserve(n) leaves size unchanged but ensures capacity() >= n; shrink_to_fit is a non-binding request; clear typically keeps capacity; portable drop-buffer idiom is string().swap(s) or move-assign from a temporary empty string.",
+     "weight": "core",
+     "evidence_hint": "Clearly separates resize (changes text length) from reserve (growth planning) and notes clear/shrink_to_fit capacity behavior."
+    },
+    {
+     "id": "mech4",
+     "point": "find/rfind and find_first_of/find_last_of return indices; absent search returns string::npos; C++20 starts_with/ends_with and C++23 contains are Boolean prefix/suffix/substring tests.",
+     "weight": "extended",
+     "evidence_hint": "Names npos for not-found and at least one of find family or the modern Boolean queries."
+    },
+    {
+     "id": "mech5",
+     "point": "to_string formats decimal text; sto* (stoi/stol/…) parse with optional idx and base (integers: base in [2, 36] or 0 auto-detect); throw invalid_argument if no conversion and out_of_range if value does not fit; partial prefix parses succeed unless idx is checked against size().",
+     "weight": "extended",
+     "evidence_hint": "Mentions throw types and that \"42xyz\"-style partial success needs idx validation."
+    }
+   ],
+   "probes": [
+    "Does std::string always allocate on the heap, and why is sizeof(std::string) bigger than a pointer?",
+    "What is the difference between reserve and resize?",
+    "What does stoi throw, and when does a partial parse still succeed?"
+   ],
+   "hints": {
+    "1": "Short strings and size vs capacity are separate stories from parsing APIs.",
+    "2": "Cover SSO inline buffer, then resize vs reserve, then contiguous c_str/data, then sto* exceptions/idx.",
+    "3": "SSO: short text inline, no heap, sizeof often 24/32; reserve plans capacity without changing size, resize changes length; C++11 contiguous + null at data()[size()]; stoi throws invalid_argument/out_of_range and can accept a prefix unless you check idx."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare in-place building vs operator+, owning string vs string_view, and sto* vs charconv.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "operator+ builds a new string and chaining creates temporaries (worst fold pattern can be quadratic); +=/append/push_back extend in place and reallocate only when size would exceed capacity; growth is typically geometric so a += loop is amortised linear but still does allocations unless you reserve first.",
+     "weight": "core",
+     "evidence_hint": "Prefers +=/append over s = s + piece and explains temporary/allocation cost of +."
+    },
+    {
+     "id": "tr2",
+     "point": "Use std::string when you need ownership, mutation, or a guaranteed null-terminated buffer for C APIs; use std::string_view (C++17) when you only read an existing sequence without copying — string_view does not guarantee null-termination and must not outlive its data.",
+     "weight": "core",
+     "evidence_hint": "Own vs borrow: string for ownership/C-string need, string_view for non-owning read with lifetime/null caveats."
+    },
+    {
+     "id": "tr3",
+     "point": "For hot/contest parsing, from_chars/to_chars (<charconv>, C++17) work on raw char ranges, are locale-independent, typically faster than sto*/iostreams, and return errc instead of throwing; fall back to stoi/to_string for convenience.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts non-throwing locale-free charconv with throwing sto* convenience."
+    }
+   ],
+   "probes": [
+    "When building a long string in a loop, why prefer += with reserve over repeated + assignment?",
+    "When would you take std::string versus std::string_view as a parameter?",
+    "When would you choose from_chars over stoi?"
+   ],
+   "hints": {
+    "1": "Think about whether each step allocates a fresh string or mutates one buffer.",
+    "2": "Compare new temporaries from + versus in-place append with optional reserve; then ownership vs view; then exceptions vs errc.",
+    "3": "Prefer reserve then +=/append; string owns/mutates/null-terminates, string_view borrows without guaranteed '\\0'; charconv is faster, locale-free, non-throwing for bulk integer parse."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply string APIs safely in I/O, C interop, building, and parsing code.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Do not return s.c_str() from a function when s is a local std::string — the pointer dangles when s is destroyed; return the string by value (or a string_view only while the owner lives).",
+     "weight": "core",
+     "evidence_hint": "Identifies dangling c_str from a destroyed local and says return the owning string."
+    },
+    {
+     "id": "app2",
+     "point": "s.copy(dest, n) copies n characters but does not append '\\0' (unlike strcpy); the caller must terminate manually, or prefer c_str()/explicit '\\0' for C APIs.",
+     "weight": "core",
+     "evidence_hint": "States copy is non-null-terminating and shows manual '\\0' or c_str preference."
+    },
+    {
+     "id": "app3",
+     "point": "When joining many pieces, sum sizes, reserve(total) once, then += each part to avoid realloc churn; prefer push_back/+= for single chars or known pieces.",
+     "weight": "extended",
+     "evidence_hint": "Describes one reserve then append pattern for joining."
+    },
+    {
+     "id": "app4",
+     "point": "Indexed loops should prefer i < s.size() (or iterators/range-for) over stopping at '\\0', because embedded '\\0' is allowed and counted in size(); C-string-style loops can stop early.",
+     "weight": "extended",
+     "evidence_hint": "Warns that null-terminated-style iteration can miss chars after an embedded '\\0'."
+    }
+   ],
+   "probes": [
+    "What goes wrong if a function returns the c_str() of a local std::string?",
+    "Why is string::copy dangerous compared with c_str() for printing into a char buffer?",
+    "How would you efficiently join a vector of strings into one std::string?"
+   ],
+   "hints": {
+    "1": "Lifetime who owns the characters when a pointer escapes a function.",
+    "2": "Local destruction invalidates c_str; copy omits '\\0'; joining should reserve then append.",
+    "3": "Return std::string by value, not c_str of a local; after copy add '\\0' yourself; reserve sum of sizes then +=; iterate with size()/iterators, not only until '\\0'."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "operator+ vs += / append / push_back",
+   "strong_answer": "+ builds a new string and chained + creates temporaries (can be quadratic when repeatedly copying a growing left-hand side); +=/append/push_back mutate in place and only reallocate when capacity is exhausted — geometric growth makes a += loop amortised O(n), and reserve(expected) removes realloc churn."
+  },
+  {
+   "topic": "reserve vs resize",
+   "strong_answer": "reserve(n) plans capacity without changing logical text; resize(n) changes length (pad or truncate) and may grow capacity, but shrinking length does not free capacity — confusing them is a common bug when building character by character."
+  },
+  {
+   "topic": "std::string vs std::string_view",
+   "strong_answer": "Use string for ownership, mutation, or guaranteed null-terminated C interop; use string_view to read existing text without copying — it is non-owning, not necessarily null-terminated, and must not outlive the viewed data."
+  },
+  {
+   "topic": "sto* / to_string vs from_chars / to_chars",
+   "strong_answer": "sto*/to_string are convenient but sto* throw and accept partial parses unless idx is checked; charconv operates on raw ranges, is locale-independent, typically faster, and reports std::errc without throwing — preferred for contest/hot integer parsing."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "cin >> str on \"hello world\" stores only \"hello\"; mixing cin >> with getline leaves a leftover newline so the next getline can read an empty line.",
+   "correction": "Use getline(cin, str) for whole lines; treat leftover-newline and fast-I/O interaction as a separate I/O topic (s54)."
+  },
+  {
+   "trap": "Assuming std::string always heap-allocates, or that sizeof(std::string) equals sizeof(char*).",
+   "correction": "With SSO, short strings typically live inline with no heap allocation; the object stores size/capacity (or equivalent) plus an inline buffer, so sizeof is larger than a pointer (often 24 or 32 on 64-bit)."
+  },
+  {
+   "trap": "Returning s.c_str() when s is a local std::string.",
+   "correction": "The pointer dangles when s is destroyed; return the std::string by value (or a string_view only while the owner lives)."
+  },
+  {
+   "trap": "s.copy(dest, n) used like strcpy.",
+   "correction": "copy does not append '\\0'; terminate manually, or prefer c_str() / an explicit null-terminated buffer for C APIs."
+  },
+  {
+   "trap": "Building with bad = bad + \"x\" in a loop, or += without reserve on large builders.",
+   "correction": "Use +=/append/push_back in place; call reserve with a known or upper-bounded final length to avoid repeated reallocations."
+  },
+  {
+   "trap": "Treating \"no exception from stoi\" as \"the whole string was a clean number\".",
+   "correction": "Partial parses like \"42abc\" → 42 succeed; check idx against size(). Hard failures throw invalid_argument or out_of_range; prefer charconv when you want non-throwing checks."
+  },
+  {
+   "trap": "Passing string_view::data() to a C API expecting a C-string, or letting a string_view outlive its source.",
+   "correction": "string_view is not guaranteed null-terminated and is non-owning; keep the owning string (or other storage) alive, and use std::string/c_str when a C-string is required."
+  },
+  {
+   "trap": "Looping while str[i] != '\\0' as if the string were only a C string.",
+   "correction": "Prefer i < s.size(), iterators, or range-for; embedded '\\0' is allowed and counted in size(), so a C-style stop can end early."
+  }
+ ]
+}

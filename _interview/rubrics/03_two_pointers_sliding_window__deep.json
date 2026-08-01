@@ -1,0 +1,252 @@
+{
+ "id": "03_two_pointers_sliding_window__deep",
+ "title": "Two Pointers & Sliding Window (Depth Pass)",
+ "type": "CP",
+ "relevance": "High (contest-form variants of OA sliding-window / pair-counting; trains the “find the monotone trick” skill Striver/LC miss).",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "OA reskins include counting subarrays with ≤k distinct IDs/SKUs (CSES Distinct Values II / Longest k-Good Segment), longest session with at most k bad events (replacement/zero-flip window), pairs of scores differing by at most D (sorted two pointers / Close Tuples after a transform), and deleting one contiguous bad segment to make all unique (Uniqueness keep-prefix + keep-suffix).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot depth-pass two-pointer / sliding-window forms when monotonicity is hidden behind constraints, sorts, or counting reductions.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Recognize a contiguous constraint that is monotone in an endpoint, or when counting valid subarrays reduces to: for each R, find the farthest/closest valid L.",
+     "weight": "core",
+     "evidence_hint": "Candidate says the window/endpoint moves only one way as R grows, and counting becomes farthest/closest L per R."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognize sorted pair/tuple or greedy-match settings where sorted values let you advance one pointer only forward (or match from ends) without resetting.",
+     "weight": "core",
+     "evidence_hint": "Mentions sort then monotone L advance for inequalities, or end-to-end greedy matching after sort."
+    },
+    {
+     "id": "rec3",
+     "point": "Recognize “delete one segment / one edit” and forbidden-pair / foe-pair segment families as the same L/R window idea with a left-endpoint constraint.",
+     "weight": "extended",
+     "evidence_hint": "Maps Uniqueness-style one-segment delete or foe-pair segments to a constrained left bound that only moves right."
+    }
+   ],
+   "probes": [
+    "What in the statement tells you this is a sliding-window / two-pointer depth variant rather than a plain array scan?",
+    "When would you expect forbidden pairs or one-segment delete to still be a two-pointer problem?"
+   ],
+   "hints": {
+    "1": "Look for a contiguous range whose validity only gets worse as you extend an end.",
+    "2": "Ask whether for each right endpoint there is a farthest or closest valid left, or whether sorting makes one pointer monotone.",
+    "3": "Say: contiguous monotone-in-endpoint constraints; sorted forward-only pointer advances; or for each R find farthest/closest valid L (including foe-pair / one-delete framings)."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Choose the right window transform: at-most difference, conflict-prefetch, sorted counting, greedy match, or non-monotone-sum alternatives.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Exactly-k often equals at_most(k) minus at_most(k−1) (distinct values, number of 1s, etc.): implement one window and call it twice.",
+     "weight": "core",
+     "evidence_hint": "States exactly(k) = at_most(k) − at_most(k−1) and reuses one at-most implementation."
+    },
+    {
+     "id": "appr2",
+     "point": "Forbidden-pair / foe-pair segments: for each R, L cannot go left of the latest conflicting index; answer adds R−L+1.",
+     "weight": "core",
+     "evidence_hint": "Prefetches latest conflict / max forbidden left per R, then counts with ans += R−L+1."
+    },
+    {
+     "id": "appr3",
+     "point": "XOR equals SUM iff no bit collisions (carry-free); maintain OR/AND or per-bit occupancy and shrink when a bit repeats.",
+     "weight": "extended",
+     "evidence_hint": "Explains carry-free XOR=SUM window and shrinks on repeated bits / occupancy."
+    },
+    {
+     "id": "appr4",
+     "point": "Sorted pair/tuple counts: fix R (or value), find minimal L with a[R]−a[L] ≤ Δ (two pointers or binary search), then add combinations such as C(len, k−1); Close Tuples easy uses a[R]−a[L]≤2 and C(cnt,2).",
+     "weight": "extended",
+     "evidence_hint": "Fixes R, monotone-finds L under the difference bound, adds combination counts."
+    },
+    {
+     "id": "appr5",
+     "point": "Greedy kangaroo / match-points: sort, match largest residual to the largest feasible partner from the other end — correctness of the greedy choice is the non-obvious part.",
+     "weight": "extended",
+     "evidence_hint": "Describes sort + both-ends matching and calls out greedy correctness, not pointer syntax."
+    }
+   ],
+   "probes": [
+    "How do you reduce exactly-k distinct (or exactly-k ones) to a standard window?",
+    "For foe pairs, what do you precompute before the R sweep, and what do you add per R?"
+   ],
+   "hints": {
+    "1": "Think about whether the hard part is transforming the condition before the pointers move.",
+    "2": "Separate templates: at_most difference, latest-conflict L, sorted difference + combinations, and greedy end matching.",
+    "3": "exactly(k)=at_most(k)−at_most(k−1); foe pairs tighten L by latest conflict and add R−L+1; XOR=SUM needs carry-free bit occupancy; sorted counts fix R and advance L under a[R]−a[L]≤Δ."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Implement amortized O(1) window updates, conflict prefetch, and monotone sorted advances without resetting L.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Maintain frequency plus distinct count (or bit occupancy) so each L/R step is O(1) amortized.",
+     "weight": "core",
+     "evidence_hint": "Updates a freq map / distinct (or bit occupancy) on expand/shrink in amortized O(1)."
+    },
+    {
+     "id": "impl2",
+     "point": "For each R, compute maximal (or minimal) valid L and, when counting subarrays, add R−L+1.",
+     "weight": "core",
+     "evidence_hint": "Writes the per-R L update then ans += R−L+1 (as in at-most-k distinct count)."
+    },
+    {
+     "id": "impl3",
+     "point": "After sorting, advance only the left pointer for pair/tuple inequalities; never reset.",
+     "weight": "core",
+     "evidence_hint": "Sorted scan moves L only forward across increasing R."
+    },
+    {
+     "id": "impl4",
+     "point": "Prefetch per-index latest-conflict arrays for forbidden-pair segment counts before the main sweep.",
+     "weight": "extended",
+     "evidence_hint": "Builds a latest-forbidden-left array, then runs the R loop against that bound."
+    },
+    {
+     "id": "impl5",
+     "point": "Opposite-direction string delete (Backspace): simulate from the right with parity of skips — still two pointers, not a stack rewrite.",
+     "weight": "extended",
+     "evidence_hint": "Matches from the right using backspace skip parity with two indices."
+    }
+   ],
+   "probes": [
+    "Walk through the freq/distinct updates when R advances and L shrinks for at-most-k distinct.",
+    "Why must the left pointer only move forward after sorting for pair-difference counts?"
+   ],
+   "hints": {
+    "1": "Each pointer move should update a small amount of window state, not rescan.",
+    "2": "Name the state: freq + distinct (or bits), latest conflict bound, or monotone L after sort.",
+    "3": "Freq/distinct (or bit occupancy) for amortized O(1) steps; per R add R−L+1; sorted pair counts never reset L; foe pairs use prefetched latest conflict; Backspace matches from the right with skip parity."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State the amortized per-step window cost and when an upgrade beyond one two-pointer pass is needed.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "With freq + distinct (or bit occupancy), each L/R step is O(1) amortized.",
+     "weight": "core",
+     "evidence_hint": "Says amortized O(1) per pointer step via constant-time state updates."
+    },
+    {
+     "id": "cx2",
+     "point": "Optional upgrade: after computing farthest reachable end with two pointers, binary lifting on that sparse table upgrades to min cuts / jumps.",
+     "weight": "extended",
+     "evidence_hint": "Mentions farthest-reach array then sparse table / binary lifting for multi-jump or min-cut queries (Cut)."
+    }
+   ],
+   "probes": [
+    "What is the per-step cost of a correct at-most-k distinct window if freq and distinct are maintained properly?",
+    "When do you layer binary lifting on top of a two-pointer farthest-reach array?"
+   ],
+   "hints": {
+    "1": "Cost should follow from how much work each L or R move does.",
+    "2": "Amortized constant updates first; multi-jump queries are a separate upgrade on farthest reach.",
+    "3": "Each L/R step O(1) amortized with freq/distinct or bit occupancy; farthest-reach then sparse table / binary lifting for min cuts/jumps."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Avoid forcing shrink-only windows on non-monotone sums and other common depth-pass traps.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Negative sums break classic shrink-on-sum; use prefix minima, binary search on length, or reset empty windows carefully (ATM and Students).",
+     "weight": "core",
+     "evidence_hint": "Refuses shrink-only when negatives appear; switches to prefix / BS-on-length / careful empty-window handling."
+    },
+    {
+     "id": "pit2",
+     "point": "When sums are non-monotone, switch to prefix sums + BS / deque — do not force a shrink-only window.",
+     "weight": "core",
+     "evidence_hint": "Explicitly abandons monotone shrink and names prefix + BS or deque."
+    },
+    {
+     "id": "pit3",
+     "point": "Greedy match: decide which end is the scarce resource before coding the pointers; correctness is non-obvious, not the pointer motion.",
+     "weight": "extended",
+     "evidence_hint": "Picks the scarce end / feasibility rule first (e.g. Counting Kangaroos 2·small≤large), then implements matching."
+    },
+    {
+     "id": "pit4",
+     "point": "XOR == SUM only with no bit collisions; shrinking must track repeated bits, not treat XOR like an ordinary sum window.",
+     "weight": "extended",
+     "evidence_hint": "Calls out carry-free occupancy and shrink-on-bit-repeat rather than sum thresholds."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you apply classic positive-sum shrink logic when array values can be negative?",
+    "Before coding kangaroo/match-points pointers, what must you decide about the two ends?"
+   ],
+   "hints": {
+    "1": "Ask whether extending/shrinking the window is still monotone in the objective.",
+    "2": "Negatives and XOR carries break the usual shrink invariant; greedy matching needs the scarce-end choice first.",
+    "3": "Negatives → prefix minima / BS-on-length / careful reset (ATM and Students), not shrink-only; non-monotone sums → prefix + BS/deque; greedy: pick scarce end first; XOR=SUM needs carry-free bit occupancy."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "exactly-k window vs at_most(k) − at_most(k−1)",
+   "strong_answer": "Prefer implementing one at_most window and calling it for k and k−1 to get exactly-k (distinct values, number of 1s, etc.) instead of specially coding an exactly-k window from scratch."
+  },
+  {
+   "topic": "classic shrink-on-sum vs prefix / BS / deque",
+   "strong_answer": "Use shrink-only windows only while the constraint is monotone; when negatives or non-monotone sums appear, switch to prefix minima, binary search on length, deque, or careful empty-window resets rather than forcing shrink-only."
+  },
+  {
+   "topic": "two pointers alone vs two pointers + binary lifting",
+   "strong_answer": "Two pointers give farthest reachable ends / maximal valid segments; when you need min cuts or multi-jump queries, build a farthest-reach array and upgrade with a sparse table / binary lifting."
+  },
+  {
+   "topic": "stack rewrite vs reverse two pointers for Backspace",
+   "strong_answer": "Backspace-style delete can stay two pointers: simulate from the right with parity of skips, rather than rewriting as an explicit stack rebuild."
+  },
+  {
+   "topic": "pointer mechanics vs greedy correctness in matching",
+   "strong_answer": "In kangaroo / match-points problems, the hard part is justifying which end is scarce and that the greedy pairing is correct; the two-pointer motion is secondary."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Applying classic shrink-when-sum-too-large logic when values can be negative.",
+   "correction": "Negatives break monotone shrink; use prefix minima, binary search on length, or carefully reset empty windows (ATM and Students)."
+  },
+  {
+   "trap": "Forcing a shrink-only sliding window whenever the problem mentions subarray sums.",
+   "correction": "If sums are non-monotone, switch to prefix sums + BS / deque instead of shrink-only."
+  },
+  {
+   "trap": "After sorting for pair/tuple inequalities, resetting the left pointer for each R.",
+   "correction": "Advance only the left pointer forward; never reset."
+  },
+  {
+   "trap": "Treating XOR==SUM windows like ordinary sum windows without tracking bit collisions.",
+   "correction": "XOR equals SUM iff carry-free; maintain OR/AND or per-bit occupancy and shrink when a bit repeats."
+  },
+  {
+   "trap": "Rewriting Backspace matching as a stack problem by default.",
+   "correction": "Simulate from the right with parity of skips — still two pointers."
+  },
+  {
+   "trap": "Coding greedy end-matching pointers before deciding which end is the scarce resource.",
+   "correction": "Decide the scarce end / feasibility rule first; correctness of the greedy match is the non-obvious part."
+  },
+  {
+   "trap": "Counting forbidden-pair segments without prefetching conflict bounds.",
+   "correction": "Prefetch per-index latest-conflict (max forbidden left) so for each R, L cannot go left of that index, then add R−L+1."
+  }
+ ]
+}

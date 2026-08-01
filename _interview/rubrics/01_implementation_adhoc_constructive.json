@@ -1,0 +1,246 @@
+{
+ "id": "01_implementation_adhoc_constructive",
+ "title": "Implementation, Ad-hoc & Constructive",
+ "type": "CP",
+ "relevance": "High — tests raw coding fluency, edge-case handling, and translating logic into bug-free code—the most common reason candidates fail OAs.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Amazon/Microsoft grid-traversal OAs: simulate robots and obstacles in 2D without BFS/DFS. Citadel/Optiver/HRT game simulations: predict the winner after N turns, often an O(1) parity or ad-hoc math disguise. Google/Meta array/string transformations: apply replacement rules until stable—find the invariant or shrink-to-pattern. Data-engineering/pipeline OAs: parse logs and compute active-session streaks—pure implementation and edge cases.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Establish that the problem is simulation, ad-hoc math, or constructive—not advanced DS or a textbook algorithm.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "These problems need simulating a process, finding a mathematical shortcut (ad-hoc), or building a valid configuration from scratch (constructive)—not advanced data structures or textbook algorithms.",
+     "weight": "core",
+     "evidence_hint": "Names simulation, ad-hoc shortcut, or constructive build as the family and rejects jumping to heavy DS/algos."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognition cues: constraints small enough for direct simulation, or the ask is “any valid answer” with room for a surprisingly simple greedy construction.",
+     "weight": "core",
+     "evidence_hint": "Points at small constraints for simulate-directly, or “any valid” wording that invites a simple greedy builder."
+    },
+    {
+     "id": "rec3",
+     "point": "OA disguises include grid robot/obstacle movement without BFS/DFS, game winner-after-N-turns prompts, replacement rules until a string stops changing, and log streak/session counting.",
+     "weight": "extended",
+     "evidence_hint": "Maps the prompt to grid sim, game-after-N-turns, invariant/shrink string transforms, or streak parsing."
+    }
+   ],
+   "probes": [
+    "What in the statement says this is simulation, ad-hoc math, or constructive rather than a standard DS/algorithm template?",
+    "Would you treat this as “simulate everything” or as “any valid construction,” and why?"
+   ],
+   "hints": {
+    "1": "Ask whether you need a fancy structure or just to run the process / emit one valid object.",
+    "2": "Look for small constraints (direct simulation) or “any valid answer” (simple greedy construction).",
+    "3": "Classify as simulate / O(1) math shortcut / construct-any; OA cousins are grid move sims, N-turn games, replacement-until-stable strings, and streak parsing."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Choose simulate vs ad-hoc formula vs construct-any, and name the invariant or base-case reduction before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Prefer an O(1) math formula or division/modulo logic that dictates the exact state at step N over blind O(N) simulation when the pattern allows it.",
+     "weight": "core",
+     "evidence_hint": "Says to hunt an O(1)/modulo closed form (e.g. grid pattern or k-th not-divisible jump) instead of looping every step."
+    },
+    {
+     "id": "appr2",
+     "point": "For “does there exist” or “construct any,” reduce to the most extreme or simplest valid base case (e.g. sorting, placing all 1s together).",
+     "weight": "core",
+     "evidence_hint": "Names reducing to a simplest skeleton like sorted order or all-1s-together before inventing a bespoke search."
+    },
+    {
+     "id": "appr3",
+     "point": "Hunt invariants that never change under the operations—e.g. sum modulo K or parity of inversions—especially on string/array transforms and games.",
+     "weight": "extended",
+     "evidence_hint": "Mentions sum modulo K, parity, or another unchanged quantity before proposing per-step simulation."
+    },
+    {
+     "id": "appr4",
+     "point": "Constructive stretch patterns include reducing a general case (k>3) to a solved base case (k=3), and reverse-thinking such as blocking bad cells instead of helping the good path.",
+     "weight": "extended",
+     "evidence_hint": "Cites k>3→k=3 reduction or block-the-bad-guys framing when the problem is constructive."
+    }
+   ],
+   "probes": [
+    "Before coding, is the win condition a simulation, an O(1) formula, or any valid construction?",
+    "What invariant or simplest valid base case would you reduce to?"
+   ],
+   "hints": {
+    "1": "Don’t start looping every step until you’ve asked for a closed form or a construct-any skeleton.",
+    "2": "Either derive O(1)/modulo state at step N, or reduce existence/construction to a simplest base (sort / all 1s together).",
+    "3": "Name an invariant (sum modulo K, parity) and, if stretch, k>3→k=3 or block-bad-guys reverse thinking."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Show concrete coding moves for grids, strings/digits, in-place markers, and common constructive builders.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "2D grids need boundary checks and 4-way/8-way directional arrays; spiral/diagonal walks must track cycle bounds carefully.",
+     "weight": "core",
+     "evidence_hint": "Mentions bounds checks, directional deltas, and careful spiral/diagonal loop limits."
+    },
+    {
+     "id": "impl2",
+     "point": "Treat strings and numbers as digit arrays with explicit leading-zero and parity handling (e.g. digit inversion that must not create a leading zero).",
+     "weight": "core",
+     "evidence_hint": "Talks digit-array edits and calls out leading zeros / parity as first-class edge cases."
+    },
+    {
+     "id": "impl3",
+     "point": "In-place matrix work can use the first row/column as state markers to achieve O(1) space modification (Set Matrix Zeroes pattern).",
+     "weight": "core",
+     "evidence_hint": "Describes marking on the first row/column instead of extra O(rows+cols) arrays."
+    },
+    {
+     "id": "impl4",
+     "point": "Core builders include streak/sliding-window counts, bracket balance tracking, frequency-counting for symmetric/palindrome construction, and bottleneck gaps such as max distance between 'R's.",
+     "weight": "extended",
+     "evidence_hint": "Names streak counting, balance for brackets, frequency→symmetric string, or max 'R' gap as the coded idea."
+    }
+   ],
+   "probes": [
+    "How would you implement an in-place matrix zeroing without an extra marker array?",
+    "What edge cases do you check when mutating digits of a number as a string?"
+   ],
+   "hints": {
+    "1": "Start from grid deltas or digit-array edits—whichever the prompt looks like.",
+    "2": "Grids: boundaries + 4-way/8-way; matrices: first row/column markers for O(1) space; strings: leading zeros.",
+    "3": "Also mention spiral cycle bounds, bracket balance, frequency→palindrome layout, or max distance between 'R's."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State when simulation is acceptable versus when an O(1) formula or O(1)-space in-place pass is required.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "When an O(1) formula or division/modulo logic gives the state at step N, O(N) simulation is the wrong complexity choice.",
+     "weight": "core",
+     "evidence_hint": "Contrasts closed-form/modulo O(1) answers with looping N steps unnecessarily."
+    },
+    {
+     "id": "cx2",
+     "point": "Space-optimized matrix problems may require O(1) space in-place modification rather than auxiliary row/column arrays.",
+     "weight": "core",
+     "evidence_hint": "Says O(1) extra space via first-row/column markers for zeroing or similar."
+    },
+    {
+     "id": "cx3",
+     "point": "Game-style OA prompts that ask for the winner after N turns often collapse to an O(1) parity check or ad-hoc math trick rather than simulating all turns.",
+     "weight": "extended",
+     "evidence_hint": "Refuses full N-turn simulation and proposes parity/ad-hoc O(1) reasoning."
+    }
+   ],
+   "probes": [
+    "When is simulating all N steps acceptable, and when should you switch to an O(1) formula?",
+    "What space bound are you aiming for on in-place matrix modification?"
+   ],
+   "hints": {
+    "1": "Ask whether the answer depends on every intermediate state or only on a closed form.",
+    "2": "Prefer O(1) math/parity when the pattern or game rules allow; reserve simulation for small-constraint process walks.",
+    "3": "Cite O(1) jump/formula vs O(N) loop, O(1) space via first row/column markers, and N-turn games that hide parity."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Surface the edge-case and wrong-framing mistakes that fail OAs on this topic.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Off-by-one and loop-bound errors dominate spiral/diagonal matrix traversal and similar cycle-bound walks.",
+     "weight": "core",
+     "evidence_hint": "Calls out spiral/diagonal off-by-one and shrinking bounds as the main failure mode."
+    },
+    {
+     "id": "pit2",
+     "point": "Digit/string mutations often break on leading zeros and parity edge cases if those checks are skipped.",
+     "weight": "core",
+     "evidence_hint": "Explicitly tests or mentions leading-zero and parity traps on digit flips."
+    },
+    {
+     "id": "pit3",
+     "point": "Missing 2D boundary checks (or wrong 4-way/8-way deltas) corrupts grid simulations even when the high-level idea is right.",
+     "weight": "extended",
+     "evidence_hint": "Mentions out-of-bounds indices or incorrect neighbor directions as a concrete bug class."
+    },
+    {
+     "id": "pit4",
+     "point": "On constructive/BFS maze variants, helping only the good path can be the wrong frame—blocking the bad guys first is the intended reverse-thinking.",
+     "weight": "extended",
+     "evidence_hint": "States block-bad-cells / reverse approach instead of only clearing a path for the hero."
+    }
+   ],
+   "probes": [
+    "Where do candidates usually go off-by-one on spiral or layered matrix walks?",
+    "What happens if you invert digits without considering a leading zero?"
+   ],
+   "hints": {
+    "1": "Think bounds and first/last cells before the happy-path loop.",
+    "2": "Spiral cycle bounds, grid boundaries/deltas, and leading zeros are the usual OA killers.",
+    "3": "Also: don’t O(N)-simulate an O(1) pattern; on maze constructives, block bad guys rather than only helping good guys."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "O(N) simulation vs O(1) ad-hoc math",
+   "strong_answer": "If division/modulo or a closed formula gives the exact state at step N (Number Spiral, K-th Not Divisible, Coin Piles, many N-turn games), prefer O(1); simulate only when constraints make direct process walking the intended path."
+  },
+  {
+   "topic": "Pure 2D implementation vs reaching for BFS/DFS",
+   "strong_answer": "Grid-traversal OAs that only move robots among obstacles often test boundary-safe 2D implementation with directional arrays—not graph search. Use BFS/DFS only when reachability/search is actually required."
+  },
+  {
+   "topic": "Construct any simple skeleton vs searching for a special solution",
+   "strong_answer": "When the problem asks for any valid answer and constraints are loose (e.g. forcing periodicity), emit the simplest greedy construction or extreme base case rather than searching for a unique or optimal-looking object."
+  },
+  {
+   "topic": "Solve the general constructive case vs reduce to a known base",
+   "strong_answer": "Patterns like k-LCM hard reduce k>3 to the already-solved k=3 case; prefer that reduction over inventing a full general builder from scratch."
+  },
+  {
+   "topic": "Help the good path vs block the bad guys",
+   "strong_answer": "On Solve The Maze–style constructives, reverse-thinking—block bad cells so evil cannot reach the goal—beats only trying to clear a path for the good side."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Tracing spirals or diagonals with wrong cycle bounds.",
+   "correction": "Track shrinking layer bounds carefully; off-by-one on loop limits is the classic spiral-matrix OA failure."
+  },
+  {
+   "trap": "Mutating digits without guarding leading zeros.",
+   "correction": "Treat the number as a digit array and refuse transforms that introduce a leading zero; parity/edge cases belong in the same checklist."
+  },
+  {
+   "trap": "Simulating all N steps when an O(1) formula exists.",
+   "correction": "Use division/modulo or parity that dictates the state at step N (grid formulas, k-th not-divisible jumps, many game winner prompts)."
+  },
+  {
+   "trap": "Grid simulation without boundary checks or correct 4-way/8-way deltas.",
+   "correction": "Validate every neighbor index and keep directional arrays consistent before applying moves."
+  },
+  {
+   "trap": "Applying string replacement rules step-by-step without an invariant.",
+   "correction": "Find what never changes (e.g. sum modulo K, parity) or recognize the string shrinks to a known pattern instead of brute-forcing every replacement."
+  },
+  {
+   "trap": "Allocating extra row/column marker arrays when O(1) space is required.",
+   "correction": "Use the first row/column as state markers for in-place matrix zeroing and similar modifications."
+  },
+  {
+   "trap": "Framing a maze constructive as only helping the good cells.",
+   "correction": "Block the bad guys (reverse-thinking) so adversarial reachability fails, rather than only paving the hero’s path."
+  }
+ ]
+}

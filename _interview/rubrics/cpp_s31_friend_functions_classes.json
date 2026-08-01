@@ -1,0 +1,181 @@
+{
+ "id": "cpp_s31_friend_functions_classes",
+ "title": "Friend Functions and Friend Classes",
+ "type": "FUND",
+ "relevance": "Interviewers probe whether candidates understand C++ access control, when friend is idiomatic (operators, iterators), and the non-mutual/non-transitive/non-inherited rules of friendship.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a friend is and that friendship is only granted by the class that owns the data.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A friend is a function or class explicitly granted access to another class's private and protected members.",
+     "weight": "core",
+     "evidence_hint": "Defines friend as an access grant to private/protected members, not as membership in the class."
+    },
+    {
+     "id": "fund2",
+     "point": "Friendship is always granted by the class that holds the data; an outside entity cannot take it.",
+     "weight": "core",
+     "evidence_hint": "Stresses one-way grant from inside the class definition, never unilateral self-declaration."
+    },
+    {
+     "id": "fund3",
+     "point": "A friend function is a free function (not a member) that has been granted access to the class's internals.",
+     "weight": "extended",
+     "evidence_hint": "Distinguishes friend free functions from member functions (no ClassName:: on the definition)."
+    },
+    {
+     "id": "fund4",
+     "point": "Python has no direct equivalent to friend; access control relies on convention rather than compiler enforcement.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts C++ friend with Python naming conventions like underscore prefixes."
+    }
+   ],
+   "probes": [
+    "What is a friend in C++, and who decides that friendship exists?"
+   ],
+   "hints": {
+    "1": "Think about private and protected members and who can reach them.",
+    "2": "Friendship is declared inside the class that owns the data.",
+    "3": "A friend is an external function or class granted private/protected access by that class; outsiders cannot declare themselves friends."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how friend functions and friend classes are declared and the three hard rules of friendship.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "To make a function a friend, place friend plus the function declaration inside the class; access modifiers do not affect friend declarations.",
+     "weight": "core",
+     "evidence_hint": "Mentions friend declaration inside the class body and that public/private placement does not change the grant."
+    },
+    {
+     "id": "mech2",
+     "point": "Declaring a whole class as a friend gives every member function of that friend class access to the granting class's private and protected members.",
+     "weight": "core",
+     "evidence_hint": "Says friend class means all of that class's members can touch the grantor's internals."
+    },
+    {
+     "id": "mech3",
+     "point": "Friendship is not mutual: if A declares B as a friend, B can access A's privates, but A cannot access B's unless B reciprocates.",
+     "weight": "core",
+     "evidence_hint": "Uses a one-way key analogy or A/B example showing no automatic reverse access."
+    },
+    {
+     "id": "mech4",
+     "point": "Friendship is not transitive: if A is a friend of B and B is a friend of C, A does not automatically get access to C.",
+     "weight": "extended",
+     "evidence_hint": "Rejects chain-of-friends access; each grant is explicit."
+    },
+    {
+     "id": "mech5",
+     "point": "Friendship is not inherited: a base class's friend does not automatically access a derived class's privates, and classes deriving from a friend do not inherit the friendship.",
+     "weight": "core",
+     "evidence_hint": "States clearly that neither direction of inheritance carries friendship."
+    }
+   ],
+   "probes": [
+    "If class A declares B as a friend, what can B access—and can A access B? Is friendship transitive or inherited?"
+   ],
+   "hints": {
+    "1": "Treat friendship like giving someone a key to your house.",
+    "2": "Cover three separate rules: mutual, transitive, and inherited.",
+    "3": "Not mutual, not transitive, not inherited—each relationship must be granted explicitly to the named function or class."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Clarify when friend is the right tool versus public accessors, especially for operators.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Friend is commonly justified for overloading symmetric binary operators and stream insertion/extraction operators when a free function needs private data.",
+     "weight": "core",
+     "evidence_hint": "Names operator+, operator<<, or operator>> and explains why a free function may need friend access."
+    },
+    {
+     "id": "tr2",
+     "point": "operator<< must be a free function because the left operand is std::ostream, which you cannot modify to add a member for your type.",
+     "weight": "core",
+     "evidence_hint": "Explains left-hand ostream forces a non-member, and friend if private state must be printed."
+    },
+    {
+     "id": "tr3",
+     "point": "Prefer asking when friend beats a public getter or setter rather than using friend as a general encapsulation bypass.",
+     "weight": "extended",
+     "evidence_hint": "Frames friend as a deliberate, narrow grant versus exposing internals publicly."
+    }
+   ],
+   "probes": [
+    "When would you use a friend function instead of a public getter for operator<< on a custom type?"
+   ],
+   "hints": {
+    "1": "Consider who owns the left-hand operand of <<.",
+    "2": "You cannot add a member to std::ostream for your class.",
+    "3": "Implement operator<< as a free function, and declare it friend if it must print private members."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply friend to idiomatic patterns and answer the common encapsulation interview traps.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "The Container/Iterator pattern is a classic friend-class use: the iterator needs intimate access to container internals that stay hidden from the public.",
+     "weight": "core",
+     "evidence_hint": "Describes iterator needing pointers/links or internal structure via friend class Iterator."
+    },
+    {
+     "id": "app2",
+     "point": "Friend does not break encapsulation because the grant must appear inside the class definition; the author retains control over who gets access.",
+     "weight": "core",
+     "evidence_hint": "Rejects the trap: explicit grant inside the class is controlled access, not a unilateral breach."
+    },
+    {
+     "id": "app3",
+     "point": "Friendship is strictly granted to the specific named class or function and does not pass down to derived classes.",
+     "weight": "extended",
+     "evidence_hint": "Quick-fire: friendship is not inherited."
+    }
+   ],
+   "probes": [
+    "Does friend break encapsulation? Is friendship inherited?"
+   ],
+   "hints": {
+    "1": "Ask who would have to write the friend declaration.",
+    "2": "Contrast an explicit grant inside the class with an outsider declaring itself a friend.",
+    "3": "No—friendship is granted only by the class author inside the definition, and it is not inherited by derived classes."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "friend function vs public getter/setter",
+   "strong_answer": "Use friend when a free function must access private state—especially symmetric binary operators and stream operators—rather than widening the public API with getters/setters for every consumer."
+  },
+  {
+   "topic": "member operator vs free friend operator<<",
+   "strong_answer": "operator<< cannot be a member of your type because the left operand is std::ostream; implement it as a free function and friend it only if it needs private data."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Saying friend breaks encapsulation because it exposes private members to outsiders.",
+   "correction": "Friendship must be granted inside the class definition, so the author retains control; C++ forbids an external entity from unilaterally declaring itself a friend."
+  },
+  {
+   "trap": "Assuming friendship is mutual, transitive, or inherited.",
+   "correction": "Friendship is one-way, non-transitive, and not inherited—neither base-class friends nor derived-from-friend classes get automatic access."
+  },
+  {
+   "trap": "Treating a friend function as a member function (calling it with ClassName:: or expecting this).",
+   "correction": "A friend function is a free function declared with friend inside the class; it is called like a normal function, not as a member."
+  }
+ ]
+}

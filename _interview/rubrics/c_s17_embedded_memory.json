@@ -1,0 +1,193 @@
+{
+ "id": "c_s17_embedded_memory",
+ "title": "Embedded Memory, Startup & the Build",
+ "type": "FUND",
+ "relevance": "Tests whether candidates understand bare-metal program startup, memory sections, and the linker/build path that firmware interviews and OAs routinely probe.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish how a microcontroller's on-chip memory is physically divided and what each region holds.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Flash/ROM is non-volatile: it retains data when power is lost and houses compiled code, .rodata, and initial templates for initialized variables.",
+     "weight": "core",
+     "evidence_hint": "Candidate says Flash keeps contents across power loss and stores code plus read-only/init templates."
+    },
+    {
+     "id": "fund2",
+     "point": "RAM is volatile: it loses contents on power loss and holds .data, .bss, the call stack, and the heap.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts RAM volatility with Flash and lists live globals, stack, and heap."
+    },
+    {
+     "id": "fund3",
+     "point": "Peripherals such as timers or serial ports are mapped into memory addresses; writing those addresses configures the hardware.",
+     "weight": "extended",
+     "evidence_hint": "Candidate describes MMIO: hardware registers appear as addresses you read/write."
+    }
+   ],
+   "probes": [
+    "On a bare-metal MCU, what lives in Flash versus RAM, and what happens to each on power loss?"
+   ],
+   "hints": {
+    "1": "Think about which memory survives a power cut and which is the live workspace.",
+    "2": "Name the common sections: code/.rodata in Flash; .data, .bss, stack, heap in RAM.",
+    "3": "Flash/ROM is non-volatile (code, .rodata, init templates); RAM is volatile (.data, .bss, stack, heap); peripherals are memory-mapped."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how reset, crt0, and the linker script initialize static storage and place sections before main.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "On reset the CPU reads a hardcoded address for the initial stack pointer and Reset Handler (often crt0), which prepares the environment before main.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes vector-table reset entry and that main is not the first code run."
+    },
+    {
+     "id": "mech2",
+     "point": "crt0 copies initialized .data from Flash into RAM and zeroes .bss; only then does it call main(), fulfilling static-storage initialization.",
+     "weight": "core",
+     "evidence_hint": "Candidate names the Flash→RAM copy for .data and the zeroing of .bss before main."
+    },
+    {
+     "id": "mech3",
+     "point": "Because RAM is volatile, .data has an LMA in Flash and a VMA in RAM; crt0 copies from LMA to VMA.",
+     "weight": "core",
+     "evidence_hint": "Candidate defines LMA as load/storage address and VMA as execution address, with .data spanning both."
+    },
+    {
+     "id": "mech4",
+     "point": "The linker script's MEMORY and SECTIONS commands map input sections to physical regions and export boundary symbols (e.g. _sdata) that startup uses as copy bookmarks.",
+     "weight": "extended",
+     "evidence_hint": "Candidate says the linker places sections and exports symbols startup walks to copy/zero memory."
+    },
+    {
+     "id": "mech5",
+     "point": "The vector table is an array of function pointers at a fixed address; the linker places it at the start of FLASH, commonly via .isr_vector.",
+     "weight": "extended",
+     "evidence_hint": "Candidate ties earliest entries (stack pointer, Reset Handler) to a linker-forced vector section at Flash start."
+    }
+   ],
+   "probes": [
+    "What is the difference between VMA and LMA for the .data section, and who uses the linker symbols between them?"
+   ],
+   "hints": {
+    "1": "Ask where initialized globals live at rest versus where the CPU uses them at run time.",
+    "2": "Separate load address (Flash) from execution address (RAM), then name the copy loop in the Reset Handler.",
+    "3": "VMA is where code/data is expected when executing; LMA is permanent storage. For .data, LMA is Flash, VMA is RAM; crt0 copies using linker symbols like _sdata/_edata/_sidata."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Show how declaration and allocation choices trade Flash vs RAM, and how library I/O can blow the memory budget.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "const goes in Flash (.rodata); initialized globals consume both Flash and RAM (.data); zero-initialized globals use only RAM (.bss).",
+     "weight": "core",
+     "evidence_hint": "Candidate maps const / initialized / zero-init to .rodata / both Flash+RAM / .bss-only."
+    },
+    {
+     "id": "tr2",
+     "point": "On bare metal, const lookup tables or string literals save RAM by keeping data exclusively in Flash.",
+     "weight": "core",
+     "evidence_hint": "Candidate explicitly says const is a RAM-saving placement choice, not only type safety."
+    },
+    {
+     "id": "tr3",
+     "point": "Without retargeting, linking printf can pull massive generic I/O handlers that exhaust Flash/RAM; .map files audit per-function cost.",
+     "weight": "extended",
+     "evidence_hint": "Candidate warns about printf size and mentions auditing with a map file or implementing a small _write path."
+    }
+   ],
+   "probes": [
+    "Why mark a large lookup table const on a microcontroller, and what goes wrong if you link printf without retargeting?"
+   ],
+   "hints": {
+    "1": "Compare where the linker puts const versus a non-const global with an initializer.",
+    "2": "Initialized globals pay twice (Flash template + RAM live copy); const pays once in Flash.",
+    "3": "const → .rodata in Flash only; initialized globals → Flash+RAM; bare printf without _write/UART retarget can bloat the image—check the .map."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Connect the toolchain, retargeting, and failure modes (soft reset, overflow, stack collision) to real bare-metal builds.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Cross-compilation targets a different ISA (e.g. arm-none-eabi-gcc with -mcpu); -T supplies the linker script; objcopy extracts .bin/.hex for flashing.",
+     "weight": "core",
+     "evidence_hint": "Candidate names host≠target, the prefixed toolchain, linker script flag, and raw image via objcopy."
+    },
+    {
+     "id": "app2",
+     "point": "newlib/newlib-nano need retargeting—implement a low-level hook such as _write that sends characters to a UART—so printf works without an OS.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes implementing _write (or equivalent) to route stdio to hardware UART."
+    },
+    {
+     "id": "app3",
+     "point": "Stack typically grows downward from high RAM while .data/.bss sit low; deep recursion or huge locals can silently overwrite globals (stack overflow).",
+     "weight": "core",
+     "evidence_hint": "Candidate describes opposing growth directions and silent corruption of globals on collision."
+    },
+    {
+     "id": "app4",
+     "point": "A soft reset that jumps to main without re-running crt0 leaves .data/.bss stale; the same risk appears with bad bootloader handoff or waking from deep sleep that powered down RAM.",
+     "weight": "extended",
+     "evidence_hint": "Candidate refuses to equate soft reset with full startup and names re-init after sleep/bootloader."
+    }
+   ],
+   "probes": [
+    "If a soft reset jumps straight to main, what happens to your globals—and how do you prevent stack/.bss collision on a small MCU?"
+   ],
+   "hints": {
+    "1": "Soft reset is not the same as power-on unless the Reset Handler runs again.",
+    "2": "Trace: skip crt0 → no .data copy / .bss zero; separately, stack descending into globals.",
+    "3": "Jumping to main without crt0 keeps stale .data/.bss; prefer static allocation and bounded stacks so requirements are compile-time proven."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "const (.rodata in Flash) vs initialized globals (.data in Flash and RAM)",
+   "strong_answer": "const keeps data only in Flash and saves RAM; initialized non-const globals store a Flash template and a live RAM copy, so they consume both."
+  },
+  {
+   "topic": "Static allocation vs heap and deep stacks",
+   "strong_answer": "Prefer static allocation so Flash/RAM needs are known at link/compile time; heap growing up from .bss and deep/downward stacks invite runtime OOM and silent stack–global collisions."
+  },
+  {
+   "topic": "Retargeted printf (_write to UART) vs linking printf without retargeting",
+   "strong_answer": "Retargeting routes characters through a small UART hook; without it, generic I/O handlers can exhaust the MCU memory budget—audit with a .map file."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming a software soft reset automatically reinitializes globals.",
+   "correction": "If the soft reset jumps to main without re-running crt0, .data and .bss keep stale values."
+  },
+  {
+   "trap": "Custom bootloader handoff or deep-sleep wake that skips the Flash→RAM copy / .bss zero.",
+   "correction": "Re-execute the initialization path after handoff or when RAM was powered down."
+  },
+  {
+   "trap": "Code or data growing past MEMORY LENGTH in the linker script.",
+   "correction": "The link fails with a region overflowed error; shrink usage or fix LENGTH/layout."
+  },
+  {
+   "trap": "Huge locals or deep recursion on a bare-metal stack.",
+   "correction": "The downward-growing stack can overwrite .data/.bss; prefer static allocation and bounded stack depth."
+  },
+  {
+   "trap": "Calling printf on bare metal without retargeting the C library.",
+   "correction": "Implement _write (or equivalent) to a UART, or avoid heavy stdio; otherwise link size can explode."
+  }
+ ]
+}

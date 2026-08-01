@@ -1,0 +1,193 @@
+{
+ "id": "cpp_s33_nested_classes",
+ "title": "Nested and Local Classes",
+ "type": "FUND",
+ "relevance": "Tests whether candidates understand C++ nested/local classes as scoping and encapsulation tools, including the no-implicit-outer-instance rule versus Java and the access and local-class restrictions that trip people up in OAs and interviews.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what nested and local classes are and why they exist for scoping and encapsulation.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A nested class is a class declared inside another class; it is a member of the enclosing class for scoping and obeys public/private/protected access control.",
+     "weight": "core",
+     "evidence_hint": "Candidate says nested class lives in the outer class scope and is subject to the same access rules as other members."
+    },
+    {
+     "id": "fund2",
+     "point": "Typical use is hiding a tightly coupled helper type (e.g. a list node or container iterator) so it does not pollute the global namespace.",
+     "weight": "core",
+     "evidence_hint": "Mentions Node-in-LinkedList or Iterator-in-container style helpers kept out of the global namespace."
+    },
+    {
+     "id": "fund3",
+     "point": "A public nested class is used from outside via Outer::Inner with the scope resolution operator.",
+     "weight": "extended",
+     "evidence_hint": "Gives Outer::Inner / Container::Iterator qualification as the way external code names the type."
+    },
+    {
+     "id": "fund4",
+     "point": "A local class is defined entirely inside a function body and is visible only in that function block.",
+     "weight": "core",
+     "evidence_hint": "Describes a class declared inside a function and usable only there, for tiny throwaway objects."
+    }
+   ],
+   "probes": [
+    "What is a nested class in C++, and how does a local class differ?",
+    "When would you nest a helper type like a node or iterator inside a container class?"
+   ],
+   "hints": {
+    "1": "Think about where the class name is visible and what problem nesting solves.",
+    "2": "Contrast a class declared inside another class with one declared inside a function.",
+    "3": "Nested class: member of outer for scoping/access; local class: only inside that function; both mainly for encapsulation/scoping."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Pin down instance relationship, access rights, out-of-class definition, and local-class restrictions.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Unlike Java inner classes, a C++ nested class has no implicit outer instance; it is an entirely separate object type with no automatic this to the enclosing object.",
+     "weight": "core",
+     "evidence_hint": "Explicitly contrasts with Java and says there is no implicit link or outer this."
+    },
+    {
+     "id": "mech2",
+     "point": "A nested class does not get special access to the outer class's non-static members; to use outer object state you must explicitly pass a pointer or reference to the outer object.",
+     "weight": "core",
+     "evidence_hint": "Says you pass Outer* or Outer& yourself; no automatic outer instance access."
+    },
+    {
+     "id": "mech3",
+     "point": "You can forward-declare a nested class inside the outer class and define its body later outside using Outer::Inner syntax.",
+     "weight": "extended",
+     "evidence_hint": "Describes forward declare inside, then class Outer::Inner { ... }; outside."
+    },
+    {
+     "id": "mech4",
+     "point": "As a member, a nested class has access rights to the outer class's private members (e.g. private statics or typedefs), but still cannot read an outer object's private non-static data without an explicit outer object reference.",
+     "weight": "core",
+     "evidence_hint": "Splits language access rights from instance: can touch private statics/typedefs; needs an outer object to touch non-static private data."
+    },
+    {
+     "id": "mech5",
+     "point": "Local classes cannot access non-static local variables of the enclosing function, cannot have static data members, and have limited linkage.",
+     "weight": "extended",
+     "evidence_hint": "Lists those three restrictions on local classes."
+    }
+   ],
+   "probes": [
+    "Does a C++ nested class have an implicit pointer to an instance of the outer class?",
+    "Can a nested class access the outer class's private members? Can a local class capture locals?"
+   ],
+   "hints": {
+    "1": "Compare C++ nested classes to Java inner classes on the outer-instance link.",
+    "2": "Separate type-level membership/access rights from needing an outer object instance.",
+    "3": "No implicit outer instance—pass Outer*/&; member access rights yes for privates like statics/typedefs, but non-static instance data needs an explicit outer reference; local classes cannot use non-static locals, have no static data members, limited linkage."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Cover when nesting helps, when it costs nothing, and why local classes lost to lambdas.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "A nested class is only a type declaration and does not increase sizeof of the outer class unless the outer class declares a data member of that nested type.",
+     "weight": "core",
+     "evidence_hint": "Says nesting itself is free; only a member of that type affects the outer object's footprint."
+    },
+    {
+     "id": "tr2",
+     "point": "Local classes are rarely used today because of their severe restrictions and because modern lambda expressions cover the tiny throwaway-object use case.",
+     "weight": "core",
+     "evidence_hint": "Links rarity to restrictions plus lambdas replacing the niche."
+    },
+    {
+     "id": "tr3",
+     "point": "Defining a nested class body outside the outer class (after a forward declaration) can keep the enclosing class definition cleaner.",
+     "weight": "extended",
+     "evidence_hint": "Mentions cleaner outer class by forward-declaring inside and defining Outer::Inner outside."
+    }
+   ],
+   "probes": [
+    "Do nested classes cost memory on the outer object?",
+    "Why are local classes uncommon in modern C++?"
+   ],
+   "hints": {
+    "1": "Ask whether nesting a type adds fields by itself.",
+    "2": "Type nested inside vs data member of that type; local class limits vs lambdas.",
+    "3": "No sizeof impact unless you store a nested-type member; local classes are restricted and largely replaced by lambdas; out-of-line Outer::Inner definition can tidy the outer class."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply nested/local classes to concrete container and function-local patterns from the material.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "In a LinkedList, a private nested Node with data/next keeps the node type hidden while the list holds a Node* head and constructs nodes inside methods like append.",
+     "weight": "core",
+     "evidence_hint": "Describes private nested Node used only by LinkedList internals."
+    },
+    {
+     "id": "app2",
+     "point": "A public nested Iterator (e.g. Container::Iterator) is the pattern for exposing a related type that clients must qualify with the outer name.",
+     "weight": "core",
+     "evidence_hint": "Names Container::Iterator or similar public nested helper clients instantiate with Outer::."
+    },
+    {
+     "id": "app3",
+     "point": "A local class inside a function (e.g. Processor inside processData) is appropriate only for a tiny type used solely in that function block.",
+     "weight": "extended",
+     "evidence_hint": "Gives a function-local class instantiated and used only inside that function."
+    }
+   ],
+   "probes": [
+    "Show how you would hide a list node type using a nested class.",
+    "How would a client create a public nested iterator type?"
+   ],
+   "hints": {
+    "1": "Pick a container helper that should not be a global type.",
+    "2": "Private nested Node vs public nested Iterator vs class inside a function.",
+    "3": "private class Node inside LinkedList; client uses Container::Iterator; local Processor only inside processData."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Nested type declaration vs nested-type data member",
+   "strong_answer": "Nesting only introduces a scoped type and does not grow the outer object's sizeof; sizeof grows only if the outer class actually declares a data member of that nested type."
+  },
+  {
+   "topic": "Local classes vs modern lambdas",
+   "strong_answer": "Local classes can make tiny throwaway types, but they cannot access non-static locals, cannot have static data members, and have limited linkage—so lambdas largely replace them in practice."
+  },
+  {
+   "topic": "Define nested class inside vs outside the outer class",
+   "strong_answer": "You can keep a forward declaration inside the outer class and define Outer::Inner later outside for a cleaner enclosing class definition."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming a C++ nested class is like a Java inner class with an implicit outer instance.",
+   "correction": "A C++ nested class has no implicit outer instance and no automatic this to the enclosing object; pass an outer pointer or reference explicitly if needed."
+  },
+  {
+   "trap": "Thinking nested classes always increase the outer class's memory footprint.",
+   "correction": "A nested class is a type declaration only; it does not affect sizeof of the outer class unless the outer class declares a data member of that nested type."
+  },
+  {
+   "trap": "Answering yes or no flatly to whether a nested class can access the outer's privates.",
+   "correction": "As a member it has access rights to outer privates (e.g. private statics or typedefs), but without an outer object reference it still cannot read that object's private non-static data."
+  },
+  {
+   "trap": "Expecting a local class to use the enclosing function's non-static local variables or to have static data members.",
+   "correction": "Local classes cannot access non-static locals of the enclosing function, cannot have static data members, and have limited linkage."
+  }
+ ]
+}

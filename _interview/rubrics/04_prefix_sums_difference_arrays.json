@@ -1,0 +1,212 @@
+{
+ "id": "04_prefix_sums_difference_arrays",
+ "title": "Prefix sums, 2D prefix sums & difference arrays",
+ "type": "CP",
+ "relevance": "High — static range sums, subarray-sum counting, and range updates are among the most common OA / interview array patterns; CF Div2 B–C reuse the same templates constantly.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Immutable many range-sum queries (LC 303 / CSES Static Range Sum); range increments then report the array (LC 1109 / Car Pooling-style difference); count subarrays with sum K or sum divisible by K (LC 560 / CSES Subarray Sums II & Divisibility, Amazon/Google-style); any submatrix/block sum (LC 304 / CSES Forest Queries).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Establish when the candidate reaches for 1D/2D prefix sums, difference arrays, or prefix+hash instead of naive loops or a tree.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Immutable array with many range-sum queries → precompute 1D prefix sums (NumArray / static range sum).",
+     "weight": "core",
+     "evidence_hint": "Names LC 303 / CSES Static Range Sum or says build prefixes so each query is a two-prefix difference."
+    },
+    {
+     "id": "rec2",
+     "point": "Many range updates then one (or few) reads of the final array → difference array, not per-update loops.",
+     "weight": "core",
+     "evidence_hint": "Mentions mark +v/−v on endpoints (bookings, seats, timeline capacity) then one prefix rebuild."
+    },
+    {
+     "id": "rec3",
+     "point": "Count subarrays with sum K or sum divisible by m → prefix values hashed (or prefix mod m), not O(n²) enumeration.",
+     "weight": "core",
+     "evidence_hint": "Points to LC 560 / CSES Subarray Sums II or Divisibility and map of prefixes / remainders."
+    },
+    {
+     "id": "rec4",
+     "point": "Sum of any submatrix/block on a static grid → 2D prefix with rectangle inclusion–exclusion.",
+     "weight": "extended",
+     "evidence_hint": "Names LC 304 / Forest Queries or says integral image / 2D prefix for rectangle queries."
+    }
+   ],
+   "probes": [
+    "You get an immutable array and many sum(l..r) queries—what do you precompute, and when would you instead use a difference array?",
+    "How do you recognize a 'count subarrays with property X on sums' problem versus a plain range-sum API?"
+   ],
+   "hints": {
+    "1": "Think about whether the array is static with range reads, or you batch range writes first.",
+    "2": "Static many queries → prefix; many range updates then read → diff; subarray count by sum/mod → prefix map.",
+    "3": "Say: sum(l..r)=pref[r]−pref[l−1]; updates via diff[l]+=v, diff[r+1]−=v; subarray K via map of prefixes."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Get the candidate to state the 1D, difference, 2D, and prefix-hash templates before coding details.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Contiguous range sum is a constant-time difference of two prefixes: sum(l..r)=pref[r]−pref[l−1].",
+     "weight": "core",
+     "evidence_hint": "Writes that identity and mentions consistent 0- or 1-indexing with an empty-prefix sentinel."
+    },
+    {
+     "id": "appr2",
+     "point": "Difference array: mark +v at l and −v at r+1; one prefix of diff applies many range updates.",
+     "weight": "core",
+     "evidence_hint": "Describes endpoint marks then rebuild; may cite Water Heater / Corporate Flight Bookings."
+    },
+    {
+     "id": "appr3",
+     "point": "2D: build with inclusion–exclusion on cells; query a rectangle with +/−/+ inclusion–exclusion on four corners.",
+     "weight": "core",
+     "evidence_hint": "States P[i][j]=a[i][j]+P[i−1][j]+P[i][j−1]−P[i−1][j−1] and the matching rectangle query signs."
+    },
+    {
+     "id": "appr4",
+     "point": "Same-remainder prefixes (pref % m, negatives normalized) mean a divisible subarray; subarray sum K uses frequencies of prior prefixes.",
+     "weight": "extended",
+     "evidence_hint": "Links same mod ⇒ divisible block and counting via map lookups of pref−K."
+    }
+   ],
+   "probes": [
+    "State the 1D range-sum identity and the difference-array update rule.",
+    "How do you extend the idea to rectangle sums and to counting subarrays with sum K?"
+   ],
+   "hints": {
+    "1": "Range sum is two prefixes; range add is two endpoint marks.",
+    "2": "Spell sum(l..r)=pref[r]−pref[l−1] and diff[l]+=v, diff[r+1]−=v, then prefix(diff).",
+    "3": "Add 2D P build/query inclusion–exclusion and 'hash prefixes / pref%m' for counting variants."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Check they can write the concrete builds, query order for hash maps, and 2D formulas without off-by-one handwaving.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Build 1D with pref[0]=0 and pref[i]=pref[i−1]+a[i]; answer ranges as pref[r]−pref[l−1] with consistent indexing.",
+     "weight": "core",
+     "evidence_hint": "Shows the sentinel zero prefix and the subtraction formula in code-shaped steps."
+    },
+    {
+     "id": "impl2",
+     "point": "Difference: diff[l]+=v, diff[r+1]−=v; final array is the prefix of diff (use long long on CF).",
+     "weight": "core",
+     "evidence_hint": "Mentions r+1 mark, clamp/bounds care, and long long for contest overflow."
+    },
+    {
+     "id": "impl3",
+     "point": "Subarray sum = K: frequency map of prefixes; init {0:1}; query pref−K before inserting the current pref.",
+     "weight": "core",
+     "evidence_hint": "Explicitly says look up pref−K first, then insert; starts with empty-prefix count 1."
+    },
+    {
+     "id": "impl4",
+     "point": "2D build P[i][j]=a[i][j]+P[i−1][j]+P[i][j−1]−P[i−1][j−1]; rectangle query uses the matching inclusion–exclusion.",
+     "weight": "extended",
+     "evidence_hint": "Recites the four-term build and four-corner query pattern."
+    }
+   ],
+   "probes": [
+    "Walk through building pref with pref[0]=0 and answering one sum(l..r).",
+    "For subarray sum K, in what order do you query and update the prefix frequency map?"
+   ],
+   "hints": {
+    "1": "Start from the empty prefix and the two-line update for a range add.",
+    "2": "Write pref[0]=0; for K, map starts {0:1} and checks pref−K before insert.",
+    "3": "Also state diff[l]+=v / diff[r+1]−=v and the full 2D P recurrence."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Confirm they know prefix/diff give constant-time range answers after a linear-style precompute, and when that stops being enough.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "After prefix precompute, any contiguous range sum is O(1) (constant-time difference of two prefixes).",
+     "weight": "core",
+     "evidence_hint": "Says each query is pref[r]−pref[l−1] in O(1), matching Range Sum Query Immutable / CSES static sums."
+    },
+    {
+     "id": "cx2",
+     "point": "Difference array applies many range updates via endpoint marks then one prefix rebuild; interleaved updates+queries need Fenwick/segment tree instead.",
+     "weight": "core",
+     "evidence_hint": "Contrasts batch updates→diff vs online interleaved updates→tree (next topic)."
+    }
+   ],
+   "probes": [
+    "After you build the prefix array, what is the per-query cost for sum(l..r)?",
+    "When do you abandon difference/prefix for a Fenwick or segment tree?"
+   ],
+   "hints": {
+    "1": "Focus on query cost once prefixes exist, and on update/query interleaving.",
+    "2": "O(1) per static range sum; many updates then one read stays with diff+one prefix.",
+    "3": "Static many queries → prefix O(1); batch range adds → diff; interleaved updates → Fenwick/segment tree."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Surface off-by-one, overflow, mod normalization, and map-update order mistakes that break these templates.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Off-by-one discipline: inclusive bounds, r+1 clamp, empty-prefix sentinel, and overflow (long long on CF).",
+     "weight": "core",
+     "evidence_hint": "Calls out r+1 marking, sentinel pref[0]=0, and 64-bit sums on Codeforces."
+    },
+    {
+     "id": "pit2",
+     "point": "For subarray sum K, inserting pref before querying pref−K double-counts or misses; for divisibility, normalize negative pref%m.",
+     "weight": "core",
+     "evidence_hint": "States query-before-insert and positive remainder normalization for mods."
+    },
+    {
+     "id": "pit3",
+     "point": "Prefix/suffix aggregates are not only sums—products, GCD, XOR, or pattern counts need the same left/right combine idea without assuming + only.",
+     "weight": "extended",
+     "evidence_hint": "Mentions Product of Array Except Self, prefix/suffix GCD, or counting \"AC\" / peaks via specialized prefixes."
+    }
+   ],
+   "probes": [
+    "What off-by-one and overflow bugs do you watch for on difference arrays in contests?",
+    "What goes wrong if you update the prefix frequency map before looking up pref−K?"
+   ],
+   "hints": {
+    "1": "Think endpoints of inclusive ranges and empty prefix.",
+    "2": "r+1 must be in range or clamped; always long long on CF; map lookup before insert.",
+    "3": "List: inclusive bounds, r+1 clamp, pref[0]=0, overflow, query pref−K before insert, normalize negative mods."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Prefix sums vs difference arrays vs Fenwick/segment tree",
+   "strong_answer": "Many range queries on static data → prefix sums; many range updates then one read → difference array; interleaved updates and queries → Fenwick or segment tree (next topic)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Off-by-one on inclusive ranges when marking difference updates or subtracting prefixes.",
+   "correction": "Keep indexing consistent; use empty-prefix sentinel pref[0]=0; for updates mark +v at l and −v at r+1 with clamp."
+  },
+  {
+   "trap": "Overflow on CF when summing or applying many range adds.",
+   "correction": "Use long long for difference arrays and prefix sums under contest constraints."
+  },
+  {
+   "trap": "Updating the prefix frequency map before querying pref−K when counting subarrays with sum K.",
+   "correction": "Init map with {0:1}; query count of pref−K first, then insert the current pref."
+  },
+  {
+   "trap": "Using raw negative values for pref % m in divisibility problems.",
+   "correction": "Hash normalized pref % m so same remainder correctly means a divisible block."
+  }
+ ]
+}

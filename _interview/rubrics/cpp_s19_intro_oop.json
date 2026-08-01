@@ -1,0 +1,156 @@
+{
+ "id": "cpp_s19_intro_oop",
+ "title": "Introduction to Object-Oriented Programming",
+ "type": "FUND",
+ "relevance": "OOP becomes essential as systems grow large and complex, and encapsulation is frequently tested conceptually in SDE interviews.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what OOP is and how classes and objects differ from a procedural organisation of code.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "In a procedural style, a program is organised as a flat collection of functions operating on passive, shared data.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes functions acting on shared passive data rather than units that own both state and behaviour."
+    },
+    {
+     "id": "fund2",
+     "point": "A class is a user-defined type that acts as a blueprint grouping data and functions together; an object is a concrete instance of that class created in memory.",
+     "weight": "core",
+     "evidence_hint": "Candidate clearly separates the blueprint/type (class) from the in-memory instance (object)."
+    },
+    {
+     "id": "fund3",
+     "point": "A class does not occupy memory itself beyond the compiler's internal tracking; the object is the actual entity you create and manipulate.",
+     "weight": "extended",
+     "evidence_hint": "Uses the house-blueprint analogy or states the class itself is not the runtime entity being manipulated."
+    }
+   ],
+   "probes": [
+    "What is the difference between a class and an object, and how does that differ from organising code as procedural functions on shared data?"
+   ],
+   "hints": {
+    "1": "Think about blueprints versus the things you actually create and use.",
+    "2": "Contrast a flat list of functions on shared data with a user-defined type that groups data and functions.",
+    "3": "A class is the blueprint (no real occupied memory beyond compiler tracking); an object is the concrete instance. Procedural style keeps functions separate from passive shared data."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how OOP bundles related data with behaviour and controls access, including basic C++ instantiation.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Object-oriented programming groups related data together with the functions that act upon it into self-contained units.",
+     "weight": "core",
+     "evidence_hint": "Mentions bundling data members with member functions inside a class as one unit."
+    },
+    {
+     "id": "mech2",
+     "point": "Encapsulation bundles data and the functions that operate on it into a class and controls access, enabling data hiding that prevents external code from bypassing validation or putting the object into an invalid state.",
+     "weight": "core",
+     "evidence_hint": "Explains private state behind a public interface, such as deposit updating vaultCash or setDimensions rejecting invalid dimensions."
+    },
+    {
+     "id": "mech3",
+     "point": "In C++, an object declaration like Account acc; instantiates the object on the stack; new is used only for heap allocation, unlike Python's acc = Account().",
+     "weight": "extended",
+     "evidence_hint": "Contrasts C++ stack declaration with Python call-style construction, and notes when new is needed."
+    }
+   ],
+   "probes": [
+    "How does a C++ class keep related data and behaviour together, and how do you create an object without heap allocation?"
+   ],
+   "hints": {
+    "1": "Look at where state lives relative to the methods that change it, and how the object is declared.",
+    "2": "Private members hide state; public methods are the interface; a plain declaration uses the stack.",
+    "3": "class Account { private: balance; public: deposit(...); }; then Account acc; creates a stack object and routes changes through the public interface."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Explain why procedural organisation becomes fragile as systems grow and how OOP addresses that scaling problem.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "As a procedural system grows, functions and data become disconnected and any function might modify any piece of data, making the system difficult to reason about and fragile to change.",
+     "weight": "core",
+     "evidence_hint": "Names unrestricted shared-data mutation, hard reasoning, or fragility at larger scale."
+    },
+    {
+     "id": "tr2",
+     "point": "OOP lets a large system be decomposed into cooperating parts, each an independent unit with its own responsibilities and internal workings.",
+     "weight": "core",
+     "evidence_hint": "Describes decomposition into independent cooperating units with clear responsibilities, such as the departments analogy."
+    }
+   ],
+   "probes": [
+    "When does procedural style of functions on shared data start to hurt, and how does OOP help?"
+   ],
+   "hints": {
+    "1": "Consider what happens when many functions can touch the same data as the codebase grows.",
+    "2": "Compare unrestricted shared-data mutation with units that own their responsibilities and internals.",
+    "3": "Procedural style works for small programs but becomes fragile as functions and data disconnect; OOP decomposes the system into cooperating self-contained units."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the four pillars briefly and recognise them in simple class designs.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Abstraction exposes only essential features while hiding complex background details, as with CoffeeMachine's public brewEspresso and private grindBeans and heatWater.",
+     "weight": "core",
+     "evidence_hint": "Gives a simple public interface versus hidden implementation details."
+    },
+    {
+     "id": "app2",
+     "point": "Inheritance derives a new class from an existing one so shared structure and behaviour are written once and reused, as with Dog inheriting from Animal and adding bark.",
+     "weight": "core",
+     "evidence_hint": "Mentions base/derived reuse of shared behaviour plus added specifics."
+    },
+    {
+     "id": "app3",
+     "point": "Polymorphism allows treating objects of different types through the same interface so the same operation behaves appropriately for each type, as with Shape and Circle/Square draw overrides.",
+     "weight": "core",
+     "evidence_hint": "Describes one shared interface with type-specific behaviour (many forms)."
+    },
+    {
+     "id": "app4",
+     "point": "In the Rectangle example, setDimensions(10, 5) then getArea outputs 50, and setDimensions only updates when length and breadth are non-negative.",
+     "weight": "extended",
+     "evidence_hint": "Walks through setting dimensions to 10 and 5, getting area 50, and notes validation on the setter."
+    }
+   ],
+   "probes": [
+    "Name the four pillars of OOP and give a short example of each in a simple class design.",
+    "If a Rectangle has setDimensions(10, 5), what does getArea return, and why might setDimensions reject some inputs?"
+   ],
+   "hints": {
+    "1": "Think about bundling and hiding, simplifying interfaces, reusing a base type, and one interface with many behaviours.",
+    "2": "Map encapsulation/data hiding, abstraction, inheritance, and polymorphism to Bank, CoffeeMachine, Animal/Dog, and Shape/Circle/Square.",
+    "3": "Encapsulation bundles and controls access; abstraction exposes brewEspresso while hiding grindBeans/heatWater; Dog inherits Animal; Circle/Square override Shape::draw; Rectangle setDimensions(10, 5) yields getArea 50 when dimensions are non-negative."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Procedural style vs object-oriented style",
+   "strong_answer": "Procedural style organises a flat collection of functions on passive shared data and is workable for small programs, but as the system grows functions and data become disconnected and any function might modify any data, making change fragile. OOP groups related data with the functions that act on it into self-contained cooperating units so a large system can be decomposed into manageable parts with clear responsibilities."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating encapsulation and data hiding as the same concept.",
+   "correction": "Encapsulation is the mechanism of bundling data and methods; data hiding is the security benefit achieved by using access modifiers (private/public) within that bundle."
+  },
+  {
+   "trap": "Assuming C++ needs new or Python-style Account() call syntax to create an ordinary object.",
+   "correction": "In C++, Account acc; instantiates the object directly on the stack; new is used only when you specifically want heap allocation. In Python you instantiate with acc = Account()."
+  }
+ ]
+}

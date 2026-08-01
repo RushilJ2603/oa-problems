@@ -1,0 +1,161 @@
+{
+ "id": "cpp_s25_this_struct_vs_class",
+ "title": "The this pointer and struct versus class",
+ "type": "FUND",
+ "relevance": "Interviewers check whether candidates understand how non-static member functions bind to an object and the real technical gap between struct and class.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what this is and that struct and class are nearly the same language feature.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Every non-static member function receives a hidden pointer this holding the address of the object the function was called on.",
+     "weight": "core",
+     "evidence_hint": "Candidate says this is the current object's address, passed only to non-static members."
+    },
+    {
+     "id": "fund2",
+     "point": "A struct is functionally almost identical to a class and may have member functions, constructors, and access specifiers.",
+     "weight": "core",
+     "evidence_hint": "Candidate rejects the idea that struct is only passive data with no methods."
+    },
+    {
+     "id": "fund3",
+     "point": "In C++ the object's address is passed implicitly and accessed via this; in Python the current object is an explicit first parameter (conventionally self).",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts C++ hidden this with Python's explicit self."
+    }
+   ],
+   "probes": [
+    "What is the this pointer, and which kinds of member functions receive it?",
+    "Can a struct have member functions and constructors, or is it only for data?"
+   ],
+   "hints": {
+    "1": "Think about how a member function knows which object's data to use.",
+    "2": "Compare non-static members to how Python instance methods receive the object.",
+    "3": "Non-static members get a hidden this; struct and class both support functions, constructors, and access specifiers."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how this is typed and used, and state the exact default differences between struct and class.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "The compiler automatically passes the object's address as an implicit parameter; inside non-static members of Rectangle, this has type Rectangle* const—a constant pointer you cannot reseat, though you can modify the object.",
+     "weight": "core",
+     "evidence_hint": "Candidate names the const-pointer nature: cannot change where this points, can mutate the pointee."
+    },
+    {
+     "id": "mech2",
+     "point": "When a parameter shadows a data member, this->member names the member and the bare name is the parameter.",
+     "weight": "core",
+     "evidence_hint": "Candidate walks through this->length = length in a constructor with matching parameter names."
+    },
+    {
+     "id": "mech3",
+     "point": "Method chaining works by returning a reference to the current object: dereference this as *this and return ClassType&.",
+     "weight": "core",
+     "evidence_hint": "Candidate says return *this from a setter typed as ClassType& so calls like setBold().setItalic() work."
+    },
+    {
+     "id": "mech4",
+     "point": "Exactly two technical differences: struct defaults members and inheritance to public; class defaults both to private.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists both default member access and default inheritance access, nothing else as a language rule."
+    }
+   ],
+   "probes": [
+    "What is the type of this inside Rectangle's non-static members, and what does the const mean?",
+    "How do you write a setter that supports obj.setA().setB()?",
+    "What are the exact technical differences between struct and class?"
+   ],
+   "hints": {
+    "1": "Ask what the compiler injects on a call like rect.area().",
+    "2": "Cover this's type, name shadowing with this->, return *this for chaining, then default access and default inheritance.",
+    "3": "this is Rectangle* const; use this-> to hit members; return *this as ClassType&; struct public defaults vs class private defaults for members and inheritance."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose struct versus class by convention when both are technically almost identical.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer struct for passive data aggregates where members are logically public and there are no complex internal invariants.",
+     "weight": "core",
+     "evidence_hint": "Candidate ties struct to public aggregate data without heavy encapsulation needs."
+    },
+    {
+     "id": "tr2",
+     "point": "Prefer class when encapsulation, data hiding, and maintaining state consistency are the point.",
+     "weight": "core",
+     "evidence_hint": "Candidate ties class to hidden state and invariants rather than keyword magic."
+    }
+   ],
+   "probes": [
+    "If struct and class are almost the same, when would you pick each in real code?"
+   ],
+   "hints": {
+    "1": "The file says usage difference is mainly convention.",
+    "2": "Separate passive public aggregates from types that must protect invariants.",
+    "3": "struct for public passive aggregates; class when encapsulation and state consistency matter."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply this to fluent setters and recognize where that pattern shows up.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Fluent/chained setters return ClassType& and end with return *this.",
+     "weight": "core",
+     "evidence_hint": "Candidate can sketch setBold/setItalic style methods returning *this by reference."
+    },
+    {
+     "id": "app2",
+     "point": "Method chaining is a common pattern for fluent interfaces and the Builder design pattern.",
+     "weight": "extended",
+     "evidence_hint": "Candidate names fluent interfaces or Builder as places this return-*this pattern appears."
+    }
+   ],
+   "probes": [
+    "Write or describe a pair of setters that allow formatter.setBold().setItalic().",
+    "Where do interviewers typically expect return *this style APIs?"
+   ],
+   "hints": {
+    "1": "Chaining needs each call to hand back the same object.",
+    "2": "Return type must be a reference to the class, not void or a copy by accident.",
+    "3": "Signature like TextFormatter& setBold() { ...; return *this; } for fluent/Builder style APIs."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "struct vs class",
+   "strong_answer": "Technically almost identical aside from default member and inheritance access; by convention use struct for passive public data aggregates with no complex invariants, and class when encapsulation, data hiding, and state consistency are the goal."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating struct as unable to have functions, constructors, or access specifiers.",
+   "correction": "A struct may have member functions, constructors, and access specifiers; it is functionally almost identical to a class."
+  },
+  {
+   "trap": "Thinking this can be reseated to point at another object.",
+   "correction": "this is a constant pointer (e.g. Rectangle* const): you cannot change where it points, but you can modify the object it points to."
+  },
+  {
+   "trap": "Implementing chaining setters that return void or return a copy instead of a reference to the current object.",
+   "correction": "Return ClassType& and end with return *this so the next call operates on the same object."
+  },
+  {
+   "trap": "Listing many language differences between struct and class beyond defaults.",
+   "correction": "There are exactly two technical differences: default member access and default inheritance access (public for struct, private for class)."
+  }
+ ]
+}

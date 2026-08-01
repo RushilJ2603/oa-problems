@@ -1,0 +1,240 @@
+{
+ "id": "08_bit_manipulation",
+ "title": "Bit Manipulation & Bitmask Tricks",
+ "type": "CP",
+ "relevance": "High (XOR / popcount / subset masks show up constantly in OAs; bitmask DP is the CM stretch)",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "XOR uniqueness (every element twice except one, or thrice / two singles) — FAANG phone-screen Single Number family. Subset/flag masks with n ≤ 15–20 on/off choices (lock dials, team splits, knapsack-like partition) → 2^n bitmasks, often unnamed. Bitwise score / maximize AND-OR: flip at most k bits or OR values to maximize AND / minimize XOR — Amazon / Google OA style. Hidden bit DP: assignment / elevator / TSP-on-n≤20 — interviewers call it DP; encoding is a bitmask over used people/nodes.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Establish when the candidate reaches for bit primitives, XOR uniqueness, 2^n masks, or bitmask DP instead of naive loops.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Statement cues: \"bitwise\", small n, \"differ in at most k bits\", powers of two, or \"minimum / maximum AND/OR/XOR\".",
+     "weight": "core",
+     "evidence_hint": "Names those wording/constraint signals as the trigger to think in bits."
+    },
+    {
+     "id": "rec2",
+     "point": "\"Every element appears twice except one\" (or thrice / two singles) → XOR uniqueness / Single Number family.",
+     "weight": "core",
+     "evidence_hint": "Maps the pair-cancel story to XOR and may cite Single Number / Single Number III."
+    },
+    {
+     "id": "rec3",
+     "point": "n ≤ 15–20 items with on/off choices (lock dials, team splits, partition) → enumerate 2^n bitmasks, even if the statement never says \"bitmask\".",
+     "weight": "core",
+     "evidence_hint": "Points at Petr lock / Apple Division / Subsets-style mask search under n ≤ 15 or n ≤ 20."
+    },
+    {
+     "id": "rec4",
+     "point": "Assignment / elevator / TSP-on-n≤20 graphs: state is the set of used people/nodes; interviewers say DP, the encoding is a bitmask.",
+     "weight": "extended",
+     "evidence_hint": "Names Elevator Rides / Matching / hidden bit DP as mask-encoded used-set DP."
+    }
+   ],
+   "probes": [
+    "What in the statement makes you reach for XOR cancel, popcount, or a 2^n mask instead of nested loops?",
+    "When do you treat an interview \"DP\" problem as a bitmask over a used set?"
+   ],
+   "hints": {
+    "1": "Look for bitwise wording, powers of two, Hamming-like \"differ in bits\", or tiny n with yes/no choices.",
+    "2": "Pair-cancel uniqueness → XOR; n ≤ 15–20 on/off → 2^n; used people/nodes ≤20 → mask DP.",
+    "3": "Say: Single Number XOR; Fedor-style Hamming via XOR+popcount; Petr/Apple/Subsets 2^n; Elevator/Matching bitmask DP."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Get the candidate to state bit-set ops, XOR/prefix-XOR identities, mask enumeration, and the bitmask DP template before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Treat integers as sets of bits: AND / OR / XOR + shifts give O(1) set ops; n & (n-1) clears the lowest set bit; n & -n isolates it.",
+     "weight": "core",
+     "evidence_hint": "States clear-lowest vs isolate-lowest and O(1) set-style bit ops."
+    },
+    {
+     "id": "appr2",
+     "point": "XOR cancels pairs (x⊕x=0, x⊕0=x); subarray XOR via prefix identity a[l..r] = pref[r] ⊕ pref[l-1]; find the one (or two) unique element(s).",
+     "weight": "core",
+     "evidence_hint": "Writes the prefix-XOR identity and the pair-cancel uniqueness approach."
+    },
+    {
+     "id": "appr3",
+     "point": "When n ≤ 20, encode subsets as masks and enumerate 2^n (or 3^n submasks).",
+     "weight": "core",
+     "evidence_hint": "Says mask = subset of {0..n-1}, loop 0..2^n-1, or submask iteration for 3^n."
+    },
+    {
+     "id": "appr4",
+     "point": "Bitmask DP template: dp[mask], transition by adding one element or merging a submask; Elevator / Matching style states.",
+     "weight": "extended",
+     "evidence_hint": "Describes dp[mask] with add-one or submask merges and cites Elevator or Matching."
+    }
+   ],
+   "probes": [
+    "State the clear-lowest and isolate-lowest bit tricks, and the prefix-XOR range identity.",
+    "When n ≤ 20, how do you encode subsets, and when do you move from plain 2^n search to dp[mask]?"
+   ],
+   "hints": {
+    "1": "Separate bit primitives, XOR identities, and mask search/DP.",
+    "2": "Clear with n&(n-1); isolate with n&-n; range XOR from two prefixes; masks when n ≤ 20.",
+    "3": "Say: O(1) AND/OR/XOR/shifts; clear/isolate lowest; a[l..r]=pref[r]⊕pref[l-1]; 2^n / 3^n; dp[mask] Elevator/Matching."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Confirm the candidate can write popcount/power-of-two checks, bit primitives, mask/submask loops, and core DP/trie templates from memory.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Popcount via Brian Kernighan n &= n-1; power-of-two test n & (n-1) == 0; Counting Bits recurrence dp[i] = dp[i>>1] + (i&1).",
+     "weight": "core",
+     "evidence_hint": "Writes n&=n-1 for popcount, the power-of-two check, and the right-shift DP recurrence."
+    },
+    {
+     "id": "impl2",
+     "point": "Bit primitives: test / set / clear / toggle bit i; isolate lowest set bit (x & -x); clear it (x & (x-1)); popcount / ctz / clz (or builtins).",
+     "weight": "core",
+     "evidence_hint": "Lists those primitives and may mention __builtin_popcount / ctz / clz."
+    },
+    {
+     "id": "impl3",
+     "point": "Power set: for mask in 0..2^n-1 take set bits; Gray code with i ^ (i >> 1); submasks via for (sub = mask; sub; sub = (sub-1)&mask).",
+     "weight": "extended",
+     "evidence_hint": "Sketches the mask loop, Gray formula, and the (sub-1)&mask submask idiom."
+    },
+    {
+     "id": "impl4",
+     "point": "Elevator-style state dp[mask] = (rides, last weight); Hamming friends via __builtin_popcount(x^y) <= k; Single Number III partitions by lowest set bit.",
+     "weight": "extended",
+     "evidence_hint": "Mentions Elevator pair-state, Fedor popcount(x^y), or XOR-partition by lowest set bit for two singles."
+    }
+   ],
+   "probes": [
+    "Write popcount with n &= n-1 and the power-of-two check from memory.",
+    "How do you enumerate all subsets or all submasks of a mask, and what does Elevator store in dp[mask]?"
+   ],
+   "hints": {
+    "1": "Start from Kernighan clear-lowest and the power-of-two equality.",
+    "2": "Add isolate x&-x, mask 0..2^n-1, and the (sub-1)&mask loop.",
+    "3": "Say: n&=n-1 popcount; n&(n-1)==0; x&-x; Subsets/Gray/submask loops; Elevator (rides, last weight); popcount(x^y)."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State the cost of bit ops, 2^n / 3^n enumeration, SOS, and the XOR-trie regime.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "AND / OR / XOR + shifts give O(1) set ops on integers-as-bitsets.",
+     "weight": "core",
+     "evidence_hint": "Calls bit set ops constant-time per operation."
+    },
+    {
+     "id": "cx2",
+     "point": "Enumerate all subsets when n ≤ 20 in 2^n; iterate submasks in O(3^n).",
+     "weight": "core",
+     "evidence_hint": "States 2^n for subsets and O(3^n) for submask enumeration / Grouping-style DP."
+    },
+    {
+     "id": "cx3",
+     "point": "SOS / subset-zeta pushes along each bit dimension in O(2^B · B); XOR binary trie on 30–31 bits for max XOR pair / max XOR subarray.",
+     "weight": "extended",
+     "evidence_hint": "Names O(2^B · B) SOS and a 30–31-bit XOR trie for max pref[r]⊕pref[l-1]."
+    }
+   ],
+   "probes": [
+    "What are the costs of plain bit ops versus full subset or submask enumeration?",
+    "When do you quote O(2^B · B) SOS or a 30–31-bit XOR trie instead of 2^n search?"
+   ],
+   "hints": {
+    "1": "Separate O(1) primitives from exponential mask work.",
+    "2": "n ≤ 20 → 2^n; submasks → O(3^n); SOS and tries are the stretch costs.",
+    "3": "Say: O(1) AND/OR/XOR/shifts; 2^n subsets; O(3^n) submasks; SOS O(2^B · B); XOR trie on 30–31 bits."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Surface confuse-the-primitive, broken prefix XOR, and missed mask/Hamming signals that fail these problems.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Confusing isolate-lowest (x & -x) with clear-lowest (x & (x-1)) breaks popcount loops and Single Number III-style partitions.",
+     "weight": "core",
+     "evidence_hint": "Separates isolate vs clear and ties each to the right template."
+    },
+    {
+     "id": "pit2",
+     "point": "Computing subarray XOR without the prefix identity a[l..r] = pref[r] ⊕ pref[l-1].",
+     "weight": "core",
+     "evidence_hint": "States the two-prefix XOR form used in Range Xor Queries / max-XOR-subarray setups."
+    },
+    {
+     "id": "pit3",
+     "point": "Missing that Hamming distance is popcount of XOR (friends iff __builtin_popcount(x^y) <= k), or that AND never increases so AND-of-all can be optimal.",
+     "weight": "extended",
+     "evidence_hint": "Cites Fedor-style XOR+popcount and Mocha-style AND-never-increases."
+    },
+    {
+     "id": "pit4",
+     "point": "Treating n ≤ 15–20 on/off or used-set DP as generic search/DP without encoding the state as a bitmask.",
+     "weight": "extended",
+     "evidence_hint": "Says the interview DP is still a mask over chosen/used indices (Petr / Elevator / Matching)."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you mix up x & -x with x & (x-1)?",
+    "How do you get range XOR from prefixes, and how do you recognize Hamming-via-XOR?"
+   ],
+   "hints": {
+    "1": "Check which primitive you meant—isolate or clear—and how range XOR is built.",
+    "2": "Isolate = x&-x; clear = x&(x-1); range = pref[r]⊕pref[l-1]; Hamming = popcount(x^y).",
+    "3": "List: don't swap isolate/clear; use pref[r]⊕pref[l-1]; Fedor popcount(x^y); AND never increases; encode n≤15–20 used/choice sets as masks."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Clear lowest set bit (n & (n-1)) vs isolate it (n & -n)",
+   "strong_answer": "Use n & (n-1) to clear/walk set bits (popcount / Brian Kernighan); use n & -n to isolate the lowest set bit for partitions like Single Number III."
+  },
+  {
+   "topic": "Enumerate 2^n subsets vs iterate submasks in O(3^n)",
+   "strong_answer": "Plain subset / choice search uses masks over 0..2^n-1 when n ≤ 20; problems that merge or score every submask of every mask need the (sub-1)&mask loop / O(3^n) submask DP (Grouping)."
+  },
+  {
+   "topic": "Prefix XOR for range XOR vs XOR binary trie for max XOR subarray",
+   "strong_answer": "Static range XOR queries use pref[r] ⊕ pref[l-1]; maximizing that quantity over ranges uses a binary trie on 30–31 bits over prefixes."
+  },
+  {
+   "topic": "Plain 2^n complete search vs bitmask DP (Elevator / Matching)",
+   "strong_answer": "On/off enumeration or partition search can be raw 2^n; assignment / elevator / TSP-on-n≤20 needs dp[mask] transitions (add one element or merge a submask) rather than one-shot mask scoring."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Swapping isolate-lowest (x & -x) with clear-lowest (x & (x-1)).",
+   "correction": "x & -x isolates the lowest set bit; x & (x-1) clears it—popcount walks use clear; XOR-partition uses isolate."
+  },
+  {
+   "trap": "Computing subarray XOR without prefixes.",
+   "correction": "Use a[l..r] = pref[r] ⊕ pref[l-1] (Range Xor Queries / max-XOR-subarray setups)."
+  },
+  {
+   "trap": "Checking Hamming distance by comparing bits ad hoc instead of XOR+popcount.",
+   "correction": "Friends iff __builtin_popcount(x^y) <= k (Fedor and New Game)."
+  },
+  {
+   "trap": "Assuming AND of a subset can beat AND of all elements when AND never increases.",
+   "correction": "AND never increases; Mocha-style optima collapse to the AND of all a_i when that observation applies."
+  },
+  {
+   "trap": "Missing the n ≤ 15–20 on/off or used-set cue and not encoding the state as a bitmask.",
+   "correction": "Lock dials / team splits / partitions → 2^n masks; assignment / elevator / TSP-on-n≤20 → dp[mask] over the used set."
+  }
+ ]
+}

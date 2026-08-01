@@ -1,0 +1,159 @@
+{
+ "id": "c_s21_further_reading",
+ "title": "Further Reading & Open Questions",
+ "type": "FUND",
+ "relevance": "Interviewers probe whether you use primary references and tools for UB/memory bugs, understand pointer provenance, and can situate C against safer alternatives and growth paths.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the canonical books, standards, and primary references for deepening C without guessing.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "K&R is the foundational creators' text for historical context and dense prose, but it predates modern standards (C99/C11) and its code style is archaic.",
+     "weight": "core",
+     "evidence_hint": "Names K&R, notes historical value, and warns it is not a modern-standards style guide."
+    },
+    {
+     "id": "fund2",
+     "point": "Never guess function behavior or undefined behavior; use primary sources such as cppreference.com and the free C standard drafts (N1570 for C11, N3220 for C23).",
+     "weight": "core",
+     "evidence_hint": "Says consult cppreference and draft standards by those draft IDs rather than relying on memory."
+    },
+    {
+     "id": "fund3",
+     "point": "Match reading to trajectory: King for beginners through intermediate; van der Linden for interview-oriented deep secrets; Hanson for reusable opaque structures in large systems; Gustedt Modern C for C11 through C23; Bryant & O'Hallaron for systems; Elecia White plus FreeRTOS/Zephyr docs for embedded.",
+     "weight": "extended",
+     "evidence_hint": "Maps at least two books or docs to the right audience (beginner, interview, systems, or embedded)."
+    }
+   ],
+   "probes": [
+    "Which C references would you reach for to settle an undefined-behavior dispute, and why not just rely on K&R?"
+   ],
+   "hints": {
+    "1": "Think primary sources versus a historical textbook.",
+    "2": "Name the daily docs site and the free draft IDs for C11 and C23.",
+    "3": "cppreference plus N1570 (C11) / N3220 (C23); K&R predates C99/C11 and is archaic in style."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how you prove C programs correct and how modern compilers treat pointer provenance.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Beyond writing code, master debuggers (gdb/lldb: watchpoints, call stack, raw memory hex), Valgrind for leaks and uninitialized reads, sanitizers via -fsanitize=address,undefined, static analyzers (clang-tidy, cppcheck), and Compiler Explorer for assembly.",
+     "weight": "core",
+     "evidence_hint": "Lists several of: gdb/lldb, Valgrind, ASan/UBSan with that flag, static analyzers, godbolt."
+    },
+    {
+     "id": "mech2",
+     "point": "A pointer remembers where it came from (provenance): even if &a[4] numerically equals &b[0] for adjacent int a[4] and int b[4], writing through a pointer derived from a into b is undefined behavior.",
+     "weight": "core",
+     "evidence_hint": "Uses the hotel-key / adjacent-array idea: same address does not authorize crossing object boundaries."
+    },
+    {
+     "id": "mech3",
+     "point": "Compilers track provenance and assume pointers derived from different objects never alias; crossing object boundaries lets aggressive optimization break code because overlap was assumed impossible; the standard is still formalizing provenance to match that.",
+     "weight": "extended",
+     "evidence_hint": "Mentions non-aliasing assumptions and that violating provenance enables broken optimized code while the standard catches up."
+    }
+   ],
+   "probes": [
+    "Why can assigning through a pointer that numerically equals &b[0] still be undefined behavior if that pointer was derived from another array a?"
+   ],
+   "hints": {
+    "1": "Think about what a pointer is allowed to refer to, not only its numeric address.",
+    "2": "Use the a[4]/b[4] example and the idea that the pointer is tied to its original object.",
+    "3": "p = &a[4] may equal &b[0] layout-wise, but *p = 10 is UB because p's provenance is a, not b; compilers assume no aliasing across objects."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast software vs hardware memory-safety approaches and C's place versus Rust.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Safer-C efforts differ by layer: Fil-C is a compile-time software transform using invisible capabilities (fat pointers) for bounds without changing the application's memory layout; CHERI is hardware where the CPU enforces pointer bounds and permissions with near-zero overhead.",
+     "weight": "core",
+     "evidence_hint": "Contrasts Fil-C (software fat pointers / invisible capabilities) with CHERI (CPU-enforced capabilities, near-zero overhead)."
+    },
+    {
+     "id": "tr2",
+     "point": "Rust guarantees memory safety at compile-time and is entering the Linux kernel and system tooling, but C remains dominant for embedded systems, legacy codebases, and platforms without a Rust compiler; C is adapting (e.g. C23 ergonomics) rather than disappearing.",
+     "weight": "core",
+     "evidence_hint": "States Rust's compile-time safety and inroads, then where C still wins and that C evolves."
+    }
+   ],
+   "probes": [
+    "How would you contrast Fil-C and CHERI as responses to C's memory-safety liability?"
+   ],
+   "hints": {
+    "1": "One approach is software at compile time; the other is in the hardware.",
+    "2": "Mention fat pointers / invisible capabilities versus CPU-enforced bounds and permissions.",
+    "3": "Fil-C transforms code to fat-pointer capabilities without changing app layout; CHERI makes the CPU enforce bounds/permissions with near-zero overhead."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Show a concrete practice roadmap from foundations through a software or embedded track.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Progress by building: CLI utilities (cat/ls/grep) for file I/O and parsing; your own malloc/free with a free-list; then a leak-free generic library (dynamic array, linked list, hash table, BST).",
+     "weight": "core",
+     "evidence_hint": "Orders foundations → allocator → robust generic data structures with specific project examples."
+    },
+    {
+     "id": "app2",
+     "point": "Then specialize: software track builds a small VM or tree-walk interpreter and studies SQLite/Redis/musl; embedded track uses an ARM Cortex-M (e.g. STM32) through bare-metal blinky, UART driver, interrupt handler, then FreeRTOS with two concurrent tasks.",
+     "weight": "core",
+     "evidence_hint": "Describes either the interpreter/real-code path or the blinky→UART→IRQ→FreeRTOS progression."
+    }
+   ],
+   "probes": [
+    "If you had already finished basic C, what would you build next to move toward systems or embedded fluency?"
+   ],
+   "hints": {
+    "1": "Reading alone is not enough—name concrete projects.",
+    "2": "Start with CLI tools and a custom allocator, then pick a track.",
+    "3": "cat/ls/grep → free-list malloc/free → generic DS; then either a small interpreter plus studying SQLite/Redis/musl, or STM32 blinky → UART → IRQ → FreeRTOS two tasks."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Fil-C vs CHERI",
+   "strong_answer": "Fil-C is a software compile-time approach using invisible capabilities (fat pointers) to enforce bounds without changing the application's memory layout; CHERI is a hardware architectural approach where the CPU enforces pointer bounds and permissions natively with near-zero overhead."
+  },
+  {
+   "topic": "C vs Rust",
+   "strong_answer": "Rust gives compile-time memory safety and is making inroads into the Linux kernel and system tooling; C remains the king of embedded systems, legacy codebases, and platforms where a Rust compiler does not exist, and C is adapting (C23 features like constexpr, typeof, nullptr, built-in bool) rather than disappearing."
+  },
+  {
+   "topic": "Software systems track vs hardware/embedded track",
+   "strong_answer": "Systems track: write a small VM or tree-walk interpreter and study SQLite, Redis, or musl; embedded track: ARM Cortex-M (e.g. STM32) from bare-metal blinky and UART through interrupt handlers to FreeRTOS with concurrent tasks, guided by Elecia White and FreeRTOS/Zephyr docs."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating a pointer as only a numeric address so &a[4] can be used to write b[0] when the arrays are adjacent.",
+   "correction": "Pointers have provenance tied to the original object; even if p from &a[4] equals &b[0] numerically, *p = 10 is undefined behavior, and compilers may optimize as if such aliasing cannot happen."
+  },
+  {
+   "trap": "Guessing how a library function behaves or what counts as undefined behavior.",
+   "correction": "Consult primary sources: cppreference.com and the free standard drafts (N1570 for C11, N3220 for C23), and learn to read the standard's legalistic wording."
+  },
+  {
+   "trap": "Debugging complex state only with printf, or skipping memory tools.",
+   "correction": "Use gdb/lldb (watchpoints, stack, hex dumps), Valgrind, -fsanitize=address,undefined, and static analyzers; revisit Section 19 tooling if skipped."
+  },
+  {
+   "trap": "Learning modern C primarily from K&R as if it matched current practice.",
+   "correction": "K&R predates C99/C11 and is archaic in style; pair historical reading with modern texts (e.g. King, Gustedt) and current drafts."
+  }
+ ]
+}

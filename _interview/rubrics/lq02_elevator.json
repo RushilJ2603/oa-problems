@@ -1,0 +1,305 @@
+{
+ "id": "lq02_elevator",
+ "title": "Design an Elevator System",
+ "type": "LLD",
+ "relevance": "High — staple LLD / machine-coding question (campus + experienced); tests OOP modeling, Strategy/State, scheduling (LOOK/SCAN), and concurrency at Flipkart, Uber, Amazon, Google, Microsoft, Atlassian-style loops.",
+ "difficulty": "mid",
+ "prereqs": [
+  "L01",
+  "L02",
+  "L03"
+ ],
+ "company_notes": "Very common campus/machine-coding design+code round at Flipkart, Uber, Swiggy, Amazon new-grad, and Indian product cos (working LOOK + clean classes beat unfinished pattern zoos); experienced FAANG/Atlassian/Microsoft LLD probes concurrency, direction-aware stopping, and pluggable dispatch; among the top ~10 canonical LLD problems.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Clarify scope and lock functional/non-functional requirements plus scale assumptions before modeling.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Distinguish two request kinds: hall call as (floor, direction UP|DOWN) vs cabin call as destination floor only, with different stopping rules.",
+     "weight": "core",
+     "evidence_hint": "States hall calls need direction and that an UP car must not pick a DOWN hall call on the way."
+    },
+    {
+     "id": "req2",
+     "point": "Clarify simulation step()/tick() vs real-time threads, classic up/down hall buttons vs destination dispatch, and whether capacity/doors/emergency are in scope.",
+     "weight": "core",
+     "evidence_hint": "Asks which execution model and which features are in/out before designing."
+    },
+    {
+     "id": "req3",
+     "point": "State typical FRs: N elevators, M floors; hall and cabin requests; assign a car; cars move/stop/reverse using LOOK; optional floor/cabin displays.",
+     "weight": "core",
+     "evidence_hint": "Lists N/M, both call types, LOOK motion, and optional displays."
+    },
+    {
+     "id": "req4",
+     "point": "State NFRs: direction-aware stopping, no lost requests, thread-safe if concurrent, extensible dispatch strategy, testable without hardware.",
+     "weight": "extended",
+     "evidence_hint": "Calls out correctness of direction, request retention, optional concurrency safety, and swappable dispatch."
+    },
+    {
+     "id": "req5",
+     "point": "Call out of scope until asked: weight sensors, door timing FSMs, emergency/fire mode, destination-dispatch panels, multi-building banks.",
+     "weight": "extended",
+     "evidence_hint": "Explicitly parks advanced real-building features unless the interviewer expands scope."
+    }
+   ],
+   "probes": [
+    "What are the functional and non-functional requirements, and what will you leave out of scope for now?",
+    "Are we modeling a deterministic step() simulation or real threads per elevator?"
+   ],
+   "hints": {
+    "1": "Start by separating hall calls from cabin destinations and asking what is in scope.",
+    "2": "Frame FRs around N elevators / M floors, LOOK motion, and assignment; NFRs around direction correctness and extensible dispatch.",
+    "3": "Say: hall=(floor,dir), cabin=destination; prefer step() unless asked for threads; park doors/emergency/destination-dispatch until asked."
+   }
+  },
+  {
+   "phase": "entities",
+   "goal": "Identify core domain objects, request types, and ownership of assignment vs motion.",
+   "must_hit": [
+    {
+     "id": "ent1",
+     "point": "ElevatorController (dispatcher) assigns hall calls; each Elevator owns movement and its pending stops.",
+     "weight": "core",
+     "evidence_hint": "Splits dispatcher assignment from per-car stop serving."
+    },
+    {
+     "id": "ent2",
+     "point": "Model Request with floor and type (PICKUP_UP | PICKUP_DOWN | DESTINATION), with equals/hash on (floor, type) so UP≠DOWN hall at the same floor.",
+     "weight": "core",
+     "evidence_hint": "Typed requests, not bare floors, and UP/DOWN at one floor are distinct."
+    },
+    {
+     "id": "ent3",
+     "point": "Floors are usually ints, not classes, unless per-floor panels/displays are needed.",
+     "weight": "extended",
+     "evidence_hint": "Avoids Floor classes unless panels/displays require them."
+    },
+    {
+     "id": "ent4",
+     "point": "Elevator tracks id, currentFloor, direction (UP|DOWN|IDLE), and separate upStops/downStops ordered structures.",
+     "weight": "core",
+     "evidence_hint": "Mentions dual ordered stop sets plus floor/direction fields."
+    }
+   ],
+   "probes": [
+    "What are the main entities and who owns hall-call assignment versus pending stops?",
+    "How do you represent an UP hall call versus a DOWN hall call on the same floor?"
+   ],
+   "hints": {
+    "1": "Name controller, elevator, and request; decide what each owns.",
+    "2": "Controller assigns; elevator holds LOOK queues; requests are typed.",
+    "3": "Request(floor, PICKUP_UP|PICKUP_DOWN|DESTINATION); Elevator has upStops/downStops; floors stay ints unless panels need classes."
+   }
+  },
+  {
+   "phase": "class_design",
+   "goal": "Sketch a Facade-friendly class structure with Strategy, optional State/Observer, and clear APIs.",
+   "must_hit": [
+    {
+     "id": "cd1",
+     "point": "ElevatorController holds List<Elevator>, ElevatorSelectionStrategy, and APIs requestElevator(floor, dir), selectFloor(elevatorId, floor), and step().",
+     "weight": "core",
+     "evidence_hint": "Shows controller fields and the three main entry methods."
+    },
+    {
+     "id": "cd2",
+     "point": "ElevatorSelectionStrategy interface with concrete NearestElevatorStrategy / LeastBusyStrategy for swappable dispatch.",
+     "weight": "core",
+     "evidence_hint": "Names a strategy interface and at least one concrete policy."
+    },
+    {
+     "id": "cd3",
+     "point": "Optional ElevatorState hierarchy (IdleState, MovingUpState, MovingDownState) and ElevatorObserver (HallDisplay, CabinDisplay) as plug points.",
+     "weight": "extended",
+     "evidence_hint": "Maps motion to State objects and displays to Observer subscribers."
+    },
+    {
+     "id": "cd4",
+     "point": "Optional thin ElevatorSystem/Building Facade over the controller; Command for button presses is optional if a simple Request DTO suffices.",
+     "weight": "extended",
+     "evidence_hint": "Mentions Facade entry and does not force Command."
+    }
+   ],
+   "probes": [
+    "Walk me through your class diagram and the public API.",
+    "Where do Strategy, State, and Observer show up in the design?"
+   ],
+   "hints": {
+    "1": "Draw controller → elevators and a selection strategy interface.",
+    "2": "Add requestElevator/selectFloor/step; elevators expose addRequest and dual stop sets.",
+    "3": "Controller+Strategy for assign; Elevator+LOOK queues; State for Idle/MovingUp/MovingDown; Observer for displays; Facade optional."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Implement direction-aware LOOK serving, dispatch selection, and a deterministic simulation tick.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "LOOK default: keep serving pending stops in the current direction; reverse only when none remain ahead (unlike SCAN to shaft end or FIFO zigzag).",
+     "weight": "core",
+     "evidence_hint": "Explains reverse-at-last-pending-request, not shaft end or FIFO order."
+    },
+    {
+     "id": "impl2",
+     "point": "Implement LOOK with two ordered structures (e.g. min-heap/TreeSet for UP, max-heap for DOWN); LOOK ops O(log F) per add/stop.",
+     "weight": "core",
+     "evidence_hint": "Uses dual ordered sets/heaps and cites O(log F) ops."
+    },
+    {
+     "id": "impl3",
+     "point": "Dispatch via selectElevator(elevators, request): prefer nearest car that is idle or already moving toward the caller; assignment O(E) per hall call.",
+     "weight": "core",
+     "evidence_hint": "Describes nearest compatible car and O(E) scan of elevators."
+    },
+    {
+     "id": "impl4",
+     "point": "Prefer deterministic step() that advances every car one floor; immediate-dispatch controller calls elevator.addRequest after selection.",
+     "weight": "extended",
+     "evidence_hint": "Chooses step()/tick simulation and immediate assign into the chosen car."
+    },
+    {
+     "id": "impl5",
+     "point": "Cost for assignment should consider distance, directional compatibility, and pending-load—not closest-idle alone under bursty lobby traffic.",
+     "weight": "extended",
+     "evidence_hint": "Warns nearest-idle stampede and adds load/direction to the score."
+    }
+   ],
+   "probes": [
+    "How does your elevator decide when to reverse, and how are stops stored?",
+    "How do you pick which elevator serves a new hall call?"
+   ],
+   "hints": {
+    "1": "Contrast FIFO, SCAN, and LOOK before coding motion.",
+    "2": "Dual ordered UP/DOWN sets; reverse when nothing ahead; strategy picks nearest compatible car.",
+    "3": "upStops min-ordered, downStops max-ordered; step() moves one floor; selectElevator scores distance+direction+load in O(E)."
+   }
+  },
+  {
+   "phase": "extensibility",
+   "goal": "Show Open/Closed plug points for dispatch algorithms, motion modes, and displays without editing core controllers.",
+   "must_hit": [
+    {
+     "id": "ext1",
+     "point": "Dispatch is Strategy so NearestElevator / LeastBusy / zoning can swap without editing the controller (OCP).",
+     "weight": "core",
+     "evidence_hint": "New selection policy is a new strategy class, controller unchanged."
+    },
+    {
+     "id": "ext2",
+     "point": "Elevator motion as State (or clean enum FSM): Idle ↔ MovingUp ↔ MovingDown (± DoorOpen / Maintenance) so transitions are not a giant switch.",
+     "weight": "core",
+     "evidence_hint": "State objects/enum handle mode-specific behavior and transitions."
+    },
+    {
+     "id": "ext3",
+     "point": "Displays via Observer: elevators publish floor/direction; hall/cabin displays subscribe; elevator must not new Display().",
+     "weight": "extended",
+     "evidence_hint": "Elevator notifies observers and stays UI-unaware."
+    },
+    {
+     "id": "ext4",
+     "point": "Peak/scale extensions: zoning, express shafts, or destination-dispatch; fairness via wait-time aging so nearest-car does not starve far floors.",
+     "weight": "extended",
+     "evidence_hint": "Mentions zoning/destination-dispatch and aging/max-wait for fairness."
+    }
+   ],
+   "probes": [
+    "How would you add a new dispatch policy or door/emergency behavior without rewriting the controller?",
+    "How do displays stay updated without the elevator knowing about UI classes?"
+   ],
+   "hints": {
+    "1": "Name the three plug points: Strategy, State, Observer.",
+    "2": "Strategy=algorithms; State=mode behavior; Observer=displays.",
+    "3": "New LeastBusyStrategy implements ElevatorSelectionStrategy; DoorOpen as ElevatorState; HallDisplay implements ElevatorObserver and subscribes."
+   }
+  },
+  {
+   "phase": "concurrency",
+   "goal": "Explain thread-per-elevator follow-ups and the shared-state synchronization hotspots.",
+   "must_hit": [
+    {
+     "id": "conc1",
+     "point": "Experienced concurrency follow-up: one thread (or actor) per elevator plus thread-safe request queues.",
+     "weight": "core",
+     "evidence_hint": "Contrasts step() simulation with per-elevator threads/actors."
+    },
+    {
+     "id": "conc2",
+     "point": "Controller reading currentFloor/direction while cars mutate them needs volatile or locked getters.",
+     "weight": "core",
+     "evidence_hint": "Makes published floor/direction safely visible to the dispatcher."
+    },
+    {
+     "id": "conc3",
+     "point": "addRequest must be synchronized with the car’s consume loop; never share one mutable queue across cars without locking.",
+     "weight": "core",
+     "evidence_hint": "Syncs producer addRequest with consumer motion; per-car queues."
+    },
+    {
+     "id": "conc4",
+     "point": "Immediate assign is simpler; a global pending queue helps when every car is saturated or you want re-balancing—still needs locking if concurrent.",
+     "weight": "extended",
+     "evidence_hint": "Compares immediate assign vs pull-from-global-queue under saturation."
+    }
+   ],
+   "probes": [
+    "If each elevator runs on its own thread, what race conditions do you protect?",
+    "How does the dispatcher safely read a car’s floor and direction while it is moving?"
+   ],
+   "hints": {
+    "1": "Simulation is default; threads appear as a follow-up—name what is shared.",
+    "2": "Protect stop queues and published floor/direction; no shared mutable stop set across cars.",
+    "3": "Per-elevator thread; synchronized addRequest with mover; volatile/locked getCurrentFloor/getDirection; private queues per car."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "FIFO vs SCAN vs LOOK",
+   "strong_answer": "FIFO wastes travel by zigzagging; SCAN overshoots empty shaft extremes; LOOK is the usual interview sweet spot—serve current direction then reverse at the last pending request, implemented with dual ordered sets."
+  },
+  {
+   "topic": "Floor-only stops vs typed Request",
+   "strong_answer": "Floor sets are simpler but can stop UP cars for DOWN hall calls; typed Request (PICKUP_UP/PICKUP_DOWN/DESTINATION) preserves passenger-facing direction correctness."
+  },
+  {
+   "topic": "step() simulation vs thread-per-elevator",
+   "strong_answer": "step()/tick is deterministic and interview-friendly; one thread/actor per elevator shows concurrency maturity but requires protected queues and safe publication of floor/direction."
+  },
+  {
+   "topic": "Immediate assign vs global pending queue",
+   "strong_answer": "Immediate assign (controller picks a car and addRequest) is simpler; a global pending queue that idle cars pull from helps when all cars are busy or you want re-balancing."
+  },
+  {
+   "topic": "State vs Strategy",
+   "strong_answer": "Strategy swaps interchangeable algorithms (dispatch); State encapsulates behavior that changes with internal mode and often triggers the next transition."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating hall UP and hall DOWN on the same floor as one stop.",
+   "correction": "Treat as two request types; only stop when car direction matches (unless it is a destination)."
+  },
+  {
+   "trap": "Ignoring a new request that appears while the car is moving.",
+   "correction": "Under LOOK, if it is ahead in the current direction, stop for it; otherwise queue it for the reverse pass."
+  },
+  {
+   "trap": "Nearest-only dispatch under a busy lobby causing starvation/ping-pong.",
+   "correction": "Use aging/max-wait, peak modes, zoning, or destination dispatch so far floors are not starved."
+  },
+  {
+   "trap": "Assuming door timing, capacity, and emergency belong in the first pass.",
+   "correction": "Add DoorOpen state and capacity checks only if the interviewer expands scope; emergency overrides strategy (e.g. force ground) when asked."
+  },
+  {
+   "trap": "Sharing one mutable stop queue across elevators or unsynchronized addRequest with the mover.",
+   "correction": "Give each car its own queue; synchronize addRequest with the consume loop; expose floor/direction via volatile or locked reads."
+  }
+ ]
+}

@@ -1,0 +1,170 @@
+{
+ "id": "cpp_s01_programming_paradigms",
+ "title": "Programming Paradigms",
+ "type": "FUND",
+ "relevance": "Interviewers ask this to check whether candidates understand why OOP exists—grouping data with the operations on it—before diving into language features.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a programming paradigm is and that the four stages grow structure to manage complexity.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A programming paradigm is a style of organising code.",
+     "weight": "core",
+     "evidence_hint": "Candidate defines paradigm as an organisational style of code, not as a language or syntax feature."
+    },
+    {
+     "id": "fund2",
+     "point": "Paradigm history is about managing growing complexity: each stage keeps the previous capabilities and adds a new way of grouping related things.",
+     "weight": "core",
+     "evidence_hint": "Says later styles build on earlier ones and add grouping so large programs stay comprehensible."
+    },
+    {
+     "id": "fund3",
+     "point": "Four stages mark the evolution and are read left to right as increasing structure: monolithic, procedural/modular, modular with structures, then object-oriented.",
+     "weight": "extended",
+     "evidence_hint": "Names the four stages in order and frames them as increasing structure."
+    }
+   ],
+   "probes": [
+    "What is a programming paradigm, and why did these styles evolve?"
+   ],
+   "hints": {
+    "1": "Think about what a paradigm organises—not which language you use.",
+    "2": "The story is managing complexity by grouping related things into larger units.",
+    "3": "Define paradigm as a style of organising code, then list the four stages from monolithic through OOP as increasing structure."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how each stage groups code differently—from one block, to functions, to structures-plus-functions, to a class.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Monolithic programs are one undivided block of statements with no named functions or structures to group data; that works only for very small programs.",
+     "weight": "core",
+     "evidence_hint": "Describes a single undivided program with no reusable units and limits it to very small programs."
+    },
+    {
+     "id": "mech2",
+     "point": "Procedural/modular (C style) packages actions into named callable functions that main invokes in sequence, while data still lives loosely apart from those functions.",
+     "weight": "core",
+     "evidence_hint": "Mentions functions and main calling them, and that data and functions remain separate."
+    },
+    {
+     "id": "mech3",
+     "point": "Modular with structures bundles related fields into a structure passed to functions, so related data travels together, but functions stay defined separately from that data.",
+     "weight": "core",
+     "evidence_hint": "Describes a structure of related fields passed into functions, with behaviour still outside the data."
+    },
+    {
+     "id": "mech4",
+     "point": "Object-oriented style uses a class that binds both the data and the functions that operate on it; main creates objects and calls functions through the object, encapsulating state and behaviour.",
+     "weight": "core",
+     "evidence_hint": "Says class unifies data and functions, objects are created, and calls go through the object (encapsulation)."
+    }
+   ],
+   "probes": [
+    "Walk through how code organisation changes from a monolithic program to an object-oriented class.",
+    "In the structure-based style, what still remains separate even after related fields are bundled?"
+   ],
+   "hints": {
+    "1": "Start with one undivided block, then add functions, then group data, then fuse both.",
+    "2": "Contrast where data lives versus where the functions that use it are defined at each stage.",
+    "3": "Monolith: one block. Procedural: named functions, data loose. Structures: Info passed in, functions still separate. OOP: class Info holds data and functions; call via an object."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Explain what each step gains in grouping and what prior styles still leave apart.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Procedural style separates what is done into named units, but still keeps data and the functions that operate on it apart.",
+     "weight": "core",
+     "evidence_hint": "Credits functions for packaging actions, then notes data and behaviour remain split."
+    },
+    {
+     "id": "tr2",
+     "point": "Structures improve cohesion of related data travelling together, but still leave functions defined separately from the data they act on.",
+     "weight": "core",
+     "evidence_hint": "Says structures help data travel together without yet uniting behaviour with that data."
+    },
+    {
+     "id": "tr3",
+     "point": "Object orientation fuses those halves so code is organised around the things (objects) in the problem rather than a flat list of procedures.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts organising around objects/things versus a flat procedure list, with data and behaviour together."
+    }
+   ],
+   "probes": [
+    "What problem does moving from plain functions to structures solve, and what does it still not solve?",
+    "Why is a class a larger answer to 'what belongs together?' than a structure alone?"
+   ],
+   "hints": {
+    "1": "Ask what each stage groups—and what it still leaves split.",
+    "2": "Functions group actions; structures group fields; only a class groups both.",
+    "3": "Structures let related data travel together but keep functions outside; a class encapsulates data and operations and centres design on objects."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Connect the progression to how OOP is used in main and to the guiding grouping intuition.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "In OOP, main creates objects of a class and invokes the class's functions through those objects.",
+     "weight": "core",
+     "evidence_hint": "Describes creating an object and calling member functions on it rather than free functions alone."
+    },
+    {
+     "id": "app2",
+     "point": "The guiding intuition is grouping: each paradigm answers 'what belongs together?' with a larger, more meaningful unit, culminating in the object that keeps state and operations on that state in one place.",
+     "weight": "core",
+     "evidence_hint": "States the grouping question and that the object is the unit that co-locates state and its operations."
+    }
+   ],
+   "probes": [
+    "If you were explaining OOP on a whiteboard after showing C-style structs, what would you draw next and why?",
+    "How does the 'what belongs together?' question change as you move from functions to structures to objects?"
+   ],
+   "hints": {
+    "1": "Picture main creating something and calling behaviour on that something.",
+    "2": "The last step is not more data fields—it is putting operations inside the same unit as the data.",
+    "3": "Draw class Info with fields and functions together; in main, Info i; then i.function1()—state and operations in one place."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Procedural functions vs modular structures",
+   "strong_answer": "Functions package what is done into named callable units, but data stays loose; structures bundle related fields so that data travels together as one argument, without yet attaching the functions to that data."
+  },
+  {
+   "topic": "Structures-plus-functions vs object-oriented classes",
+   "strong_answer": "With structures, related data is grouped but functions remain separate; a class fuses data and the functions that operate on it into one encapsulated unit, so design centres on objects rather than a flat list of procedures."
+  },
+  {
+   "topic": "Monolithic program vs procedural modular style",
+   "strong_answer": "A monolithic program is one undivided block with no reusable named units and only suits very small programs; procedural style breaks logic into named functions that main invokes in sequence."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating a C-style structure plus free functions as already object-oriented.",
+   "correction": "Structures only bundle related data fields; the functions that act on them are still defined separately. OOP requires a class that binds data and those functions together and calls them through an object."
+  },
+  {
+   "trap": "Thinking each new paradigm discards the previous style's capabilities.",
+   "correction": "Each paradigm keeps the previous one's capabilities and adds a new way of grouping related things so larger programs stay comprehensible."
+  },
+  {
+   "trap": "Describing OOP only as 'using classes' without the grouping motivation.",
+   "correction": "The point of the progression is answering 'what belongs together?' with a larger unit—culminating in an object that keeps state and the operations on that state in one place (encapsulation)."
+  }
+ ]
+}

@@ -1,0 +1,229 @@
+{
+ "id": "c_s07_dynamic_memory",
+ "title": "Dynamic memory management",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs probe whether candidates can allocate, resize, and free heap memory without leaks, dangling pointers, or undefined behavior.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish why the heap exists and what malloc, calloc, and free provide.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "The stack is fast but constrains size (mostly compile-time), rigid lifetimes (cannot return a pointer to a local), and space (typically small; a huge stack array can overflow).",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts stack/static duration with heap allocation requested at runtime."
+    },
+    {
+     "id": "fund2",
+     "point": "malloc(size) allocates size bytes of uninitialized memory and returns a pointer to it, or NULL on failure (OOM).",
+     "weight": "core",
+     "evidence_hint": "Mentions uninitialized bytes and NULL check before use."
+    },
+    {
+     "id": "fund3",
+     "point": "calloc(nmemb, size) allocates for an array of nmemb elements of size bytes each and initializes all bytes to zero.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts calloc zero-init with malloc's uninitialized block."
+    },
+    {
+     "id": "fund4",
+     "point": "free(ptr) deallocates memory from malloc/calloc/realloc; if ptr is null, no action occurs.",
+     "weight": "core",
+     "evidence_hint": "States free is a no-op on NULL and only frees allocator-returned blocks."
+    },
+    {
+     "id": "fund5",
+     "point": "Do not cast malloc in C: void* promotes to any pointer type; a cast can mask a missing #include <stdlib.h> (especially in C89).",
+     "weight": "extended",
+     "evidence_hint": "Says casting is unnecessary in C and risky for hiding undeclared malloc."
+    }
+   ],
+   "probes": [
+    "Why use the heap instead of a stack array or VLA?",
+    "What does malloc return on failure, and how does calloc differ?"
+   ],
+   "hints": {
+    "1": "Think about what happens when size is unknown until runtime or data must outlive the function.",
+    "2": "Name the four stdlib.h functions and contrast malloc vs calloc initialization.",
+    "3": "Heap from OS at runtime; malloc uninitialized or NULL; calloc zero-fills; free releases; no cast of malloc in C."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain the allocation/free contract, dangling pointers, and safe realloc behavior.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Every successful allocation must be paired with exactly one free.",
+     "weight": "core",
+     "evidence_hint": "States one free per successful alloc as the memory contract."
+    },
+    {
+     "id": "mech2",
+     "point": "free does not erase the block's data and does not set the caller's pointer to NULL; after free(p), p is a dangling pointer and using it is undefined behavior—set p = NULL after free.",
+     "weight": "core",
+     "evidence_hint": "Describes dangling pointer and NULL-defuse after free."
+    },
+    {
+     "id": "mech3",
+     "point": "realloc may grow in place or allocate a new block, copy data, and free the old block; on failure it returns NULL and leaves the original block untouched.",
+     "weight": "core",
+     "evidence_hint": "Explains in-place vs move, and that failure preserves the old pointer's block."
+    },
+    {
+     "id": "mech4",
+     "point": "Never write p = realloc(p, ...); use a temporary pointer and only assign on success, or a failed realloc overwrites p with NULL and leaks the original block.",
+     "weight": "core",
+     "evidence_hint": "Gives the temp-pointer pattern and names the leak on failure."
+    },
+    {
+     "id": "mech5",
+     "point": "If ptr is NULL, realloc(ptr, size) behaves like malloc(size); after a successful realloc that moves, other pointers into the old block become dangling.",
+     "weight": "extended",
+     "evidence_hint": "Mentions NULL-as-malloc and stale interior pointers after a move."
+    }
+   ],
+   "probes": [
+    "What is wrong with p = realloc(p, new_size)?",
+    "After free(p), what is the state of p and the freed bytes?"
+   ],
+   "hints": {
+    "1": "Ask what ownership you surrender at free, and what realloc does if it cannot grow.",
+    "2": "Separate success path (new pointer, possibly moved) from failure path (NULL, old block still valid).",
+    "3": "Use int *temp = realloc(arr, ...); if (!temp) keep/free arr; else arr = temp; always NULL after free."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare allocation strategies and why heap freedom has costs.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "VLAs stay stack-bound: they can crash if too large and vanish when the function returns, so they do not replace heap allocation for large or long-lived data.",
+     "weight": "core",
+     "evidence_hint": "Rejects VLAs for size/lifetime reasons vs malloc."
+    },
+    {
+     "id": "tr2",
+     "point": "2-D as array-of-pointers (row pointers then each row) allows ragged rows and matrix[r][c] but needs loops to alloc/free and scatters rows (poor cache locality).",
+     "weight": "core",
+     "evidence_hint": "Names N+1-style allocs, ragged arrays, and cache downside."
+    },
+    {
+     "id": "tr3",
+     "point": "2-D as one contiguous flat block needs one malloc/one free and good cache behavior, but requires index math like row * cols + col.",
+     "weight": "core",
+     "evidence_hint": "Contrasts single allocation and manual indexing with pointer-of-pointers."
+    },
+    {
+     "id": "tr4",
+     "point": "realloc can often expand in place without copying, which is faster than always malloc + memcpy + free of a new block.",
+     "weight": "extended",
+     "evidence_hint": "Prefers realloc for growth when in-place expansion is possible."
+    }
+   ],
+   "probes": [
+    "How would you dynamically allocate a matrix, and what are the trade-offs?",
+    "Why prefer realloc over always allocating a new buffer yourself?"
+   ],
+   "hints": {
+    "1": "Consider syntax convenience versus number of allocations and memory layout.",
+    "2": "Compare array-of-pointers vs one flat buffer; mention in-place realloc.",
+    "3": "Ragged + matrix[r][c] vs contiguous + row*cols+col; realloc may avoid a full copy."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply ownership, common UB bugs, tooling, and when heap allocation is banned.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Classic bugs: memory leak (lose all pointers before free); double free (corrupts allocator metadata, often crashes); use-after-free (dangling write can corrupt unrelated data); freeing a non-heap or mid-block pointer (e.g. free(p+1)) destroys the heap.",
+     "weight": "core",
+     "evidence_hint": "Lists leak, double-free, use-after-free, and invalid free targets."
+    },
+    {
+     "id": "app2",
+     "point": "Ownership must be explicit: a function that returns malloced memory transfers free responsibility to the caller (document that the caller frees).",
+     "weight": "core",
+     "evidence_hint": "States caller-frees for returned heap pointers."
+    },
+    {
+     "id": "app3",
+     "point": "Detect heap bugs with valgrind (Linux) or AddressSanitizer (e.g. gcc -fsanitize=address -g).",
+     "weight": "extended",
+     "evidence_hint": "Names valgrind and/or ASan for leaks, double-frees, OOB."
+    },
+    {
+     "id": "app4",
+     "point": "Real-time/embedded often bans dynamic allocation: malloc time is non-deterministic, fragmentation can cause late OOM, and systems may lack virtual memory/OS OOM handling—prefer static buffers or fixed-size pools.",
+     "weight": "core",
+     "evidence_hint": "Ties ban to latency, fragmentation, and catastrophic OOM without VM."
+    },
+    {
+     "id": "app5",
+     "point": "Heap fragmentation: total free space may be large while no contiguous block satisfies a request (allocator tracks free/used blocks; long-running alloc/free of mixed sizes).",
+     "weight": "extended",
+     "evidence_hint": "Explains Swiss-cheese free space failing a large contiguous request."
+    }
+   ],
+   "probes": [
+    "Walk through the big heap UB bugs and how you would catch them.",
+    "Why is malloc often banned in real-time embedded or aerospace software?"
+   ],
+   "hints": {
+    "1": "Think about what breaks the every-alloc-one-free contract at runtime.",
+    "2": "Cover leak, double-free, use-after-free, invalid free; then latency/fragmentation for embedded.",
+    "3": "Pair alloc/free with clear ownership; use valgrind/ASan; embedded prefers static pools because malloc is non-deterministic and can fragment."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Heap vs stack / VLA",
+   "strong_answer": "Heap for runtime-sized or outliving-the-function data; stack/VLA is fast but size/lifetime limited and VLAs vanish on return and can overflow if large."
+  },
+  {
+   "topic": "Array-of-pointers 2-D vs contiguous flat 2-D",
+   "strong_answer": "Pointer rows: ragged arrays and matrix[r][c], but multiple alloc/free and poor locality. Flat block: one malloc/free and cache-friendly, but manual row*cols+col indexing."
+  },
+  {
+   "topic": "realloc vs malloc + memcpy + free",
+   "strong_answer": "Manual copy always moves; realloc may expand in place without copying, which is much faster when adjacent space is free."
+  },
+  {
+   "topic": "Dynamic allocation vs static buffers / fixed pools (embedded)",
+   "strong_answer": "Heap is flexible but non-deterministic and fragmentable; real-time/aerospace often mandates static globals or fixed-size pools for predictability and safety."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using the pointer after free without nulling it (dangling pointer).",
+   "correction": "free does not clear data or the pointer; set p = NULL immediately after free and never dereference a freed address."
+  },
+  {
+   "trap": "Writing p = realloc(p, new_size) on failure.",
+   "correction": "Failed realloc returns NULL but leaves the old block valid; assigning NULL to p leaks it—use a temporary, then assign only on success."
+  },
+  {
+   "trap": "Casting malloc in C.",
+   "correction": "Unnecessary in C; in C89 a cast can hide a missing stdlib.h so malloc is assumed to return int and a 64-bit pointer can be truncated to 32-bit."
+  },
+  {
+   "trap": "Assuming the old pointer stays valid after successful realloc, or keeping interior pointers into the old block.",
+   "correction": "Always use the pointer realloc returns; if the block moved, any pointers into the old block are dangling."
+  },
+  {
+   "trap": "Passing a stack address or mid-block pointer to free.",
+   "correction": "Only free pointers exactly returned by malloc/calloc/realloc—not locals and not p+1 into a block."
+  },
+  {
+   "trap": "Partial allocation failure without cleanup (e.g. struct allocated but inner buffer fails; or buffer allocated then fopen fails).",
+   "correction": "On error paths free everything already allocated before returning (free inner then outer; free buffer if file open fails)."
+  }
+ ]
+}

@@ -1,0 +1,150 @@
+{
+ "id": "cpp_s17_scope_storage",
+ "title": "Variable scope and storage",
+ "type": "FUND",
+ "relevance": "Interviewers probe whether candidates can reason about which code can see a variable and how long it lives—global vs local vs static—because mistakes here cause wrong outputs and shared-state bugs.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that declaration site controls both visibility (scope) and lifetime (storage duration), and define global vs local.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A global variable is declared outside every function and is visible to all of them.",
+     "weight": "core",
+     "evidence_hint": "Says globals sit outside functions and any function can reach them."
+    },
+    {
+     "id": "fund2",
+     "point": "A local variable is declared inside a function or block and is visible only there.",
+     "weight": "core",
+     "evidence_hint": "Says locals are confined to their function or block."
+    },
+    {
+     "id": "fund3",
+     "point": "Where a variable is declared controls which code can see it (scope) and how long it lives (lifetime / storage duration).",
+     "weight": "extended",
+     "evidence_hint": "Separates the two concerns: who can name it vs how long the object exists."
+    }
+   ],
+   "probes": [
+    "What is the difference between a global variable and a local variable in C++?"
+   ],
+   "hints": {
+    "1": "Think about where each is declared relative to functions.",
+    "2": "One is outside every function; the other is inside a function or block.",
+    "3": "Global: outside all functions, visible to all; local: inside a function/block, visible only there."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how nested scopes resolve names via shadowing, and how static locals retain value across calls while staying function-private.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "An inner declaration may reuse a name from an outer scope; the inner name shadows the outer one within its block, and an unqualified use refers to the nearest enclosing declaration.",
+     "weight": "core",
+     "evidence_hint": "Describes shadowing and nearest-enclosing resolution, e.g. nested x printing the innermost first."
+    },
+    {
+     "id": "mech2",
+     "point": "A static local variable lives inside a function but, unlike an ordinary local, retains its value between calls; it is initialised once and persists for the whole run of the program while staying visible only inside its function.",
+     "weight": "core",
+     "evidence_hint": "Says init once, survives across calls, still only visible in that function."
+    },
+    {
+     "id": "mech3",
+     "point": "Each call recreates an ordinary local afresh, while a static local carries over across calls.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts ordinary local always reset vs static counting up across successive calls."
+    }
+   ],
+   "probes": [
+    "If the same name is declared in nested blocks, which declaration does an unqualified use refer to?",
+    "What happens to a static local's value across multiple calls to the same function?"
+   ],
+   "hints": {
+    "1": "Compare ordinary locals to static locals on the second and third call.",
+    "2": "For names: walk outward from the use site; for static: ask whether it is re-created each call.",
+    "3": "Nearest enclosing declaration wins for shadowing; static is initialised once and retains its value between calls while remaining visible only inside its function."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "State when globals are convenient versus why locals are preferred, and what a static local uniquely combines.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Globals are convenient when a value must be reachable by many functions, but they can be changed from anywhere, which is why locals are preferred whenever a value is needed in only one place.",
+     "weight": "core",
+     "evidence_hint": "Mentions multi-function reachability vs uncontrolled mutation; prefers locals for single-place use."
+    },
+    {
+     "id": "tr2",
+     "point": "A static local combines a local's narrow visibility with a global's lifetime.",
+     "weight": "core",
+     "evidence_hint": "Explicitly pairs narrow visibility with program-long lifetime."
+    }
+   ],
+   "probes": [
+    "When would you use a global versus a local, and what risk do globals introduce?",
+    "What does a static local give you that neither a plain local nor a global alone provides?"
+   ],
+   "hints": {
+    "1": "Ask who needs to see the value and who might accidentally change it.",
+    "2": "Globals: shared reach; locals: confined; static local: confined name, long life.",
+    "3": "Prefer locals for one-place use; globals when many functions need the value but anything can mutate them; static local = local visibility + global lifetime."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply scope/lifetime rules to predict which binding is used and how values evolve across calls.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "In nested scopes that each declare x, printing at each level yields the innermost binding first, then the enclosing function's binding, with the global remaining outside those blocks.",
+     "weight": "core",
+     "evidence_hint": "Walks the nested-x example: innermost block, then main's x, then global outside."
+    },
+    {
+     "id": "app2",
+     "point": "Across repeated calls, an ordinary local is recreated each time while a static local increments and retains its prior value between calls.",
+     "weight": "core",
+     "evidence_hint": "Describes ordinary local reset each call vs static carrying over across successive calls."
+    }
+   ],
+   "probes": [
+    "Given nested declarations of the same name at global, function, and block scope, what does each unqualified print refer to?",
+    "If a function has both an ordinary local and a static local that is incremented each call, what differs between the first and third call?"
+   ],
+   "hints": {
+    "1": "Resolve each print from the use site outward.",
+    "2": "Track which variables are recreated vs which persist across calls.",
+    "3": "Innermost shadowing wins at each level; ordinary locals reset every call while the static local keeps counting across calls."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Global vs local",
+   "strong_answer": "Use a global when many functions must reach the same value; prefer a local whenever the value is needed in only one place, because a global can be changed from anywhere."
+  },
+  {
+   "topic": "Static local vs ordinary local",
+   "strong_answer": "An ordinary local is recreated each call; a static local keeps local-only visibility but retains its value for the whole program run—local visibility with global lifetime."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming an unqualified name always means the global (or the function-level) variable when an inner block redeclares the same name.",
+   "correction": "The inner name shadows the outer one within its block; an unqualified use refers to the nearest enclosing declaration."
+  },
+  {
+   "trap": "Treating a static local like an ordinary local that resets on every call, or like a global that every function can see.",
+   "correction": "A static local is initialised once, retains its value between calls for the whole program run, and stays visible only inside its function."
+  }
+ ]
+}

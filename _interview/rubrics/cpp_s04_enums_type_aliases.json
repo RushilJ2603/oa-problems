@@ -1,0 +1,161 @@
+{
+ "id": "cpp_s04_enums_type_aliases",
+ "title": "Enumerations and Type Aliases",
+ "type": "FUND",
+ "relevance": "Enums and typedef aliases replace magic integers with named, intent-revealing types that interviewers check when assessing readable C++ fundamentals.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what enumerations and typedef aliases are and the readability problem they solve.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "An enumeration defines a new type whose values are a named, fixed set of constants.",
+     "weight": "core",
+     "evidence_hint": "Candidate says an enum introduces a type limited to a fixed set of named member constants."
+    },
+    {
+     "id": "fund2",
+     "point": "Raw integer encodings of fixed choice sets (menus, days, suits, ratings) are easy to mistype and hard to read; enums map readable names to small integer codes.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts magic numbers with named members for small fixed choice sets."
+    },
+    {
+     "id": "fund3",
+     "point": "typedef introduces a new name for an existing type; the aliased name is not a new type, only another spelling of the original that documents intent.",
+     "weight": "core",
+     "evidence_hint": "Candidate states typedef is an alias spelling, not a distinct type, used to document meaning."
+    }
+   ],
+   "probes": [
+    "What problem do enumerations solve that raw integer codes do not?",
+    "What does typedef actually create — a new type, or something else?"
+   ],
+   "hints": {
+    "1": "Think about menus, days of the week, or card suits written as bare numbers.",
+    "2": "An enum names a fixed set of constants as a type; typedef only renames an existing type.",
+    "3": "Enum = new type with a fixed named constant set; typedef = another spelling of an existing type that documents intent."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how enum members are numbered by default and with explicit values, and how typedef aliases are declared.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "An enum lists members in braces; by default they are numbered automatically from zero in order (e.g. mon = 0 through sun = 6).",
+     "weight": "core",
+     "evidence_hint": "Candidate writes enum day { mon, tue, ... } and assigns 0, 1, 2, ... in declaration order."
+    },
+    {
+     "id": "mech2",
+     "point": "Any member may be given an explicit value; later members without an explicit value continue counting up from the most recent one (e.g. mon = 1, tue = 2, wed = 5, thur = 6, fri = 7, sat = 9, sun = 10).",
+     "weight": "core",
+     "evidence_hint": "Candidate explains continuation from the last explicit value with the day example values."
+    },
+    {
+     "id": "mech3",
+     "point": "typedef int marks and typedef int rollno make marks and rollno simply int under another name at the point of declaration.",
+     "weight": "extended",
+     "evidence_hint": "Candidate shows typedef int marks; typedef int rollno; and treats both as int."
+    }
+   ],
+   "probes": [
+    "If mon = 1 and wed = 5 with no values on tue, thur, and fri, what values do those members get?",
+    "How do you declare a typedef alias for int used as marks?"
+   ],
+   "hints": {
+    "1": "Default numbering starts at the first member; explicit values change where counting resumes.",
+    "2": "After an explicit value, the next unnamed members are last+1, last+2, and so on.",
+    "3": "mon = 1 ⇒ tue = 2; wed = 5 ⇒ thur = 6, fri = 7; sat = 9 ⇒ sun = 10; typedef int marks; typedef int rollno;"
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast named enums and typedef aliases with bare machine types for readability without changing computation.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Both enumerations and typedef aliases improve readability without changing what the program computes.",
+     "weight": "core",
+     "evidence_hint": "Candidate says they clarify intent but leave runtime behaviour the same as using the underlying integers/types."
+    },
+    {
+     "id": "tr2",
+     "point": "An enum variable can have only the listed set of values and expresses intent in comparisons (d == mon) instead of a magic number (d == 0).",
+     "weight": "core",
+     "evidence_hint": "Candidate prefers d == mon over d == 0 and notes the value set is restricted to the enum members."
+    },
+    {
+     "id": "tr3",
+     "point": "marks and rollno aliases leave behaviour identical to using int throughout while making declarations self-describing about what the integers represent.",
+     "weight": "extended",
+     "evidence_hint": "Candidate says marks/rollno are still int but declarations state marks vs roll numbers."
+    }
+   ],
+   "probes": [
+    "Why prefer an enum member name in a comparison over comparing against 0?",
+    "If marks and rollno are both typedefs for int, what changes about program behaviour versus using int directly?"
+   ],
+   "hints": {
+    "1": "Focus on readability and intent, not on different machine instructions.",
+    "2": "Enum comparisons name the choice; typedef only documents what an int is for.",
+    "3": "d == mon beats d == 0 for intent and allowed values; marks/rollno behave exactly like int but read as marks or roll numbers."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply enum variables and typedef aliases in simple program declarations and control flow.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A variable of enum type (e.g. day d or dep d) may be assigned listed members and used directly in expressions and comparisons such as if (d == mon).",
+     "weight": "core",
+     "evidence_hint": "Candidate declares day d or dep d, assigns mon/fri/sun or ece, and compares with == mon."
+    },
+    {
+     "id": "app2",
+     "point": "With typedef int marks and typedef int rollno, you can declare marks m1, m2, m3 and rollno r1, r2, r3 to show what those integers store.",
+     "weight": "core",
+     "evidence_hint": "Candidate declares marks and rollno variables to label marks vs roll-number ints."
+    }
+   ],
+   "probes": [
+    "Write a small main that declares a day, assigns fri, and checks whether it equals mon.",
+    "How would you declare three marks variables and three roll-number variables using typedef aliases?"
+   ],
+   "hints": {
+    "1": "Declare a variable whose type is the enum or typedef name, then assign and compare.",
+    "2": "day d; d = fri; if (d == mon) { ... } and marks m1, m2, m3; rollno r1, r2, r3.",
+    "3": "Full pattern: enum day { mon, ... }; day d = fri; if (d == mon) {}; typedef int marks; typedef int rollno; marks m1, m2, m3; rollno r1, r2, r3."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "enum named members vs magic integer codes",
+   "strong_answer": "Enums keep a fixed named set and let comparisons read as intent (d == mon) instead of opaque codes (d == 0), without changing what the program computes."
+  },
+  {
+   "topic": "typedef alias names vs bare int",
+   "strong_answer": "typedef marks/rollno are still int — not new types — but declarations document whether values are marks or roll numbers while behaviour stays identical to int."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming every enum member must be given an explicit integer value.",
+   "correction": "Only some members need explicit values; any that follow without one continue counting up from the most recent explicit value."
+  },
+  {
+   "trap": "Treating a typedef name as a distinct new type that the type system separates from the original.",
+   "correction": "typedef only introduces another spelling of an existing type; marks and rollno are simply int."
+  },
+  {
+   "trap": "Writing comparisons against raw codes like d == 0 when the enum members are available.",
+   "correction": "Use the member name (d == mon) so the code expresses intent and stays tied to the allowed value set."
+  }
+ ]
+}

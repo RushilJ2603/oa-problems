@@ -1,0 +1,192 @@
+{
+ "id": "cpp_s30_abstract_classes_interfaces",
+ "title": "Abstract Classes and Interfaces",
+ "type": "FUND",
+ "relevance": "Interviewers use abstract classes and the C++ interface idiom to check whether candidates understand polymorphism contracts, when a base cannot be instantiated, and why virtual destructors matter for polymorphic deletion.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a pure virtual function is and what makes a class abstract.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A pure virtual function is a virtual function declared in a base class with no default implementation, written by appending = 0 to the declaration.",
+     "weight": "core",
+     "evidence_hint": "Says virtual void draw() = 0 (or equivalent) and that = 0 means the class intentionally leaves the function unimplemented so inheritors must supply one."
+    },
+    {
+     "id": "fund2",
+     "point": "An abstract class is any class that contains at least one pure virtual function, declared directly or inherited without being overridden.",
+     "weight": "core",
+     "evidence_hint": "Defines abstract as having ≥1 pure virtual, including the inherited-unoverridden case."
+    },
+    {
+     "id": "fund3",
+     "point": "You cannot instantiate an abstract class; creating an object of that type is a compile-time error.",
+     "weight": "core",
+     "evidence_hint": "States Shape s; (or similar) fails at compile time because the class is incomplete."
+    },
+    {
+     "id": "fund4",
+     "point": "In Python the same structural requirement uses abc.ABC plus @abstractmethod; C++ uses = 0 natively.",
+     "weight": "extended",
+     "evidence_hint": "Mentions abc module / ABC / @abstractmethod as the Python analogue of = 0."
+    }
+   ],
+   "probes": [
+    "What is a pure virtual function, and what makes a C++ class abstract?"
+   ],
+   "hints": {
+    "1": "Think about a virtual function the base deliberately does not implement.",
+    "2": "Look at the declaration syntax (= 0) and the rule for classes that still have one.",
+    "3": "virtual void f() = 0 makes the class abstract; any class with at least one pure virtual (own or inherited unoverridden) cannot be instantiated."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how abstract bases are used safely and how the interface idiom and pure-virtual definitions work.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Pointers and references to an abstract class are allowed; they are the handles used for polymorphism.",
+     "weight": "core",
+     "evidence_hint": "Says Shape* / Shape& are OK while Shape objects are not, because abstract types are used polymorphically."
+    },
+    {
+     "id": "mech2",
+     "point": "If a derived class fails to override every pure virtual from an abstract base, that derived class stays abstract and cannot be instantiated.",
+     "weight": "core",
+     "evidence_hint": "States incomplete override → derived remains abstract / not instantiable."
+    },
+    {
+     "id": "mech3",
+     "point": "C++ has no interface keyword; an interface is an idiom: a class with only pure virtual member functions and no member variables (state), often named with an I prefix by convention.",
+     "weight": "core",
+     "evidence_hint": "Contrasts with Java/C#, describes all-pure-virtual no-state class, notes IPrintable-style naming is style not language."
+    },
+    {
+     "id": "mech4",
+     "point": "A pure virtual may still have a definition (e.g. void Base::show() { ... }); the class remains uninstantiable, but derived overrides can call the base implementation explicitly (Base::show()).",
+     "weight": "extended",
+     "evidence_hint": "Describes rare valid out-of-class definition, forced override, and optional Base::call for shared default behaviour."
+    },
+    {
+     "id": "mech5",
+     "point": "Always give an abstract base a virtual destructor (typically virtual ~Base() = default); deleting via Base* without it skips the derived destructor and causes resource leaks / undefined behaviour.",
+     "weight": "core",
+     "evidence_hint": "Ties polymorphic deletion Base* = new Derived() to needing a virtual destructor."
+    },
+    {
+     "id": "mech6",
+     "point": "An abstract class can have a constructor; derived constructors call it during base-outwards construction to initialise any shared state.",
+     "weight": "extended",
+     "evidence_hint": "Yes, constructor exists and runs for the base subobject even though the abstract type itself is not instantiated."
+    }
+   ],
+   "probes": [
+    "Can you take a pointer to an abstract class? What happens if a derived class does not override every pure virtual?",
+    "What is the difference between an abstract class and an interface in C++?",
+    "Can an abstract class have a constructor? Why must its destructor be virtual?"
+   ],
+   "hints": {
+    "1": "Abstract types are incomplete objects but still useful as polymorphic handles.",
+    "2": "Separate: what you may declare (pointers/refs), what derived must implement, interface-as-idiom, and destructor/constructor rules.",
+    "3": "Pointers/refs OK; miss any pure virtual → still abstract; interface = all pure virtual + no state; virtual ~Base() = default for safe delete; constructors run for shared state."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Place concrete, mixed-abstract, and interface classes on the state-vs-behaviour spectrum and say when each fits.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "All-concrete class (no pure virtuals): purpose is code reusability and managing state; instantiate directly.",
+     "weight": "core",
+     "evidence_hint": "Names concrete class, no pure virtuals, reuse/state, direct instantiation."
+    },
+    {
+     "id": "tr2",
+     "point": "Mixed abstract class (concrete methods plus pure virtuals): purpose is reusability plus polymorphism—share default behaviour or state while forcing derived classes to fill in missing parts.",
+     "weight": "core",
+     "evidence_hint": "Describes mix of implemented and pure virtual methods and the dual reuse/polymorphism goal."
+    },
+    {
+     "id": "tr3",
+     "point": "All-pure-virtual class / interface (no state, only pure virtuals plus virtual destructor): purpose is pure polymorphism—a strict behavioural contract decoupling what from how.",
+     "weight": "core",
+     "evidence_hint": "Emphasizes no state, only pure virtuals (+ virtual dtor), contract-only design."
+    }
+   ],
+   "probes": [
+    "When would you choose a mixed abstract base versus a pure interface (all pure virtual, no state)?"
+   ],
+   "hints": {
+    "1": "Ask whether you need shared state/default behaviour or only a contract.",
+    "2": "Map the three-class taxonomy: all-concrete, mixed abstract, all-pure-virtual.",
+    "3": "Need shared state or default methods → mixed abstract; only a behavioural contract with no state → interface idiom; full implementations only → concrete."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply an abstract Shape interface with concrete Circle/Rectangle under polymorphic use.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "An abstract Shape with pure virtual draw() and area() lets concrete Circle and Rectangle supply overrides while clients hold Shape* and call through dynamic dispatch.",
+     "weight": "core",
+     "evidence_hint": "Describes Shape* array (or similar) iterating draw()/area() with runtime resolution to Circle/Rectangle."
+    },
+    {
+     "id": "app2",
+     "point": "Virtual destructor on Shape is mandatory for safe polymorphic deletion when the hierarchy is used via base pointers.",
+     "weight": "core",
+     "evidence_hint": "Calls out virtual ~Shape() = default (or equivalent) as required in the polymorphic Shape design."
+    }
+   ],
+   "probes": [
+    "Sketch an abstract Shape with Circle and Rectangle and show how a Shape* array uses them polymorphically.",
+    "Where must the virtual destructor live in that design, and why?"
+   ],
+   "hints": {
+    "1": "Start from a base that declares behaviour without implementing it.",
+    "2": "Pure virtual draw/area on Shape; override in Circle and Rectangle; store Shape*.",
+    "3": "Shape* shapes[] = { &c, &r }; loop calls s->draw() / s->area() via dynamic dispatch; Shape needs virtual ~Shape() = default."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "All-concrete class vs mixed abstract class",
+   "strong_answer": "All-concrete has no pure virtuals and is for reuse and state you instantiate directly. Mixed abstract adds pure virtuals alongside concrete methods so you share default behaviour or state while still forcing derived classes to implement the missing pieces—reuse plus polymorphism."
+  },
+  {
+   "topic": "Mixed abstract class vs all-pure-virtual interface",
+   "strong_answer": "Mixed abstract couples shared implementation/state with a partial contract. An interface (all pure virtual, no member variables, plus virtual destructor) is pure polymorphism: a behavioural contract that fully decouples what from how, with no shared state."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming a derived class is concrete after inheriting an abstract base even if it did not override every pure virtual.",
+   "correction": "Any pure virtual left unoverridden keeps the derived class abstract, so it still cannot be instantiated."
+  },
+  {
+   "trap": "Omitting a virtual destructor on an abstract base used via Base*.",
+   "correction": "Always use something like virtual ~Base() = default; otherwise deleting through the base pointer fails to run the derived destructor, leaking resources and causing undefined behaviour."
+  },
+  {
+   "trap": "Believing C++ has a language-level interface keyword like Java or C#.",
+   "correction": "C++ has no interface keyword; an interface is an idiom—an abstract class with only pure virtual functions and no state (I-prefix naming is convention only)."
+  },
+  {
+   "trap": "Thinking a pure virtual function can never have a body, or that providing a body makes the class instantiable.",
+   "correction": "A pure virtual may have a definition (e.g. Base::show()); the class still cannot be instantiated. Derived must override and may call Base::show() for shared default behaviour."
+  },
+  {
+   "trap": "Claiming an abstract class cannot have a constructor because it cannot be instantiated.",
+   "correction": "It can have a constructor; the derived constructor invokes it during base-outwards construction to initialise shared base state."
+  }
+ ]
+}

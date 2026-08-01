@@ -1,0 +1,317 @@
+{
+ "id": "hq17_ad_aggregator",
+ "title": "Design an Ad Click Aggregator / Real-Time Analytics",
+ "type": "HLD",
+ "relevance": "High — canonical “scaling writes + stream processing” HLD (Alex Xu Vol.2 ch.6 / Hello Interview); Meta, Google, Amazon, Uber, Netflix ads; probes Kafka/Flink, windowed aggregation, dedup/idempotency, Lambda vs Kappa, OLAP serving.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h08_message_queues",
+  "h14_estimation",
+  "h05_db_scaling",
+  "h03_caching",
+  "h15_building_blocks"
+ ],
+ "company_notes": "Campus/intern/new-grad: Kafka buffer, pre-agg, OLAP, basic dedup, why not one SQL table. Experienced / Meta–Google–Uber ads: event-time windows, hot shards, Lambda vs Kappa, impression signing, peak write QPS, billing vs dashboard accuracy. Top-tier HLD alongside metrics/Top-K/notifications; depth is write scaling + stream correctness, not auction or fraud ML unless asked.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock functional scope, NFRs, and what is explicitly out of scope before designing.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "In scope: record clicks (often impressions), redirect to advertiser URL, query aggregates by ad/campaign over time with ≥1-minute granularity, optional geo/device slices, near-real-time dashboard freshness.",
+     "weight": "core",
+     "evidence_hint": "Lists click/impression recording, redirect, minute-grain metrics, optional dimensions, and freshness as in-scope."
+    },
+    {
+     "id": "req2",
+     "point": "Out of scope unless pulled: ad targeting/auction/RTB, creative CDN, full fraud ML, cross-device identity, conversion attribution.",
+     "weight": "core",
+     "evidence_hint": "Explicitly parks auction, CDN, fraud ML, identity, and attribution."
+    },
+    {
+     "id": "req3",
+     "point": "NFRs: peak write throughput; no silent click loss after accept; sub-second reads on pre-agg; freshness seconds–minutes; idempotent counting; billing accuracy stricter than dashboard freshness.",
+     "weight": "core",
+     "evidence_hint": "Separates durability, read latency on pre-agg, freshness, idempotency, and billing vs dashboard bar."
+    },
+    {
+     "id": "req4",
+     "point": "Clarify clicks-only vs impressions+clicks, dimensions, freshness SLA, billing vs dashboard, and logged-in users only.",
+     "weight": "extended",
+     "evidence_hint": "Asks clarifying questions on event types, dims, SLAs, and billing path."
+    }
+   ],
+   "probes": [
+    "What is in scope vs out of scope, and how do dashboard freshness and billing accuracy differ?"
+   ],
+   "hints": {
+    "1": "Start with what the system must record and what queries advertisers need.",
+    "2": "Separate functional (track, redirect, aggregate) from NFRs and name what you will not design.",
+    "3": "Say ≥1-minute aggregates, near-real-time dashboards, no silent loss after accept, and billing stricter than dashboard; park RTB/fraud/attribution."
+   }
+  },
+  {
+   "phase": "estimation",
+   "goal": "Align write-heavy scale and show why pre-aggregation beats scanning raw events.",
+   "must_hit": [
+    {
+     "id": "est1",
+     "point": "Hello Interview baseline: 10M active ads, peak ~10k clicks/s; if peak ≈ 10× average → ~1k/s avg → ~100M clicks/day.",
+     "weight": "core",
+     "evidence_hint": "States 10M ads, ~10k/s peak, ~1k/s avg, ~100M clicks/day with the 10× peak/avg link."
+    },
+    {
+     "id": "est2",
+     "point": "Event size ~100–500 B → raw ingest tens of MB/s peak; retention (e.g. 7–30d Kafka + longer lake) dominates storage more than OLAP rollups.",
+     "weight": "core",
+     "evidence_hint": "Uses 100–500 B events, tens of MB/s peak, and 7–30d Kafka plus lake retention as the storage driver."
+    },
+    {
+     "id": "est3",
+     "point": "Pre-agg shrinks data hard: 86400 minutes/day × ads × dims ≪ raw events if only non-zero buckets are stored; dashboard reads ≪ write path.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts 86400 minute buckets and non-zero-only storage with raw volume, and notes reads are secondary."
+    }
+   ],
+   "probes": [
+    "Walk through peak click rate, daily volume, and why we optimize writes and pre-agg first."
+   ],
+   "hints": {
+    "1": "Pick a peak click QPS and relate it to average and daily volume.",
+    "2": "Use the 10M ads / ~10k clicks/s baseline and convert peak to daily clicks.",
+    "3": "State ~10k/s peak, ~100M clicks/day, 100–500 B events, 7–30d retention, and that pre-agg and write path dominate over dashboard QPS."
+   }
+  },
+  {
+   "phase": "api",
+   "goal": "Define click/event intake and metrics query interfaces including redirect and auth.",
+   "must_hit": [
+    {
+     "id": "api1",
+     "point": "GET /v1/click with ad_id, impression_id, sig → validate → enqueue → 302 to advertiser landing URL.",
+     "weight": "core",
+     "evidence_hint": "Describes signed click GET that enqueues then 302 redirects."
+    },
+    {
+     "id": "api2",
+     "point": "Alternate beacon POST /v1/events with event_id, type click|impression, ad_id, campaign_id, event_time, dims → 202 for mobile SDKs.",
+     "weight": "extended",
+     "evidence_hint": "Mentions async POST /v1/events returning 202."
+    },
+    {
+     "id": "api3",
+     "point": "GET metrics on ads/campaigns with from/to, granularity 1m|1h|1d, group_by country/device; public/signed click URL vs authenticated advertiser metrics; billing export consumes reconciled aggregates only.",
+     "weight": "core",
+     "evidence_hint": "Shows metrics GETs with granularity/group_by, auth split, and reconciled-only billing export."
+    }
+   ],
+   "probes": [
+    "How does the click URL work end-to-end, and how do advertisers query metrics?"
+   ],
+   "hints": {
+    "1": "Think tracking endpoint first, then a separate read API for dashboards.",
+    "2": "Click path should validate and enqueue before redirect; metrics are authenticated queries over time ranges.",
+    "3": "GET /v1/click → enqueue → 302; optional POST /v1/events → 202; GET .../metrics with 1m|1h|1d; billing webhook only on reconciled aggregates."
+   }
+  },
+  {
+   "phase": "data_model",
+   "goal": "Model raw events, dedup state, OLAP aggregates, lake truth, and billing snapshots.",
+   "must_hit": [
+    {
+     "id": "dm1",
+     "point": "Raw impression/click event: event_id or impression_id, ad_id, campaign_id, advertiser_id, optional user_id, event_time, ingest_time, ip/ua hashes, country, device, HMAC sig.",
+     "weight": "core",
+     "evidence_hint": "Lists the raw event fields including dual timestamps and HMAC sig."
+    },
+    {
+     "id": "dm2",
+     "point": "Dedup store: Redis set / Bloom of impression_id with TTL ≈ attribution window (hours–days); OLAP aggregate fact keyed by ad_id, window_start, granularity, dims → clicks, impressions, optional unique_approx.",
+     "weight": "core",
+     "evidence_hint": "Separates impression_id dedup with TTL from OLAP fact keys and counts."
+    },
+    {
+     "id": "dm3",
+     "point": "Raw lake Parquet/ORC on S3/GCS as source of truth for batch recompute; billing snapshot as immutable daily/hourly exact counts post-reconciliation with audited corrections.",
+     "weight": "extended",
+     "evidence_hint": "Names lake as batch source of truth and immutable reconciled billing snapshots."
+    }
+   ],
+   "probes": [
+    "What do you store raw vs pre-aggregated, and where does dedup state live?"
+   ],
+   "hints": {
+    "1": "You need both an append-only event record and something dashboards can query quickly.",
+    "2": "Split raw event, dedup set/Bloom, OLAP minute facts, lake, and billing snapshots.",
+    "3": "Raw event with impression_id/HMAC; Redis/Bloom TTL hours–days; OLAP (ad_id, window_start, dims)→counts; lake Parquet for Spark; immutable reconciled billing rows."
+   }
+  },
+  {
+   "phase": "architecture",
+   "goal": "Assemble intake → Kafka → Flink windows → OLAP, plus batch reconcile for billing.",
+   "must_hit": [
+    {
+     "id": "arch1",
+     "point": "Click/Event API behind LB: verify HMAC, dedup, append to Kafka clicks topic keyed by ad_id or salted key, archive to lake, then 302; Ad Placement Service is a black box issuing signed impression_id + click URL.",
+     "weight": "core",
+     "evidence_hint": "Describes stateless click API: HMAC, dedup, Kafka produce, lake archive, 302 after durable accept."
+    },
+    {
+     "id": "arch2",
+     "point": "Flink event-time tumbling windows emit minute aggregates to OLAP (Pinot/Druid/ClickHouse/BigQuery); Spark batch reconciler does exact dedup/aggregate from lake for billing and OLAP correction.",
+     "weight": "core",
+     "evidence_hint": "Names Flink minute windows to OLAP and Spark lake reconcile for authoritative billing."
+    },
+    {
+     "id": "arch3",
+     "point": "Happy path freshness is about window + checkpoint lag; optional Redis hot counters for pacing/budget and a fraud filter before count.",
+     "weight": "extended",
+     "evidence_hint": "Ties dashboard lag to window/checkpoint and mentions optional pacing Redis and fraud filter."
+    }
+   ],
+   "probes": [
+    "Draw the path from user click to advertiser chart and the separate billing path."
+   ],
+   "hints": {
+    "1": "Buffer clicks before aggregating; do not write dashboards synchronously from the click handler.",
+    "2": "API → Kafka → Flink → OLAP for dashboards; lake → Spark for billing truth.",
+    "3": "HMAC+dedup+Kafka then 302; Flink 1-min event-time windows to OLAP; Spark exact GROUP BY impression_id for invoices; never invoice from provisional stream alone."
+   }
+  },
+  {
+   "phase": "deep_dives",
+   "goal": "Defend Lambda vs Kappa, dedup keys, exactly-once, hot keys, late events, and hierarchical rollups.",
+   "must_hit": [
+    {
+     "id": "dd1",
+     "point": "Batch alone is stale under spikes; stream alone is hard to prove money-correct — senior answer is speed layer for UX + batch for truth (Lambda); Kappa if arguing one streaming codebase + log replay.",
+     "weight": "core",
+     "evidence_hint": "Compares batch vs stream and lands on Lambda (speed+batch) or justified Kappa."
+    },
+    {
+     "id": "dd2",
+     "point": "Dedup before windowing with signed per-impression id; user_id+ad_id is wrong for retargeting; Bloom FPs can drop real clicks — prefer exact Redis on money-adjacent paths.",
+     "weight": "core",
+     "evidence_hint": "Insists on signed impression_id dedup before windows and calls out Bloom FP risk for billing."
+    },
+    {
+     "id": "dd3",
+     "point": "Exactly-once story: Flink checkpoints + Kafka transactions + idempotent sink (e.g. Pinot upsert); honest shorthand is at-least-once + idempotent aggregate key.",
+     "weight": "core",
+     "evidence_hint": "Does not claim naked EOS; cites checkpoints, Kafka transactions, idempotent sink."
+    },
+    {
+     "id": "dd4",
+     "point": "Hot ads: salt ad_id then merge with SUM upsert or query-time sum; late events via watermark + allowed lateness, then side-output corrections or batch reconcile; long-range queries use hour/day rollups.",
+     "weight": "extended",
+     "evidence_hint": "Covers salting, watermarks/lateness, and hierarchical hour/day pre-agg."
+    }
+   ],
+   "probes": [
+    "Would you use Lambda or Kappa for billing-grade counts, and how do you dedupe and handle hot ads?"
+   ],
+   "hints": {
+    "1": "Separate dashboard freshness from invoice correctness.",
+    "2": "Talk speed vs batch layers, where dedup runs, and what happens when one ad goes viral.",
+    "3": "Lambda: Flink→OLAP for UX, Spark over lake for money; signed impression_id before windows; salt hot ad_id; watermarks for late mobile events; hour/day rollups for long ranges."
+   }
+  },
+  {
+   "phase": "bottlenecks",
+   "goal": "Scale each stage and define durable accept, replay, and failure healing.",
+   "must_hit": [
+    {
+     "id": "bn1",
+     "point": "Scale Click API horizontally behind LB with a lean verify/dedup/produce/redirect path; Kafka: more partitions, salt popular ads, monitor consumer lag.",
+     "weight": "core",
+     "evidence_hint": "Horizontally scales API and addresses Kafka hot keys/partitions and lag."
+    },
+    {
+     "id": "bn2",
+     "point": "Flink keyed state by ad+window; tune checkpoint interval (Uber ~2 min for EOS) vs freshness; dedup Redis sharded by impression_id with TTL so memory stays small; OLAP writes aggregates not every raw click.",
+     "weight": "core",
+     "evidence_hint": "Mentions Flink state/checkpoints (~2 min Uber), TTL’d Redis shards, and aggregate-only OLAP writes."
+    },
+    {
+     "id": "bn3",
+     "point": "Durable accept = Kafka ack before 302; replay retained offsets; reconciliation heals stream drift; DLQ for poison events; never block ingest on Spark; multi-region dual produce + union/upsert if active-active.",
+     "weight": "extended",
+     "evidence_hint": "States Kafka-ack-before-302, replay, reconcile, DLQ, and non-blocking batch."
+    }
+   ],
+   "probes": [
+    "Where does this system break first at peak write load, and how do you recover from processor bugs?"
+   ],
+   "hints": {
+    "1": "Walk the pipeline and name the first bottleneck on each hop.",
+    "2": "API QPS, Kafka hot partitions, Flink checkpoints, Redis memory, OLAP write amp, batch overrun.",
+    "3": "LB-scale lean click handlers; salt Kafka keys; Uber-like ~2 min checkpoints vs freshness; Kafka ack before 302 then replay/reconcile; write aggregates only to OLAP."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Batch vs stream (Lambda vs Kappa)",
+   "strong_answer": "Batch alone is simple but stale under spikes; stream alone is fresh but harder to prove money-correct. Prefer speed layer (Flink → near-real-time OLAP) for dashboards and batch (Spark over lake) for billing truth; choose Kappa only if you defend one streaming codebase plus log replay and still have a money-correctness story."
+  },
+  {
+   "topic": "Dedup timing and key vs Bloom vs Redis",
+   "strong_answer": "Dedup before windowing so cross-minute duplicates are not double-counted. Use signed per-impression id, not user_id+ad_id. Bloom is space-cheap but false positives can drop real clicks—prefer exact Redis for money-adjacent paths or accept FP only on non-billing dashboards."
+  },
+  {
+   "topic": "Exactly-once delivery claim vs at-least-once + idempotent sink",
+   "strong_answer": "Do not claim naked exactly-once. Honest interview story is Flink checkpoints + Kafka transactions + idempotent sink (Pinot upsert / UUID), summarized as at-least-once plus idempotent aggregate key."
+  },
+  {
+   "topic": "OLAP vs TSDB for serving",
+   "strong_answer": "Millions of ad IDs with multi-dimension slices favor columnar OLAP (Pinot/Druid/ClickHouse); plain TSDB only if cardinality and query shape stay tiny."
+  },
+  {
+   "topic": "Server-side 302 tracking vs client-only beacon",
+   "strong_answer": "Prefer server-side 302 through /click (count then redirect) over client-only navigation/best-effort beacon that can skip tracking and lose revenue."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Aggregating in the same OLTP DB that stores raw clicks with GROUP BY at 10k/s.",
+   "correction": "Store raw for audit/replay; serve pre-aggregated rows from OLAP, never COUNT(*) on OLTP at peak write rate."
+  },
+  {
+   "trap": "Counting with processing time so late mobile clicks land in the wrong minute.",
+   "correction": "Bucket by event time; use watermarks and allowed lateness so late events join the correct window."
+  },
+  {
+   "trap": "Claiming exactly-once without dedup, idempotent sink, or checkpoint story.",
+   "correction": "Explain at-least-once delivery plus Flink checkpoints, Kafka transactions, and idempotent OLAP upsert/aggregate keys."
+  },
+  {
+   "trap": "Deduping only inside a 1-minute Flink window.",
+   "correction": "Dedup before windowing (e.g. Redis/Bloom on impression_id) so duplicates across window boundaries do not double-count."
+  },
+  {
+   "trap": "Using user_id + ad_id forever as the idempotency key.",
+   "correction": "Use signed per-impression id so legitimate re-shows/retargeting still count correctly."
+  },
+  {
+   "trap": "Billing off the real-time layer without batch reconciliation.",
+   "correction": "Invoice from batch-reconciled exact counts over the lake; treat stream aggregates as provisional for dashboards unless product explicitly allows otherwise."
+  },
+  {
+   "trap": "Ignoring hot ad partition imbalance after a celebrity campaign.",
+   "correction": "Salt hot ad_id keys across partitions and merge with SUM upsert or query-time sum."
+  },
+  {
+   "trap": "Client-only redirect with best-effort beacon.",
+   "correction": "Use server-side 302 tracking after durable enqueue so lost beacons do not silently drop revenue."
+  },
+  {
+   "trap": "Building custom stream-state on raw Kafka consumers when asked for seniority.",
+   "correction": "Name Flink/Spark tradeoffs: event-time windows, watermarks, checkpoints, and why plain consumers fail for windowed state."
+  },
+  {
+   "trap": "Scope creep into a full fraud platform without being asked.",
+   "correction": "Mention invalid traffic/bots briefly, then park behind a filter service unless the interviewer expands scope."
+  }
+ ]
+}

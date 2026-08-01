@@ -1,0 +1,151 @@
+{
+ "id": "cpp_s09_dynamic_memory",
+ "title": "Dynamic Memory Allocation on the Heap",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs test whether candidates can correctly allocate, index, and free heap memory with new/delete and avoid leaks or use-after-free.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that heap storage is requested at run time with new, unlike compile-time-sized stack arrays.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Heap memory is allocated dynamically: the amount is decided at run time, not at compile time.",
+     "weight": "core",
+     "evidence_hint": "Candidate says the heap lets the program ask for storage sized by what it discovers while running, not a fixed compile-time size."
+    },
+    {
+     "id": "fund2",
+     "point": "A built-in array like int A[5] lives in the function stack frame with size fixed at compile time; new int[5] allocates a heap block and returns its address into a pointer.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts A on the stack with p = new int[5] (or int* p = new int[5]) where p holds the heap block address."
+    },
+    {
+     "id": "fund3",
+     "point": "The pointer itself is a stack variable that holds the address of the heap block created by new[].",
+     "weight": "extended",
+     "evidence_hint": "Candidate describes the stack-points-to-heap picture: p on the stack, the new[] block on the heap."
+    }
+   ],
+   "probes": [
+    "How does allocating an array with new differ from declaring a built-in array like int A[5]?"
+   ],
+   "hints": {
+    "1": "Think about when the size is known and where the storage lives.",
+    "2": "Compare a stack frame array fixed at compile time with an explicit new[] request whose address is stored in a pointer.",
+    "3": "int A[5] is on the stack at compile-time size; int* p = new int[5] puts a block of 5 ints on the heap and keeps its address in p."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Establish the full cycle: obtain with new[], use through the pointer, release with matching delete[], and null the pointer.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A block obtained with new persists for as long as the program runs unless the program explicitly gives it back; releasing it is entirely the programmer's responsibility.",
+     "weight": "core",
+     "evidence_hint": "Candidate states heap lifetime is not automatic and delete (or delete[]) must be called by the programmer."
+    },
+    {
+     "id": "mech2",
+     "point": "An array allocated with new[] must be released with delete[]; after delete[] the pointer still holds the old address, which is no longer valid, so assign NULL to mark it as pointing nowhere.",
+     "weight": "core",
+     "evidence_hint": "Candidate writes delete[] p; then p = NULL; and explains NULL as a deliberate points-to-nothing state versus a stale dangling address."
+    },
+    {
+     "id": "mech3",
+     "point": "A heap array reached through a pointer is indexed like an ordinary array: p[2] advances two elements past the address in p and accesses that value.",
+     "weight": "extended",
+     "evidence_hint": "Candidate shows A[2] = 15 and p[2] = 15 side by side and says indexing is defined in terms of the pointer."
+    }
+   ],
+   "probes": [
+    "After you allocate with new[], how do you correctly release the block, and what should you do with the pointer afterward?"
+   ],
+   "hints": {
+    "1": "Heap memory is not cleaned up when a function returns the way stack locals are.",
+    "2": "Match new[] with delete[], then consider what address the pointer still holds.",
+    "3": "Call delete[] p to return the block, then set p = NULL so it is a null pointer rather than a dangling address."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast automatic stack management and fixed compile-time size with manual heap ownership and run-time sizing.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Stack memory is managed automatically—locals vanish when the function returns—whereas heap memory is not reclaimed automatically.",
+     "weight": "core",
+     "evidence_hint": "Candidate clearly separates automatic stack lifetime from manual heap release."
+    },
+    {
+     "id": "tr2",
+     "point": "A stack array cannot be declared with a size known only at run time; the heap is the region that can satisfy a request whose size is discovered while the program runs.",
+     "weight": "core",
+     "evidence_hint": "Candidate explains that a user-supplied size rules out a compile-time stack array and requires new[]."
+    }
+   ],
+   "probes": [
+    "When would you choose heap allocation with new[] over a built-in stack array?"
+   ],
+   "hints": {
+    "1": "Consider lifetime management and when the size becomes known.",
+    "2": "Stack: automatic reclaim, fixed compile-time size. Heap: manual release, size can be decided at run time.",
+    "3": "Use the heap when size comes from input at run time; accept that you must delete[] yourself because the heap is not reclaimed automatically."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply new[] to a run-time-sized array and recognize the leak when reallocating without delete[].",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A typical pattern reads size from the user, then allocates with int* p = new int[size] because that size is known only at run time.",
+     "weight": "core",
+     "evidence_hint": "Candidate sketches cin >> size followed by new int[size] and notes a stack array could not use that bound."
+    },
+    {
+     "id": "app2",
+     "point": "If you later allocate a fresh block with another new int[size] and assign it to p, the first block must be released with delete[] before reassigning or it is leaked.",
+     "weight": "core",
+     "evidence_hint": "Candidate flags that p = new int[size] a second time orphans the old block unless delete[] ran first."
+    }
+   ],
+   "probes": [
+    "Walk through allocating an array whose length the user enters, then changing that length later—what can go wrong?"
+   ],
+   "hints": {
+    "1": "The interesting case is when size is not a compile-time constant.",
+    "2": "Allocate with new int[size] after reading size; think carefully before a second new[] into the same pointer.",
+    "3": "Before p = new int[size] again, delete[] the first block; otherwise the old heap memory stays reserved and unused—a leak."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Stack array vs heap array with new[]",
+   "strong_answer": "A built-in stack array has compile-time-fixed size and vanishes automatically when the function returns. A heap array from new[] can use a size discovered at run time and persists until the programmer releases it with delete[]; the pointer on the stack only holds the address."
+  },
+  {
+   "topic": "Leaving a pointer after delete[] vs setting it to NULL",
+   "strong_answer": "After delete[], the pointer still holds the old address, which is no longer valid. Assigning NULL makes a recognisable null pointer that points nowhere, instead of leaving a dangling stale address."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Skipping delete[] after new[]",
+   "correction": "The heap block stays reserved and unusable for the rest of the program's life—a memory leak—because heap memory is never reclaimed automatically."
+  },
+  {
+   "trap": "Using the pointer after delete[] without resetting it",
+   "correction": "The old address is no longer valid; accessing it reaches memory the program no longer owns. Set the pointer to NULL after delete[]."
+  },
+  {
+   "trap": "Reassigning p = new int[size] to resize without deleting the first block",
+   "correction": "The second new[] replaces the pointer with a brand-new block and orphans the first; delete[] the first block before reassigning or it is leaked."
+  }
+ ]
+}

@@ -1,0 +1,203 @@
+{
+ "id": "02_greedy",
+ "title": "Greedy (exchange argument, sorting-by-criterion, scheduling)",
+ "type": "CP",
+ "relevance": "High — OAs and Div2 A–C constantly ask “sort by the right key, then take locally optimal choices”; interval / deadline / pairing variants dominate interview greedy.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Max meetings / min removals / burst balloons → sort intervals by end (Movie Festival / LC 435 / LC 452). Reach-the-end / min jumps / circular gas → frontier or tank scan (Jump Game family / Gas Station)—common FAANG phone-screen. Assign cookies / rescue boats / light+heavy under capacity → sort + two pointers (Assign Cookies / Ferris Wheel). Finish jobs before deadlines / maximize score under time → sort by deadline or duration, often with a heap to drop the worst (Tasks & Deadlines / Course Schedule III / Potions).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Establish that the problem is greedy: fixed-priority local choices after sorting, not DP or heavy search.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "A greedy problem builds an optimal answer by repeatedly making a locally best choice under a fixed priority (earliest finish, smallest cost, largest gain, or a custom comparator from a 2-element swap).",
+     "weight": "core",
+     "evidence_hint": "Names locally optimal choices under a fixed priority / comparator rather than exploring all subsets."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognize greedy when the statement maximizes/minimizes a count or sum under constraints and a sort plus one left-to-right pass (sometimes with a heap) feels plausible.",
+     "weight": "core",
+     "evidence_hint": "Points at max/min under constraints plus sort + single forward pass (optional heap) as the cue."
+    },
+    {
+     "id": "rec3",
+     "point": "OA/interview disguises include interval end-time scheduling (meetings / removals / arrows), reach/tank scans (Jump Game / Gas Station), sort+two-pointer pairing (cookies / boats), and deadline/duration scheduling often with a heap.",
+     "weight": "extended",
+     "evidence_hint": "Maps the prompt to one of: sort-by-end intervals, frontier/tank scan, pairing two pointers, or deadline/duration + heap."
+    }
+   ],
+   "probes": [
+    "What in the statement suggests a fixed sort key plus a single left-to-right greedy pass rather than DP?",
+    "Is the priority earliest finish, smallest cost, largest gain, or a swap-derived comparator—and how do you know?"
+   ],
+   "hints": {
+    "1": "Ask whether a locally best choice under one priority could build the whole answer.",
+    "2": "Look for maximize/minimize a count/sum under constraints where sort + one forward pass (maybe a heap) feels natural.",
+    "3": "Name the priority (earliest finish / cost / gain / swap comparator) and the OA cousin: intervals-by-end, Jump/Gas scan, cookies pairing, or deadline heap."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Pick the right comparator and justify it with an exchange argument or domination before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Prove the key with an exchange argument: any optimal solution can be swapped toward the greedy order without worsening, or every rejected alternative is dominated.",
+     "weight": "core",
+     "evidence_hint": "States you can transform any optimal into the greedy order by swaps without loss, or that rejected picks are dominated."
+    },
+    {
+     "id": "appr2",
+     "point": "For interval / activity selection, sort by end (or by deadline / duration) then take one forward pass—Movie Festival is the canonical earliest-ending proof; Non-overlapping Intervals is the same idea as min removals.",
+     "weight": "core",
+     "evidence_hint": "Says sort intervals by end time then greedily keep non-overlapping (or drop conflicts / stab overlapping groups)."
+    },
+    {
+     "id": "appr3",
+     "point": "Exchange-argument scheduling template (Tasks and Deadlines): compare two adjacent items; if swapping never hurts, that comparator defines an optimal order—here sort by duration.",
+     "weight": "core",
+     "evidence_hint": "Mentions adjacent-swap exchange and duration order for Tasks & Deadlines–style scheduling."
+    },
+    {
+     "id": "appr4",
+     "point": "Stretch variants keep the same idea with more machinery: multi-resource earliest-ending + multiset (Movie Festival II), reverse/latest-possible packing (Petya's Exams), or sort by deadline then drop the longest via a max-heap when overdue (Course Schedule III).",
+     "weight": "extended",
+     "evidence_hint": "Names multiset of end times, reverse deadline packing, or deadline-sort + heap-drop-longest as the stretch move."
+    }
+   ],
+   "probes": [
+    "What do you sort by, and how would an exchange argument show that order is optimal?",
+    "For intervals, why earliest-ending rather than earliest-starting?"
+   ],
+   "hints": {
+    "1": "Name a sort key before proposing DP or search.",
+    "2": "Argue adjacent swap / exchange: moving toward the greedy order never worsens the answer.",
+    "3": "Intervals → sort by end + forward keep; Tasks & Deadlines → sort by duration via exchange; stretch → multiset ends, reverse packing, or deadline + drop-longest heap."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Code the concrete greedy scan: sort, then pairing, reach/tank, constructible prefix, or multiset rooms.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Pairing template: sort both sides then two-pointer assign the greediest feasible match (Assign Cookies / Ferris Wheel lightest+heaviest under capacity / boats).",
+     "weight": "core",
+     "evidence_hint": "Describes sorting then two pointers matching lightest with heaviest or next feasible cookie/child."
+    },
+    {
+     "id": "impl2",
+     "point": "Reach / tank invariants: Jump Game maintains a farthest-reach index; Gas Station resets the start when the tank goes below 0, with the exchange that if you fail at i, no start in the failed segment works.",
+     "weight": "core",
+     "evidence_hint": "Mentions farthest-reach scan and/or tank reset when tank < 0 plus the failed-segment start argument."
+    },
+    {
+     "id": "impl3",
+     "point": "Missing Coin Sum constructible prefix: maintain reach and accept the next coin iff it is ≤ reach+1; if the next coin is > reach+1, that sum is impossible.",
+     "weight": "core",
+     "evidence_hint": "States the reach / reach+1 acceptance rule for the next coin."
+    },
+    {
+     "id": "impl4",
+     "point": "Multi-resource scheduling (Room Allocation / Movie Festival II): assign free rooms via a multiset of end times while keeping earliest-ending order.",
+     "weight": "extended",
+     "evidence_hint": "Uses a multiset (or heap) of finishing times to reuse the earliest free resource."
+    }
+   ],
+   "probes": [
+    "Walk through how you would implement sort + two-pointer pairing for lightest+heaviest under a capacity.",
+    "How do you maintain the Jump Game farthest reach or the Gas Station tank reset in one pass?"
+   ],
+   "hints": {
+    "1": "After sorting, say what one left-to-right pass tracks.",
+    "2": "Pairing → two pointers; Jump → farthest index; Gas → reset start when tank < 0; coins → reach vs reach+1.",
+    "3": "Also: Room Allocation / Movie Festival II free rooms via multiset of end times."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch wrong comparators and cases where greedy must be abandoned for DP.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Abandon greedy for general coin change and 0/1 knapsack—those need DP (USACO Guide “when greedy fails”); Hit the Lottery only shows when canonical denominations make coin greedy safe.",
+     "weight": "core",
+     "evidence_hint": "Refuses blind coin/knapsack greedy and contrasts canonical denominations vs general coin DP."
+    },
+    {
+     "id": "pit2",
+     "point": "Wrong interval comparator (e.g. sorting by start instead of end) breaks activity selection / min-removals / arrows—all of which share the sort-by-end family.",
+     "weight": "core",
+     "evidence_hint": "Insists on sorting by end time for Movie Festival / LC 435 / LC 452 style prompts."
+    },
+    {
+     "id": "pit3",
+     "point": "Skipping the proof habit—failing to argue that any optimal solution can be transformed into the greedy one without loss—leaves a plausible but unjustified local heuristic.",
+     "weight": "extended",
+     "evidence_hint": "Gives an exchange or domination sketch, not only “sort then take best.”"
+    }
+   ],
+   "probes": [
+    "When would you refuse greedy and switch to DP on a coin or knapsack-flavored prompt?",
+    "What goes wrong if you schedule intervals sorted by start time instead of end time?"
+   ],
+   "hints": {
+    "1": "Ask whether the denominations/items are a known greedy-safe case.",
+    "2": "General coin change and 0/1 knapsack → DP; intervals → must sort by end.",
+    "3": "Also demand an exchange/transform-to-greedy proof, not just a local rule of thumb."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Canonical-denomination coin greedy vs general coin DP",
+   "strong_answer": "Hit the Lottery–style canonical denominations can make greedy safe; general coin change needs DP—know when greedy fails before coding a denomination grab."
+  },
+  {
+   "topic": "Sort-by-end interval greedy vs other interval orders",
+   "strong_answer": "Max meetings, min removals, and arrows-to-burst-balloons all use sort by end time then a forward pass; sorting by start (or another key) is the usual wrong comparator."
+  },
+  {
+   "topic": "Single-resource earliest-ending vs multi-resource multiset scheduling",
+   "strong_answer": "Movie Festival is one person earliest-ending; Movie Festival II / Room Allocation keep earliest-ending but track free resources with a multiset of end times."
+  },
+  {
+   "topic": "Sort-by-duration exchange vs deadline-sort + heap drop",
+   "strong_answer": "Tasks and Deadlines sorts by duration via adjacent-swap exchange; Course Schedule III / Potions-style prompts sort by deadline (or take positives) and use a heap to dump the worst when the schedule breaks."
+  },
+  {
+   "topic": "Two-pointer pairing vs skill-matched greedy matching",
+   "strong_answer": "Cookies / Ferris Wheel pair after sorting with two pointers under a capacity/greediest-feasible rule; BerSU Ball is sort + greedy matching within difference 1—same family, different feasibility predicate."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Applying coin/knapsack greedy when the problem is general coin change or 0/1 knapsack.",
+   "correction": "Switch to DP; only treat denomination greedy as safe when the setting is canonical (Hit the Lottery lesson / USACO “when greedy fails”)."
+  },
+  {
+   "trap": "Sorting intervals by start time for activity selection, min removals, or arrows.",
+   "correction": "Sort by end time, then keep non-overlapping / drop conflicts / stab overlapping groups (Movie Festival / LC 435 / LC 452)."
+  },
+  {
+   "trap": "On Missing Coin Sum, accepting coins without the reach+1 rule.",
+   "correction": "Maintain reach; accept next iff ≤ reach+1; if next coin > reach+1, that sum is impossible."
+  },
+  {
+   "trap": "On Gas Station, restarting anywhere after a failure without the segment exchange.",
+   "correction": "Reset start when tank < 0; if you fail at i, no start in the failed segment works."
+  },
+  {
+   "trap": "Treating Jump Game as needing DP/BFS when a farthest-reach scan suffices.",
+   "correction": "Maintain the reachable frontier (farthest index); Jump Game II extends the same invariant with range/BFS-layer greedy for min jumps."
+  },
+  {
+   "trap": "Claiming a sort key is optimal without an exchange or domination argument.",
+   "correction": "Compare adjacent items (Tasks & Deadlines template) or show any optimal can be swapped into the greedy order without loss."
+  }
+ ]
+}

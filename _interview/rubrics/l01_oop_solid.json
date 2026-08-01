@@ -1,0 +1,201 @@
+{
+ "id": "l01_oop_solid",
+ "title": "OOP & SOLID principles",
+ "type": "CONCEPT",
+ "relevance": "High — the vocabulary and judgment bar for every LLD / machine-coding round (campus + experienced); Flipkart, Uber, Swiggy, Amazon, Atlassian, and most Indian product cos grill class design against these before patterns.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Campus/new-grad LLD and machine-coding rounds almost always open with OOP pillars and applying SOLID (Flipkart, Uber, Swiggy, Amazon, Razorpay, Atlassian-style). Mid/experienced rounds grade why this interface or why not inherit on parking lot, Splitwise, elevator, booking, and game designs. Foundational for all LLD; explicit SOLID quizzes common early in Indian product loops and as follow-ups during machine-coding review.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Candidate can name the four OOP pillars and state each SOLID letter’s intent in interview terms.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Four pillars: Encapsulation hides state and exposes validated operations; Abstraction shows what and hides how; Inheritance shares is-a contracts carefully; Polymorphism is one interface with many behaviors and the engine of extensible LLD.",
+     "weight": "core",
+     "evidence_hint": "Names all four and gives a crisp one-liner for each without collapsing encapsulation into abstraction."
+    },
+    {
+     "id": "fund2",
+     "point": "Prefer composition/HAS-A over deep inheritance: inherit for true subtype contracts; compose for reusable behavior (Strategy, pricing engines, payment gateways).",
+     "weight": "core",
+     "evidence_hint": "Says inherit only for real is-a; reuse behavior via HAS-A/composition with an LLD example."
+    },
+    {
+     "id": "fund3",
+     "point": "SRP: a class should have one reason to change, often one business actor—not merely “one method”; God classes (ParkingLot that also bills, notifies, and persists) fail LLD reviews.",
+     "weight": "core",
+     "evidence_hint": "Ties SRP to actor/axis of change and flags a multi-concern God class as a review fail."
+    },
+    {
+     "id": "fund4",
+     "point": "OCP: open for extension, closed for modification—add a new vehicle/fare/payment type via new class and polymorphism, not another switch branch in stable code.",
+     "weight": "extended",
+     "evidence_hint": "Describes extending by new type/class rather than editing stable switch/if logic."
+    }
+   ],
+   "probes": [
+    "Walk me through the four OOP pillars, then give me one sentence each for SRP and OCP in an LLD setting."
+   ],
+   "hints": {
+    "1": "Start with encapsulation vs abstraction, then inheritance vs polymorphism.",
+    "2": "SRP is about one reason to change / one actor; OCP is extend without rewriting stable policy.",
+    "3": "Say: hide state behind validated ops; show what not how; careful is-a; one interface many behaviors—then SRP = one actor to change, OCP = new class + polymorphism not another switch."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Candidate can apply LSP, ISP, and DIP correctly and spot classic hierarchy/interface coupling smells.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "LSP: subtypes must honor the base contract; throwing UnsupportedOperationException or weakening preconditions (Square/Rectangle, Bicycle/startEngine) is an inheritance smell → redesign the hierarchy.",
+     "weight": "core",
+     "evidence_hint": "Gives a subtype that breaks the base contract and says redesign the hierarchy rather than stub/throw."
+    },
+    {
+     "id": "mech2",
+     "point": "ISP: don’t force clients onto fat interfaces; split by role (Parkable vs Chargeable) so implementers aren’t stubbing unused methods.",
+     "weight": "core",
+     "evidence_hint": "Splits a fat interface into role-specific ones so clients/implementers only see what they use."
+    },
+    {
+     "id": "mech3",
+     "point": "DIP: high-level policy depends on abstractions, not concretions—inject PaymentGateway, don’t new StripeClient() inside the service (also unlocks testing).",
+     "weight": "core",
+     "evidence_hint": "Says inject an abstraction at the boundary instead of constructing a concrete client inside the service."
+    },
+    {
+     "id": "mech4",
+     "point": "Supporting heuristics: DRY (don’t copy domain rules); KISS/YAGNI—in a 90-min machine-coding round, a working SRP/OCP design beats a half-finished pattern zoo.",
+     "weight": "extended",
+     "evidence_hint": "Mentions not over-applying patterns in a timed round and keeping a working SRP/OCP core."
+    }
+   ],
+   "probes": [
+    "ElectricCar implements Car but throws on turnOnEngine—what principle is broken, and how do you redesign it? Then how would ISP and DIP show up on a fat Machine with print/scan/fax?"
+   ],
+   "hints": {
+    "1": "Ask whether every subtype can honor the parent’s promises.",
+    "2": "LSP → fix the abstraction; ISP → split by role; DIP → depend on injected interfaces.",
+    "3": "Classic LSP fail: redesign with start()/capability interfaces; segregate Printer/Scanner/Fax; DocumentService depends on a Printer abstraction injected at construction, not a concrete HpPrinter."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Candidate judges when to inherit, when to compose, and how far to push SOLID in a timed LLD round.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Inheritance for reuse couples you to parent APIs and often violates LSP; composition + delegation reuses behavior without fake is-a (Replace Inheritance with Delegation when is-a is fake).",
+     "weight": "core",
+     "evidence_hint": "Rejects inherit-everything-for-reuse and prefers composition/delegation when the is-a story is weak."
+    },
+    {
+     "id": "tr2",
+     "point": "Not every new feature needs a new interface—apply OCP/DIP where change is likely (payment, pricing, vehicle type); YAGNI elsewhere in a timed round.",
+     "weight": "core",
+     "evidence_hint": "Selectively applies interfaces where variation is expected and invokes YAGNI for the rest."
+    },
+    {
+     "id": "tr3",
+     "point": "Working code vs perfect SOLID: mandatory requirements plus a clean core model win; call out follow-up refactors you’d do with more time.",
+     "weight": "extended",
+     "evidence_hint": "Prioritizes a runnable happy path with a sound core, then names later SOLID cleanups."
+    }
+   ],
+   "probes": [
+    "Why not inherit everything for reuse? And in a timed machine-coding round, when would you skip introducing another interface?"
+   ],
+   "hints": {
+    "1": "Think about fake is-a and what you actually need to ship.",
+    "2": "Composition avoids unused inherited APIs; YAGNI limits SOLID to likely change points.",
+    "3": "Inherit only true subtypes; compose for shared behavior; reserve OCP/DIP for payment/pricing/vehicle-type; ship mandatory requirements first and name follow-up refactors."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Candidate can run pillar/SOLID drills and a short machine-coding design checklist before coding.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "For BankAccount: encapsulation (private balance + withdraw), abstraction (Account API), inheritance vs composition choice, polymorphism (Savings vs Current interest).",
+     "weight": "core",
+     "evidence_hint": "Maps each pillar onto BankAccount with concrete private state, API, and Savings/Current behavior."
+    },
+    {
+     "id": "app2",
+     "point": "SRP smell: UserManager that authenticates, updates profile, and sends email—split into classes and state each one’s single reason to change.",
+     "weight": "core",
+     "evidence_hint": "Splits auth, profile, and email into separate classes with one change reason each."
+    },
+    {
+     "id": "app3",
+     "point": "OCP drill: refactor PriceCalculator if (type == ...) to a PricingStrategy (or shape/area) hierarchy so a new type needs zero edits to the calculator.",
+     "weight": "core",
+     "evidence_hint": "Replaces type switches with strategy/polymorphism and claims the calculator stays untouched for new types."
+    },
+    {
+     "id": "app4",
+     "point": "Machine-coding checklist: for a tiny system (vending machine / parking spot allocator), spend 10 minutes listing entities, IS-A vs HAS-A, and which SOLID moves you’ll use; only then code a working happy path.",
+     "weight": "extended",
+     "evidence_hint": "Describes a short design pass (entities, IS-A/HAS-A, SOLID moves) before coding the happy path."
+    }
+   ],
+   "probes": [
+    "Take a ParkingLot-style design: where do you use composition vs inheritance, and which SOLID moves would you apply before you start coding?"
+   ],
+   "hints": {
+    "1": "List entities and behaviors before classes.",
+    "2": "Mark true is-a vs has-a; put pricing/payment/vehicle variation behind abstractions.",
+    "3": "Entities + IS-A/HAS-A map; SRP off the God ParkingLot; OCP via strategy/polymorphism for new types; inject payment abstractions; then code the happy path."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Inheritance vs composition",
+   "strong_answer": "Inherit only for true subtype contracts; prefer composition/HAS-A for reusable behavior. Inheritance couples to parent APIs and often violates LSP; composition + delegation reuses behavior without fake is-a."
+  },
+  {
+   "topic": "New interface for every feature vs YAGNI",
+   "strong_answer": "Apply OCP/DIP where change is likely (payment, pricing, vehicle type); YAGNI elsewhere in a timed round—don’t invent interfaces you don’t need."
+  },
+  {
+   "topic": "Working demo vs perfect SOLID",
+   "strong_answer": "Mandatory requirements plus a clean core model win in machine-coding; name follow-up SOLID refactors you’d do with more time rather than shipping a half-finished pattern zoo."
+  },
+  {
+   "topic": "SRP vs small classes",
+   "strong_answer": "SRP is one axis of change / one actor, not “small classes.” A cohesive large domain class can be fine; a small class with two stakeholders is not."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating SRP as “make classes small.”",
+   "correction": "SRP means one reason to change (often one business actor). A cohesive 200-line domain class can be fine; a 50-line class with two stakeholders is not."
+  },
+  {
+   "trap": "Inheriting everything for reuse.",
+   "correction": "Inheritance couples you to parent APIs and often violates LSP; composition + delegation reuses behavior without fake is-a."
+  },
+  {
+   "trap": "Adding a new interface for every feature.",
+   "correction": "No—apply OCP/DIP where change is likely; YAGNI elsewhere in a timed round."
+  },
+  {
+   "trap": "ElectricCar implements Car but throws on turnOnEngine.",
+   "correction": "Classic LSP failure; redesign the abstraction (e.g. start() / capability interfaces)."
+  },
+  {
+   "trap": "Naming patterns without needing them.",
+   "correction": "Patterns are applications of SOLID (Strategy ≈ OCP+composition; DI ≈ DIP). Don’t name a pattern you didn’t need."
+  },
+  {
+   "trap": "Chasing perfect SOLID over a working solution.",
+   "correction": "Mandatory requirements + clean core model win; call out follow-up refactors you’d do with more time."
+  }
+ ]
+}

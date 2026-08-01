@@ -1,0 +1,167 @@
+{
+ "id": "cpp_s32_static_members",
+ "title": "Static Members",
+ "type": "FUND",
+ "relevance": "Interviewers use static members to check whether candidates understand class-level shared state, lifetime, and the constraints on static functions versus instance methods in C++.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that static members belong to the class, are shared across instances, and have program lifetime.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Static members belong to the class itself and are shared across all instances, existing even if no objects have been created.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts object members with class-owned statics that are shared and usable without instances."
+    },
+    {
+     "id": "fund2",
+     "point": "A static data member has only one copy in the entire program and lives for the whole program: created at start and destroyed at termination.",
+     "weight": "core",
+     "evidence_hint": "Says one shared copy regardless of how many objects exist, with program-long lifetime."
+    },
+    {
+     "id": "fund3",
+     "point": "Static members are stored in the data segment (or BSS if uninitialised), not on the stack or heap alongside object instances.",
+     "weight": "extended",
+     "evidence_hint": "Names data/BSS segment and explicitly rejects stack/heap-with-object storage."
+    }
+   ],
+   "probes": [
+    "How do static members differ from normal class members in ownership, sharing, and lifetime?"
+   ],
+   "hints": {
+    "1": "Think about who owns the member: each object, or the class.",
+    "2": "Consider how many copies exist and when that storage is created and destroyed.",
+    "3": "Static members are class-owned, one shared copy for the whole program, not per-object stack/heap fields."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain declaration versus definition, in-class initialisation rules, and static function access limits.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Historically a static member must be declared inside the class but defined and initialised outside the class in a single source file.",
+     "weight": "core",
+     "evidence_hint": "Shows in-class declaration plus out-of-class Class::member = value definition."
+    },
+    {
+     "id": "mech2",
+     "point": "C++17 inline static allows defining and initialising static members directly inside the class, avoiding a separate out-of-class definition.",
+     "weight": "core",
+     "evidence_hint": "Mentions C++17 inline static in-class definition as the modern alternative."
+    },
+    {
+     "id": "mech3",
+     "point": "A static member function has no this pointer, so it can only directly access other static members and cannot read or modify non-static members.",
+     "weight": "core",
+     "evidence_hint": "Links no this to static-only access and gives an error for touching instance fields."
+    },
+    {
+     "id": "mech4",
+     "point": "Older standards allow in-class init of const static integral types; constexpr static members are implicitly inline and must be initialised in the class.",
+     "weight": "extended",
+     "evidence_hint": "Distinguishes const integral in-class init from non-integral types, and states constexpr static is implicitly inline."
+    }
+   ],
+   "probes": [
+    "How do you declare, define, and initialise a static data member, and what can a static member function access?"
+   ],
+   "hints": {
+    "1": "Separate the blueprint (declaration) from the actual memory allocation (definition).",
+    "2": "Cover classic out-of-class definition, C++17 inline static, and the no-this rule for static functions.",
+    "3": "Declare in class, define outside unless inline static / allowed const integral or constexpr static; static functions may touch only other statics."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose clear access style and avoid unsafe cross-translation-unit static dependencies.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer accessing static members via the class name and scope resolution (Class::member) over object access, because it communicates that the member is static.",
+     "weight": "core",
+     "evidence_hint": "Says object access works but Class::member is strongly preferred for clarity."
+    },
+    {
+     "id": "tr2",
+     "point": "Avoid cross-file dependencies between static variables; if needed, wrap the static in a function that returns a reference (Construct On First Use).",
+     "weight": "core",
+     "evidence_hint": "Names the static initialisation order problem and the function-local reference idiom as the safe pattern."
+    }
+   ],
+   "probes": [
+    "How should you access statics, and what goes wrong when statics in different .cpp files depend on each other?"
+   ],
+   "hints": {
+    "1": "Think about what the call site communicates: instance state or class state.",
+    "2": "Recall that the standard does not guarantee static init order across translation units.",
+    "3": "Prefer Class::member; avoid cross-file static deps, or use Construct On First Use returning a reference."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply static members to instance tracking, utilities, factories, and Singleton-style access.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A classic use is an object counter: a shared static count updated in constructors/destructors, read via a static getter.",
+     "weight": "core",
+     "evidence_hint": "Describes increment/decrement of a shared count and a static function returning the active count."
+    },
+    {
+     "id": "app2",
+     "point": "Static functions are typically used for utility groupings, instance management, factory methods, and as the global access method in the Singleton pattern.",
+     "weight": "core",
+     "evidence_hint": "Lists utilities/factories/Singleton static access rather than only mentioning a counter."
+    },
+    {
+     "id": "app3",
+     "point": "In Python, the equivalents are a class variable for static data and a method decorated with @staticmethod for a static member function.",
+     "weight": "extended",
+     "evidence_hint": "Maps C++ static data to class variables and static functions to @staticmethod."
+    }
+   ],
+   "probes": [
+    "Give a concrete example of using static members to track live instances, and name other common design uses."
+   ],
+   "hints": {
+    "1": "Start with something every object must update on create and destroy.",
+    "2": "Add a static reader, then mention factories or Singleton-style Class::getInstance.",
+    "3": "Shared counter in ctor/dtor plus static getter; also utilities, factories, and Singleton access."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Class::member access vs object.member access",
+   "strong_answer": "Both can reach a static member, but Class::member is strongly preferred because it makes the class-level ownership obvious at the call site."
+  },
+  {
+   "topic": "Out-of-class definition vs C++17 inline static",
+   "strong_answer": "Classic C++ requires a single out-of-class definition for allocation; C++17 inline static lets you define and initialise in-class and skip the separate definition."
+  },
+  {
+   "topic": "Cross-file static dependency vs Construct On First Use",
+   "strong_answer": "Depending on another translation unit's static risks the static initialisation order fiasco; wrapping the static in a function that returns a reference initialises on first use and avoids that order hazard."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming static member functions can use const or virtual like ordinary member functions.",
+   "correction": "const qualifies this, which static functions do not have, so const is meaningless; virtual needs an object's vtable, which is impossible without an instance."
+  },
+  {
+   "trap": "Letting one static variable's initialisation depend on another static from a different .cpp file.",
+   "correction": "Init order across translation units is unspecified (static initialisation order fiasco); avoid the dependency or use Construct On First Use."
+  },
+  {
+   "trap": "Trying to initialise a non-integral const static (for example const static std::string) in-class under older rules, or having a static function touch non-static fields.",
+   "correction": "Only const static integral types had the old in-class init exception; non-integrals need out-of-class definition, and static functions may only directly access other statics."
+  }
+ ]
+}

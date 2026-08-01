@@ -1,0 +1,163 @@
+{
+ "id": "cpp_s14_functions_overloading_defaults",
+ "title": "Function overloading, templates, and default arguments",
+ "type": "FUND",
+ "relevance": "Interviewers probe whether candidates can write one conceptual operation for many argument shapes without illegal overload clashes, broken template deduction, or misuse of defaults.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what overloading, function templates, and default arguments each allow.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Two or more functions may share a name if their parameter lists differ in number of parameters or in types.",
+     "weight": "core",
+     "evidence_hint": "States overloads are distinguished by parameter lists (count and/or types), not by name alone."
+    },
+    {
+     "id": "fund2",
+     "point": "A function template writes the function once with a placeholder type parameter; the compiler generates a concrete version for each type actually used.",
+     "weight": "core",
+     "evidence_hint": "Describes one templated definition plus compiler instantiation per used type."
+    },
+    {
+     "id": "fund3",
+     "point": "A parameter may be given a default value, making it optional at the call site.",
+     "weight": "core",
+     "evidence_hint": "Says a defaulted parameter can be omitted and the default is supplied instead."
+    }
+   ],
+   "probes": [
+    "What three C++ features let one conceptual operation serve many argument shapes, and what does each one do?"
+   ],
+   "hints": {
+    "1": "Think about same name with different signatures, one body for many types, and optional trailing parameters.",
+    "2": "Overloading shares a name across differing parameter lists; templates use a type parameter; defaults make a parameter optional.",
+    "3": "Overloads: same name, different parameters; template: placeholder type, compiler generates per use; default argument: optional at the call site."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how the compiler picks overloads, when return type fails as a distinguisher, how template deduction binds T, and where defaults may appear.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "The compiler selects the overload by matching the call’s arguments to the parameter lists.",
+     "weight": "core",
+     "evidence_hint": "Mentions argument matching / call-site types and arity drive which overload is called."
+    },
+    {
+     "id": "mech2",
+     "point": "Overloads must differ in their parameters; differing only in return type is not a distinct overload and will not compile.",
+     "weight": "core",
+     "evidence_hint": "Gives the clash of int max(int,int) vs float max(int,int) and says return type alone cannot disambiguate because the return may be ignored."
+    },
+    {
+     "id": "mech3",
+     "point": "With one template parameter T, both arguments must deduce to the same type; mixing float and double (e.g. maxim(2.3f, 5.6)) yields no matching function.",
+     "weight": "core",
+     "evidence_hint": "Explains T cannot be both float and double for one call, so mixed types fail deduction unless cast."
+    },
+    {
+     "id": "mech4",
+     "point": "Only trailing parameters may carry defaults so omitted arguments are always the last ones.",
+     "weight": "core",
+     "evidence_hint": "States defaults are restricted to trailing parameters for positional omission to work."
+    }
+   ],
+   "probes": [
+    "Why is float max(int, int) illegal next to int max(int, int), and what goes wrong if you call a single-T maxim with a float and a double?"
+   ],
+   "hints": {
+    "1": "Ask what the call site must supply for the compiler to choose, including when the return is unused.",
+    "2": "Return type is invisible if ignored; one T cannot bind two different argument types.",
+    "3": "Identical (int,int) parameters with different return types clash; maxim(2.3f, 5.6) fails because T cannot be both float and double."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast when to use separate overloads, a template, or a defaulted parameter instead of another overload.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "When logic is identical across types and only the types change, separate hand-written overloads are wasteful compared with one template.",
+     "weight": "core",
+     "evidence_hint": "Says one template replaces separate typed max/maxim overloads when the body is the same."
+    },
+    {
+     "id": "tr2",
+     "point": "A single function with a default argument can replace a pair of overloads that differ only by an optional trailing parameter.",
+     "weight": "core",
+     "evidence_hint": "Notes one add with z defaulted covers both two- and three-argument calls that would otherwise need two overloads."
+    }
+   ],
+   "probes": [
+    "When would you prefer a template over typed overloads, and when does a default argument replace an overload pair?"
+   ],
+   "hints": {
+    "1": "Compare identical logic across types versus optional last parameters with the same body.",
+    "2": "Same algorithm, different types → template; same algorithm, optional trailing arg → default.",
+    "3": "Template replaces int/float max-style overloads; defaulted z replaces separate add(int,int) and add(int,int,int)."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply overload selection, template deduction, and defaulted calls to concrete call sites from the material.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "For overloaded add, add(a, b) uses the two-int version and add(a, b, c) uses the three-int version when a, b, c are ints.",
+     "weight": "core",
+     "evidence_hint": "Walks the two- and three-argument int calls to the matching overloads."
+    },
+    {
+     "id": "app2",
+     "point": "With int add(int x, int y, int z = 0), add(2, 5) yields 7, add(2, 5, 8) yields 15, and add(2, 5, 0) yields 7.",
+     "weight": "core",
+     "evidence_hint": "States the three call results using the default or explicit z."
+    },
+    {
+     "id": "app3",
+     "point": "maxim(12, 14) deduces T as int and maxim(2.3, 1.4) deduces T as double from matching argument types.",
+     "weight": "extended",
+     "evidence_hint": "Names the deduced types for those two calls."
+    }
+   ],
+   "probes": [
+    "Given the overloaded and defaulted add examples, what is called or returned for add(a,b), add(a,b,c), add(2,5), and add(2,5,8)?"
+   ],
+   "hints": {
+    "1": "Match arity and types first; then apply the default when the last argument is omitted.",
+    "2": "Two ints → two-param overload; three ints → three-param; omitted z uses 0.",
+    "3": "add(a,b) two-int overload; add(a,b,c) three-int; add(2,5)→7; add(2,5,8)→15."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Function template vs hand-written typed overloads",
+   "strong_answer": "If the logic is identical and only the types change, one template with a type parameter replaces separate overloads such as int and float max; the compiler generates a concrete version per type actually used."
+  },
+  {
+   "topic": "Default argument vs overload pair for optional trailing parameter",
+   "strong_answer": "One function with a trailing default (e.g. z = 0) often replaces writing both a two-parameter and a three-parameter overload when the body is the same."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Declaring two functions that differ only in return type (e.g. int max(int,int) and float max(int,int)) and treating them as overloads.",
+   "correction": "Overloads must differ in parameters; return type alone is not enough because a call may ignore the return, so the compiler has no basis to choose and the program will not compile."
+  },
+  {
+   "trap": "Calling a single-parameter-type template like maxim with mixed argument types (e.g. float and double).",
+   "correction": "One T must resolve to a single type per call; both arguments must be the same type or be cast so deduction can succeed."
+  },
+  {
+   "trap": "Putting default arguments on non-trailing parameters.",
+   "correction": "Only trailing parameters may carry defaults so that any omitted arguments are always the last ones."
+  }
+ ]
+}

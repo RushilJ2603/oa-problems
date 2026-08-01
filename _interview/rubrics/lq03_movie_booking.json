@@ -1,0 +1,318 @@
+{
+ "id": "lq03_movie_booking",
+ "title": "Design a Movie Ticket Booking System (BookMyShow)",
+ "type": "LLD",
+ "relevance": "High — hard concurrency LLD / machine-coding staple (campus + SDE-2); Flipkart, Swiggy, Amazon, Walmart, Razorpay, BookMyShow-style loops probe seat locking + payment; pairs with HLD Ticketmaster/BookMyShow (hq11).",
+ "difficulty": "mid",
+ "prereqs": [
+  "L01",
+  "L02",
+  "L03",
+  "L04",
+  "L05",
+  "L06"
+ ],
+ "company_notes": "Very common campus/machine-coding BookMyShow LLD at Flipkart, Uber, Swiggy, Amazon new-grad, and Indian product cos (working hold+confirm + clean classes beat a pattern zoo; concurrency often a stretch after happy path); SDE-2/experienced at FAANG-adjacent, Razorpay, Walmart, BookMyShow expects TTL locks, multi-seat atomicity, and payment failure paths from the start and may bridge to HLD (Redis, waiting room); among the top ~10 hard LLD problems and the canonical concurrency + inventory OOD question after Parking Lot / Elevator.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Clarify scope and lock functional/non-functional requirements, use cases, and demo assumptions before modeling.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Clarify first: single cinema vs multi-city aggregator, specific seat pick vs auto-assign, seat tiers/pricing, payment in scope, cancel/refund, hold TTL, and whether concurrency is required.",
+     "weight": "core",
+     "evidence_hint": "Asks multi-city vs single cinema, seat selection model, pricing, payment, cancel/refund, hold TTL, and concurrency before designing."
+    },
+    {
+     "id": "req2",
+     "point": "Typical FR: search movies/shows by city (+ title); list cinemas/shows; view seat map; select N seats; temporarily lock; pay; confirm booking; cancel confirmed booking (release seats).",
+     "weight": "core",
+     "evidence_hint": "Lists search/list/map/select/lock/pay/confirm/cancel as the customer path."
+    },
+    {
+     "id": "req3",
+     "point": "Cover use cases: browse→pay→ticket; two users race same seat → exactly one wins; abandon checkout → TTL frees seats; payment fails → unlock; cancel → seats AVAILABLE again.",
+     "weight": "core",
+     "evidence_hint": "Walks race, TTL abandon, payment-fail unlock, and cancel release—not only the happy path."
+    },
+    {
+     "id": "req4",
+     "point": "NFR: no double-booking; thread-safe under concurrent holds; extensible pricing/payment; lock TTL; modular services (not one god class).",
+     "weight": "core",
+     "evidence_hint": "States no double-booking, concurrent-hold safety, swappable pricing/payment, TTL, and modular services."
+    },
+    {
+     "id": "req5",
+     "point": "State assumptions for LLD: e.g. one city demo, ~100–300 seats/screen, hold = 10 min, payment mocked, in-memory OK; park UI rendering, real PGW, refunds, waitlist, partner APIs, flash-sale waiting room until asked.",
+     "weight": "extended",
+     "evidence_hint": "Gives seat-count/TTL/mock-payment assumptions and parks HLD-only extras until asked."
+    }
+   ],
+   "probes": [
+    "Before drawing classes, what would you clarify for scope, FRs, NFRs, and assumptions?",
+    "Which use cases must work on day one—especially races, abandon, and payment failure?"
+   ],
+   "hints": {
+    "1": "Start with clarifying questions: city scope, seat pick, payment, TTL, concurrency.",
+    "2": "Separate typical FR (search→lock→pay→confirm/cancel) from NFRs (no double-book, TTL, extensible strategies) and out-of-scope HLD items.",
+    "3": "Say: clarify multi-city/payment/TTL; FR search/list/map/hold/pay/confirm/cancel; NFR no double-book + concurrent holds; assume ~100–300 seats/screen, 10 min hold, mocked payment; park PGW/waitlist/waiting room."
+   }
+  },
+  {
+   "phase": "entities",
+   "goal": "Establish the city→show hierarchy, ShowSeat inventory, and seat/booking status model.",
+   "must_hit": [
+    {
+     "id": "ent1",
+     "point": "Hierarchy: City → Cinema → Screen → Show (movie + screen + startTime) → per-show seat inventory; seat map template on Screen, availability per Show.",
+     "weight": "core",
+     "evidence_hint": "Draws City/Cinema/Screen/Show and says availability is per show, not shared across the day’s shows."
+    },
+    {
+     "id": "ent2",
+     "point": "Seat = layout (row, col, type); racing inventory is ShowSeat / status keyed by (showId, seatId)—mutating one shared Seat.status across shows is wrong.",
+     "weight": "core",
+     "evidence_hint": "Separates layout Seat from per-show ShowSeat inventory and rejects a single shared Seat.status."
+    },
+    {
+     "id": "ent3",
+     "point": "3-state seat model: AVAILABLE → LOCKED/HELD → BOOKED; never jump AVAILABLE→BOOKED while payment is in flight.",
+     "weight": "core",
+     "evidence_hint": "Names AVAILABLE/LOCKED|HELD/BOOKED and forbids booking without a hold during payment."
+    },
+    {
+     "id": "ent4",
+     "point": "Booking holds id, user, show, seats, amount, status PENDING|CONFIRMED|CANCELLED, and payment; User 1──* Booking.",
+     "weight": "extended",
+     "evidence_hint": "Lists Booking fields and PENDING/CONFIRMED/CANCELLED lifecycle tied to a user."
+    }
+   ],
+   "probes": [
+    "What is the entity hierarchy from city down to seats, and where does availability live?",
+    "How do Seat and ShowSeat differ, and what statuses can a show seat take?"
+   ],
+   "hints": {
+    "1": "Don’t flatten—name City, Cinema, Screen, Show, and seats.",
+    "2": "Layout on Screen; inventory status per Show; seats move AVAILABLE→LOCKED→BOOKED.",
+    "3": "City→Cinema→Screen→Show; Seat is row/col/type; ShowSeat status by (showId,seatId); Booking PENDING|CONFIRMED|CANCELLED."
+   }
+  },
+  {
+   "phase": "class_design",
+   "goal": "Sketch Facade/Singleton service, SeatLockManager, strategies, and booking construction before coding.",
+   "must_hit": [
+    {
+     "id": "cd1",
+     "point": "MovieBookingService as Singleton/Facade over catalog maps plus seatLockManager and bookingManager; APIs findShows / bookTickets or holdSeats+confirmBooking / cancelBooking / admin add*.",
+     "weight": "core",
+     "evidence_hint": "Shows a thin facade service with catalog maps, lock manager, booking manager, and book/hold/confirm/cancel entry points."
+    },
+    {
+     "id": "cd2",
+     "point": "SeatLockManager owns lockedSeats map and TTL scheduler; lockSeats(show, seats, userId) and unlockSeats only if same user and still LOCKED.",
+     "weight": "core",
+     "evidence_hint": "Names SeatLockManager with TTL unlock and same-user unlock rules."
+    },
+    {
+     "id": "cd3",
+     "point": "PricingStrategy (Weekday/Weekend/Category) and PaymentStrategy (Card/Upi) as interfaces; BookingBuilder for multi-field Booking.",
+     "weight": "core",
+     "evidence_hint": "Points Strategy for pricing and payment plus Builder for Booking."
+    },
+    {
+     "id": "cd4",
+     "point": "Optional MovieObserver for new-show alerts; enums SeatType, SeatStatus, BookingStatus, PaymentStatus; don’t force Factory unless seat layouts/payment adapters need it.",
+     "weight": "extended",
+     "evidence_hint": "Mentions optional Observer and enums; avoids unnecessary Factory."
+    }
+   ],
+   "probes": [
+    "Walk me through your class diagram and who owns lock transitions versus confirm.",
+    "Where do Singleton/Facade, Strategy, Builder, and State show up?"
+   ],
+   "hints": {
+    "1": "Start with MovieBookingService as the facade entry.",
+    "2": "Add SeatLockManager + BookingManager; inject PricingStrategy/PaymentStrategy; Builder for Booking.",
+    "3": "Facade Singleton service; SeatLockManager alone does AVAILABLE↔LOCKED (+TTL); BookingManager lock→price→pay→confirm; Strategy + BookingBuilder; optional MovieObserver."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Implement two-phase hold/confirm, all-or-nothing multi-seat holds, and the booking orchestration path.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Two-phase booking: (1) lock/hold seats atomically → Booking(PENDING); (2) on payment success LOCKED→BOOKED and CONFIRMED, else release LOCKED→AVAILABLE on failure/timeout.",
+     "weight": "core",
+     "evidence_hint": "Describes hold→PENDING then confirm or release—not one AVAILABLE→BOOKED leap during payment."
+    },
+    {
+     "id": "impl2",
+     "point": "Atomic multi-seat hold: check all seats available then lock all under one critical section; any conflict fails the whole request with no orphan partial holds.",
+     "weight": "core",
+     "evidence_hint": "All-or-nothing check-then-lock; conflict rolls back with no partial holds."
+    },
+    {
+     "id": "impl3",
+     "point": "Prefer holdSeats → confirmBooking / releaseHold APIs when payment is in scope; mock PaymentStrategy.pay(amount); on failure release locks; on success confirm idempotently.",
+     "weight": "core",
+     "evidence_hint": "Uses two-phase APIs, mocked pay, failure unlock, and idempotent confirm."
+    },
+    {
+     "id": "impl4",
+     "point": "SeatLockManager is the only component allowed to transition AVAILABLE↔LOCKED (and timeout release); BookingManager orchestrates lock → price → pay → confirm/release.",
+     "weight": "extended",
+     "evidence_hint": "Assigns lock transitions to SeatLockManager and orchestration to BookingManager."
+    },
+    {
+     "id": "impl5",
+     "point": "Hot path is O(k) seats under one per-show lock, not a global lock; state knobs like numCities, seatsPerScreen, lockTtlMs rather than HLD capacity math.",
+     "weight": "extended",
+     "evidence_hint": "Says LLD skips capacity math and codes O(k) under a per-show lock."
+    }
+   ],
+   "probes": [
+    "Walk through hold then confirm when payment is in scope—what happens on success vs failure?",
+    "How do you lock multiple seats together without leaving a partial hold?"
+   ],
+   "hints": {
+    "1": "Prefer two-phase over one-shot if payment is in scope.",
+    "2": "All-or-nothing under one critical section; pay mocked; failure releases.",
+    "3": "holdSeats→Booking(PENDING); pay; success LOCKED→BOOKED+CONFIRMED else unlock; multi-seat check-all-then-lock-all; SeatLockManager owns AVAILABLE↔LOCKED."
+   }
+  },
+  {
+   "phase": "extensibility",
+   "goal": "Show Open/Closed plug points for pricing, payment, booking lifecycle, and optional notifications without rewriting the critical section.",
+   "must_hit": [
+    {
+     "id": "ext1",
+     "point": "Strategy swaps PricingStrategy (weekday/weekend/category) and PaymentStrategy (card/UPI) without editing the booking flow or critical section.",
+     "weight": "core",
+     "evidence_hint": "New pricing/payment is a new strategy class; lock/confirm path unchanged."
+    },
+    {
+     "id": "ext2",
+     "point": "Seat/booking lifecycle as State/FSM (enum fine in machine coding; State objects if transitions explode): PENDING→CONFIRMED and AVAILABLE→LOCKED→BOOKED.",
+     "weight": "core",
+     "evidence_hint": "Uses enum FSM or State objects for seat and booking status transitions."
+    },
+    {
+     "id": "ext3",
+     "point": "Facade keeps bookTickets/findShows thin—hides lock + price + pay + confirm; optional Observer notifies users when a watched movie gets a new show.",
+     "weight": "extended",
+     "evidence_hint": "Facade hides orchestration; Observer only for new-show alerts if asked."
+    },
+    {
+     "id": "ext4",
+     "point": "Out of scope until asked: UI seat map rendering, real PGW, refunds, waitlist, partner theatre APIs, flash-sale waiting room (HLD/hq11).",
+     "weight": "extended",
+     "evidence_hint": "Parks UI/PGW/refunds/waitlist/partner APIs/waiting room unless interviewer expands."
+    }
+   ],
+   "probes": [
+    "How would you add weekend pricing or UPI payment without rewriting the lock path?",
+    "What would you leave out of scope for LLD versus push to HLD?"
+   ],
+   "hints": {
+    "1": "Name Strategy for pricing/payment as the main OCP plug.",
+    "2": "Add State/FSM for statuses and optional Observer; keep Facade thin.",
+    "3": "New WeekendPricing/UpiPayment implement strategies; enum/State for seat+booking; MovieObserver optional; park PGW/waitlist/waiting room."
+   }
+  },
+  {
+   "phase": "concurrency",
+   "goal": "Make hold+confirm strongly consistent with correct lock granularity, TTL races, and multi-instance fences.",
+   "must_hit": [
+    {
+     "id": "conc1",
+     "point": "Lock granularity: per-show synchronized(show) / ReentrantLock (or Redis key show:{id}) so different shows don’t serialize; never hold a DB row lock for the entire payment window.",
+     "weight": "core",
+     "evidence_hint": "Chooses per-show lock and refuses to hold DB locks while the user pays."
+    },
+    {
+     "id": "conc2",
+     "point": "Concurrency checklist: check-then-act under one lock; unlock only if still held by same user; TTL must not release BOOKED seats; ordered lock acquisition if locking seat-by-seat (deadlock).",
+     "weight": "core",
+     "evidence_hint": "Covers atomic check-then-act, same-user unlock, TTL vs BOOKED, and ordered seat locks."
+    },
+    {
+     "id": "conc3",
+     "point": "ConcurrentHashMap is fine for catalog maps; seat check-then-act still needs an explicit critical section / atomic status transition.",
+     "weight": "core",
+     "evidence_hint": "Rejects ConcurrentHashMap alone as sufficient for seat inventory races."
+    },
+    {
+     "id": "conc4",
+     "point": "Search/browse can be eventually consistent; hold+confirm must be strongly consistent; confirm path conditional so late payment can’t overwrite BOOKED or steal an expired hold; unlock only LOCKED→AVAILABLE.",
+     "weight": "extended",
+     "evidence_hint": "Separates stale browse from strong hold/confirm and makes confirm/unlock conditional."
+    },
+    {
+     "id": "conc5",
+     "point": "Multi-instance: Redis SET NX PX holds plus conditional DB update / unique (show_id, seat_id) booking constraint as final fence; Redlock alone is not a correctness fence (Kleppmann).",
+     "weight": "extended",
+     "evidence_hint": "Pairs Redis TTL hold with DB as source of truth and refuses Redlock-alone claims."
+    }
+   ],
+   "probes": [
+    "Two users click the same seats at once—how do you ensure exactly one wins?",
+    "Is ConcurrentHashMap enough for seats, and what changes if you run multiple app instances?"
+   ],
+   "hints": {
+    "1": "Name the race: check-then-act on seat status under a lock.",
+    "2": "Prefer per-show lock + same-user TTL unlock; CHM only for catalogs.",
+    "3": "synchronized(show) all-or-nothing hold; unlock only same user + still LOCKED; TTL skips BOOKED; multi-instance Redis NX PX + DB conditional/unique constraint—not Redlock alone."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Hold-then-pay vs one-shot book",
+   "strong_answer": "One-shot bookTickets is simpler for demos; two-phase hold then confirm is what real ticketing does and what concurrency follow-ups expect when payment is in scope."
+  },
+  {
+   "topic": "Per-show lock vs per-seat locks vs DB FOR UPDATE",
+   "strong_answer": "Per-show lock is simple and correct for LLD; per-seat gives more parallelism but needs ordered seat-id acquisition to avoid deadlock; DB row lock only for a short txn that sets LOCKED+expires_at, never for minutes of user input/payment."
+  },
+  {
+   "topic": "In-memory synchronized vs Redis + DB",
+   "strong_answer": "Single JVM: per-show lock + status enum; multi-instance: Redis TTL hold plus conditional DB update / unique (show_id, seat_id) as the final fence—Redis/Redlock alone is not correctness."
+  },
+  {
+   "topic": "Optimistic vs pessimistic concurrency",
+   "strong_answer": "Booking conflicts are common on hot shows, so pessimistic / atomic conditional update is preferred; OCC alone causes sad pay-then-fail UX unless you still hold first."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Two users click the same seats and both get tickets.",
+   "correction": "Check+lock atomically under a per-show lock (or single conditional multi-row update); loser gets failure/409, not a second ticket."
+  },
+  {
+   "trap": "User never pays and seats stay locked forever.",
+   "correction": "TTL/scheduler releases LOCKED→AVAILABLE; unlock must no-op if already BOOKED or held by another user."
+  },
+  {
+   "trap": "Payment succeeds twice on retry and double-books or double-charges.",
+   "correction": "Idempotency key / booking id; confirm is conditional on PENDING + held seats."
+  },
+  {
+   "trap": "Partial multi-seat success locking only some seats.",
+   "correction": "Forbidden—all-or-nothing hold; rollback on any unavailable seat."
+  },
+  {
+   "trap": "Assuming ConcurrentHashMap makes seat booking safe.",
+   "correction": "Fine for catalog maps; seat check-then-act still needs an explicit critical section or atomic status transition."
+  },
+  {
+   "trap": "Mutating Screen Seat.status as shared inventory across showtimes.",
+   "correction": "Layout ≠ inventory; materialize status per show (ShowSeat / (showId, seatId)) or you double-sell across showtimes."
+  },
+  {
+   "trap": "Claiming Redis Redlock alone makes distributed booking correct.",
+   "correction": "Use Redis SET NX PX for holds plus DB as source of truth (conditional write / unique constraint); don’t claim Redlock alone is a correctness fence."
+  }
+ ]
+}

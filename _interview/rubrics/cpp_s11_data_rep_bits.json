@@ -1,0 +1,214 @@
+{
+ "id": "cpp_s11_data_rep_bits",
+ "title": "Data Representation & Bit Manipulation",
+ "type": "FUND",
+ "relevance": "Interviewers and OAs use bit-level representation, two's complement, endianness, and mask idioms to test whether candidates understand how C maps values onto hardware bits.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish binary/hex units and the core idea of two's complement signed integers.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A nibble is 4 bits and can represent 16 distinct values (0 to 15); a byte is 8 bits and is the smallest addressable unit of memory in C.",
+     "weight": "core",
+     "evidence_hint": "States nibble=4 bits / 16 values and byte=8 bits as C's smallest addressable unit."
+    },
+    {
+     "id": "fund2",
+     "point": "Because 16 equals 2 to the 4, exactly one hex digit maps to one nibble; hex is written with a 0x prefix using digits 0-9 and A-F.",
+     "weight": "core",
+     "evidence_hint": "Links hex to nibbles and recalls 0x0→0000 and 0xF→1111 or reading 0xA5 as 1010 0101."
+    },
+    {
+     "id": "fund3",
+     "point": "Unsigned integers use straight binary; modern systems represent negatives with two's complement, where the MSB has negative weight and negation is flip-all-bits then add 1.",
+     "weight": "core",
+     "evidence_hint": "Contrasts unsigned positional binary with two's complement sign bit and the flip-and-add-1 negation rule."
+    },
+    {
+     "id": "fund4",
+     "point": "IEEE-754 float (32-bit) and double (64-bit) store a sign bit, a biased exponent, and a mantissa/significand.",
+     "weight": "extended",
+     "evidence_hint": "Names the three fields and the 32-bit float / 64-bit double sizes from the standard."
+    }
+   ],
+   "probes": [
+    "What is a nibble versus a byte, and why do we write integers in hex in C?",
+    "How does two's complement encode a negative integer, and how do you negate a bit pattern?"
+   ],
+   "hints": {
+    "1": "Think about base-2 storage units and why base-16 lines up neatly with them.",
+    "2": "Relate one hex digit to one nibble, then explain the MSB's role in signed values.",
+    "3": "Nibble=4 bits (16 values), byte=8 bits; hex digit↔nibble; two's complement: MSB negative weight, negate via ~x+1."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how two's complement ranges, endianness layouts, shifts, and sign extension actually behave.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "For an N-bit two's complement value the range is asymmetrical [-2^(N-1), 2^(N-1)-1]; for 8 bits that is -128 to +127, with one unique zero (0000 0000).",
+     "weight": "core",
+     "evidence_hint": "Gives the asymmetric range and cites -128..+127 for 8 bits plus a single zero pattern."
+    },
+    {
+     "id": "mech2",
+     "point": "Endianness is architecture-defined, not C-standard: for 0x11223344 at address 0x1000, big-endian puts 0x11 at the lowest address and little-endian puts 0x44 there.",
+     "weight": "core",
+     "evidence_hint": "Walks the byte order of 0x11223344 at 0x1000 for both endiannesses."
+    },
+    {
+     "id": "mech3",
+     "point": "x << N multiplies by 2^N; x >> N divides by 2^N, but unsigned types usually get a logical shift (zeros in) while signed types on most compilers get an arithmetic shift (sign bits in), which is implementation-defined.",
+     "weight": "core",
+     "evidence_hint": "States the multiply/divide view and distinguishes logical vs arithmetic right shift by signedness."
+    },
+    {
+     "id": "mech4",
+     "point": "Widening a signed value performs sign extension (copy the sign bit into new upper bits); plain char signedness is implementation-defined.",
+     "weight": "extended",
+     "evidence_hint": "Mentions sign extension on widen and that plain char may be signed or unsigned."
+    }
+   ],
+   "probes": [
+    "What is the range of an 8-bit two's complement integer, and why is it asymmetric?",
+    "Given 0x11223344 stored at 0x1000, what bytes appear in memory on big-endian versus little-endian?",
+    "How does a right shift differ for signed versus unsigned integers?"
+   ],
+   "hints": {
+    "1": "Separate value math (two's complement) from byte order in memory.",
+    "2": "State the 8-bit range, then place MSB vs LSB of 0x11223344 at the low address.",
+    "3": "8-bit range -128..+127; BE: 0x11 at 0x1000; LE: 0x44 at 0x1000; >> is logical for unsigned, often arithmetic for signed."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast defined wraparound, shift/float pitfalls, and when endianness must be managed.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Unsigned arithmetic is defined to wrap modulo 2^N; signed overflow is Undefined Behavior, so compilers may optimize away checks that assume wrapping.",
+     "weight": "core",
+     "evidence_hint": "Explicitly contrasts defined unsigned wrap with signed overflow UB and optimizer assumptions."
+    },
+    {
+     "id": "tr2",
+     "point": "Shifting by a negative amount or by an amount greater than or equal to the type's bit-width is UB—for example 1 << 32 on a 32-bit integer is UB, not 0.",
+     "weight": "core",
+     "evidence_hint": "States the shift-width UB rule and cites 1 << 32 on a 32-bit int."
+    },
+    {
+     "id": "tr3",
+     "point": "C does not dictate endianness; network protocols use big-endian network byte order, so serialize with htonl/ntohl (or equivalent) when crossing hosts or binary files.",
+     "weight": "extended",
+     "evidence_hint": "Says endianness is unmanaged by C and names network byte order plus htonl/ntohl."
+    },
+    {
+     "id": "tr4",
+     "point": "Never compare floats with == because rounding (e.g. 0.1 + 0.2) can miss exact equality; compare against an epsilon. NaN == NaN is always false.",
+     "weight": "extended",
+     "evidence_hint": "Rejects == for floats, mentions epsilon, and notes NaN inequality to itself."
+    }
+   ],
+   "probes": [
+    "Why is relying on signed integer wraparound dangerous in C?",
+    "When is shifting left or right undefined behavior?",
+    "Why might reading a multi-byte integer as a char* break across machines?"
+   ],
+   "hints": {
+    "1": "Think about what the C abstract machine guarantees versus what hardware seems to do.",
+    "2": "Contrast unsigned modulo wrap with signed UB, then add shift-count and float-equality rules.",
+    "3": "Unsigned wraps modulo 2^N; signed overflow is UB; shift count ≥ width (e.g. 1<<32 on 32-bit) is UB; floats need epsilon; manage endianness at I/O boundaries."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply mask idioms, classic bit tricks, and a practical endianness probe.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "To set/clear/toggle bit n without touching others: build mask ((uint32_t)1 << n), then x |= mask, x &= ~mask, or x ^= mask.",
+     "weight": "core",
+     "evidence_hint": "Writes the three mask updates and mentions casting 1 to the target unsigned type."
+    },
+    {
+     "id": "app2",
+     "point": "Test a bit with (x >> n) & 1u; extract a field such as 3 bits from bit 4 with (x >> 4) & 0x07.",
+     "weight": "core",
+     "evidence_hint": "Shows shift-then-mask for a single bit and the 0x07 field extract."
+    },
+    {
+     "id": "app3",
+     "point": "Power-of-two test is x && !(x & (x - 1)); lowest set bit is x & -x; popcount can clear lowest set bits via x &= (x - 1) in a loop.",
+     "weight": "core",
+     "evidence_hint": "Recalls the three idioms with the exact expressions from the file."
+    },
+    {
+     "id": "app4",
+     "point": "Detect little-endian by storing uint16_t 0x0001 and checking whether the first byte via uint8_t* equals 0x01.",
+     "weight": "extended",
+     "evidence_hint": "Describes the 0x0001 probe and *ptr == 0x01 meaning little-endian."
+    }
+   ],
+   "probes": [
+    "How do you set, clear, and toggle the n-th bit of an integer?",
+    "How do you test whether x is a power of two, or isolate its lowest set bit?",
+    "Write a check that reports whether the host is little-endian."
+   ],
+   "hints": {
+    "1": "Start from a one-hot mask shifted by n, then choose |, &~, or ^.",
+    "2": "After masks, recall x&(x-1) style tricks and reading the low byte of 0x0001.",
+    "3": "mask=(uint32_t)1<<n with |= / &= ~ / ^=; is_pow2: x&&!(x&(x-1)); lowest: x&-x; LE if low byte of 0x0001 is 0x01."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Unsigned wrap vs signed overflow",
+   "strong_answer": "Unsigned ops wrap modulo 2^N by definition; signed overflow is UB, so assuming wrap-to-negative is wrong and optimizers may delete overflow checks."
+  },
+  {
+   "topic": "Logical right shift vs arithmetic right shift",
+   "strong_answer": "Logical >> fills zeros from the left (usual for unsigned); arithmetic >> copies the sign bit (common for signed, but implementation-defined)—same operator, different fill policy."
+  },
+  {
+   "topic": "Big-endian vs little-endian",
+   "strong_answer": "Identical multi-byte values, different address order: BE stores the most significant byte at the lowest address, LE the least; C is silent, so network/file code must convert (e.g. htonl/ntohl)."
+  },
+  {
+   "topic": "XOR swap vs temporary variable",
+   "strong_answer": "XOR swap avoids a temp but if both pointers alias the same object, *a ^= *a clears the value; in practice prefer a temporary."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming signed integers wrap like unsigned when they overflow.",
+   "correction": "Unsigned wrap is defined; signed overflow is Undefined Behavior—do not rely on wraparound."
+  },
+  {
+   "trap": "Treating plain char as always signed (or always unsigned).",
+   "correction": "Plain char signedness is implementation-defined; be explicit with signed char or unsigned char when it matters."
+  },
+  {
+   "trap": "Believing 1 << 32 on a 32-bit int yields 0.",
+   "correction": "Shift count ≥ bit-width (or negative) is UB, not modular reduction to 0."
+  },
+  {
+   "trap": "Comparing floating-point results with ==.",
+   "correction": "Rounding can make 0.1 + 0.2 unequal to 0.3 in binary; use an epsilon. Also NaN == NaN is false."
+  },
+  {
+   "trap": "XOR-swapping through two pointers that alias the same location.",
+   "correction": "*a ^= *a zeroes the value; use a temporary when swapping."
+  },
+  {
+   "trap": "Casting a multi-byte integer to char* or reading raw binary without considering endianness.",
+   "correction": "Byte order is architecture-specific; normalize at network/file boundaries."
+  }
+ ]
+}

@@ -1,0 +1,277 @@
+{
+ "id": "lq05_vending_machine",
+ "title": "Design a Vending Machine",
+ "type": "LLD",
+ "relevance": "High — the textbook State-pattern LLD / machine-coding question (campus + experienced); Amazon, Microsoft, Google, Walmart, and Indian product cos use it to probe FSM modeling, inventory + change logic, and concurrency.",
+ "difficulty": "mid",
+ "prereqs": [
+  "l01_oop_solid",
+  "l02_patterns_creational",
+  "l03_patterns_structural"
+ ],
+ "company_notes": "Campus/machine-coding (Flipkart, Uber, Swiggy, Amazon new-grad, Indian product cos): common design+code round where working FSM + change + inventory beats a half-finished pattern zoo. Experienced LLD (Amazon, Microsoft, Google, Walmart): same core with deeper ExactChangeOnly, jam/refund, integer money, Strategy payment, and stock/vault concurrency probes. Among the top canonical LLD problems; treat as the State-pattern template for later FSM questions (ATM, traffic light, document workflow).",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock functional scope, clarifying product rules, NFRs, and scale assumptions before any class diagram.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Mandatory FR: multi-product inventory with prices/qty; accept coins (and often notes); select product; dispense and return change; reject insufficient funds / out-of-stock; cancel yields full refund.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists inventory, coin accept, select, dispense+change, reject paths, and cancel→refund without jumping to code."
+    },
+    {
+     "id": "req2",
+     "point": "Clarify order and money rules up front: select-then-pay vs pay-then-select; coins only vs notes/card/UPI; exact-change-only when hopper is low; slot codes vs product ids; cancel/refund anytime before dispense; admin restock/collect cash.",
+     "weight": "core",
+     "evidence_hint": "Candidate asks clarifying questions and states explicit assumptions rather than silently picking defaults."
+    },
+    {
+     "id": "req3",
+     "point": "NFR bar: correct state transitions with no charge without dispense; thread-safe stock/cash if concurrent; extensible payment and states; money as integer minor units; working demo/CLI.",
+     "weight": "extended",
+     "evidence_hint": "Mentions FSM correctness, integer money, extensibility, and optional concurrency without inventing fleet scale."
+    },
+    {
+     "id": "req4",
+     "point": "State assumptions: one transaction at a time per machine; canonical denominations so greedy change is OK; no networked fleet unless asked; spot/SKU count is tiny so in-memory maps are fine.",
+     "weight": "extended",
+     "evidence_hint": "States single-session machine, local in-memory inventory, and keeps fleet sync out of the OOD round."
+    }
+   ],
+   "probes": [
+    "What clarifying questions do you ask before drawing classes?",
+    "Is this select-then-pay or pay-then-select, and what happens on cancel?"
+   ],
+   "hints": {
+    "1": "Start from customer and admin use cases, not patterns.",
+    "2": "Separate mandatory FR (inventory, coins, select, dispense+change, reject, cancel) from extensions (card/UPI, ExactChangeOnly, jam, alerts).",
+    "3": "Say: one transaction per machine; integer minor units; ask select-then-pay vs pay-then-select and exact-change-only explicitly."
+   }
+  },
+  {
+   "phase": "entities",
+   "goal": "Name the domain objects and session/cash/inventory responsibilities that the FSM will orchestrate.",
+   "must_hit": [
+    {
+     "id": "ent1",
+     "point": "Core entities: VendingMachine as context/Facade; VendingMachineState hierarchy; Inventory/Slot plus Product/Item; CashBox/CoinVault holding session insert and change reserve; optional PaymentStrategy, Display Observer, and admin API.",
+     "weight": "core",
+     "evidence_hint": "Names machine, states, inventory/slots/products, and cash box with session vs reserve, not a single god blob."
+    },
+    {
+     "id": "ent2",
+     "point": "Prefer slot-based inventory (slotId → product + qty + capacity) over a flat product→qty map so restock fills physical slots and the same SKU can span multiple slots.",
+     "weight": "core",
+     "evidence_hint": "Models slots with code, product, qty, capacity rather than only a product map."
+    },
+    {
+     "id": "ent3",
+     "point": "Money model: Coin/Note enums with value in cents (or paise); CashBox tracks reserve Map<Coin,int> plus sessionInserted; never float prices/balances.",
+     "weight": "extended",
+     "evidence_hint": "Uses integer cents/paise and denomination enums; separates session cash from hopper reserve."
+    }
+   ],
+   "probes": [
+    "What are the main entities and who owns stock vs change vs session balance?",
+    "Why slots instead of a product→quantity map?"
+   ],
+   "hints": {
+    "1": "List nouns from the happy path: machine, item, slot, coin, change.",
+    "2": "Machine holds state + session; Inventory owns slots; CashBox owns hopper and session insert.",
+    "3": "Sketch: VendingMachine → Inventory(Slot/Product) + CashBox(session+reserve) + VendingMachineState; optional PaymentStrategy/Display."
+   }
+  },
+  {
+   "phase": "class_design",
+   "goal": "Draw the Facade + State hierarchy and public APIs so transitions live in states, not a giant switch.",
+   "must_hit": [
+    {
+     "id": "cd1",
+     "point": "VendingMachine holds state, inventory, cashBox, balance/selectedCode/session and exposes insertCoin/selectItem/dispense/refund/setState as the public Facade; it must not become a giant if/else on a state enum.",
+     "weight": "core",
+     "evidence_hint": "Shows context fields and delegates customer ops to current state via setState transitions."
+    },
+    {
+     "id": "cd2",
+     "point": "VendingMachineState abstract/interface with IdleState, HasMoneyState, ItemSelectedState, DispensingState (optional ExactChangeOnly/OutOfStock/Maintenance); each state implements insertCoin/selectItem/dispense/refund and owns transitions via machine.setState.",
+     "weight": "core",
+     "evidence_hint": "Lists the state classes and methods; transitions are inside states, not a central switch."
+    },
+    {
+     "id": "cd3",
+     "point": "Supporting APIs: Inventory isAvailable/reduceStock/addItem; CashBox insert/canMakeChange/makeChange/refundSession; customer insertCoin/insertNote, selectItem, dispense, refund/cancel, display; admin restock, collectCash, setExactChangeOnly.",
+     "weight": "extended",
+     "evidence_hint": "Surfaces inventory and cash-box methods plus customer vs admin APIs matching the skeleton."
+    }
+   ],
+   "probes": [
+    "Walk me through the class diagram and where transitions live.",
+    "What methods does each state need to implement?"
+   ],
+   "hints": {
+    "1": "Draw the FSM happy path before naming classes.",
+    "2": "Facade delegates to current VendingMachineState; Inventory and CashBox sit beside the context.",
+    "3": "Idle → HasMoney (or ItemSelected) → Dispensing → Idle with per-state insertCoin/selectItem/dispense/refund and setState inside states."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Implement FSM behavior, integer money, change pre-checks, and atomic commit of stock plus vault.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Typical happy path Idle → HasMoney (or ItemSelected) → Dispensing → Idle; invalid actions in a state must no-op/error/refund and never silently corrupt balance.",
+     "weight": "core",
+     "evidence_hint": "Narrates legal transitions and explicit reject/refund for illegal ops in each state."
+    },
+    {
+     "id": "impl2",
+     "point": "Money is integer cents/paise only; denominations as enums (e.g. Coin.QUARTER = 25); never double/float for prices or balance.",
+     "weight": "core",
+     "evidence_hint": "Uses int minor units and enum coin values; rejects floating-point money."
+    },
+    {
+     "id": "impl3",
+     "point": "Change-making: greedy largest-first against available hopper counts; if exact change impossible, abort sale and refund full insert (or enter ExactChangeOnly); mention DP when denominations are arbitrary.",
+     "weight": "extended",
+     "evidence_hint": "Describes hopper-aware greedy, full refund on failure, and DP as the non-canonical follow-up."
+    },
+    {
+     "id": "impl4",
+     "point": "Transaction atomicity: validate stock and canMakeChange(deposit - price) before decrementing inventory or committing coins; on dispense failure, full refund and lock slot.",
+     "weight": "extended",
+     "evidence_hint": "Pre-checks stock and change, then commits; jam path refunds all and locks the slot."
+    }
+   ],
+   "probes": [
+    "How do you decide whether you can dispense and return change?",
+    "What happens if the dispense motor fails after payment?"
+   ],
+   "hints": {
+    "1": "Implement the happy path states before extensions.",
+    "2": "Pre-check stock and canMakeChange, then mutate inventory and vault together.",
+    "3": "Greedy against hopper counts; if change impossible refund full insert; jam → full refund + lock slot, never keep money without an item."
+   }
+  },
+  {
+   "phase": "extensibility",
+   "goal": "Show OCP/SOLID hooks for new states, payments, and change algorithms without rewriting the Facade.",
+   "must_hit": [
+    {
+     "id": "ext1",
+     "point": "State pattern over enum-switch for OCP: adding Maintenance / ExactChangeOnly / Jam should not edit a giant switch in VendingMachine; each new state is a class.",
+     "weight": "core",
+     "evidence_hint": "Prefers State classes so new modes plug in without touching a central switch."
+    },
+    {
+     "id": "ext2",
+     "point": "State vs Strategy: State changes with internal mode and triggers the next mode; Strategy is an interchangeable algorithm (change-making, card vs cash) unaware of sibling strategies — PaymentStrategy for card/UPI often skips change.",
+     "weight": "core",
+     "evidence_hint": "Separates FSM states from PaymentStrategy/change Strategy and explains when each applies."
+    },
+    {
+     "id": "ext3",
+     "point": "SOLID signal: OCP for new state/payment/change algo without editing VendingMachine; SRP — state owns transitions, vault owns change, inventory owns stock; DIP on VendingMachineState/PaymentStrategy; Singleton OK for one physical machine but prefer DI for tests / multi-machine.",
+     "weight": "extended",
+     "evidence_hint": "Maps OCP/SRP/DIP to concrete types and qualifies Singleton with DI for tests."
+    }
+   ],
+   "probes": [
+    "How would you add ExactChangeOnly or card/UPI without rewriting VendingMachine?",
+    "When is Singleton justified here?"
+   ],
+   "hints": {
+    "1": "Ask what should change without editing the Facade.",
+    "2": "New behavior → new State or PaymentStrategy/change Strategy, not more ifs.",
+    "3": "ExactChangeOnlyState / Maintenance as states; CashPayment vs CardPayment as Strategy; Singleton only for one process↔one machine, inject for tests."
+   }
+  },
+  {
+   "phase": "concurrency",
+   "goal": "Protect single-machine sessions and atomic stock/vault updates under concurrent UI or admin access.",
+   "must_hit": [
+    {
+     "id": "conc1",
+     "point": "One physical machine usually serializes customer sessions with a single transaction lock; still protect stock decrement and cash vault (read-calculate-commit) so admin restock / multi-UI cannot double-vend.",
+     "weight": "core",
+     "evidence_hint": "Describes a session lock plus atomic stock/vault commit so the last unit cannot vend twice."
+    },
+    {
+     "id": "conc2",
+     "point": "Hot path is commit transaction (stock −1 + vault update + change) as one critical section per machine; do not hold the lock during card network I/O — authorize async, then commit.",
+     "weight": "extended",
+     "evidence_hint": "Keeps the lock around local commit only; card auth stays outside the critical section."
+    },
+    {
+     "id": "conc3",
+     "point": "Admin restock while a sale is in progress: restock only in Idle/Maintenance, or lock inventory mutations against the active transaction; prefer fine-grained locks or ConcurrentHashMap for stock maps if claiming concurrent requests.",
+     "weight": "extended",
+     "evidence_hint": "Restricts restock to safe states or locks inventory against the active sale."
+    }
+   ],
+   "probes": [
+    "Two users hit select on the last item — what prevents double vend?",
+    "Can admin restock during an active sale?"
+   ],
+   "hints": {
+    "1": "Think one customer session at a time on one machine.",
+    "2": "Serialize the session and make stock decrement + vault update atomic.",
+    "3": "Single transaction lock; commit stock−1 and vault together; restock only in Idle/Maintenance or blocked against the active transaction."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Enum FSM vs State pattern classes",
+   "strong_answer": "Enum + switch is faster to code; State classes win OCP when interviewers add Maintenance / ExactChangeOnly / Jam. Prefer State classes in OOD rounds."
+  },
+  {
+   "topic": "Select-then-pay vs pay-then-select",
+   "strong_answer": "Both valid — pick one, draw transitions consistently, and reject the other order in Idle/HasMoney."
+  },
+  {
+   "topic": "Greedy vs DP change",
+   "strong_answer": "Greedy for canonical coin systems against available hopper counts; mention DP (change-making problem) when denominations are arbitrary or hopper constraints break greediness."
+  },
+  {
+   "topic": "Singleton VendingMachine",
+   "strong_answer": "OK for one physical device / one process↔one machine; say you’d inject for unit tests or multi-machine simulators and don’t cargo-cult it for fleets."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Asking whether selection is allowed before inserting money without stating a product rule",
+   "correction": "Make the rule explicit: either allow ItemSelected then accept coins, or reject until HasMoney."
+  },
+  {
+   "trap": "Discovering the machine cannot make change only after mutating stock or committing coins",
+   "correction": "Pre-check canMakeChange; refund all; optionally enter ExactChangeOnlyState."
+  },
+  {
+   "trap": "Dispense motor jams after payment and only refunding change or keeping the payment",
+   "correction": "Full refund (not just change), lock the slot, journal the failure; never leave money taken with no item."
+  },
+  {
+   "trap": "Two concurrent selects double-vending the last unit",
+   "correction": "Serialize one session lock and atomically decrement stock so two selects cannot vend the last unit twice."
+  },
+  {
+   "trap": "Bolting card/UPI into cash state methods",
+   "correction": "Introduce PaymentStrategy; cashless path often skips change and collapses HasMoney self-loops."
+  },
+  {
+   "trap": "Admin restock mutating inventory mid-sale",
+   "correction": "Restock only in Idle/Maintenance, or lock inventory mutations against the active transaction."
+  },
+  {
+   "trap": "God-class VendingMachine with nested if (state == …)",
+   "correction": "Interviewer docks the State-pattern signal — transitions belong in state classes via setState."
+  },
+  {
+   "trap": "Using double for money or failing to restore hopper coins when change fails mid-calculation",
+   "correction": "Use integer cents/paise only; restore hopper state if change-making aborts."
+  }
+ ]
+}

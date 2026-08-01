@@ -1,0 +1,219 @@
+{
+ "id": "c_s13_algorithms",
+ "title": "Algorithms & Problem-Solving in C",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs test whether you can analyze Big-O, choose search/sort strategies, and apply common array and bit patterns in C without a rich standard library.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish asymptotic complexity vocabulary and how algorithms are judged as input size grows.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Big-O is the asymptotic upper bound (worst-case): f(n) ≤ c · g(n) for some constant c as n → ∞.",
+     "weight": "core",
+     "evidence_hint": "States Big-O as worst-case upper bound and mentions the inequality form or that larger terms dominate as n grows."
+    },
+    {
+     "id": "fund2",
+     "point": "For a cost like 3n² + 5n + 10, drop constants and smaller terms and call the growth roughly proportional to n².",
+     "weight": "core",
+     "evidence_hint": "Explains that the n² term overwhelms the rest and constants/lower-order terms are dropped."
+    },
+    {
+     "id": "fund3",
+     "point": "Big-Omega is the asymptotic lower bound (best-case); Big-Theta is the tight bound from both above and below.",
+     "weight": "extended",
+     "evidence_hint": "Distinguishes Ω as lower/best-case and Θ as matching upper and lower growth rate."
+    },
+    {
+     "id": "fund4",
+     "point": "We reject stopwatch timing because elapsed time depends on CPU, system load, and compiler optimizations, not the mathematical limits of the algorithm.",
+     "weight": "extended",
+     "evidence_hint": "Says wall-clock timing is machine- and environment-dependent, so asymptotic analysis is preferred."
+    }
+   ],
+   "probes": [
+    "What do Big-O, Big-Omega, and Big-Theta each mean, and why don’t we just time the program with a stopwatch?"
+   ],
+   "hints": {
+    "1": "Think about how resource use scales as n goes toward infinity, not how fast it runs on your laptop today.",
+    "2": "Separate upper bound, lower bound, and tight bound; then say why stopwatch results vary across machines.",
+    "3": "Big-O = worst-case upper bound, Ω = best-case lower bound, Θ = tight bound; reject stopwatch timing because CPU, load, and compiler optimizations change elapsed time."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how core search, sort, library, and bit algorithms actually operate in C.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Linear search inspects every element sequentially and is O(n) time and O(1) space; it is the only viable option for completely unsorted data.",
+     "weight": "core",
+     "evidence_hint": "Describes sequential scan, states O(n)/O(1), and notes it is required when data is unsorted."
+    },
+    {
+     "id": "mech2",
+     "point": "Binary search on a sorted array checks the middle, then restricts to the left or right half, yielding O(log n) time; compute mid as lo + (hi - lo) / 2 to avoid signed integer overflow.",
+     "weight": "core",
+     "evidence_hint": "Mentions halving a sorted range, O(log n), and the overflow-safe mid formula instead of (lo + hi) / 2."
+    },
+    {
+     "id": "mech3",
+     "point": "Merge sort recursively halves until size 1, then merges sorted halves: guaranteed O(n log n) time, O(n) auxiliary space, and stable.",
+     "weight": "core",
+     "evidence_hint": "Describes split-then-merge, guaranteed O(n log n), O(n) extra space, and stability (identical elements keep relative order)."
+    },
+    {
+     "id": "mech4",
+     "point": "Quicksort partitions around a pivot so smaller elements are left and larger right; typically in-place with O(log n) recursion-stack space.",
+     "weight": "extended",
+     "evidence_hint": "Explains pivot partitioning and in-place practice with O(log n) stack space."
+    },
+    {
+     "id": "mech5",
+     "point": "qsort and bsearch take void * plus element size and a comparator that returns negative if first < second, zero if equal, and positive if first > second.",
+     "weight": "extended",
+     "evidence_hint": "Names opaque void *, element size, and the negative/zero/positive comparator contract."
+    },
+    {
+     "id": "mech6",
+     "point": "For x > 0, (x & (x - 1)) == 0 checks a power of two; XOR of all elements leaves the unique value when every other number appears exactly twice.",
+     "weight": "extended",
+     "evidence_hint": "Gives the power-of-two bit test and the XOR find-unique property."
+    }
+   ],
+   "probes": [
+    "Walk through binary search mid calculation and contrast merge sort’s guarantees with how quicksort partitions."
+   ],
+   "hints": {
+    "1": "Start with sorted vs unsorted search, then how divide-and-conquer sorts recombine or partition.",
+    "2": "Cover mid overflow safety, merge sort’s aux array and stability, then qsort’s comparator contract.",
+    "3": "mid = lo + (hi - lo) / 2; merge sort O(n log n) time, O(n) space, stable; quicksort partitions around a pivot in-place; comparator returns <0 / 0 / >0."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Weigh searching, sorting, and recursion choices against complexity, space, and practical limits.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Binary search needs a sorted array and O(log n) time; linear search is slower at O(n) but works on unstructured data.",
+     "weight": "core",
+     "evidence_hint": "States the sorted precondition for binary search versus linear search’s broader applicability."
+    },
+    {
+     "id": "tr2",
+     "point": "Merge sort guarantees O(n log n) but needs O(n) auxiliary space; quicksort is typically faster in practice and in-place with O(log n) stack space, but can hit O(n²) when the pivot is always the smallest or largest element.",
+     "weight": "core",
+     "evidence_hint": "Contrasts merge’s guaranteed bound and extra space with quicksort’s practical speed, low stack space, and O(n²) worst case from bad pivots."
+    },
+    {
+     "id": "tr3",
+     "point": "Quadratic sorts are generally too slow for large datasets, but insertion sort is highly efficient for very small or nearly sorted arrays; on tiny n, O(n²) can beat O(n log n) due to lower constant overhead.",
+     "weight": "extended",
+     "evidence_hint": "Says bubble/insertion/selection are O(n²) and usually slow, but insertion helps small/nearly sorted inputs, and constants can flip winners on tiny arrays."
+    },
+    {
+     "id": "tr4",
+     "point": "Recursion makes divide-and-conquer elegant but each call uses stack space and deep recursion can stack-overflow; iterative solutions are safer for massive inputs but often harder to read.",
+     "weight": "extended",
+     "evidence_hint": "States the simplicity-vs-stack-depth tradeoff and that iterative code is safer but harder to read."
+    }
+   ],
+   "probes": [
+    "When would you choose merge sort over quicksort, and when is insertion sort preferable to an O(n log n) sort?"
+   ],
+   "hints": {
+    "1": "Compare guarantees, extra memory, and input shape—not just average Big-O labels.",
+    "2": "Put merge’s O(n) aux space and stability against quicksort’s in-place speed and O(n²) pivot failure; then mention small/nearly sorted arrays.",
+    "3": "Merge: guaranteed O(n log n), O(n) space, stable. Quicksort: fast in practice, O(log n) stack, O(n²) on always-extreme pivots. Insertion: good for tiny or nearly sorted data."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply interview process, C library APIs, and array/bit patterns to concrete problem-solving.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Interview flow: clarify bounds/types/edge cases; state a naive O(n²) or exponential baseline; optimize (e.g., hash map or sorting first); manually trace arrays of size 0, 1, and 2.",
+     "weight": "core",
+     "evidence_hint": "Lists clarify → brute force → optimize → test edges with sizes 0, 1, and 2."
+    },
+    {
+     "id": "app2",
+     "point": "Two-pointer moves indices from 0 and n - 1 toward the center (reverse/palindrome); sliding-window expands/shrinks a start/end sub-array for contiguous conditions; in-place partitioning swaps to group elements without O(n) extra space.",
+     "weight": "core",
+     "evidence_hint": "Names the three patterns with their index movement or grouping purpose."
+    },
+    {
+     "id": "app3",
+     "point": "Prefer an if/else integer comparator for qsort over returning *(int*)a - *(int*)b, which can overflow a 32-bit integer and flip the sign.",
+     "weight": "extended",
+     "evidence_hint": "Warns that subtraction-based comparators overflow and describes explicit less/greater/equal returns."
+    },
+    {
+     "id": "app4",
+     "point": "Mitigate quicksort’s O(n²) risk by choosing a random pivot or the median of three elements; in practice prefer stdlib qsort unless constrained to implement sorting yourself.",
+     "weight": "extended",
+     "evidence_hint": "Mentions random or median-of-three pivots and that production C usually uses qsort."
+    }
+   ],
+   "probes": [
+    "How would you structure an array interview answer end-to-end, including which C patterns and qsort pitfalls you’d watch for?"
+   ],
+   "hints": {
+    "1": "Start with clarify/brute/optimize/test, then name one array pattern you’d try.",
+    "2": "Add the size 0/1/2 edge trace and the safe qsort comparator instead of subtraction.",
+    "3": "Clarify → O(n²)/exponential baseline → optimize → test sizes 0, 1, 2; use two-pointer/sliding-window/partition as fit; comparator via if/else, not a - b."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Asymptotic analysis vs stopwatch timing",
+   "strong_answer": "Asymptotic analysis describes mathematical scaling as n → ∞; stopwatch timing depends on CPU, system load, and compiler optimizations, so it does not measure the algorithm’s inherent limits."
+  },
+  {
+   "topic": "Linear search vs binary search",
+   "strong_answer": "Linear search is O(n) time / O(1) space and works on unsorted data; binary search is O(log n) but requires a sorted array and careful mid/boundary handling."
+  },
+  {
+   "topic": "Merge sort vs quicksort",
+   "strong_answer": "Merge sort guarantees O(n log n) time, uses O(n) auxiliary space, and is stable; quicksort is typically in-place with O(log n) stack space and very fast in practice, but worst-case O(n²) occurs when the pivot is always the smallest or largest element."
+  },
+  {
+   "topic": "O(n²) sorts vs O(n log n) sorts",
+   "strong_answer": "Bubble, insertion, and selection are generally too slow for large datasets; insertion sort shines on very small or nearly sorted arrays, and on tiny n an O(n²) algorithm may beat O(n log n) due to lower constant overhead."
+  },
+  {
+   "topic": "Recursion vs iteration for divide-and-conquer",
+   "strong_answer": "Recursion expresses divide-and-conquer cleanly but consumes stack space per call and can overflow on deep recursion; iterative solutions are safer for massive inputs but are often significantly harder to read."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming two nested loops are always O(n²).",
+   "correction": "Count exact iterations: if the outer loop runs n times but the inner loop halves its workload each step, total complexity may be O(n log n)."
+  },
+  {
+   "trap": "Computing mid as (lo + hi) / 2 in binary search.",
+   "correction": "lo + hi can overflow a signed int (undefined behavior); use mid = lo + (hi - lo) / 2."
+  },
+  {
+   "trap": "Running binary search on unsorted data, or needing the first of duplicate values without adjusted bounds.",
+   "correction": "Binary search requires strictly sorted data; finding a specific duplicate occurrence needs modified boundary checks."
+  },
+  {
+   "trap": "Integer qsort comparator written as *(int*)a - *(int*)b.",
+   "correction": "Large positive minus large negative can overflow a 32-bit int and flip the sign; use explicit if/else comparisons returning negative, zero, or positive."
+  },
+  {
+   "trap": "Assuming quicksort is always O(n log n).",
+   "correction": "Worst case is O(n²) when the pivot is consistently the smallest or largest element (e.g., first element on an already sorted array); mitigate with a random pivot or median of three."
+  }
+ ]
+}

@@ -1,0 +1,187 @@
+{
+ "id": "cpp_s23_member_functions",
+ "title": "Member Functions",
+ "type": "FUND",
+ "relevance": "Interviewers probe member-function categories, definition with ::, object passing/returning, and const correctness as core C++ class design fluency.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the conventional categories of member functions and where they may be defined.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Member functions are conventionally grouped into four categories by role: Manager, Accessor (getter), Mutator (setter), and Utility (facilitator)—conventions, not distinct language features.",
+     "weight": "core",
+     "evidence_hint": "Names the four roles and notes they are conventions for managing object state, not separate language constructs."
+    },
+    {
+     "id": "fund2",
+     "point": "A member function may be defined inside the class body, or declared inside and defined outside using the scope resolution operator (::).",
+     "weight": "core",
+     "evidence_hint": "States both placement options and mentions :: for the out-of-class definition."
+    },
+    {
+     "id": "fund3",
+     "point": "Static member functions operate on the class as a whole rather than a specific object.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts static members with ordinary instance member functions."
+    }
+   ],
+   "probes": [
+    "What are the main categories of member functions, and how do you define a member function outside its class?"
+   ],
+   "hints": {
+    "1": "Think about how functions relate to object state: create/destroy, read, write, or compute.",
+    "2": "List Manager, Accessor, Mutator, Utility; then mention declaration in the class and definition with ClassName::.",
+    "3": "Four conventional roles; out-of-class definition uses the scope resolution operator so the compiler knows which class owns the function."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain inline rules, two-pass class parsing, const member functions, mutable, and ref-qualifiers.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A function defined inside the class body is implicitly inline; defining outside the class but still wanting inline requires the explicit inline keyword.",
+     "weight": "core",
+     "evidence_hint": "Distinguishes implicit inline for in-class definitions from the need for explicit inline when defined outside (e.g. in a header)."
+    },
+    {
+     "id": "mech2",
+     "point": "Inside a class, definition order does not matter: the compiler parses declarations in a first pass and function bodies in a second pass, so a function near the top can call one declared near the bottom.",
+     "weight": "core",
+     "evidence_hint": "Mentions two-pass parsing and that call order among members is independent of textual order."
+    },
+    {
+     "id": "mech3",
+     "point": "A const member function is declared by placing const after the parameter list; it must not modify the object's state, and only const member functions may be called on a const object (including via const reference).",
+     "weight": "core",
+     "evidence_hint": "Shows trailing const, no data-member mutation, and that non-const methods cannot be invoked on const instances."
+    },
+    {
+     "id": "mech4",
+     "point": "mutable on a data member exempts it from const enforcement so a const member function can change cache or mutex state while preserving logical constness.",
+     "weight": "extended",
+     "evidence_hint": "Gives caching or thread-safety examples and contrasts logical vs bitwise constness."
+    },
+    {
+     "id": "mech5",
+     "point": "C++11 ref-qualified member functions append & or && to restrict calls to lvalues (persistent objects) or rvalues (temporaries).",
+     "weight": "extended",
+     "evidence_hint": "Explains process() & vs process() && and when each overload is selected."
+    }
+   ],
+   "probes": [
+    "What does it mean for a member function to be const, and what does mutable change about that guarantee?"
+   ],
+   "hints": {
+    "1": "Look at where const appears on a member function and what the compiler allows inside its body.",
+    "2": "Trailing const means this is treated as const; mutable members can still be written for caches or mutexes.",
+    "3": "Only const methods on const objects; mutable enables logical constness when bitwise state changes without changing observable value."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare definition placement and how objects are passed or returned from member functions.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Short functions (e.g. getters/setters) are often defined inside the class; longer or more complex functions are best declared in the class (header) and defined outside (typically in a .cpp) with ClassName::.",
+     "weight": "core",
+     "evidence_hint": "Ties in-class definition to convenience/short bodies and out-of-class to longer logic and header/.cpp split."
+    },
+    {
+     "id": "tr2",
+     "point": "Passing class-type objects by value copies the whole object via the copy constructor and is generally inefficient; prefer reference (&) or const reference (const &) when the argument should not be modified.",
+     "weight": "core",
+     "evidence_hint": "Rejects default by-value for large objects and names const & as the usual read-only parameter form."
+    },
+    {
+     "id": "tr3",
+     "point": "Return by value when creating a new object (compilers may apply RVO); return by reference when returning an existing object such as *this for chaining—never a local.",
+     "weight": "core",
+     "evidence_hint": "Separates new-object returns from *this chaining and flags dangling references to locals."
+    }
+   ],
+   "probes": [
+    "When would you define a member function inside the class versus outside, and how should you pass and return objects?"
+   ],
+   "hints": {
+    "1": "Consider function length and whether you need to avoid copying large objects.",
+    "2": "Inside for short/inline-friendly code; outside with :: for complex logic; prefer const & parameters; value vs reference returns depend on new vs existing objects.",
+    "3": "In-class implies inline; out-of-class needs :: (and inline if kept in a header); almost always pass objects by const &; return value for new objects (RVO), reference for *this chaining."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply const correctness and safe return practices in realistic class APIs.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Const correctness means marking member functions const when they do not modify state and passing objects as const Type& when modification is not intended; omitting const on an accessor blocks reads through const instances.",
+     "weight": "core",
+     "evidence_hint": "Defines the practice and explains the failure mode if getters lack const."
+    },
+    {
+     "id": "app2",
+     "point": "Never return a reference to a local variable created inside the function; the local is destroyed at return, leaving a dangling reference—return by value when generating new objects.",
+     "weight": "core",
+     "evidence_hint": "States the dangling-reference trap and the by-value fix for newly created objects."
+    },
+    {
+     "id": "app3",
+     "point": "Ref-qualified overloads are an advanced tool used mainly to optimise return types or prevent dangerous operations on temporary objects.",
+     "weight": "extended",
+     "evidence_hint": "Gives a purpose for &/&& member overloads beyond basic const."
+    }
+   ],
+   "probes": [
+    "What is const correctness, and why is returning a reference to a local from a member function unsafe?"
+   ],
+   "hints": {
+    "1": "Think about const objects and what methods they are allowed to call.",
+    "2": "Mark non-mutating methods const and use const & parameters; locals die at function exit so references to them dangle.",
+    "3": "Without const on accessors, const instances cannot be read; always return by value for new objects, not a reference to a local."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Define inside class vs declare inside / define outside with ::",
+   "strong_answer": "Inside is convenient for short functions and is implicitly inline; longer or more complex functions should be declared in the class (often a header) and defined outside with ClassName:: (typically in a .cpp); if defined outside but still in a header and you want inline, mark inline explicitly."
+  },
+  {
+   "topic": "Pass by value vs by reference / const reference",
+   "strong_answer": "By value copies the whole object via the copy constructor and is generally inefficient for class types; almost always pass by & to avoid the copy, or const & when the function must not modify the argument."
+  },
+  {
+   "topic": "Return by value vs by reference",
+   "strong_answer": "Return by value when creating a new object (RVO may eliminate the copy); return by reference when handing back an existing object such as *this for chaining; never return a reference to a local."
+  },
+  {
+   "topic": "Bitwise constness vs logical constness (mutable)",
+   "strong_answer": "A const member function must not change observable state; mutable exempts specific members (e.g. caches, mutexes) so bitwise state may change while logical constness is preserved."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Returning a reference to a local variable created inside the function",
+   "correction": "The local is destroyed when the function ends, leaving a dangling reference; return by value when generating new objects."
+  },
+  {
+   "trap": "Forgetting to mark an accessor as const",
+   "correction": "Users cannot call non-const methods on const instances (including via const reference), so unmarked getters block reading from const objects—const correctness requires const on non-mutating members and const Type& when modification is not intended."
+  },
+  {
+   "trap": "Calling a non-const member function on a const object or const reference",
+   "correction": "The compiler treats the object as read-only, so only const member functions are allowed (e.g. getBalance() ok, deposit() error)."
+  },
+  {
+   "trap": "Assuming an out-of-class definition in a header is inline like an in-class definition",
+   "correction": "Only in-class definitions are implicitly inline; outside the class you must write the inline keyword explicitly if you want inline."
+  }
+ ]
+}

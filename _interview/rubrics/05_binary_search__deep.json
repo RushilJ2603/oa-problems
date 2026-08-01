@@ -1,0 +1,266 @@
+{
+ "id": "05_binary_search__deep",
+ "title": "Binary Search & Parametric Search (Depth Pass)",
+ "type": "CP",
+ "relevance": "High (second wave of CF-style BS-on-answer / parametric checks beyond the classic OA templates)",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Threshold scheduling: minimum days so every monster/task is cleared by some worker with cooldown/endurance (Final Boss / Monster Killing family). Facility radius: smallest Wi-Fi/tower radius covering all clients (Cellular Network clone, common in OA). Budgeted median: raise salaries so the median is at least X without exceeding budget S (Salary Changing). Hidden k-th: k-th product / table entry / pair sum without materializing O(n^2) pairs — classic phone-screen follow-up to plain binary search.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot a hidden monotone decision problem where contest text never says binary search but a threshold X is checkable near-linearly.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "After the standard ladder (Koko / ship packages / Hamburgers / min-max partition), problems hide a monotonic decision: guess a threshold X (time, capacity, strength, median, party size), then answer YES/NO with greedy, two pointers, prefix/diff arrays, or BFS.",
+     "weight": "core",
+     "evidence_hint": "Names a threshold X and a yes/no check built from greedy, two pointers, prefix/diff, or BFS rather than a named binary-search template."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognize it when the answer range is huge (10^9–10^18) but a fixed X can be validated in near-linear time, and feasibility is monotone in X.",
+     "weight": "core",
+     "evidence_hint": "Cites a 10^9–10^18-scale answer range plus cheap near-linear validation and monotonicity in X."
+    },
+    {
+     "id": "rec3",
+     "point": "OA/interview skins include threshold scheduling (Final Boss / Monster Killing), facility radius (Cellular Network), budgeted median (Salary Changing), and hidden k-th without materializing O(n^2) pairs.",
+     "weight": "extended",
+     "evidence_hint": "Maps the prompt to one of those four skins: scheduling days, tower radius, budgeted median, or implicit k-th."
+    }
+   ],
+   "probes": [
+    "What tells you this is a hidden parametric / BS-on-answer problem rather than a classic OA Koko-style template?",
+    "If the answer range is huge but checking a fixed X is near-linear and monotone, what do you reach for?"
+   ],
+   "hints": {
+    "1": "Ask whether the statement hides a threshold with a yes/no check instead of announcing binary search.",
+    "2": "Look for a huge answer range plus a near-linear monotone feasibility check in X.",
+    "3": "Say: guess X (time/capacity/strength/median/party size), validate with greedy/two pointers/prefix-diff/BFS; cue is 10^9–10^18 range with monotone near-linear check."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Formulate the monotone check and choose the right predicate engine: rewrite, coverage greedy, cost-of-k resort, k-th count, graph threshold, or diff-array.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Rewrite the check until it is obviously monotone: “can we achieve median/height/time ≥ X?” beats inventing a direct formula.",
+     "weight": "core",
+     "evidence_hint": "States a can-we-achieve ≥ X style predicate and refuses a closed-form first attempt."
+    },
+    {
+     "id": "appr2",
+     "point": "Coverage checks (Cellular / Wooden Toy / Office Keys): sort both sides, then two-pointer or “next uncovered” greedy; if the greedy fails, mid is impossible.",
+     "weight": "core",
+     "evidence_hint": "Sorts both sides and runs two-pointer or next-uncovered greedy, treating greedy failure as mid impossible."
+    },
+    {
+     "id": "appr3",
+     "point": "Cost-depends-on-k (Sagheer): when taking k items changes each item’s cost, re-sort for that k inside the check — do not reuse one global order.",
+     "weight": "core",
+     "evidence_hint": "Recomputes costs a_i + i·k for the guessed k, re-sorts, and prefix-sums inside the check."
+    },
+    {
+     "id": "appr4",
+     "point": "k-th in an implicit sorted list (multiplication table / pair products): BS the value v, count how many entries ≤ v in O(n) or O(n log).",
+     "weight": "extended",
+     "evidence_hint": "Binary-searches the value and counts ≤ v without building the full list."
+    },
+    {
+     "id": "appr5",
+     "point": "Parametric + graph (Jumping Takahashi): edges appear as S grows; BS S and only rebuild/BFS the threshold graph — do not Dijkstra over all S.",
+     "weight": "extended",
+     "evidence_hint": "Binary-searches strength S, rebuilds edges at the threshold, and BFS/reachability-checks rather than Dijkstra over all S."
+    }
+   ],
+   "probes": [
+    "How do you rewrite the ask into a monotone feasibility check?",
+    "For coverage or cost-depends-on-k, what do you do inside the mid check?",
+    "For an implicit k-th or a parametric graph, what do you search and what do you rebuild?"
+   ],
+   "hints": {
+    "1": "Start from “can we achieve ≥ X?” before hunting a formula.",
+    "2": "Coverage → sort both sides + greedy/two pointers; Sagheer → re-sort costs for that k; k-th → count ≤ v; graph → BS S + rebuild/BFS.",
+    "3": "Say: monotone rewrite; coverage greedy fails ⇒ mid impossible; re-sort for k; BS v and count ≤ v; BS S and BFS the threshold graph, not Dijkstra over all S."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Show safe mid arithmetic, i64 overflow hygiene, fixed-iteration float BS, and O(1)-amortized updates inside the check.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Prefer mid = lo + (hi-lo)/2; damage × turns, n·mid, and ∑ mid/i all need i64.",
+     "weight": "core",
+     "evidence_hint": "Uses mid = lo + (hi-lo)/2 and i64 for those product/sum patterns."
+    },
+    {
+     "id": "impl2",
+     "point": "Float / continuous answers: run a fixed 80–100 iterations (Meeting Place); never while (hi-lo > 1e-9) under tight TL.",
+     "weight": "core",
+     "evidence_hint": "Uses a fixed 80–100 iteration loop and rejects an EPS-style while (hi-lo > 1e-9)."
+    },
+    {
+     "id": "impl3",
+     "point": "Diff-array / sliding window inside check (Present): “add +1 on [i,i+w)” is O(1) amortized per index after a difference array, so total check stays O(n).",
+     "weight": "core",
+     "evidence_hint": "Places difference marks for window adds and rebuilds so each index is amortized O(1) and the check is O(n)."
+    },
+    {
+     "id": "impl4",
+     "point": "Sagheer-style cost rewrite: cost of taking k items becomes a_i + i·k; sort and prefix-sum inside the check for that k.",
+     "weight": "extended",
+     "evidence_hint": "Rebuilds a_i + i·k, sorts, and prefix-sums per mid/k inside the predicate."
+    }
+   ],
+   "probes": [
+    "What mid formula and integer type do you use when products like damage × turns or ∑ mid/i appear?",
+    "How do you binary-search a continuous answer without EPS TLE?",
+    "How does a difference array keep a watering / sliding-window check O(n)?"
+   ],
+   "hints": {
+    "1": "Think safe mid, wide integers, fixed float iterations, and amortized updates in the predicate.",
+    "2": "mid = lo + (hi-lo)/2 with i64; floats use 80–100 fixed iters; window adds go through a diff array.",
+    "3": "Spell: mid = lo+(hi-lo)/2; i64 on damage×turns / n·mid / ∑ mid/i; 80–100 iters not while (hi-lo > 1e-9); +1 on [i,i+w) via diff so check stays O(n)."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Keep each mid check near-linear (or O(n)/O(n log) counts) and refuse materializing huge implicit lists or all-S graph searches.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "A fixed X is validated in near-linear time while the answer range stays huge (10^9–10^18), so search cost is log of the range times one check.",
+     "weight": "core",
+     "evidence_hint": "Separates near-linear per-mid validation from logarithmic guesses over a 10^9–10^18 answer range."
+    },
+    {
+     "id": "cx2",
+     "point": "For k-th in an implicit list, count entries ≤ v in O(n) or O(n log) rather than materializing O(n^2) pairs.",
+     "weight": "core",
+     "evidence_hint": "Quotes O(n) or O(n log) counting per mid and refuses building the full pair/table list."
+    },
+    {
+     "id": "cx3",
+     "point": "Present-style diff-array check stays O(n) because each window add is O(1) amortized per index after the difference array.",
+     "weight": "extended",
+     "evidence_hint": "Charges the check as O(n) via amortized O(1) difference updates per index."
+    }
+   ],
+   "probes": [
+    "What is the per-mid cost you expect when the answer range is 10^9–10^18?",
+    "How do you count for an implicit k-th without O(n^2) materialization?",
+    "Why does a difference-array watering check stay O(n)?"
+   ],
+   "hints": {
+    "1": "Separate log guesses from the cost of one feasibility check.",
+    "2": "Near-linear (or O(n)/O(n log) count) per mid; never build O(n^2) pairs; diff keeps watering O(n).",
+    "3": "Say: log over 10^9–10^18 × near-linear check; count ≤ v in O(n) or O(n log); Present check O(n) via amortized O(1) diff updates."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch global-order reuse, overflow, EPS float loops, Dijkstra-over-S, and formula-first mistakes the depth ladder punishes.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "When taking k items changes each item’s cost, do not reuse one global order — re-sort for that k inside the check.",
+     "weight": "core",
+     "evidence_hint": "Catches sorting once globally and forces a_i + i·k re-sort per guessed k."
+    },
+    {
+     "id": "pit2",
+     "point": "Integer overflow on damage × turns, n·mid, and ∑ mid/i — use i64 and mid = lo + (hi-lo)/2.",
+     "weight": "core",
+     "evidence_hint": "Names those overflow sites and switches to i64 with safe mid."
+    },
+    {
+     "id": "pit3",
+     "point": "Never while (hi-lo > 1e-9) under tight TL for continuous answers; use fixed 80–100 iterations.",
+     "weight": "core",
+     "evidence_hint": "Rejects the EPS while-loop and states a fixed 80–100 iteration float BS."
+    },
+    {
+     "id": "pit4",
+     "point": "On parametric graphs, do not Dijkstra over all S — BS S and only rebuild/BFS the threshold graph.",
+     "weight": "extended",
+     "evidence_hint": "Redirects from Dijkstra-over-S to binary search on S plus rebuild/BFS."
+    },
+    {
+     "id": "pit5",
+     "point": "Inventing a direct formula instead of rewriting to “can we achieve median/height/time ≥ X?” misses the monotone check.",
+     "weight": "extended",
+     "evidence_hint": "Abandons a closed form and restates a monotone ≥ X feasibility predicate."
+    }
+   ],
+   "probes": [
+    "What goes wrong if Sagheer-style costs are sorted only once globally?",
+    "Which overflow and float-loop mistakes show up in Final Boss / Meeting Place style checks?",
+    "Why is Dijkstra over all S the wrong move on Jumping Takahashi-style problems?"
+   ],
+   "hints": {
+    "1": "Check order reuse, integer width, float termination, and graph search choice.",
+    "2": "Re-sort per k; i64 + safe mid; fixed 80–100 iters; BS+BFS not Dijkstra-over-S.",
+    "3": "Also: rewrite to a monotone ≥ X check instead of inventing a direct formula."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Monotone feasibility rewrite vs inventing a direct formula",
+   "strong_answer": "Rewrite the check until it is obviously monotone: “can we achieve median/height/time ≥ X?” beats inventing a direct formula."
+  },
+  {
+   "topic": "Re-sort costs for guessed k vs one global sort order",
+   "strong_answer": "When taking k items changes each item’s cost (Sagheer: a_i + i·k), re-sort for that k inside the check and prefix-sum — do not reuse one global order."
+  },
+  {
+   "topic": "Fixed 80–100 float iterations vs while (hi-lo > 1e-9)",
+   "strong_answer": "For continuous answers (Meeting Place), run a fixed 80–100 iterations; never while (hi-lo > 1e-9) under tight TL."
+  },
+  {
+   "topic": "BS value + count ≤ v vs materializing O(n^2) pairs",
+   "strong_answer": "For k-th in an implicit sorted list (multiplication table / pair products), BS the value v and count how many entries ≤ v in O(n) or O(n log) instead of materializing O(n^2) pairs."
+  },
+  {
+   "topic": "BS S + rebuild/BFS threshold graph vs Dijkstra over all S",
+   "strong_answer": "Edges appear as S grows (Jumping Takahashi); BS S and only rebuild/BFS the threshold graph — do not Dijkstra over all S."
+  },
+  {
+   "topic": "Difference-array window adds vs naive per-mid resim of watering",
+   "strong_answer": "Inside Present-style checks, “add +1 on [i,i+w)” is O(1) amortized per index after a difference array, so the total check stays O(n)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Reusing one global sort order when item costs depend on the guessed k.",
+   "correction": "Re-sort for that k inside the check (cost becomes a_i + i·k); prefix-sum after sorting."
+  },
+  {
+   "trap": "Integer overflow on damage × turns, n·mid, or ∑ mid/i, or mid = (lo+hi)/2 overflow risk.",
+   "correction": "Use i64 for those products/sums and prefer mid = lo + (hi-lo)/2."
+  },
+  {
+   "trap": "Floating-point while (hi-lo > 1e-9) under tight TL.",
+   "correction": "Run a fixed 80–100 iterations (Meeting Place), not an EPS while-loop."
+  },
+  {
+   "trap": "Dijkstra over all S when edges appear as strength S grows.",
+   "correction": "BS S and only rebuild/BFS the threshold graph (Jumping Takahashi)."
+  },
+  {
+   "trap": "Coverage greedy succeeds/fails ignored as the feasibility oracle.",
+   "correction": "Sort both sides, then two-pointer or “next uncovered” greedy; if the greedy fails, mid is impossible."
+  },
+  {
+   "trap": "Inventing a direct formula instead of a monotone check.",
+   "correction": "Rewrite until the ask is “can we achieve median/height/time ≥ X?” with a yes/no predicate."
+  },
+  {
+   "trap": "Materializing all pairs/table entries to find a k-th value.",
+   "correction": "BS the value v and count how many entries ≤ v in O(n) or O(n log)."
+  }
+ ]
+}

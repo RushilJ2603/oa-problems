@@ -1,0 +1,241 @@
+{
+ "id": "c_s08_structs_unions",
+ "title": "Structures, Unions, Enums & Bit-fields",
+ "type": "FUND",
+ "relevance": "C composite types, padding/alignment, unions, and bit packing are staples of systems SDE interviews and OAs that probe whether candidates understand real memory layout beyond language syntax.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what structs, unions, enums, and bit-fields are and how they are declared and accessed.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A structure is a contiguous block of memory containing a sequence of named members of potentially different types.",
+     "weight": "core",
+     "evidence_hint": "Candidate defines a struct as grouped heterogeneous members sharing one namespace in sequential storage."
+    },
+    {
+     "id": "fund2",
+     "point": "A struct tag alone requires the struct keyword on every declaration; a typedef alias lets you omit it.",
+     "weight": "core",
+     "evidence_hint": "They contrast struct Point p1 with typedef struct { ... } Point; Point p2."
+    },
+    {
+     "id": "fund3",
+     "point": "Members are accessed with ., and C99 designated initializers map values by name; unspecified designated members are zero-initialized.",
+     "weight": "core",
+     "evidence_hint": "They prefer { .y = 20, .x = 10 } over brittle positional init and note omitted fields become zero."
+    },
+    {
+     "id": "fund4",
+     "point": "A union allocates exactly enough memory for its largest member; all members start at the same address (offset 0) and writing one overwrites the others.",
+     "weight": "core",
+     "evidence_hint": "They explain overlapping storage like a shared safe, not side-by-side layout."
+    },
+    {
+     "id": "fund5",
+     "point": "Enums assign names to integer constants; by default the first is 0 and later ones increment by 1, and in C those constants leak into the surrounding scope.",
+     "weight": "extended",
+     "evidence_hint": "They mention default numbering and why names are prefixed (e.g. STATE_IDLE) to avoid collisions."
+    },
+    {
+     "id": "fund6",
+     "point": "Bit-fields let you specify the exact number of bits a member occupies within an integer word.",
+     "weight": "extended",
+     "evidence_hint": "They describe packing multiple narrow fields into one word for registers or dense packing."
+    }
+   ],
+   "probes": [
+    "What is the difference between a struct and a union in how members occupy memory?",
+    "Why do C programmers usually prefix enum constants like STATE_IDLE?"
+   ],
+   "hints": {
+    "1": "Think about whether members sit next to each other or share one region.",
+    "2": "Struct = sequential contiguous members; union = same address, size of largest; enums are named ints that enter the enclosing scope.",
+    "3": "Say: struct Point { int x,y; }; needs struct or a typedef; union Data { uint32_t raw; float f; char str[4]; } overlaps at offset 0; enums default from 0 unless set explicitly."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain alignment/padding, reordering, packed layouts, pointers/arrow, self-reference, type punning, FAMs, and offsetof.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "sizeof(struct bad_layout) with char, int, char is typically 12 bytes, not 6, because the compiler injects padding so int is aligned and trailing padding keeps array elements aligned.",
+     "weight": "core",
+     "evidence_hint": "They walk through padding after the first char and trailing padding so overall size is a multiple of the max member alignment."
+    },
+    {
+     "id": "mech2",
+     "point": "A structure's overall alignment is the largest alignment of any member, and its total size must be a multiple of that alignment; _Alignof queries alignment (C11).",
+     "weight": "core",
+     "evidence_hint": "They state the absolute alignment/size rule rather than only giving an example number."
+    },
+    {
+     "id": "mech3",
+     "point": "Reordering members largest-alignment-first yields sizeof(struct good_layout) of 8 bytes; a traced 64-bit layout shrinks from 24 bytes to 16 bytes when reordered.",
+     "weight": "core",
+     "evidence_hint": "They reorder int before chars, or pointer/int/char, and cite the smaller sizeof."
+    },
+    {
+     "id": "mech4",
+     "point": "__attribute__((packed)) (or #pragma pack) can force a network_header of char plus int to exactly 5 bytes with no padding.",
+     "weight": "extended",
+     "evidence_hint": "They name a packed attribute/pragma and state the resulting exact size."
+    },
+    {
+     "id": "mech5",
+     "point": "Pass structs by pointer (const if read-only); ptr->member is sugar for (*ptr).member; a struct may contain a pointer to its own type but not an instance of itself.",
+     "weight": "core",
+     "evidence_hint": "They cite copy cost, arrow syntax, and fixed-size pointers enabling lists/trees."
+    },
+    {
+     "id": "mech6",
+     "point": "In C, reading a different union member than last written is defined type punning of the object representation; a Flexible Array Member must be last, and sizeof excludes that array.",
+     "weight": "extended",
+     "evidence_hint": "They contrast C union punning with needing a tag for safety, and malloc(sizeof(Vector) + N * sizeof(element)) for FAMs."
+    },
+    {
+     "id": "mech7",
+     "point": "offsetof(type, member) from stddef.h gives a member's byte offset at compile time without creating an instance.",
+     "weight": "extended",
+     "evidence_hint": "They name offsetof and describe the null-pointer-to-struct compile-time trick."
+    }
+   ],
+   "probes": [
+    "Why is sizeof(struct { char a; int b; char c; }) typically larger than the sum of the member sizes?",
+    "How do you get a member's offset in a struct without allocating one?"
+   ],
+   "hints": {
+    "1": "Ask what the CPU needs for an int's address, and what happens between array elements.",
+    "2": "Alignment forces padding after char before int; trailing padding makes size a multiple of max alignment; offsetof is the compile-time answer.",
+    "3": "Expect ~12 for bad_layout, 8 after reordering chars together; packed network_header is 5; Trace 24→16 on 64-bit; use offsetof from stddef.h."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Weigh packing, passing style, and bit-field portability against correctness and speed.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Packed structs save memory/match wire layouts but can incur severe performance cost where unaligned loads need byte-by-byte access.",
+     "weight": "core",
+     "evidence_hint": "They pair memory/ABI wins with slower generated code on architectures without cheap unaligned loads."
+    },
+    {
+     "id": "tr2",
+     "point": "Passing a large struct by value copies every byte; passing a pointer avoids that overhead (const when mutation is not needed).",
+     "weight": "core",
+     "evidence_hint": "They recommend pointer parameters for large structs and mention const for read-only APIs."
+    },
+    {
+     "id": "tr3",
+     "point": "Bit-fields pack tightly for registers, but ordering is implementation-defined, so portable exact hardware maps should use bitwise operations instead.",
+     "weight": "core",
+     "evidence_hint": "They refuse to rely on bit-field layout across compilers/ABIs and prefer masks/shifts for portable register maps."
+    },
+    {
+     "id": "tr4",
+     "point": "Returning a struct by value may be optimized with RVO, but an out-pointer remains a common explicit C idiom.",
+     "weight": "extended",
+     "evidence_hint": "They acknowledge RVO yet still describe writing through a caller-provided pointer as idiomatic C."
+    }
+   ],
+   "probes": [
+    "When would you pack a struct, and what do you give up?",
+    "Would you model a hardware register with bit-fields or with masks—and why?"
+   ],
+   "hints": {
+    "1": "Separate space/layout needs from speed and portability.",
+    "2": "Packed/wire/HW vs unaligned cost; by-value copy vs pointer; bit-field order is not portable.",
+    "3": "Say: pack for packets/HW size match but expect slow unaligned access; pass large structs by pointer; use bitwise ops when register bit order must be portable."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply composite types to variants, trees/lists, and safe dynamic data handling.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Self-referential nodes use a pointer to the same struct type (e.g. next or left/right) as the basis of linked lists and trees; the typedef alias cannot be used inside the incomplete definition.",
+     "weight": "core",
+     "evidence_hint": "They write struct Node { ... struct Node *next; } or TreeNode left/right pointers using the tag."
+    },
+    {
+     "id": "app2",
+     "point": "A tagged union pairs an enum tag with a union (often anonymous) so code knows which member is active before reading it.",
+     "weight": "core",
+     "evidence_hint": "They show DataType/ValType plus union { int i; float f; } and a switch on the tag."
+    },
+    {
+     "id": "app3",
+     "point": "Since C11, anonymous nested struct/union members project into the enclosing scope (e.g. Player.x without an intermediate name).",
+     "weight": "extended",
+     "evidence_hint": "They access nested fields as if declared on the outer struct when the inner type is unnamed."
+    },
+    {
+     "id": "app4",
+     "point": "Allocate a FAM struct with malloc(sizeof(Vector) + 100 * sizeof(int)) so capacity lives in the header and data[] trails it.",
+     "weight": "extended",
+     "evidence_hint": "They place the incomplete array last and size the allocation as header plus element storage."
+    }
+   ],
+   "probes": [
+    "How would you represent a value that is either an int or a float safely in C?",
+    "Complete a binary tree node that needs left and right child pointers."
+   ],
+   "hints": {
+    "1": "You need both the payload storage and a way to know which kind is live.",
+    "2": "Enum tag + union members; tree children are pointers to struct TreeNode, not embedded nodes.",
+    "3": "typedef struct { ValType type; union { int i; float f; }; } Value; and struct TreeNode *right; beside *left."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Packed vs naturally aligned structs",
+   "strong_answer": "Packing (__attribute__((packed)) / #pragma pack) removes padding for HW/network layouts (e.g. exact 5-byte header) but can force slow byte-wise access on platforms that fault or penalize unaligned loads; default layout favors speed and alignment."
+  },
+  {
+   "topic": "Pass struct by value vs by pointer",
+   "strong_answer": "By-value copies the whole object and is costly for large structs; pass a pointer (const if read-only) to avoid the copy. Return-by-value may use RVO, but out-pointers stay a clear C idiom."
+  },
+  {
+   "topic": "Bit-fields vs bitwise masks for hardware registers",
+   "strong_answer": "Bit-fields express width compactly in one word, but member order is implementation-defined (e.g. LSB-vs-MSB packing), so portable exact register maps should use explicit bitwise operations instead."
+  },
+  {
+   "topic": "Positional vs designated struct initialization",
+   "strong_answer": "Positional initializers break when member order changes; C99 designated initializers bind by name and zero any unspecified members, making init robust to reordering."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating a struct as a raw byte blob for disk or network I/O",
+   "correction": "Padding holds garbage and layout varies by compiler/architecture; serialize field-by-field or use an explicitly packed, agreed wire format."
+  },
+  {
+   "trap": "Assuming C++ union type punning works like C",
+   "correction": "In C, reading a different union member than last written is defined as reading the overlapping object representation; in C++ reading an inactive member is undefined behavior."
+  },
+  {
+   "trap": "Relying on bit-field member order for portable register maps",
+   "correction": "Ordering is implementation-defined; prefer masks and shifts when exact bit positions must be portable."
+  },
+  {
+   "trap": "Expecting sizeof(struct) to equal the sum of member sizes",
+   "correction": "The compiler inserts padding for alignment and trailing padding so size is a multiple of the struct's overall alignment (max member alignment)."
+  },
+  {
+   "trap": "Embedding a struct instance of the same type inside itself",
+   "correction": "That would make size infinite; only a pointer to the same type is allowed, and you must use the struct tag because a typedef alias is incomplete until the closing brace."
+  },
+  {
+   "trap": "Defining the same unprefixed enumerator name in two enums in one scope",
+   "correction": "C enum constants leak into the surrounding scope, so use prefixed names like STATE_IDLE."
+  }
+ ]
+}

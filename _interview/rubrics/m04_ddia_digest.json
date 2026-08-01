@@ -1,0 +1,223 @@
+{
+ "id": "m04_ddia_digest",
+ "title": "DDIA chapter-by-chapter digest (interview lens)",
+ "type": "CONCEPT",
+ "relevance": "High — the tradeoff vocabulary interviewers expect in HLD deep dives (replication lag, isolation, partitioning, consistency); FAANG + Indian product cos (Atlassian, Uber, Flipkart, etc.). Not a substitute for timed design practice.",
+ "difficulty": "mid",
+ "prereqs": [
+  "m01_hld_framework"
+ ],
+ "company_notes": "Campus/early-career India product cos: rarely formal Raft; often implicit DDIA (replica lag, shard key, node death, cache vs DB truth)—Flipkart/Uber/Atlassian HLD probes map to ch.5–6–8. FAANG/big-tech mid+ HLD: explicit ch.5–9 tradeoff language; senior loops may touch consensus/coordination (ch.9) and stream/CDC (ch.11); new-grad depth varies—prefer applied ch.5–7 over proofs. Meta resource: cite chapter ideas inside every HLD foundation and hq* deep dive; re-read the matching chapter the night before, don’t binge cover-to-cover.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish DDIA’s interview job: tradeoff vocabulary and NFR/storage/model language—not tool tutorials or finishing all chapters before practice.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "DDIA teaches why Redis/Kafka/Postgres via tradeoffs; naming tools without a chapter-backed tradeoff scores weak, and the book is not a timed-design substitute.",
+     "weight": "core",
+     "evidence_hint": "Says interviewers want replication/isolation/partitioning/consistency language, not cover-to-cover recall or tool name-drops."
+    },
+    {
+     "id": "fund2",
+     "point": "Ch.1 NFR language: reliability (fault ≠ failure), scalability via named load parameters, maintainability (operability/simplicity/evolvability); quote percentiles (p50/p95/p99), never average latency.",
+     "weight": "core",
+     "evidence_hint": "Contrasts fault vs failure, names load parameters, and prefers percentile SLOs over averages."
+    },
+    {
+     "id": "fund3",
+     "point": "Ch.2–3 foundations: pick relational vs document vs graph for access patterns; LSM/SSTables (write-optimized, compaction, bloom filters) vs B-trees (read-friendly + WAL); OLTP row store vs OLAP column store.",
+     "weight": "extended",
+     "evidence_hint": "Ties model to access pattern and explains why write-heavy vs read-heavy storage engines differ."
+    },
+    {
+     "id": "fund4",
+     "point": "Ch.4 evolution: backward + forward compatibility; rolling deploys need schema contracts—Avro/Protobuf/Thrift beat ad-hoc JSON for cross-service evolution; REST vs RPC as API shapes.",
+     "weight": "extended",
+     "evidence_hint": "Treats schemas as contracts and can say why typed evolution helps rolling deploys."
+    }
+   ],
+   "probes": [
+    "What is DDIA for in an HLD interview, and what is it not?",
+    "How do you talk about latency and scalability without saying average latency?"
+   ],
+   "hints": {
+    "1": "Start from tradeoff vocabulary, not chapter completion.",
+    "2": "Cover ch.1 percentiles/load parameters, then model fit and storage-engine stories.",
+    "3": "Say: tools need chapter tradeoffs; fault≠failure + load params + p50/p95/p99; model fits access pattern; LSM vs B-tree and OLTP vs OLAP; schemas/compat for evolution."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Lock how replication, partitioning, isolation, and distributed failure actually behave—the interview-core chapters.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Ch.5 replication: single-leader, multi-leader, and leaderless; sync vs async; client guarantees read-your-writes, monotonic reads, and consistent prefix; quorums with R+W>N (plus sloppy quorum / hinted handoff).",
+     "weight": "core",
+     "evidence_hint": "Names topologies, sync/async, at least one client read guarantee, and quorum condition R+W>N."
+    },
+    {
+     "id": "mech2",
+     "point": "Ch.6 partitioning: key-range vs hash; hot spots (celebrity/timestamp); local secondary indexes (scatter-gather) vs global async indexes; avoid naïve hash-mod-N rebalancing; “consistent hashing” often means hash partitioning + fixed slots.",
+     "weight": "core",
+     "evidence_hint": "Picks range vs hash with a hotspot story and contrasts local vs global secondary indexes."
+    },
+    {
+     "id": "mech3",
+     "point": "Ch.7 transactions: ACID’s C is an application invariant; isolation is not all-or-nothing—read committed vs snapshot vs serializable; name lost update, write skew, phantoms; 2PL vs SSI for money/booking.",
+     "weight": "core",
+     "evidence_hint": "Names an isolation level and the anomaly it prevents for a payments/seats/inventory example."
+    },
+    {
+     "id": "mech4",
+     "point": "Ch.8–9 mechanics: partial failure; timeout ≠ certainty; clocks drift; GC pauses; fencing tokens; linearizability vs weaker models; total-order broadcast; Raft/Paxos at interview depth; ZooKeeper/etcd for coordination; 2PC pain across services.",
+     "weight": "extended",
+     "evidence_hint": "Says timeout leaves outcome unknown, locks need fencing under pauses, and consensus is for coordination not every user read."
+    }
+   ],
+   "probes": [
+    "Reads go to replicas—what can go wrong for the writer, and what client guarantee fixes it?",
+    "Walk hash vs range partitioning and what breaks secondary indexes when you shard."
+   ],
+   "hints": {
+    "1": "Stay in ch.5–7 first; add ch.8–9 only for failure and consistency.",
+    "2": "Replication topologies + read guarantees; partition key + indexes; isolation anomalies; then timeouts/fencing/linearizability.",
+    "3": "Single/multi/leaderless + R+W>N; range vs hash and hot keys; lost update/write skew/phantoms; timeout≠certainty and fencing; Raft for coordination, 2PC is a smell."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose replication, consistency, derived-data, and coordination approaches with explicit rejected alternatives.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Replication tradeoff aloud: single-leader is simple but has lag anomalies; multi-leader invites conflicts; leaderless uses quorums (R+W>N) with sloppy quorum/hinted handoff costs.",
+     "weight": "core",
+     "evidence_hint": "States all three topologies with the main downside of each."
+    },
+    {
+     "id": "tr2",
+     "point": "Consistency ladder: linearizability is expensive; eventual needs named client guarantees; use total-order log/Raft for coordination (leader, config, unique ID), not every user read; CAP one-letter labels are a misuse—reason per operation/failure mode.",
+     "weight": "core",
+     "evidence_hint": "Refuses CP/AP stickers and reserves strong consistency/consensus for coordination-critical paths."
+    },
+    {
+     "id": "tr3",
+     "point": "Ch.10–11 derived data: batch (immutable inputs, recompute) vs streams (log, CDC, event time vs processing time, idempotence); dual-writes without a log race and lose data—prefer CDC/outbox.",
+     "weight": "extended",
+     "evidence_hint": "Names dual-write failure and proposes log/CDC/outbox instead of DB-then-Kafka blind writes."
+    },
+    {
+     "id": "tr4",
+     "point": "Distributed transactions vs single-partition + async: prefer single-partition transactions with idempotent async; 2PC across microservices blocks on coordinator failure.",
+     "weight": "extended",
+     "evidence_hint": "Rejects cross-service 2PC as default and offers partition-local tx + async instead."
+    }
+   ],
+   "probes": [
+    "Single-leader vs multi-leader vs leaderless—when do you pick each?",
+    "When do you actually need linearizability or Raft versus eventual consistency?",
+    "Write DB then Kafka—what’s wrong, and what’s the DDIA-shaped fix?"
+   ],
+   "hints": {
+    "1": "Name the option you rejected, not only the one you chose.",
+    "2": "Tie replication choice to lag/conflicts/quorum; tie strong consistency to coordination cost.",
+    "3": "Single-leader=lag, multi=conflicts, leaderless=quorum; linearizability expensive / Raft for coordination; dual-write→CDC/outbox; avoid cross-service 2PC."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply DDIA chapters as whiteboard talk tracks on feed, replicas, shard keys, booking, locks, and dual-writes.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Ch.1 drill: for Design Twitter/Instagram feed, name load parameters and which percentile belongs on an SLO; say when you’d skip early estimation.",
+     "weight": "core",
+     "evidence_hint": "Lists concrete load parameters and a percentile SLO, and gates estimation on whether numbers change the design."
+    },
+    {
+     "id": "app2",
+     "point": "Ch.5–6 drills: explain a replica-lag anomaly (stale profile after edit) plus read-your-writes/sticky replica/read-leader fix; for URL shortener vs chat messages pick hash vs range/compound and name hotspot mitigation (salt/random suffix/celebrity path).",
+     "weight": "core",
+     "evidence_hint": "Gives one lag anomaly+fix and a shard-key choice with hotspot mitigation."
+    },
+    {
+     "id": "app3",
+     "point": "Ch.7–8/locking drills: two users book the last seat—walk lost-update vs write-skew and choose isolation/constraint (unique row, SELECT FOR UPDATE, serializable); Redis TTL lock alone fails under GC pause—add fencing token or DB conditional write.",
+     "weight": "core",
+     "evidence_hint": "Names the anomaly, the isolation/constraint, and why fencing or conditional write beats TTL-only locks."
+    },
+    {
+     "id": "app4",
+     "point": "Ch.11 drill: Write DB then Kafka fails under partial success; propose CDC/outbox; skim Raft only if the interviewer probes consensus—interviewers care you apply ch.5–7 on the board more than finishing later chapters.",
+     "weight": "extended",
+     "evidence_hint": "Proposes outbox/CDC for dual-write and prioritizes applied ch.5–7 over claiming the whole book."
+    }
+   ],
+   "probes": [
+    "Design a feed—what load parameters and percentile SLO do you state first?",
+    "Two users book the last seat, and someone proposes a Redis lock for inventory—walk your answer.",
+    "You wrote to the DB then to Kafka—what fails, and how do you fix it?"
+   ],
+   "hints": {
+    "1": "Map the prompt to a chapter drill, not a book summary.",
+    "2": "Feed→load params/percentiles; replicas→read-your-writes; seats→isolation; locks→fencing; DB+Kafka→outbox.",
+    "3": "Say load params + p95/p99 SLO; fix lag with read-your-writes; hash vs range with salt/celebrity path; serializable/unique/FOR UPDATE for last seat; fencing over TTL lock; CDC/outbox over dual-write."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Single-leader vs multi-leader vs leaderless replication",
+   "strong_answer": "Single-leader is operationally simple but async replicas create lag anomalies; multi-leader improves geo/write availability but needs conflict resolution; leaderless uses quorums (R+W>N) and may rely on sloppy quorum/hinted handoff."
+  },
+  {
+   "topic": "Hash vs range partitioning",
+   "strong_answer": "Hash spreads load and fights hot keys better for uniform IDs (e.g. URL shortener); range/compound keys help ordered scans (e.g. chat by room+time) but risk celebrity/timestamp hotspots—mitigate with salt, random suffix, or a separate celebrity path."
+  },
+  {
+   "topic": "Local vs global secondary indexes",
+   "strong_answer": "Local indexes keep writes on the partition but reads scatter-gather; global indexes make reads simpler but are typically updated asynchronously and can lag."
+  },
+  {
+   "topic": "Linearizability vs eventual consistency",
+   "strong_answer": "Linearizability is expensive and rarely needed on every user read; eventual is fine only if you still name client guarantees you need (e.g. read-your-writes on profile, strong checks on inventory)."
+  },
+  {
+   "topic": "Batch vs stream derived data (and dual-write vs log/CDC)",
+   "strong_answer": "Batch recomputes from immutable inputs; streams use a log with CDC, event-time vs processing-time, and idempotence; dual-writing DB and Kafka without a log races and loses data—prefer CDC/outbox."
+  },
+  {
+   "topic": "Cross-service 2PC vs single-partition transactions + async",
+   "strong_answer": "Prefer single-partition transactions plus idempotent async; 2PC across microservices is a smell because the coordinator failure blocks the protocol."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Is Cassandra AP and Mongo CP?",
+   "correction": "Refuse the one-letter label; cite Kleppmann’s CAP follow-up and discuss this read/write under this partition/failure mode."
+  },
+  {
+   "trap": "Just use consistent hashing.",
+   "correction": "Many DBs say consistent hashing but mean hash partitioning with fixed slots; argue minimal remapping on rebalance, not the CDN paper blindly."
+  },
+  {
+   "trap": "Eventual consistency is fine.",
+   "correction": "Ask which client guarantee you still need—read-your-writes on profile? strong inventory checks?"
+  },
+  {
+   "trap": "We need distributed transactions.",
+   "correction": "Prefer single-partition transactions + idempotent async; 2PC blocks on coordinator failure."
+  },
+  {
+   "trap": "Redis lock = safe.",
+   "correction": "Without fencing, a paused holder can still write after TTL expiry; use fencing tokens or a DB/conditional-write epoch check."
+  },
+  {
+   "trap": "I read all of DDIA.",
+   "correction": "Interviewers care that you apply ch.5–7 on the whiteboard; finishing later chapters without timed designs doesn’t help campus loops."
+  }
+ ]
+}

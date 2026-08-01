@@ -1,0 +1,202 @@
+{
+ "id": "05_binary_search",
+ "title": "Binary Search & Parametric Search",
+ "type": "CP",
+ "relevance": "High (appears constantly as optimal/hidden constraints in arrays)",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Resource allocation OAs (e.g. Amazon: partition packages into K days minimizing maximum daily weight); speed/rate problems (minimum rate to finish in H hours, Koko Eating Bananas); subsequence/subarray optimization (pick length-K subsequence minimizing maximum difference → sorting + BS); hidden parametric float BS (maximum non-overlapping circle radius).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Establish that the candidate spots binary search / binary search on answer from wording and constraints.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Wording like \"minimize the maximum\" or \"maximize the minimum\" is a hard giveaway for binary search on answer.",
+     "weight": "core",
+     "evidence_hint": "Names those phrases and says the answer is the boundary of a monotone feasibility predicate."
+    },
+    {
+     "id": "rec2",
+     "point": "\"Find the smallest K such that...\" signals binary search on answer rather than a direct closed formula.",
+     "weight": "core",
+     "evidence_hint": "Says search over candidate K values with a yes/no check, not iterate all answers linearly."
+    },
+    {
+     "id": "rec3",
+     "point": "When the answer range is massive (e.g. up to 10^{14}) but a guessed answer validates in O(N), reach for binary search on answer.",
+     "weight": "extended",
+     "evidence_hint": "Cites huge answer bounds plus cheap validation as the classic parametric-search tell."
+    }
+   ],
+   "probes": [
+    "What phrases or constraint shapes make you reach for binary search on answer instead of a linear scan?",
+    "If the answer can be huge but checking a candidate is cheap, what technique do you use?"
+   ],
+   "hints": {
+    "1": "Look at the ask: min/max of a constrained quantity, or smallest K with a property.",
+    "2": "Tie \"minimize the maximum\" / \"maximize the minimum\" / \"smallest K such that\" to a monotone check.",
+    "3": "Say: those phrases or a 10^{14}-scale answer with O(N) validation → binary search on the answer."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Get the candidate to state monotonicity and the isValid(mid) formulation before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "If the search space is monotonic, binary search finds the boundary (minimum or maximum valid answer).",
+     "weight": "core",
+     "evidence_hint": "States that once feasibility flips from false to true (or vice versa), binary search isolates the boundary."
+    },
+    {
+     "id": "appr2",
+     "point": "Binary search on answer centers on formulating an isValid(mid) predicate for a guessed mid.",
+     "weight": "core",
+     "evidence_hint": "Describes guessing mid then checking whether mid is a feasible answer under the problem constraints."
+    },
+    {
+     "id": "appr3",
+     "point": "Monotonicity examples: if a task can finish in X time it can finish in X+1; if a number is ≥ k, all larger numbers are ≥ k.",
+     "weight": "extended",
+     "evidence_hint": "Gives one of those two monotone implications to justify searching the boundary."
+    }
+   ],
+   "probes": [
+    "What must be true of the search space before binary search on answer is valid?",
+    "How do you set up the check you run on mid for a parametric problem?"
+   ],
+   "hints": {
+    "1": "Think about whether better answers stay feasible as the parameter moves one way.",
+    "2": "Name a monotone predicate and an isValid(mid) that returns yes/no for a guessed answer.",
+    "3": "Say: monotone space → search the min/max valid boundary; implement that as isValid(mid) (e.g. finish in X ⇒ finish in X+1)."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Confirm they can write bound logic, the integer loop template, and safe floating-point iteration.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Can write std::lower_bound / std::upper_bound logic (or Python bisect) from scratch without off-by-one errors.",
+     "weight": "core",
+     "evidence_hint": "Sketches a lo/hi loop that lands on first ≥ / first > without fencing off-by-one."
+    },
+    {
+     "id": "impl2",
+     "point": "Integer binary search template: l = min_possible, r = max_possible; while(l <= r) { mid = l + (r-l)/2; ... }.",
+     "weight": "core",
+     "evidence_hint": "Recites that loop shape and mid = l + (r-l)/2 rather than (l+r)/2 overflow risk."
+    },
+    {
+     "id": "impl3",
+     "point": "Floating-point binary search uses for (int i = 0; i < 100; i++) instead of while(r - l > EPS) to avoid precision TLE.",
+     "weight": "core",
+     "evidence_hint": "Prefers a fixed ~100 iterations over an EPS-based while loop."
+    }
+   ],
+   "probes": [
+    "Write the integer binary-search loop skeleton you actually use in contests.",
+    "How do you binary-search a floating-point answer without precision TLE?"
+   ],
+   "hints": {
+    "1": "Start from lower/upper bound logic and a lo/hi while loop.",
+    "2": "Use l/r = min/max possible, mid = l+(r-l)/2; for floats prefer a fixed iteration count.",
+    "3": "Spell: while(l <= r) with mid = l+(r-l)/2; floats: for (int i = 0; i < 100; i++) not while(r-l > EPS)."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Confirm they know the log search-space cost and that each mid check is linear in N when that is the validation cost.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "On a monotonic search space, the boundary is found in O(log(search space)) binary-search steps.",
+     "weight": "core",
+     "evidence_hint": "States logarithmic steps over the answer/index range, not linear enumeration of candidates."
+    },
+    {
+     "id": "cx2",
+     "point": "When validating a guessed answer takes O(N), that is the per-mid check cost paired with the log search.",
+     "weight": "core",
+     "evidence_hint": "Separates cheap O(N) feasibility from the log number of guesses over a huge answer range."
+    }
+   ],
+   "probes": [
+    "What is the search complexity once the space is monotonic?",
+    "If checking a candidate answer scans the array once, what cost do you quote per mid?"
+   ],
+   "hints": {
+    "1": "Separate number of guesses from cost of one guess.",
+    "2": "Guesses are logarithmic in the search space; a full-array check is O(N).",
+    "3": "Say: O(log(search space)) steps, each validating in O(N) when that is the predicate cost."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch off-by-one bounds bugs, EPS float loops, and missing min-max wording cues.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Off-by-one errors in hand-rolled lower_bound / upper_bound break first/last position and bound queries.",
+     "weight": "core",
+     "evidence_hint": "Warns about inclusive/exclusive hi updates and landing on the wrong first ≥ / first > index."
+    },
+    {
+     "id": "pit2",
+     "point": "Floating-point while(r - l > EPS) risks precision TLE; prefer a fixed for (int i = 0; i < 100; i++) loop.",
+     "weight": "core",
+     "evidence_hint": "Rejects EPS while-loops under tight TL in favor of ~100 iterations."
+    },
+    {
+     "id": "pit3",
+     "point": "Failing to treat \"minimize the maximum\" / \"maximize the minimum\" as a BS-on-answer signal leads to slower or wrong approaches.",
+     "weight": "extended",
+     "evidence_hint": "Immediately maps that wording to parametric binary search (e.g. Book Allocation / Painter's Partition style)."
+    }
+   ],
+   "probes": [
+    "What goes wrong if your lower/upper bound loop is off by one?",
+    "Why avoid while(r - l > EPS) for contest floating-point binary search?"
+   ],
+   "hints": {
+    "1": "Think bounds landing and float termination conditions.",
+    "2": "Hand-rolled bisect off-by-ones; EPS loops can TLE—use fixed iterations.",
+    "3": "Also: \"minimize the maximum\" / \"maximize the minimum\" ⇒ isValid + binary search on answer."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Linear scan of the answer space vs binary search on a monotonic space",
+   "strong_answer": "When feasibility is monotonic, binary search finds the min/max valid boundary in O(log(search space)) instead of trying answers linearly—especially when the range is huge (e.g. up to 10^{14}) and each check is O(N)."
+  },
+  {
+   "topic": "Floating-point while(r - l > EPS) vs fixed 100 iterations",
+   "strong_answer": "Prefer for (int i = 0; i < 100; i++) over while(r - l > EPS) to avoid precision TLE on continuous / parametric float searches."
+  },
+  {
+   "topic": "Array lower/upper bound vs binary search on answer",
+   "strong_answer": "Sorted-array first/last position uses lower/upper bound; \"minimize the maximum\" / capacity / rate problems use an isValid(mid) parametric search over the answer."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Off-by-one when writing lower_bound / upper_bound (or bisect) by hand.",
+   "correction": "Practice the inclusive/exclusive update rules until first ≥ and first > land correctly without fencing errors."
+  },
+  {
+   "trap": "Using while(r - l > EPS) for floating-point binary search.",
+   "correction": "Use a fixed loop for (int i = 0; i < 100; i++) to avoid precision TLE."
+  },
+  {
+   "trap": "Missing that \"minimize the maximum\" or \"maximize the minimum\" means binary search on answer.",
+   "correction": "Treat that wording as a hard giveaway: formulate isValid(mid) and binary-search the boundary (Book Allocation / Painter's Partition / capacity patterns)."
+  },
+  {
+   "trap": "Trying to invent a direct formula when the answer range is massive but a candidate is cheap to check.",
+   "correction": "If validating a guess is O(N) and the range is huge (e.g. up to 10^{14}), binary-search the answer with a monotone predicate."
+  }
+ ]
+}

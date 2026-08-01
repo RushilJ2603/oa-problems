@@ -1,0 +1,185 @@
+{
+ "id": "cpp_s26_operator_overloading",
+ "title": "Operator Overloading",
+ "type": "FUND",
+ "relevance": "Interviewers use it to check that candidates can give classes intuitive operator syntax while matching built-in semantics, choosing member vs non-member correctly, and writing resource-safe assignment.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what operator overloading is and the hard limits on what you may redefine.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Operator overloading provides custom implementations of standard C++ operators for user-defined types and is syntactic sugar for a function call.",
+     "weight": "core",
+     "evidence_hint": "Candidate says it redefines how operators like + or << work on classes/structs, enabling a + b instead of a.add(b), and calls it syntactic sugar."
+    },
+    {
+     "id": "fund2",
+     "point": "These operators cannot be overloaded: member access (.), pointer-to-member (.*), scope resolution (::), ternary (?:), sizeof, typeid, and alignof.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists those forbidden operators and notes overloading them would alter the language's evaluation rules."
+    },
+    {
+     "id": "fund3",
+     "point": "You cannot invent new operators, and you cannot change an operator's precedence, associativity, or number of operands.",
+     "weight": "extended",
+     "evidence_hint": "Candidate rejects inventing something like ** for exponentiation and says arity/precedence/associativity are fixed."
+    }
+   ],
+   "probes": [
+    "What is operator overloading, and which operators are you not allowed to overload?"
+   ],
+   "hints": {
+    "1": "Think about operators that are baked into how C++ parses and evaluates expressions.",
+    "2": "List the access, scope, ternary, and type-query operators that stay non-overloadable.",
+    "3": "Cannot overload ., .*, ::, ?:, sizeof, typeid, alignof; also no new operators and no changing precedence, associativity, or operand count."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how member vs non-member operators bind operands and the canonical forms for common operators.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "As a member, the left-hand operand is *this and the binary right-hand operand is the function argument (e.g. c1 + c2 calls c1.operator+(c2)).",
+     "weight": "core",
+     "evidence_hint": "Candidate maps member binary operators to this-as-left and rhs-as-argument."
+    },
+    {
+     "id": "mech2",
+     "point": "As a non-member, every operand is an explicit argument (e.g. c1 + c2 calls operator+(c1, c2)), often declared friend for private access.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes free-function operators with both operands as parameters and mentions friend when private data is needed."
+    },
+    {
+     "id": "mech3",
+     "point": "Assignment (=), subscript ([]), function call (()), and arrow (->) must be implemented as member functions.",
+     "weight": "core",
+     "evidence_hint": "Candidate names =, [], (), and -> as must-be-member operators."
+    },
+    {
+     "id": "mech4",
+     "point": "Prefix ++/-- modify and return a reference to *this; postfix takes a dummy int, saves the old state, modifies, and returns the old state by value.",
+     "weight": "extended",
+     "evidence_hint": "Candidate distinguishes operator++() returning Counter& from operator++(int) returning a saved Counter by value."
+    },
+    {
+     "id": "mech5",
+     "point": "Subscript is usually overloaded in a non-const / const pair: non-const returns a reference for writing; const returns a const reference for read-only access.",
+     "weight": "extended",
+     "evidence_hint": "Candidate describes int& operator[](int) and const int& operator[](int) const for write vs read-only use."
+    }
+   ],
+   "probes": [
+    "How do member and non-member operator+ differ in how operands are passed, and which operators must be members?"
+   ],
+   "hints": {
+    "1": "Ask yourself what object the member function is invoked on versus what a free function receives.",
+    "2": "For members left is this; for free functions both sides are parameters; then recall the must-be-member list.",
+    "3": "Member: c1.operator+(c2); non-member: operator+(c1,c2); must be members: =, [], (), ->."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose member vs non-member and correct return semantics so overloaded operators behave like built-ins.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Use a non-member when the left-hand operand is a type you do not own (e.g. std::ostream for cout << obj) or when you want symmetry so implicit conversions apply equally to both sides (e.g. 1.5 + c and c + 1.5).",
+     "weight": "core",
+     "evidence_hint": "Candidate cites unowned left operand (streams) and symmetric conversion cases as reasons for non-member."
+    },
+    {
+     "id": "tr2",
+     "point": "Compound assignment modifies the existing object and returns a reference to *this; arithmetic operators return a new object by value and are often implemented by taking the left by value and applying +=.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts Vector2D& operator+= returning *this with operator+ returning by value after lhs += rhs."
+    },
+    {
+     "id": "tr3",
+     "point": "After checking must-be-member, unowned left-hand type, and symmetry needs, otherwise prefer a member function.",
+     "weight": "extended",
+     "evidence_hint": "Candidate restates the rule-of-thumb order: must-member → unowned LHS → symmetry → else member."
+    }
+   ],
+   "probes": [
+    "When would you implement operator+ as a non-member instead of a member, and how should += versus + return?"
+   ],
+   "hints": {
+    "1": "Consider stream insertion and mixed-type expressions like a literal plus your class.",
+    "2": "Walk the choose checklist: must-member, unowned LHS, symmetry, else member; then contrast += vs + returns.",
+    "3": "<< must be non-member; prefer non-member + for 1.5 + c symmetry; += returns *this by reference, + returns by value via +=."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply canonical patterns for streams, resource-owning assignment, comparisons, and functors.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Stream << and >> must be non-members that take and return the stream by reference so chaining like cout << a << b works.",
+     "weight": "core",
+     "evidence_hint": "Candidate writes friend ostream& operator<<(ostream&, const T&) returning os, and similarly for >>."
+    },
+    {
+     "id": "app2",
+     "point": "Copy assignment for a class managing raw resources must deep-copy, check self-assignment (this == &rhs), free the old resource before copying, and return *this to allow a = b = c.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes self-assignment guard, delete[] old data, allocate/copy new data, return *this."
+    },
+    {
+     "id": "app3",
+     "point": "Overloading operator() creates functors (function objects) that can carry state and are used heavily with standard algorithms.",
+     "weight": "extended",
+     "evidence_hint": "Candidate explains an object like Multiplier invoked as timesFive(10) via operator(), holding a factor across calls."
+    },
+    {
+     "id": "app4",
+     "point": "In C++20, defaulting operator<=> lets the compiler generate all six comparison operators with member-wise comparison.",
+     "weight": "extended",
+     "evidence_hint": "Candidate mentions auto operator<=>(const T&) const = default and that ==, !=, <, >, <=, >= are generated."
+    }
+   ],
+   "probes": [
+    "How do you overload << for a class, and what must a correct copy assignment do if the class owns heap memory?"
+   ],
+   "hints": {
+    "1": "Remember which operand is std::cout, and what goes wrong on str = str without a guard.",
+    "2": "<< is a non-member returning ostream&; assignment needs self-check, deep copy, and return *this.",
+    "3": "friend ostream& operator<<(ostream& os, const Person& p) { ...; return os; }; assignment: if (this == &rhs) return *this; delete old; deep-copy; return *this."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Member vs non-member operators",
+   "strong_answer": "Must-be-member for =, [], (), ->. Use non-member when the left operand is a type you do not own (streams) or when you want symmetric implicit conversions on both sides; otherwise prefer a member."
+  },
+  {
+   "topic": "Return by reference vs return by value",
+   "strong_answer": "Compound assignment and prefix ++ return a reference to *this; arithmetic + and postfix ++ return a new object by value. Never return a reference to a local created inside the operator—that is undefined behaviour once the function exits."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Inventing a new operator (e.g. **) or trying to change precedence, associativity, or arity.",
+   "correction": "You may only overload existing operators; precedence, associativity, and operand count stay fixed by the language."
+  },
+  {
+   "trap": "Returning a reference to a local object from an operator that should create a new value (e.g. operator+).",
+   "correction": "Return the new object by value; a reference to a local dangles when the function exits (undefined behaviour)."
+  },
+  {
+   "trap": "Omitting the self-assignment check in copy assignment for a resource-owning class.",
+   "correction": "Without if (this == &rhs), self-assignment deletes the object's own data then copies from freed memory; check first, then free, deep-copy, and return *this."
+  },
+  {
+   "trap": "Implementing << or >> as a member of your class.",
+   "correction": "The left operand is an ostream/istream you do not own, so these must be non-member (often friend) functions that take and return the stream by reference for chaining."
+  }
+ ]
+}

@@ -1,0 +1,286 @@
+{
+ "id": "lq04_splitwise",
+ "title": "Design Splitwise (Expense Sharing)",
+ "type": "LLD",
+ "relevance": "High — staple LLD / machine-coding question (campus + experienced); tests Strategy for split types, pairwise balance ledgers, debt simplification, and concurrency at Flipkart, Uber, Amazon, Microsoft, Atlassian, and fintech loops (Razorpay / CRED / PhonePe style).",
+ "difficulty": "mid",
+ "prereqs": [
+  "L01",
+  "L02",
+  "L04",
+  "L05"
+ ],
+ "company_notes": "Campus/machine-coding staple at Flipkart, Uber, Swiggy, Amazon new-grad, and Indian product cos (working EQUAL/EXACT/PERCENT + balances in ~90 min; simplify as stretch). Experienced LLD at FAANG / Atlassian / Microsoft / fintech probes Strategy vs switch, pairwise ledger correctness, greedy vs optimal simplify, and concurrent balance updates. Among the top ~10 canonical LLD problems.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock FRs/NFRs and assumptions: split types, pairwise balances, settle/simplify scope, single currency, and what is out of scope.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Support users and groups; add expense with payer, amount, participants, and split type EQUAL / EXACT / PERCENT; show pairwise balances; settle full or partial.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists users/groups, addExpense with those fields, showBalances, and settleUp including partial settle."
+    },
+    {
+     "id": "req2",
+     "point": "Clarify scope early: group and non-group expenses, whether simplify debts and notifications are in scope, concurrency, and single currency.",
+     "weight": "core",
+     "evidence_hint": "Asks clarifying questions before designing and states assumptions such as single currency and immutable expenses."
+    },
+    {
+     "id": "req3",
+     "point": "NFRs: correct validation and rounding, no lost balances under concurrent updates, OCP for new split types, modular packages, demonstrable main.",
+     "weight": "extended",
+     "evidence_hint": "Mentions validation/rounding, concurrency safety, OCP for splits, and a runnable CLI/demo."
+    },
+    {
+     "id": "req4",
+     "point": "Call out of scope until asked: multi-currency/FX, recurring expenses, images/notes, real payment rails, auth.",
+     "weight": "extended",
+     "evidence_hint": "Explicitly parks FX, recurring, payments, and auth rather than designing them upfront."
+    }
+   ],
+   "probes": [
+    "What functional requirements and assumptions would you lock before drawing classes?",
+    "Are EQUAL, EXACT, and PERCENT enough, or do we need SHARE, simplify, and notifications in v1?"
+   ],
+   "hints": {
+    "1": "Start by listing users, groups, expenses, balances, and settle — then ask what is optional.",
+    "2": "Typical FR set is users/groups, three split types, pairwise balances, partial settle; optional simplify and passbook.",
+    "3": "State single currency, immutable expenses, 2-decimal money; park multi-currency, recurring, payments, and auth until asked."
+   }
+  },
+  {
+   "phase": "entities",
+   "goal": "Define the core data model: User, Group, Expense/Split, BalanceSheet, Transaction/Settlement, and SplitType.",
+   "must_hit": [
+    {
+     "id": "ent1",
+     "point": "User has id, name, email and a BalanceSheet; Group has id, name, members, and optional expenses history.",
+     "weight": "core",
+     "evidence_hint": "Sketches User and Group with those fields and links User to BalanceSheet."
+    },
+    {
+     "id": "ent2",
+     "point": "Expense is immutable after build: id, description, amount, paidBy, and splits (user + computed share); settlements adjust balances rather than mutating expense shares.",
+     "weight": "core",
+     "evidence_hint": "Treats Expense as an append-only ledger entry and uses Settlement/Transaction for settle-up."
+    },
+    {
+     "id": "ent3",
+     "point": "BalanceSheet stores pairwise signed balances (Map of other user to amount) with adjustBalance; Transaction/Settlement records from, to, amount.",
+     "weight": "core",
+     "evidence_hint": "Shows balances[A][B]-style or signed bilateral sheet plus a Settlement/Transaction type."
+    },
+    {
+     "id": "ent4",
+     "point": "SplitType enum covers EQUAL, EXACT, PERCENT; Split holds user plus amount owed for that expense.",
+     "weight": "extended",
+     "evidence_hint": "Names the enum values and a Split value object tying user to share amount."
+    }
+   ],
+   "probes": [
+    "What entities do you need, and how do you represent who owes whom?",
+    "Is an expense mutable after it is added?"
+   ],
+   "hints": {
+    "1": "List User, Group, Expense, Split, BalanceSheet, and Settlement before services.",
+    "2": "Expense owns computed Splits; BalanceSheet is the only place that mutates who-owes-whom.",
+    "3": "Expense is immutable; settleUp adjusts BalanceSheet and may append a Settlement/Transaction; passbook is expenses plus settlements a user touched."
+   }
+  },
+  {
+   "phase": "class_design",
+   "goal": "Structure SplitwiseService as facade with Strategy/Factory for splits, Builder for Expense, and BalanceSheet as the mutation boundary.",
+   "must_hit": [
+    {
+     "id": "cd1",
+     "point": "SplitStrategy interface with EqualSplitStrategy, ExactSplitStrategy, PercentageSplitStrategy; service must not bury if (type == EQUAL) inside Expense.",
+     "weight": "core",
+     "evidence_hint": "Draws SplitStrategy.calculateShares/calculateSplits and three concrete strategies used by the service."
+    },
+    {
+     "id": "cd2",
+     "point": "SplitwiseService facade holds users and groups maps and orchestrates addUser, createGroup/addMember, addExpense, showBalances, settleUp, optional simplifyGroupDebts.",
+     "weight": "core",
+     "evidence_hint": "Service API matches those methods; no split math inline in the facade."
+    },
+    {
+     "id": "cd3",
+     "point": "Expense built via ExpenseBuilder plus SplitStrategy; optional SplitFactory/ExpenseFactory from SplitType so callers never new concrete strategies.",
+     "weight": "extended",
+     "evidence_hint": "Shows Builder constructing Expense after strategy produces Splits; may mention Factory from enum."
+    },
+    {
+     "id": "cd4",
+     "point": "Patterns map: Strategy primary; Factory optional; Builder common; Singleton for service optional (DI cleaner for tests); Observer for notify if time; Facade is the thin service API.",
+     "weight": "extended",
+     "evidence_hint": "Can name which patterns are primary vs optional without forcing Observer/Singleton."
+    }
+   ],
+   "probes": [
+    "Where does split math live versus balance mutation?",
+    "How would you add a new split type without editing Expense or the service's core flow?"
+   ],
+   "hints": {
+    "1": "Separate strategy calculation from BalanceSheet.adjustBalance.",
+    "2": "CLI → SplitwiseService → SplitStrategy → Expense/Builder → BalanceSheet; settle/simplify emit Transactions.",
+    "3": "SplitStrategy produces Splits; service only orchestrates and locks; BalanceSheet is the single mutator of pairwise debts."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Implement validation, rounding, pairwise netting, settleUp, and greedy debt simplification correctly.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "EQUAL divides amount among N with rounding so shares sum to total (remainder to first share); EXACT amounts must sum to total; PERCENT must sum to 100.",
+     "weight": "core",
+     "evidence_hint": "Describes EQUAL rounding fix, EXACT sum check, and PERCENT sum-to-100 check before updating balances."
+    },
+    {
+     "id": "impl2",
+     "point": "Maintain pairwise balances and net A↔B on write or read (e.g. A owes B 50 and B owes A 20 becomes A owes B 30); never leave both directions as separate non-zero lines without netting.",
+     "weight": "core",
+     "evidence_hint": "Explains bilateral netting and showBalances returning non-zero pairwise edges."
+    },
+    {
+     "id": "impl3",
+     "point": "settleUp(from, to, amount) rejects amount ≤ 0 or exceeding owed; settlements adjust balances and optionally append a Settlement/Transaction.",
+     "weight": "core",
+     "evidence_hint": "Validates settle amount then adjusts the pair; does not mutate historical expense shares."
+    },
+    {
+     "id": "impl4",
+     "point": "simplifyDebts greedy: net per user → creditors (net > 0) and debtors (net < 0) → repeatedly match largest creditor with largest debtor for min(|debt|, credit); yields ≤ N−1 transfers; exact min-transfer is NP-hard — mention, don’t implement DP unless asked.",
+     "weight": "extended",
+     "evidence_hint": "Walks greedy simplify and states ≤ N−1 transfers plus NP-hard optimal only if pressed."
+    }
+   ],
+   "probes": [
+    "How do you handle $100 split equally among 3 people?",
+    "Walk through greedy simplify and what you would say if asked for the minimum number of transfers."
+   ],
+   "hints": {
+    "1": "Validate EXACT/PERCENT before any balance mutation; reject atomically.",
+    "2": "EQUAL: two shares 33.33 and one 33.34 so totals 100.00; settle checks amount ≤ 0 and exceeds owed.",
+    "3": "Greedy: nets → sort creditors/debtors → settle min(|debt|, credit) until done; code that in interview time, only mention NP-hard/DP if they push optimal."
+   }
+  },
+  {
+   "phase": "extensibility",
+   "goal": "Show OCP for new split types and keep domain logic free of type-switches and CLI parsing.",
+   "must_hit": [
+    {
+     "id": "ext1",
+     "point": "Strategy (or Split hierarchy + factory) wins over type-switch or Expense subclasses when SHARE or itemized splits appear; a giant switch fails the extensibility follow-up.",
+     "weight": "core",
+     "evidence_hint": "Argues adding SHARE as a new strategy without editing Expense/ExpenseService core."
+    },
+    {
+     "id": "ext2",
+     "point": "Keep parsing in a thin driver (EXPENSE / SHOW / SHOW u1 lines); domain logic stays in services.",
+     "weight": "core",
+     "evidence_hint": "Separates CLI/driver I/O from SplitwiseService and strategies."
+    },
+    {
+     "id": "ext3",
+     "point": "Optional later SHARE (weighted parts); Observer notify on expense/settlement only if time permits — don’t force in a time-boxed round.",
+     "weight": "extended",
+     "evidence_hint": "Names SHARE and Observer as stretch, not blocking the happy path."
+    }
+   ],
+   "probes": [
+    "Why Strategy instead of a switch on SplitType inside Expense?",
+    "Where should machine-coding input parsing live relative to domain services?"
+   ],
+   "hints": {
+    "1": "Think about adding SHARE without touching existing expense creation paths.",
+    "2": "Swap EQUAL/EXACT/PERCENT via Strategy/Factory so ExpenseService stays closed for modification.",
+    "3": "New split type = new SplitStrategy (+ factory mapping); parser stays in the driver; Observer/SHARE only if time remains."
+   }
+  },
+  {
+   "phase": "concurrency",
+   "goal": "Make concurrent addExpense/settleUp on the same pair atomic without races.",
+   "must_hit": [
+    {
+     "id": "conc1",
+     "point": "Two expenses updating the same pair must not race; synchronize addExpense/settleUp with a service-level lock or lock ordered user-id pairs.",
+     "weight": "core",
+     "evidence_hint": "Places an atomic critical section around compute-splits-then-adjust-all-pairs."
+    },
+    {
+     "id": "conc2",
+     "point": "ConcurrentHashMap is fine for user/group catalogs but map alone is not an atomic ledger adjust — balance updates still need a lock/critical section.",
+     "weight": "core",
+     "evidence_hint": "Distinguishes thread-safe maps from pairwise balance mutation atomicity."
+    },
+    {
+     "id": "conc3",
+     "point": "Hot group: serialize updates per group (queue or group lock); keep expense append append-only; coarse synchronized is interview-safe, fine-grained pair-ordered locks scale better if probed.",
+     "weight": "extended",
+     "evidence_hint": "Mentions per-group serialization and tradeoff of coarse vs fine-grained locking."
+    }
+   ],
+   "probes": [
+    "Is ConcurrentHashMap enough for safe balance updates?",
+    "How do you prevent two concurrent expenses from interleaving mid-update on the same pair?"
+   ],
+   "hints": {
+    "1": "Catalog maps and ledger adjusts are different concurrency problems.",
+    "2": "Atomic create-expense: compute splits then adjust all pairs under one lock; don’t interleave two expenses mid-update.",
+    "3": "Service-wide synchronized or ordered pair locks for addExpense/settleUp; ConcurrentHashMap for users/groups only; optional per-group queue for hot groups."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Strategy vs type-switch / Expense subclasses",
+   "strong_answer": "Strategy (or Split hierarchy + factory) preserves OCP when SHARE or itemized splits appear; a giant switch on SplitType inside Expense fails the extensibility follow-up."
+  },
+  {
+   "topic": "Pairwise matrix vs net-only per user",
+   "strong_answer": "Net-only cannot answer who do I pay; pairwise or signed bilateral BalanceSheet is the interview default, with simplify collapsing the graph when asked."
+  },
+  {
+   "topic": "Simplify greedy vs exact min transfers",
+   "strong_answer": "Greedy matching of largest creditor/debtor is what you code in ~90 min and yields ≤ N−1 transfers; exact minimum transfer count is NP-hard — mention DP/bitmask only if they push optimal."
+  },
+  {
+   "topic": "Service-wide synchronized vs fine-grained locks",
+   "strong_answer": "Coarse service lock is correct and interview-safe; pair-ordered locks or per-group queues scale better under concurrent updates on hot groups — mention when concurrency is probed."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Splitting $100 equally among 3 people with naive division leaves shares that do not sum to the total.",
+   "correction": "Round to 2 decimals and absorb remainder on the first share so two get 33.33 and one gets 33.34, summing to 100.00."
+  },
+  {
+   "trap": "Accepting invalid EXACT or PERCENT input and partially updating balances.",
+   "correction": "Validate before mutating balances (EXACT sums to amount; PERCENT sums to 100); reject the expense atomically."
+  },
+  {
+   "trap": "Showing A owes B and B owes A as two separate non-zero lines.",
+   "correction": "Net the pair on read or on write so only the residual direction remains."
+  },
+  {
+   "trap": "Explaining simplify like A→B 250 and B→C 200 by rewriting edges by hand.",
+   "correction": "Compute per-user nets first, then run greedy creditor/debtor matching; resulting nets depend on those nets, not ad-hoc edge rewrites."
+  },
+  {
+   "trap": "Removing a member deletes their history or still includes them in new expenses without settling.",
+   "correction": "History stays; exclude the member from new expenses; prompt settling outstanding balances."
+  },
+  {
+   "trap": "Relying on ConcurrentHashMap alone or interleaving two expenses mid-update.",
+   "correction": "Atomic create-expense under one lock: compute splits then adjust all pairs; catalog CHM ≠ atomic ledger adjust."
+  },
+  {
+   "trap": "Hard-wiring SplitwiseService as a Singleton for production and tests.",
+   "correction": "Singleton is fine for a demo; prefer constructor injection in production/tests because Singleton complicates mocking."
+  }
+ ]
+}

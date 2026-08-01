@@ -1,0 +1,198 @@
+{
+ "id": "cpp_s08_references_pointers",
+ "title": "References, address-of, dereference, and pointers",
+ "type": "FUND",
+ "relevance": "Interviewers probe whether candidates understand aliases vs copies, how & and * actually work, and why raw pointers are needed to reach heap memory.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that an lvalue reference is an alias, and that pointers store addresses as values.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "An lvalue reference is essentially an alias: a second name for an object that already exists, not a copy.",
+     "weight": "core",
+     "evidence_hint": "Says y bound to x names the same object/storage; changing either is visible through the other."
+    },
+    {
+     "id": "fund2",
+     "point": "A reference must be initialised when declared; an uninitialised reference is a compile error.",
+     "weight": "core",
+     "evidence_hint": "States int& y; fails because a reference must name something."
+    },
+    {
+     "id": "fund3",
+     "point": "A pointer is an object that holds a memory address (typically of another variable) as its value.",
+     "weight": "core",
+     "evidence_hint": "Defines pointer as storing an address, and may mention raw/dumb vs smart pointers."
+    },
+    {
+     "id": "fund4",
+     "point": "A reference occupies no separate storage of its own; &x == &y when y aliases x.",
+     "weight": "extended",
+     "evidence_hint": "Says the reference shares the object's address rather than getting its own box."
+    }
+   ],
+   "probes": [
+    "What is an lvalue reference, and how does it differ from a separate copy of the object?",
+    "What does a pointer store, and how is that different from a reference?"
+   ],
+   "hints": {
+    "1": "Think about whether a second name creates a second object.",
+    "2": "Contrast alias (same storage) with a variable that holds an address as its value.",
+    "3": "Reference = another label on the same box; pointer = its own object whose value is an address."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how &, *, const binding, temporary materialisation, and pointer init/deref actually operate.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Unary & is address-of (returns the address of the first byte of the object); unary * dereference returns the value at an address as an lvalue; they are opposites.",
+     "weight": "core",
+     "evidence_hint": "Explains &x vs *(&x), and that * follows an address to the object."
+    },
+    {
+     "id": "mech2",
+     "point": "The meaning of & depends on context: after a type it declares an lvalue reference; unary in an expression is address-of; binary is bitwise AND.",
+     "weight": "core",
+     "evidence_hint": "Lists the three roles of & with examples like int& ref, &x, and x & y."
+    },
+    {
+     "id": "mech3",
+     "point": "A const lvalue reference can bind to a modifiable lvalue; the object is treated as const through that reference but can still be modified through its original name.",
+     "weight": "core",
+     "evidence_hint": "Walks through const int& ref { x } forbidding ref = 7 while x = 6 remains okay."
+    },
+    {
+     "id": "mech4",
+     "point": "A const lvalue reference binding to an rvalue materialises a hidden temporary on the stack; the reference binds to that temporary for the reference's lifetime.",
+     "weight": "extended",
+     "evidence_hint": "Describes rewriting const int& ref = 5 into a hidden temporary and binding to it; &ref is the temporary's address."
+    },
+    {
+     "id": "mech5",
+     "point": "Pointers must be initialised to a known value; an uninitialised pointer holds a garbage address and dereferencing it is undefined behaviour (wild pointer).",
+     "weight": "core",
+     "evidence_hint": "Contrasts int* ptr; with int* ptr3{ &x } and warns about wild pointers."
+    },
+    {
+     "id": "mech6",
+     "point": "Pointer use separates into declaration (int* p), initialisation with an address (p = &x), and dereferencing (*p).",
+     "weight": "extended",
+     "evidence_hint": "Names the three steps and keeps their syntax/roles distinct."
+    }
+   ],
+   "probes": [
+    "Why can const int& ref = 5 compile, and what does &ref actually refer to?",
+    "Walk through printing x, &x, p, &p, and *p when p points at x.",
+    "How do you tell address-of & from reference & and from bitwise AND?"
+   ],
+   "hints": {
+    "1": "Ask what physical memory backs a reference, and what unary * does to an address.",
+    "2": "For rvalues, mention compiler-created stack storage; for pointers, separate declare / assign address / dereference.",
+    "3": "const int& to 5 becomes a hidden temporary; p stores &x; *p follows that address; & after a type vs unary vs binary."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast const vs non-const references and copying a pointer versus aliasing a pointer.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Favour lvalue references to const over non-const unless you need to modify the referenced object.",
+     "weight": "core",
+     "evidence_hint": "States the preference for const refs when mutation is not required."
+    },
+    {
+     "id": "tr2",
+     "point": "Assigning one pointer to another copies the address into a separate pointer; a reference to a pointer (int*&) is an alias for the pointer itself.",
+     "weight": "core",
+     "evidence_hint": "Contrasts int* p2 = p1 (independent copy of the address) with int*& p3 = p1 (same pointer)."
+    },
+    {
+     "id": "tr3",
+     "point": "sizeof a pointer does not depend on pointee type; int*, double*, and char* are the same size (8 bytes on a typical modern 64-bit compiler).",
+     "weight": "extended",
+     "evidence_hint": "Says each pointer merely holds an address, so sizes match, citing 8 bytes on 64-bit."
+    }
+   ],
+   "probes": [
+    "When would you choose const int& over int&?",
+    "What is the difference between int* p2 = p1 and int*& p3 = p1?"
+   ],
+   "hints": {
+    "1": "One choice is about mutation rights; the other about copy versus alias.",
+    "2": "Const through the reference vs mutating via the original name; pointer assignment vs reference-to-pointer.",
+    "3": "Prefer const refs unless you must modify; p2 is a second pointer with the same address, p3 is another name for p1."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Explain why pointers exist: heap memory has no name and is only reachable by address.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A program can access the code section and its own stack by name, but cannot reach heap memory directly by name because heap memory is requested at runtime.",
+     "weight": "core",
+     "evidence_hint": "Recalls code/stack/heap and that heap blocks lack source-level names."
+    },
+    {
+     "id": "app2",
+     "point": "A pointer on the stack stores the address of a heap block; dereferencing it is how the program reaches that anonymous dynamic memory (e.g. as a growing std::vector needs).",
+     "weight": "core",
+     "evidence_hint": "Describes the stack-held pointer as the bridge to dynamically allocated heap storage."
+    }
+   ],
+   "probes": [
+    "Why do we need pointers if we already have named variables on the stack?",
+    "How does a program access memory whose size or lifetime is only known at runtime?"
+   ],
+   "hints": {
+    "1": "Think about which memory regions you can name in source code.",
+    "2": "Stack locals have names; heap allocations do not.",
+    "3": "Heap blocks are only usable via a stored address held in a pointer (often on the stack) and then dereferenced."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "const lvalue reference vs non-const lvalue reference",
+   "strong_answer": "Prefer const lvalue references unless you need to modify the object; a const ref can still bind to a modifiable lvalue but blocks mutation through that name, while the original identifier may still modify it."
+  },
+  {
+   "topic": "copying a pointer (int* p2 = p1) vs reference to a pointer (int*& p3 = p1)",
+   "strong_answer": "p2 is a separate pointer that merely holds the same address, so reseating p2 leaves p1 alone; p3 aliases p1, so changing where it points also changes p1."
+  },
+  {
+   "topic": "reference vs pointer",
+   "strong_answer": "A reference is an alias that must be initialised and has no separate storage of its own; a pointer is its own object that stores an address, can be reseated, and is how you reach unnamed heap memory."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating & as always meaning the same thing.",
+   "correction": "After a type, & declares an lvalue reference; unary in an expression it is address-of; binary it is bitwise AND."
+  },
+  {
+   "trap": "Confusing dereference * with multiplication.",
+   "correction": "Dereference is unary; multiplication is binary — context distinguishes them."
+  },
+  {
+   "trap": "Declaring a pointer without initialising it, then dereferencing.",
+   "correction": "An uninitialised pointer holds a garbage address (wild pointer); dereferencing it is undefined behaviour — always initialise to a known value."
+  },
+  {
+   "trap": "Assuming const int& ref = 5 somehow takes the address of the literal 5 itself.",
+   "correction": "The compiler materialises a hidden stack temporary, binds the const reference to that temporary for the reference's lifetime, and &ref is the temporary's address (read-only through the const ref)."
+  },
+  {
+   "trap": "Believing a reference is a second object or can be left unbound.",
+   "correction": "A reference shares the referent's storage, must be initialised at declaration, and & of either name yields the same address."
+  }
+ ]
+}

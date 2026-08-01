@@ -1,0 +1,209 @@
+{
+ "id": "m03_best_resources",
+ "title": "Best SD resources ranked (courses / books / playlists)",
+ "type": "CONCEPT",
+ "relevance": "High — meta module for every campus + off-campus HLD/LLD prep path; pick 1–2 primaries, don’t collect 10 courses.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Campus/product-cos and some FAANG new-grad: light HLD or TinyURL-style; free stack often enough. Off-campus SDE-1/2 and experienced hire: full HLD with Vol.1 or Grokking plus Hello Interview; Vol.2/DDIA for deeper probing. Indian product cos (Atlassian, Uber, Flipkart): HLD and LLD/machine coding. Meta choice once at prep start; revisit only when a mock exposes a gap.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish each resource’s role and a free-first learning sequence for placements prep.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "primer (donnemartin) is the best free syllabus/map: building blocks, performance numbers, Anki decks, sample HLD/OOD — skim outline, return per topic.",
+     "weight": "core",
+     "evidence_hint": "Names system-design-primer as the map/glossary, not a cover-to-cover read that replaces designing."
+    },
+    {
+     "id": "fund2",
+     "point": "Hello Interview (In a Hurry + How to Prepare + Delivery Framework) is the best free modern guide built from what FAANG interviewers score, including the 45-min skeleton.",
+     "weight": "core",
+     "evidence_hint": "Says Hello Interview teaches how to run the interview and reuses the delivery skeleton on every design X."
+    },
+    {
+     "id": "fund3",
+     "point": "Gaurav Sen playlist is best free video intuition for scale, microservices, LB, cache, DB tradeoffs; Vol.1 (Alex Xu) is best interview playbook for canonical HLD with 4-step framework and ~16 classic designs.",
+     "weight": "extended",
+     "evidence_hint": "Separates spoken intuition (Gaurav Sen) from structured canonical designs (Vol.1 / ByteByteGo)."
+    },
+    {
+     "id": "fund4",
+     "point": "Role map: primer=glossary/map; Hello Interview=how to run 45 min; Gaurav Sen=spoken intuition; Vol.1/Grokking=practice designs; Vol.2=harder designs; DDIA=why tradeoffs; InterviewReady=paid HLD+LLD depth.",
+     "weight": "core",
+     "evidence_hint": "Can assign one job per resource without treating DDIA as an interview script."
+    }
+   ],
+   "probes": [
+    "Rank the free primaries you’d open first for placements and what job each one does.",
+    "What is DDIA for in this stack, and what is it not?"
+   ],
+   "hints": {
+    "1": "Think map vs framework vs video intuition vs practice book.",
+    "2": "Assign: primer, Hello Interview, Gaurav Sen, Vol.1/Grokking, Vol.2, DDIA, InterviewReady.",
+    "3": "primer=map; Hello Interview=45-min delivery; Gaurav Sen=intuition; Vol.1/Grokking=designs; Vol.2=harder; DDIA=tradeoff depth not script."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to assemble a stack and run prep with one delivery framework and timed practice.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Suggested placements stack (~4–8 weeks): primer map → Hello Interview framework → Gaurav Sen playlist → Vol.1 (or Grokking) for 10–15 designs → Vol.2/DDIA chapters only where depth is probed.",
+     "weight": "core",
+     "evidence_hint": "States the sequence in order and prefers free first before paid deepeners."
+    },
+    {
+     "id": "mech2",
+     "point": "One delivery framework: requirements → estimation → API → data model → high-level diagram → 2–3 deep dives → bottlenecks; Hello Interview and Alex Xu 4-step are the same idea.",
+     "weight": "core",
+     "evidence_hint": "Walks the skeleton without inventing extra steps or treating the two frameworks as conflicting."
+    },
+    {
+     "id": "mech3",
+     "point": "Canonical set is ~15–20 designs (URL shortener, rate limiter, chat, news feed, video, drive, etc.) via Vol.1/Grokking/hq*; LLD is a separate track (OOP/SOLID, patterns, concurrency, parking lot/Splitwise/elevator) via l*/lq* — Vol.1 won’t teach machine coding.",
+     "weight": "extended",
+     "evidence_hint": "Keeps HLD playbooks and LLD machine-coding resources as separate tracks."
+    },
+    {
+     "id": "mech4",
+     "point": "Self-test: pick a 3-resource stack for 4-week campus prep (one map, one framework, one practice source); timebox one design 45 min on Hello Interview Delivery Framework only; map five hq* to Vol.1 or Grokking or Hello Interview breakdowns.",
+     "weight": "extended",
+     "evidence_hint": "Describes drills that force selection, timed delivery, and knowing where to practice each problem."
+    }
+   ],
+   "probes": [
+    "Build a 3-resource stack for a 4-week campus prep and justify dropping the rest.",
+    "Walk the delivery skeleton you’d reuse on every design X."
+   ],
+   "hints": {
+    "1": "You need one map, one framework, one practice source.",
+    "2": "Use the ~4–8 week order: primer → Hello Interview → Gaurav Sen → Vol.1 or Grokking.",
+    "3": "Framework steps: requirements, estimation, API, data model, diagram, 2–3 deep dives, bottlenecks."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Judge buy vs free, practice vs consumption, and when to open depth resources.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Free path (primer + Hello Interview + Gaurav Sen + ByteByteGo YT) is enough for many campus rounds; pay for Vol.1/Grokking/InterviewReady when you need structured solutions or mocks.",
+     "weight": "core",
+     "evidence_hint": "Buys only to close a clear gap, not by default prestige."
+    },
+    {
+     "id": "tr2",
+     "point": "Anti-pattern: finishing DDIA or 3 paid courses before ever whiteboard-timing a design — practice > consumption.",
+     "weight": "core",
+     "evidence_hint": "Prioritizes timed designs over finishing books/courses first."
+    },
+    {
+     "id": "tr3",
+     "point": "Depth on demand: open DDIA/Vol.2 when follow-ups (quorum, partitioning, exactly-once, geo) keep failing — not as week-1 reading; HLD bar is LB/cache/DB/sharding/queues/consistency/estimation, not implementing Raft/Paxos.",
+     "weight": "extended",
+     "evidence_hint": "Uses DDIA/Vol.2 selectively and rejects research-consensus as the interview bar."
+    },
+    {
+     "id": "tr4",
+     "point": "Use one Grokking path (DesignGurus or Educative), not both; coding-parrot dumps are bookmarks after cores, not primary curriculum.",
+     "weight": "extended",
+     "evidence_hint": "Avoids overlapping paid Grokking tracks and link-dump-as-curriculum."
+    }
+   ],
+   "probes": [
+    "Given ₹0 vs a book+course budget, what stays free and what do you buy first?",
+    "When would you open DDIA or Vol.2 versus staying on Vol.1 practice?"
+   ],
+   "hints": {
+    "1": "Prefer free until a gap is clear.",
+    "2": "Campus often free stack; buy Vol.1/Grokking/InterviewReady for structured solutions or mocks.",
+    "3": "Don’t finish DDIA or 3 paid courses before timed whiteboards; open depth when specific follow-ups fail."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply stack choice to company settings and fix common prep failure modes.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Campus/product-cos light HLD: free stack (primer + Hello Interview + Gaurav Sen + a few Vol.1 chapters) usually enough; off-campus/experienced: Vol.1 or Grokking practice set + Hello Interview expected.",
+     "weight": "core",
+     "evidence_hint": "Matches stack weight to campus vs full HLD round expectations."
+    },
+    {
+     "id": "app2",
+     "point": "Indian product cos (Atlassian, Uber, Flipkart): often HLD and LLD/machine coding — don’t stop at Alex Xu alone; add l01+lq*, InterviewReady LLD, or coding-parrot/Low-Level-Design before those rounds.",
+     "weight": "core",
+     "evidence_hint": "Explicitly adds an LLD resource when the stack is HLD-only."
+    },
+    {
+     "id": "app3",
+     "point": "Budget/application drill: rewrite stack for ₹0 vs book+course budget; DDIA triage names chapters to skim for chat/news feed/distributed cache and the interview phrases they unlock.",
+     "weight": "extended",
+     "evidence_hint": "Can rewrite the stack by budget and map selective DDIA chapters to interview language."
+    }
+   ],
+   "probes": [
+    "You’re interviewing at Flipkart with HLD and machine coding — what do you add to an Alex Xu-only stack?",
+    "Someone watched 40 hours of SD YouTube and still freezes — what is missing?"
+   ],
+   "hints": {
+    "1": "Check whether the company asks LLD/machine coding too.",
+    "2": "Freezing usually means no timed delivery framework and no solo whiteboard reps.",
+    "3": "Add an LLD track for Atlassian/Uber/Flipkart; fix YouTube-only prep with Hello Interview framework + timed 45-min designs."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Free stack vs paid Vol.1/Grokking/InterviewReady",
+   "strong_answer": "Free path (primer + Hello Interview + Gaurav Sen + ByteByteGo YT) covers many campus rounds; buy Vol.1, Grokking, or InterviewReady only when you need structured solutions, mocks, or a combined HLD+LLD video package."
+  },
+  {
+   "topic": "Practice designs vs consuming DDIA/paid courses",
+   "strong_answer": "Practice beats consumption: do not finish DDIA or 3 paid courses before whiteboard-timing designs; open DDIA/Vol.2 only when depth follow-ups keep failing."
+  },
+  {
+   "topic": "DesignGurus Grokking vs Educative Grokking Modern",
+   "strong_answer": "Overlapping walkthroughs of the classic set — pick one Grokking path, not both."
+  },
+  {
+   "topic": "Vol.1 playbook vs DDIA depth book",
+   "strong_answer": "Vol.1/Grokking train canonical interview designs; DDIA builds tradeoff vocabulary (replication, partitioning, transactions, streams) via selective chapters, not as an interview script or week-1 read."
+  },
+  {
+   "topic": "HLD resources vs LLD track",
+   "strong_answer": "Vol.1 does not teach machine coding; LLD needs a separate track (sheet l*/lq*, InterviewReady LLD, or coding-parrot/Low-Level-Design), especially for Indian product cos."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Watched 40 hours of SD YouTube but freezes in the room",
+   "correction": "Missing a timed delivery framework plus solo whiteboard reps — use Hello Interview Delivery Framework and timebox 45-min designs."
+  },
+  {
+   "trap": "Buying both DesignGurus Grokking and Educative Grokking Modern",
+   "correction": "They overlap; use one Grokking path only."
+  },
+  {
+   "trap": "Reading all of DDIA before any design practice",
+   "correction": "Classic stall — interviewers reward applied tradeoffs, not chapter recall; practice first, skim selective chapters on demand."
+  },
+  {
+   "trap": "Treating Vol.1 diagrams as the only correct architecture",
+   "correction": "Interviewers poke alternatives; defend tradeoffs rather than recite one diagram."
+  },
+  {
+   "trap": "Ignoring LLD until the night before an Atlassian/Flipkart machine-coding round",
+   "correction": "LLD is a separate skill from HLD playbooks — add an LLD resource earlier."
+  },
+  {
+   "trap": "Chasing every newsletter/video instead of finishing designs end-to-end",
+   "correction": "Finish ~15 designs with estimation and one deep dive each rather than collecting more content."
+  }
+ ]
+}

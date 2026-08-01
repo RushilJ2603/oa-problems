@@ -1,0 +1,209 @@
+{
+ "id": "c_s16_interrupts",
+ "title": "Interrupts & Concurrency in Embedded C",
+ "type": "FUND",
+ "relevance": "Embedded and systems interviews probe whether candidates understand hardware preemption, ISR design, and how shared data between main and interrupts creates races that volatile alone does not fix.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what an interrupt is, how the CPU preempts main, and what an ISR is allowed to do.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "An interrupt asynchronously preempts current CPU execution so a dedicated Interrupt Service Routine (ISR) can run.",
+     "weight": "core",
+     "evidence_hint": "Names IRQ → ISR preemption of main, not a normal function call from application code."
+    },
+    {
+     "id": "fund2",
+     "point": "On IRQ, the CPU finishes the current instruction, saves state (registers and program counter) to the stack, looks up the ISR in the vector table, runs it, then restores context and resumes main.",
+     "weight": "core",
+     "evidence_hint": "Walks complete current instruction → save → vector table → ISR → restore → resume."
+    },
+    {
+     "id": "fund3",
+     "point": "Interrupt latency is the time from the hardware event asserting the IRQ to the first instruction inside the ISR.",
+     "weight": "extended",
+     "evidence_hint": "Defines latency as event-to-first-ISR-instruction, and notes it matters for real-time systems."
+    },
+    {
+     "id": "fund4",
+     "point": "A well-designed ISR clears the peripheral interrupt flag, does only minimal immediate work, then sets a flag or pushes data so heavy work runs in main.",
+     "weight": "core",
+     "evidence_hint": "Lists the three-step pattern: acknowledge, minimal work, defer via flag/buffer."
+    }
+   ],
+   "probes": [
+    "Walk me through what the CPU does from the moment a peripheral asserts an IRQ until main resumes.",
+    "What are the three things a well-designed ISR should do, and why must it stay short and non-blocking?"
+   ],
+   "hints": {
+    "1": "Think hardware preemption, not a software call into your ISR.",
+    "2": "IRQ → finish instruction → save context → vector table → ISR → restore → resume main.",
+    "3": "ISR: clear flag, minimal work (e.g. read a byte), defer heavy work via flag/buffer to main."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain shared-data races between main and ISRs, what volatile actually does, and how critical sections, atomic types, and SPSC buffers fix them.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A C expression like event_count++ is a Read-Modify-Write (load, increment register, store); an ISR between steps can cause a lost update.",
+     "weight": "core",
+     "evidence_hint": "Describes RMW torn mid-sequence and the ISR write being overwritten by main's stale store."
+    },
+    {
+     "id": "mech2",
+     "point": "volatile gives visibility (compiler must actually read/write memory) but does not make multi-instruction RMW atomic.",
+     "weight": "core",
+     "evidence_hint": "Says volatile ≠ atomic; RMW on volatile can still be torn by an interrupt."
+    },
+    {
+     "id": "mech3",
+     "point": "A critical section disables interrupts around the shared update so the RMW completes without preemption, then re-enables them.",
+     "weight": "core",
+     "evidence_hint": "Mentions disable_interrupts / __disable_irq, do the update, then enable_interrupts."
+    },
+    {
+     "id": "mech4",
+     "point": "sig_atomic_t guarantees atomic simple loads/stores only; ++ remains a multi-instruction RMW. Full atomic RMW without disabling interrupts uses C11 stdatomic.",
+     "weight": "extended",
+     "evidence_hint": "Separates load/store atomicity of sig_atomic_t from ++, and names <stdatomic.h> for RMW."
+    },
+    {
+     "id": "mech5",
+     "point": "A lock-free SPSC ring buffer works by ISR-only writes to head and main-only writes to tail, relying on word-atomic stores to those indices.",
+     "weight": "core",
+     "evidence_hint": "ISR owns head, main owns tail; store to a 32-bit index is seen fully old or fully new."
+    },
+    {
+     "id": "mech6",
+     "point": "The buffer payload need not be atomic if the ISR writes buffer[head] before publishing the new head, and main only reads after seeing the updated head.",
+     "weight": "extended",
+     "evidence_hint": "Describes write-payload-then-publish-head sequencing so the consumer never reads an unfinished slot."
+    }
+   ],
+   "probes": [
+    "Why does volatile int event_count++ still race with an ISR that also increments it?",
+    "How does a single-producer/single-consumer ring buffer avoid critical sections between an ISR and main?"
+   ],
+   "hints": {
+    "1": "Look at how many CPU steps ++ actually is, and who writes which index in the ring buffer.",
+    "2": "RMW can be torn mid-sequence; SPSC splits ownership so only one writer touches head and one touches tail.",
+    "3": "volatile = visibility only; protect RMW with disable/enable IRQ, or use SPSC head/tail ownership plus write-before-publish-head."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare polling vs interrupts and critical-section protection vs lock-free deferral, including what breaks each approach.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Polling is simple and deterministic but burns 100% CPU and blocks sleep or other work; interrupt-driven I/O saves CPU/power but adds latency and concurrency hazards.",
+     "weight": "core",
+     "evidence_hint": "States both sides: busy-wait cost of 100% CPU vs preemption/concurrency cost of interrupts."
+    },
+    {
+     "id": "tr2",
+     "point": "Wrapping the entire main loop in a critical section would destroy interrupt latency and defeat hardware preemption.",
+     "weight": "core",
+     "evidence_hint": "Says critical sections must be short; whole-main disable defeats the purpose of interrupts."
+    },
+    {
+     "id": "tr3",
+     "point": "SPSC lock-free handoff avoids critical sections but breaks if a second producer (e.g. two ISRs) both RMW the shared head.",
+     "weight": "extended",
+     "evidence_hint": "Names the single-producer assumption and the race when two writers update head."
+    }
+   ],
+   "probes": [
+    "When would you choose polling over interrupt-driven I/O, and what do you give up either way?",
+    "If critical sections fix races, why not keep interrupts disabled for the whole main loop?"
+   ],
+   "hints": {
+    "1": "Contrast CPU utilization and power with latency and shared-data races.",
+    "2": "Critical sections must be brief; SPSC only works with one writer per index.",
+    "3": "Polling: 100% CPU, simple; interrupts: efficient but concurrent; long disable or dual producers both break the design."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply ISR deferral, torn multi-word reads, and reentrancy/atomic rules to concrete embedded C patterns.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "printf and malloc must not run in an ISR because they are blocking and non-reentrant; if main holds malloc's lock and the ISR calls malloc, the system deadlocks.",
+     "weight": "core",
+     "evidence_hint": "Describes lock held in main, ISR waits forever, main cannot resume until ISR ends."
+    },
+    {
+     "id": "app2",
+     "point": "On an 8-bit AVR, reading a 32-bit shared tick counter takes 4 instructions and can be torn by a timer ISR; copy under disable/enable IRQ, then do slow work outside.",
+     "weight": "core",
+     "evidence_hint": "Mentions torn 32-bit read/write on 8-bit AVR, local copy in a critical section, then work outside."
+    },
+    {
+     "id": "app3",
+     "point": "A flag shared between a GPIO ISR and main must be volatile so main re-reads it from RAM every loop instead of optimizing the check away.",
+     "weight": "extended",
+     "evidence_hint": "Names volatile bool (or equivalent) for the deferred button_pressed handshake."
+    },
+    {
+     "id": "app4",
+     "point": "A function is reentrant only if it can be interrupted mid-execution and safely called again from an ISR; shared hidden state (statics, errno, malloc) makes it non-reentrant—pass state via pointers instead.",
+     "weight": "extended",
+     "evidence_hint": "Defines reentrancy and cites static/global/errno/malloc as unsafe; stack/pointer args as the fix."
+    }
+   ],
+   "probes": [
+    "Why can't you call printf or malloc inside an ISR?",
+    "How would you safely check and clear a 32-bit tick counter from main when a 1ms timer ISR increments it on an 8-bit MCU?"
+   ],
+   "hints": {
+    "1": "Think locks, reentrancy, and multi-instruction reads of wide variables.",
+    "2": "malloc can deadlock with main; wide reads need a short critical section and a local copy.",
+    "3": "No printf/malloc in ISR; __disable_irq, copy/clear ticks, __enable_irq, then do_something; flag for deferral needs volatile."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Polling vs interrupt-driven I/O",
+   "strong_answer": "Polling busy-waits on a status register: deterministic and simple, but costs 100% CPU and prevents sleep or other work. Interrupt-driven I/O lets the CPU sleep or do background work until hardware signals readiness, cutting waste and power, but adds interrupt latency and shared-data concurrency hazards."
+  },
+  {
+   "topic": "Critical sections vs lock-free SPSC deferral",
+   "strong_answer": "Critical sections (disable/enable interrupts) make RMW of shared data atomic but must stay short or later IRQs are missed and latency suffers—wrapping all of main defeats preemption. An SPSC ring buffer avoids critical sections by giving the ISR exclusive write of head and main exclusive write of tail, relying on word-atomic index stores and write-payload-before-publish-head sequencing, but fails with a second producer racing on head."
+  },
+  {
+   "topic": "volatile visibility vs true atomicity",
+   "strong_answer": "volatile forces real memory accesses so main and ISR see updates, but does not make ++ or other RMW atomic. Atomic simple loads/stores need types like sig_atomic_t (still not ++); aligned word load/store is naturally atomic on typical 32-bit MCUs, while wider values (e.g. 64-bit on 32-bit) can tear; full atomic RMW without masking IRQs uses C11 stdatomic, and pipelines/multicore may also need memory barriers."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming volatile makes event_count++ (or any multi-instruction RMW) atomic between main and an ISR.",
+   "correction": "volatile only ensures visibility—actual memory reads/writes. RMW can still be torn; protect with a critical section, use proper atomics, or redesign ownership (e.g. SPSC)."
+  },
+  {
+   "trap": "Calling printf or malloc inside an ISR.",
+   "correction": "They are blocking and non-reentrant. If main holds malloc's heap lock when the IRQ fires, the ISR blocks forever waiting for that lock while main cannot resume until the ISR finishes—deadlock."
+  },
+  {
+   "trap": "Reading or clearing a multi-word shared counter (e.g. 32-bit system_ticks on 8-bit AVR) from main without disabling interrupts.",
+   "correction": "The read can take multiple instructions (4 on that AVR example) and the write of zero can tear. Copy and optionally clear under a short critical section, then do slow work outside with the local copy."
+  },
+  {
+   "trap": "Adding a second producer (another ISR) to an SPSC ring buffer that only splits head/tail ownership.",
+   "correction": "Both producers would RMW the shared head, recreating the race the design avoided. SPSC requires exactly one writer of head and one writer of tail."
+  },
+  {
+   "trap": "Treating sig_atomic_t as making ++ or other RMW safe.",
+   "correction": "sig_atomic_t only guarantees atomic simple loads and stores; ++ remains a multi-instruction sequence unless you disable interrupts or use C11 atomics."
+  }
+ ]
+}

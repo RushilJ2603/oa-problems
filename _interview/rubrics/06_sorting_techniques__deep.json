@@ -1,0 +1,266 @@
+{
+ "id": "06_sorting_techniques__deep",
+ "title": "Sorting-based Techniques, Comparators & Coordinate Compression (Depth)",
+ "type": "CP",
+ "relevance": "High (sort-then-greedy, event order, and rank-compression + Fenwick still dominate harder OA / Div2 C–D array problems)",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Typed inventory / coupon assign (USB vs PS/2, discount tiers): sort price and fill constrained buckets first. Meeting rooms / k workers (Room Allocation, Movie Festival II): event sort plus reuse earliest-free resource. Leaderboard uniqueness / rank remap (Ratings Change, Best Price): sort preferences or thresholds, assign next free rank or evaluate at compressed candidates. Count inversions / range pairs under 1e9 values (Seating D2, Petya and Array, Deque optimization): compress then Fenwick, same family as count-smaller-to-the-right.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot depth sorting problems that hinge on the right sort key, event secondary order, or compressing every DS-touched index.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "After the famous ladder, the next skill is which key to sort on under constraints (ties, open/close events, free-item thresholds) and compressing every index the DS will touch (including r+1 removals / prefix values).",
+     "weight": "core",
+     "evidence_hint": "Names sort-key choice under ties/events/thresholds and compressing every touched index, not just a plain sort-then-scan."
+    },
+    {
+     "id": "rec2",
+     "point": "Spot it when values are ≤1e9 but n≤2e5, when greediness needs a multiset over a sorted stream, or when a rewrite like a_i−b_i turns a pairwise condition into a 1D sorted scan.",
+     "weight": "core",
+     "evidence_hint": "Cites ≤1e9 with n≤2e5, sorted-stream+multiset greediness, or an a_i−b_i rewrite to a 1D scan."
+    },
+    {
+     "id": "rec3",
+     "point": "OA/interview skins include typed inventory/coupon assign, meeting rooms/k workers, leaderboard uniqueness/rank remap, and count inversions/range pairs under 1e9 values via compress-then-Fenwick.",
+     "weight": "extended",
+     "evidence_hint": "Maps the prompt to one of those four skins from Where it appears."
+    }
+   ],
+   "probes": [
+    "What tells you this is a depth sorting problem—sort-key/event order/compression—rather than a plain sort-then-scan template?",
+    "If values are ≤1e9 with n≤2e5, or greed needs a multiset over a sorted stream, or a pairwise inequality rewrites to a_i−b_i, what do you reach for?"
+   ],
+   "hints": {
+    "1": "Ask whether the hard part is which key to sort on, how events tie-break, or which coordinates the DS will touch.",
+    "2": "Cue triad: ≤1e9 with n≤2e5; multiset over a sorted stream; rewrite like a_i−b_i to a 1D sorted scan.",
+    "3": "Say: pick the constrained sort key (ties/open-close/thresholds) and compress every DS index including r+1 removals/prefixes; skins are coupon buckets, k-resource reuse, rank remap, and compress+Fenwick pair counts."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Choose the right sort key, rewrite, event model, or sorted-stream+multiset before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Rewrite before sorting: inequalities like a_i+a_j>b_i+b_j map to sorting a−b (Pair of Topics); do not invent a 2D comparator.",
+     "weight": "core",
+     "evidence_hint": "Rewrites the pairwise inequality to sort a−b (or a_i−b_i) and rejects a 2D cmp."
+    },
+    {
+     "id": "appr2",
+     "point": "Exchange argument ⇒ sort key: Tasks and Deadlines sorts by duration ascending (not deadline); Hanoi / nesting rings sorts outer radius descending with a careful inner tie-break.",
+     "weight": "core",
+     "evidence_hint": "States duration↑ for Tasks and Deadlines, or outer↓ with inner tie-break for nesting rings."
+    },
+    {
+     "id": "appr3",
+     "point": "Greedy over a sorted stream + multiset: Knights / Movie Festival II / Too Many Segments — sort the primary key, maintain a dynamic bag of active ends/loots, delete the extremal element when a constraint breaks.",
+     "weight": "core",
+     "evidence_hint": "Sorts primary key then maintains a multiset/bag and deletes the extremal element on constraint break."
+    },
+    {
+     "id": "appr4",
+     "point": "Suffix/prefix after one sort: Monster Killing (suffix max power), Air Conditioners (prefix/suffix min cost) — once positions are ordered, answers are linear scans.",
+     "weight": "extended",
+     "evidence_hint": "Orders positions once, then answers with a suffix-max or prefix/suffix min linear scan."
+    },
+    {
+     "id": "appr5",
+     "point": "Movie Festival II: k attendees; sort by end and assign each film to the latest free end ≤ start. Too Many Segments: scan x, keep active segments by r, greedily delete furthest r when coverage >k.",
+     "weight": "extended",
+     "evidence_hint": "Describes latest-free-end assignment for k attendees, or furthest-r deletion when coverage exceeds k."
+    }
+   ],
+   "probes": [
+    "How do you turn a pairwise inequality into a 1D sort key instead of inventing a 2D comparator?",
+    "What exchange argument or sorted-stream+multiset template picks the sort key here?",
+    "After one positional sort, when is the rest just a prefix/suffix linear scan?"
+   ],
+   "hints": {
+    "1": "Try a rewrite or exchange argument before designing a fancy comparator.",
+    "2": "Pair of Topics → a−b; Tasks/Deadlines → duration↑; Knights/Movie II/Too Many Segments → sorted stream + multiset; Monster Killing / Air Conditioners → suffix/prefix after sort.",
+    "3": "Say: rewrite a_i+a_j>b_i+b_j to sort a−b; exchange ⇒ duration↑ or outer↓+inner tie-break; maintain active ends/loots and drop the extremal; or finish with suffix-max / prefix-suffix mins."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Show strict-weak-order ties, event secondary keys, offline Fenwick ranking, and correct r+1 compression.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Offline Fenwick template: collect every value that will be update/query’d (array values and derived prefixes) → sort+unique → lower_bound ranks → then scan.",
+     "weight": "core",
+     "evidence_hint": "Collects all update/query values including derived prefixes, sort+unique, lower_bound ranks, then scans."
+    },
+    {
+     "id": "impl2",
+     "point": "Compress the event you update, not a proxy: for range cover include r+1 (or r if inclusive ends are stored consistently) in the coordinate list — rank(r)+1 is a different wrong point when holes exist (Feed Cats).",
+     "weight": "core",
+     "evidence_hint": "Puts the removal coordinate r+1 into the coordinate list and rejects rank(r)+1 when holes exist."
+    },
+    {
+     "id": "impl3",
+     "point": "Strict weak order under ties (Correct Placement): sort by width ascending with height descending on ties so a same-width peer is not treated as already seen; then scan with running min height.",
+     "weight": "core",
+     "evidence_hint": "Uses width↑ and height↓ on ties, then a running-min-height scan."
+    },
+    {
+     "id": "impl4",
+     "point": "Event secondary key: decide open-vs-close order explicitly (+1 before −1 or the reverse); Room Allocation / Online games WA if a room frees after the same-time arrival is processed wrong. Online games emits +1 at A and −1 at A+B.",
+     "weight": "extended",
+     "evidence_hint": "States an explicit +1/−1 secondary order at equal times and names the same-time free-after-arrival WA."
+    }
+   ],
+   "probes": [
+    "Walk through the offline Fenwick rank pipeline when prefixes are also queried.",
+    "What coordinate do you compress for a range-cover removal, and why is rank(r)+1 wrong?",
+    "How do you break width ties in Correct Placement, and how do you order same-time open/close events?"
+   ],
+   "hints": {
+    "1": "Think ranks for every touched value, removal coordinates, and explicit tie/event order.",
+    "2": "sort+unique+lower_bound on values and prefixes; compress r+1 not rank(r)+1; width↑ height↓; fix +1 vs −1 at equal times.",
+    "3": "Spell: collect update/query values and derived prefixes → sort+unique → lower_bound → scan; include r+1 in coords; Correct Placement width↑ height↓ then running min height; decide +1 before −1 (or reverse) so same-time free/arrival cannot WA."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Explain why huge values force compression at n≤2e5 and why one sort unlocks linear answer scans.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "When values are ≤1e9 but n≤2e5, Fenwick/segment structures must sit on compressed ranks of the values they touch, not on the raw value domain.",
+     "weight": "core",
+     "evidence_hint": "Contrasts ≤1e9 values with n≤2e5 and insists on rank compression before Fenwick/segtree indexing."
+    },
+    {
+     "id": "cx2",
+     "point": "Count inversions / range pairs under 1e9 values (Seating D2 / Petya and Array / Deque optimization) stay feasible by compressing then using Fenwick—same family as count smaller to the right.",
+     "weight": "core",
+     "evidence_hint": "Names compress-then-Fenwick for 1e9-scale values instead of indexing the raw domain."
+    },
+    {
+     "id": "cx3",
+     "point": "Suffix/prefix after one sort: once positions are ordered, Monster Killing and Air Conditioners finish with linear scans (suffix max / prefix-suffix mins) rather than further heavy structure.",
+     "weight": "extended",
+     "evidence_hint": "Says one ordering pass then linear suffix-max or prefix/suffix min scans."
+    }
+   ],
+   "probes": [
+    "Why do ≤1e9 values with n≤2e5 force coordinate compression before Fenwick?",
+    "How do inversion / prefix-pair counts under 1e9 values stay tractable?",
+    "After positions are sorted, what is left for Monster Killing or Air Conditioners?"
+   ],
+   "hints": {
+    "1": "Separate the huge value domain from the n≤2e5 number of ranks you can afford.",
+    "2": "Compress every touched value/prefix, then Fenwick; or finish with linear prefix/suffix scans after one sort.",
+    "3": "Say: ≤1e9 with n≤2e5 ⇒ ranks then Fenwick (Seating/Petya/Deque); after one positional sort, answers are linear suffix-max or prefix/suffix mins."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch proxy compression, weak tie orders, missing rewrites, and same-time event ordering bugs.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Using rank(r)+1 instead of compressing the removal coordinate r+1 — a different wrong point when holes exist.",
+     "weight": "core",
+     "evidence_hint": "Rejects rank(r)+1 and requires r+1 (or consistent inclusive r) in the coordinate list."
+    },
+    {
+     "id": "pit2",
+     "point": "Sorting equal widths without height-descending order so a same-width peer is treated as already seen (Correct Placement).",
+     "weight": "core",
+     "evidence_hint": "Adds height↓ on equal widths so same-width peers are not marked already seen."
+    },
+    {
+     "id": "pit3",
+     "point": "Inventing a 2D comparator for a_i+a_j>b_i+b_j instead of rewriting to sort a−b (Pair of Topics).",
+     "weight": "core",
+     "evidence_hint": "Drops the 2D cmp and sorts a−b after the rewrite."
+    },
+    {
+     "id": "pit4",
+     "point": "Leaving open-vs-close secondary order unspecified so a room frees after the same-time arrival is processed wrong (Room Allocation / Online games).",
+     "weight": "extended",
+     "evidence_hint": "Picks an explicit +1-before−1 or reverse secondary key at equal times."
+    },
+    {
+     "id": "pit5",
+     "point": "Sorting Tasks and Deadlines by deadline instead of duration ascending when the exchange argument says reward depends on durations.",
+     "weight": "extended",
+     "evidence_hint": "Switches the key to duration ascending, not deadline."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you compress rank(r)+1 for a range-cover removal?",
+    "How can Correct Placement or Room Allocation WA from tie / same-time ordering?",
+    "Why is a 2D comparator the wrong first move on Pair of Topics, and why is deadline the wrong key on Tasks and Deadlines?"
+   ],
+   "hints": {
+    "1": "Check proxy ranks, tie order, rewrite vs 2D cmp, and event secondary keys.",
+    "2": "Compress r+1; height↓ on equal widths; rewrite to a−b; decide +1 vs −1 at equal times; duration↑ not deadline.",
+    "3": "Also: Feed Cats needs the removal coordinate itself; same-width peers must not look already seen; Room Allocation/Online games WA on same-time free-after-arrival."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Compress removal coordinate r+1 vs rank(r)+1",
+   "strong_answer": "For range cover, include r+1 (or r if inclusive ends are stored consistently) in the coordinate list — rank(r)+1 is a different wrong point when holes exist (Feed Cats)."
+  },
+  {
+   "topic": "Rewrite to sort a−b vs inventing a 2D comparator",
+   "strong_answer": "Inequalities like a_i+a_j>b_i+b_j rewrite to sorting a−b (Pair of Topics); do not invent a 2D cmp."
+  },
+  {
+   "topic": "Duration ascending vs deadline (Tasks and Deadlines)",
+   "strong_answer": "Exchange argument ⇒ sort by duration ascending, not deadline; reward is independent of order except durations."
+  },
+  {
+   "topic": "Open-before-close vs reverse at equal event times",
+   "strong_answer": "Decide open-vs-close order explicitly (+1 before −1 or the reverse); Room Allocation / Online games WA if a room frees after the same-time arrival is processed wrong."
+  },
+  {
+   "topic": "Sorted stream + multiset vs plain sort-then-scan",
+   "strong_answer": "Knights / Movie Festival II / Too Many Segments need sort of the primary key plus a dynamic bag of active ends/loots, deleting the extremal element when a constraint breaks."
+  },
+  {
+   "topic": "Outer radius descending with inner tie-break vs naive nesting order",
+   "strong_answer": "Hanoi / nesting rings: sort outer descending with a careful inner tie-break, then nest with a monotonic structure."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Compressing rank(r)+1 as a proxy for range-cover removal.",
+   "correction": "Compress the removal coordinate r+1 (or r if inclusive ends are consistent); rank(r)+1 is wrong when holes exist."
+  },
+  {
+   "trap": "Equal widths ordered so a same-width peer looks already seen while scanning heights.",
+   "correction": "In Correct Placement, sort width ascending with height descending on ties, then scan with running min height."
+  },
+  {
+   "trap": "Inventing a 2D comparator for pairwise a/b inequalities.",
+   "correction": "Rewrite a_i+a_j>b_i+b_j to sort a−b (Pair of Topics), then two-pointers / lower_bound."
+  },
+  {
+   "trap": "Unspecified open/close secondary key at equal times.",
+   "correction": "Choose +1 before −1 or the reverse explicitly; otherwise Room Allocation / Online games can free a room after a same-time arrival is processed wrong."
+  },
+  {
+   "trap": "Sorting Tasks and Deadlines by deadline.",
+   "correction": "Exchange argument ⇒ sort by duration ascending; reward depends on durations, not deadline order."
+  },
+  {
+   "trap": "Forgetting derived prefixes when building Fenwick ranks.",
+   "correction": "Offline template: collect every update/query value including derived prefixes → sort+unique → lower_bound ranks → then scan."
+  },
+  {
+   "trap": "Using only a plain sort when the greedy needs a live bag of ends/loots.",
+   "correction": "Sort the primary key and maintain a multiset of active ends/loots; delete the extremal element when the constraint breaks (Knights / Movie Festival II / Too Many Segments)."
+  }
+ ]
+}

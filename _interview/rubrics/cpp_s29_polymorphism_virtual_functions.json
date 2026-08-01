@@ -1,0 +1,176 @@
+{
+ "id": "cpp_s29_polymorphism_virtual_functions",
+ "title": "Polymorphism and Virtual Functions",
+ "type": "FUND",
+ "relevance": "Interviewers use virtual functions, override bugs, vtables, and object slicing to test whether candidates understand how C++ dynamic polymorphism actually works.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish compile-time vs run-time polymorphism, upcasting, static binding, and what virtual/override/final mean.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "C++ supports compile-time polymorphism (function overloading, templates) and run-time polymorphism via inheritance and virtual functions.",
+     "weight": "core",
+     "evidence_hint": "Names both kinds and ties run-time polymorphism to virtual functions and inheritance."
+    },
+    {
+     "id": "fund2",
+     "point": "Upcasting is safe: a base pointer or reference may point to a derived object because a derived object is a base object.",
+     "weight": "core",
+     "evidence_hint": "States base pointer/reference to derived is valid and explains the is-a relationship."
+    },
+    {
+     "id": "fund3",
+     "point": "Without virtual, C++ uses static binding: the call is wired from the pointer type at compile time, so a Car* to AdvancedCar still runs Car::startEngine.",
+     "weight": "core",
+     "evidence_hint": "Explains early binding from pointer type and gives the non-virtual Car/AdvancedCar outcome."
+    },
+    {
+     "id": "fund4",
+     "point": "Marking the base function virtual enables dynamic dispatch so the call uses the actual object type; override forces a true override and final blocks further overriding or inheritance.",
+     "weight": "extended",
+     "evidence_hint": "Mentions virtual for late binding, override as a compile-time signature check, and final to seal a function or class."
+    }
+   ],
+   "probes": [
+    "What is the difference between compile-time and run-time polymorphism in C++?",
+    "What happens if you call startEngine through a Car* that points to AdvancedCar when startEngine is not virtual?"
+   ],
+   "hints": {
+    "1": "Think about when the call target is chosen: compile time or run time.",
+    "2": "Contrast function overloading/templates with inheritance plus virtual, then describe upcasting without virtual.",
+    "3": "Compile-time: overloading and templates; run-time: virtual. Non-virtual Car* calls Car::startEngine even if the object is AdvancedCar."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how dynamic dispatch is implemented with vtables and vptrs, and how to force a static base call.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A class with at least one virtual function gets a per-class vtable (static array of function pointers to the most-derived accessible virtuals) and each object gets a hidden vptr to that table.",
+     "weight": "core",
+     "evidence_hint": "Says one vtable per class, one vptr per object, and that the vtable holds the addresses used for dispatch."
+    },
+    {
+     "id": "mech2",
+     "point": "A virtual call through a base pointer reads the object's vptr, indexes the vtable, and jumps to the function; that indirection is slightly slower and usually prevents inlining.",
+     "weight": "core",
+     "evidence_hint": "Describes the indirect lookup path and names both per-call cost and lost inlining."
+    },
+    {
+     "id": "mech3",
+     "point": "Qualifying with Base:: (for example Car::startEngine()) bypasses dynamic dispatch and statically calls that base version.",
+     "weight": "extended",
+     "evidence_hint": "Shows scope resolution to invoke the base implementation from an override."
+    }
+   ],
+   "probes": [
+    "How does dynamic dispatch work under the hood?",
+    "How can a derived override still call the base version of a virtual function?"
+   ],
+   "hints": {
+    "1": "Picture each polymorphic object carrying a pointer to a shared function table for its class.",
+    "2": "Name vtable versus vptr, then walk a virtual call: vptr → table slot → function.",
+    "3": "vtable is one static table per class; vptr is embedded per object; Base::func() forces a static call."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast C++’s opt-in virtual model and polymorphic usage via pointers/references versus value semantics.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Unlike Python where methods are virtual by default, C++ defaults to static binding for performance and requires an explicit virtual for dynamic dispatch.",
+     "weight": "core",
+     "evidence_hint": "Compares Python’s default virtual methods with C++ requiring virtual to pay the dispatch cost only when needed."
+    },
+    {
+     "id": "tr2",
+     "point": "Polymorphism only works through pointers or references; copying by value slices the derived part and breaks dynamic behavior.",
+     "weight": "core",
+     "evidence_hint": "States pass/assign by Base value slices, and that Base* or Base& preserve the dynamic type."
+    }
+   ],
+   "probes": [
+    "Why does C++ make you write virtual instead of making all methods virtual by default?",
+    "Why must polymorphic objects be passed by pointer or reference?"
+   ],
+   "hints": {
+    "1": "Connect the language default to performance and to how objects are passed.",
+    "2": "Static binding avoids vptr/indirection until you opt in; value copies only keep the base subobject.",
+    "3": "C++ prioritises performance so virtual is explicit; by-value assignment invokes the Base copy and sets the new object’s vptr to the Base vtable."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply override rules and catch classic traps: hiding, default arguments, and object slicing.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Override requires an exact signature match including const-ness; a same-name different-signature derived function hides the base and is not an override.",
+     "weight": "core",
+     "evidence_hint": "Gives the missing-const display example: derived display(int) hides Base::display(int) const."
+    },
+    {
+     "id": "app2",
+     "point": "Virtual functions dispatch dynamically, but default arguments are bound statically from the static pointer type—so Base* p to Derived calling print() runs Derived::print with Base’s default 10, not Derived’s 20.",
+     "weight": "core",
+     "evidence_hint": "States output Derived: 10 and explains static default vs dynamic function choice."
+    },
+    {
+     "id": "app3",
+     "point": "Passing AdvancedCar by value into a Car parameter slices away derived state (for example batteryLevel) and identify() runs as the base Car version.",
+     "weight": "extended",
+     "evidence_hint": "Describes by-value printByValue slicing and output I am a standard Car."
+    }
+   ],
+   "probes": [
+    "Spot the bug: derived display(int) versus base display(int) const—what happens and how do you prevent it?",
+    "What does Base* p = new Derived(); p->print(); print if both declare defaults 10 and 20?",
+    "What happens if you pass a derived object to a function that takes the base by value?"
+   ],
+   "hints": {
+    "1": "Check signature match, default-argument binding, and whether the parameter is a value or a pointer/reference.",
+    "2": "Missing const → hiding; defaults follow the pointer type; by-value copy keeps only the Base subobject.",
+    "3": "Use override to catch mismatches; expect Derived: 10; slicing drops derived members and the copy’s vptr points at the Base vtable."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Static binding (default) vs virtual dynamic dispatch",
+   "strong_answer": "C++ defaults to static binding for performance; virtual adds a per-object vptr and a slower indirect call that usually cannot be inlined, so you opt in only when run-time polymorphism is needed."
+  },
+  {
+   "topic": "Polymorphic objects by value vs by pointer/reference",
+   "strong_answer": "By-value copy/assignment slices to the Base subobject, resets the vptr to the Base vtable, and loses derived state; Base* or Base& preserve dynamic type and correct virtual dispatch."
+  },
+  {
+   "topic": "Python virtual-by-default vs C++ explicit virtual",
+   "strong_answer": "Python methods are virtual by default so a base reference always hits a derived override if present; C++ requires writing virtual because it prioritises performance."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "A derived function with the same name but different parameters (or missing const) looks like an override but hides the base function instead.",
+   "correction": "Override needs an exact signature match including const-ness; use the override specifier so mismatches become compile errors."
+  },
+  {
+   "trap": "Assuming default arguments on a virtual function come from the dynamic type.",
+   "correction": "The function is chosen dynamically, but defaults are substituted statically from the pointer/reference type—Base* yields Base’s default (10) even when Derived::print runs."
+  },
+  {
+   "trap": "Passing or assigning a derived object to a base object by value and expecting polymorphism.",
+   "correction": "That slices: only the Base subobject is copied, derived data is lost, and virtual calls resolve as Base; pass Base* or Base& instead."
+  },
+  {
+   "trap": "Calling a derived-only method like activateAutopilot through a Car* after upcasting.",
+   "correction": "The base pointer only exposes the base interface; derived-only members are not visible without a different mechanism, and non-virtual base methods still bind statically to the base version."
+  }
+ ]
+}

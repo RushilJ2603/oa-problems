@@ -1,0 +1,155 @@
+{
+ "id": "cpp_s05_increment_decrement",
+ "title": "Increment and Decrement Operators",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs probe whether candidates know pre- and post-forms make the same change but differ in what they return and what that costs inside larger expressions.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the four operators and that pre- and post-forms change the variable the same way but differ in when the update happens relative to the expression value.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "C++ has pre-increment ++x and post-increment x++ (add one) and pre-decrement --x and post-decrement x-- (subtract one).",
+     "weight": "core",
+     "evidence_hint": "Names all four operators and states increment adds one while decrement subtracts one."
+    },
+    {
+     "id": "fund2",
+     "point": "Pre-increment increments first, then uses the updated value in the expression.",
+     "weight": "core",
+     "evidence_hint": "Says behaviour is increment-then-return / change it now then show me."
+    },
+    {
+     "id": "fund3",
+     "point": "Post-increment uses the current value in the expression first, then increments the variable afterwards.",
+     "weight": "core",
+     "evidence_hint": "Says use-then-increment / show me now then change it."
+    }
+   ],
+   "probes": [
+    "What are the four increment/decrement operators in C++, and how do pre- and post-forms differ in order of operations?"
+   ],
+   "hints": {
+    "1": "Think about when the variable changes relative to when its value is read.",
+    "2": "Pre means update first; post means hand back the old value then update.",
+    "3": "++x: increment then use; x++: use then increment (same idea for --)."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Establish value categories, the need for a temporary in post-increment, and how the ordering shows up in concrete expression results.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Pre-increment returns an lvalue — a reference to the actual variable after modification.",
+     "weight": "core",
+     "evidence_hint": "States pre-increment hands back the variable itself as an lvalue."
+    },
+    {
+     "id": "mech2",
+     "point": "Post-increment must keep a copy of the old value to return, so that copy is a temporary and post-increment returns an rvalue.",
+     "weight": "core",
+     "evidence_hint": "Mentions temporary/old-value copy and rvalue return for post-increment."
+    },
+    {
+     "id": "mech3",
+     "point": "For int x = 5, y = ++x yields x = 6 and y = 6; y = x++ yields x = 6 and y = 5.",
+     "weight": "core",
+     "evidence_hint": "Walks the two assignments and ends with those paired results."
+    },
+    {
+     "id": "mech4",
+     "point": "In z = x++ * y with x = 5 and y = 10, z becomes 50 and x becomes 6; with ++x * y, z becomes 60 (x already 6).",
+     "weight": "extended",
+     "evidence_hint": "Uses old x (5) then updates for post, and increments first for pre, matching 50 vs 60."
+    }
+   ],
+   "probes": [
+    "If x starts at 5, what do y = ++x and y = x++ leave in x and y, and why does post-increment return an rvalue?"
+   ],
+   "hints": {
+    "1": "Ask what each form hands back to the surrounding expression, not only what happens to x.",
+    "2": "Pre returns the variable (lvalue); post must return a temporary copy of the old value (rvalue).",
+    "3": "y = ++x → both 6; y = x++ → y = 5, x = 6 because post returns the old value."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Establish when pre- versus post- forms differ in cost for non-trivial types.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Pre-increment is slightly more efficient for complex types because it does not need to create a temporary copy.",
+     "weight": "core",
+     "evidence_hint": "Links pre's efficiency to avoiding a temporary."
+    },
+    {
+     "id": "tr2",
+     "point": "Post-increment costs slightly more for non-trivial types because it must yield the original value via a temporary while still leaving the variable incremented.",
+     "weight": "core",
+     "evidence_hint": "Ties the extra cost to keeping/returning a copy of the old value."
+    }
+   ],
+   "probes": [
+    "Why might you prefer ++x over x++ for a complex type when the expression result is unused?"
+   ],
+   "hints": {
+    "1": "Compare what each form has to return to the caller.",
+    "2": "One form can return the variable; the other must preserve the old value.",
+    "3": "Post needs a temporary copy of the old value (rvalue), so it costs more for non-trivial types; pre does not."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the operators' ordering in larger expressions and recognize wraparound overflow on fixed-width signed integers.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "The same pre/post ordering rule applies inside larger arithmetic expressions: the form decides whether the old or updated value is used in the computation.",
+     "weight": "core",
+     "evidence_hint": "Explains that the expression sees old vs updated value depending on post vs pre."
+    },
+    {
+     "id": "app2",
+     "point": "Incrementing a value already at its type's maximum wraps around to the type's minimum (overflow), rather than producing a larger number.",
+     "weight": "core",
+     "evidence_hint": "States silent wrap from max to min for fixed-width integer types."
+    },
+    {
+     "id": "app3",
+     "point": "A signed char is eight bits in the range -128 to 127; char x = 127; ++x yields -128 via two's complement (01111111 + 1 = 10000000).",
+     "weight": "extended",
+     "evidence_hint": "Gives the range, the ++x from 127 to -128, and the sign-bit/two's-complement explanation."
+    }
+   ],
+   "probes": [
+    "What happens if you pre-increment a char that already holds 127, and why?"
+   ],
+   "hints": {
+    "1": "Think about what a fixed-width type does when arithmetic crosses its maximum.",
+    "2": "Signed char ranges from -128 to 127; overflowing the top wraps to the bottom.",
+    "3": "127 is 01111111; adding one gives 10000000, which in two's complement is -128."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Pre-increment (++x) vs post-increment (x++)",
+   "strong_answer": "Both add one to the variable, but pre returns an lvalue (the updated variable) with no temporary, while post returns an rvalue temporary copy of the old value and therefore costs slightly more for complex/non-trivial types; prefer pre when the expression result is not needed."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming incrementing past a type's maximum yields a larger number (e.g. expecting 128 after ++ on a char at 127).",
+   "correction": "Fixed-width integer overflow wraps: a signed char at 127 becomes -128 because 01111111 + 1 = 10000000 in two's complement; the same wrap-to-the-other-end idea applies to every fixed-width integer type."
+  },
+  {
+   "trap": "Treating ++x and x++ as interchangeable inside larger expressions because both eventually increment.",
+   "correction": "They differ in what the surrounding expression sees: post uses the old value then increments (e.g. x++ * y with x=5,y=10 gives 50), while pre increments first (++x * y gives 60)."
+  }
+ ]
+}

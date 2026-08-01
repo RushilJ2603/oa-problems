@@ -1,0 +1,256 @@
+{
+ "id": "02_greedy__deep",
+ "title": "Greedy (exchange argument, scheduling) — Depth Pass",
+ "type": "CP",
+ "relevance": "High — post-ladder CF Div2 C/D scheduling & custom-comparator greeds; these are the forms that show up once Movie-Festival / Tasks-Deadlines templates are automatic.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Average-grade / median-salary minimize-cost → deficit fill or BS-on-median + greedy assign (Vanya / Salary Changing). k servers / 2 machines / reusable interval licenses → sort by start/end + multiset of free end times (Two TVs → TV Shows; Meeting-Rooms II). One machine with release times & deadlines → PQ of earliest deadlines among released jobs (Printing Machine). Bulk discount / 2-for-1 once bill passes a threshold → two-pointer or reverse spend unlocked by expensive items (PriceFixed).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot post-template greeds that need a custom exchange comparator, BS+greedy feasibility, or an available-job priority queue rather than plain sort-by-end.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "After classic sort-by-end / duration / deadline, deeper greeds ask for a custom comparator from an n=2 exchange, a feasibility check under a guessed answer, or a PQ over currently available jobs (earliest exit / reverse-from-deadline).",
+     "weight": "core",
+     "evidence_hint": "Names those three shapes: exchange comparator, BS+greedy check, or available-pool earliest-exit / reverse-from-deadline."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognize them when item order changes the objective by a closed-form delta, when you can binary-search a time/cost and simulate, or when idle gaps must be jumped while always serving the tightest live deadline.",
+     "weight": "core",
+     "evidence_hint": "Cites closed-form swap delta, binary-search-and-simulate, or jump-idle + tightest live deadline as the cue."
+    },
+    {
+     "id": "rec3",
+     "point": "OA/interview disguises include deficit fill or BS-on-median hire salary, k servers / 2 machines / reusable licenses with a multiset of free ends, one-machine release+deadline PQ, and 2-for-1 bulk-discount buy order.",
+     "weight": "extended",
+     "evidence_hint": "Maps the prompt to Vanya/Salary Changing, Two TVs/TV Shows/Meeting-Rooms II, Printing Machine, or PriceFixed-style discount unlock."
+    }
+   ],
+   "probes": [
+    "What tells you this is beyond classic sort-by-end Movie-Festival greedy?",
+    "Is the tell a swap-derived comparator, a binary-searched answer with a greedy check, or an available-job priority queue?"
+   ],
+   "hints": {
+    "1": "Ask whether plain earliest-end / deadline sort already finishes the classic ladder.",
+    "2": "Look for closed-form order delta, guessed time/cost to simulate, or idle jumps with a live deadline pool.",
+    "3": "Name n=2 exchange comparator, BS+greedy feasibility, or earliest-exit / reverse-from-deadline PQ, and match to Stas, Delivery Dilemma / Schedule Management, or Printing Machine."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Choose the right deep-greedy family and justify the sort key or simulation order with exchange or feasibility structure.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "n=2 exchange → comparator: expand the objective for adjacent i,j; the sign of Δ after a swap is the sort key (Stas: sort by b−a).",
+     "weight": "core",
+     "evidence_hint": "Expands adjacent cost, takes the sign of the swap delta as the comparator, and cites Stas / b−a."
+    },
+    {
+     "id": "appr2",
+     "point": "BS + greedy check: guess time/cost/mid; simulate a clear greedy (assign hardest constraints first, dump remainder cheaply)—Delivery Dilemma, Schedule Management, Exams, Salary Changing.",
+     "weight": "core",
+     "evidence_hint": "Says binary-search the answer then run a feasibility greedy that prioritizes hard constraints and dumps the rest cheaply."
+    },
+    {
+     "id": "appr3",
+     "point": "Reverse-from-deadline: when once available, always available, process time backward and always take the best live job (Portals / Money Buys / USACO milk-scheduling pattern).",
+     "weight": "extended",
+     "evidence_hint": "Processes backward and repeatedly picks the best still-live job under the always-available assumption."
+    },
+    {
+     "id": "appr4",
+     "point": "Available-pool + earliest exit: keep started jobs in a min-heap of deadlines; on idle, jump to the next arrival (Printing Machine)—exchange: always print the live job that leaves first.",
+     "weight": "extended",
+     "evidence_hint": "Maintains a deadline min-heap of released jobs and jumps idle time to the next arrival instead of walking every time unit."
+    }
+   ],
+   "probes": [
+    "What do you sort by, and how does an adjacent-swap delta justify that comparator?",
+    "Would you binary-search an answer and check greedily, or maintain an available-job heap—and why?"
+   ],
+   "hints": {
+    "1": "Decide exchange-comparator vs BS+check vs available-pool before coding.",
+    "2": "For order-sensitive cost, expand adjacent i,j and sort by sign of Δ; for monotone feasibility, guess mid and simulate.",
+    "3": "Stas → sort by b−a; Delivery/Schedule/Exams/Salary → BS+greedy; Printing Machine → deadline PQ + idle jump; Portals/Money Buys → reverse best-live."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Show concrete mechanics for the core templates on the depth ladder: gaps, Huffman merges, closed forms, resource multisets, and conflict pairing.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Tape: cover with k segments by taking total span minus the (k-1) largest inter-break gaps.",
+     "weight": "core",
+     "evidence_hint": "Computes full span, drops the (k-1) largest gaps between consecutive points, and sums the rest."
+    },
+    {
+     "id": "impl2",
+     "point": "Stick Divisions / Huffman: repeatedly combine the two current smallest costs; any other merge order can be exchanged toward this without raising cost.",
+     "weight": "core",
+     "evidence_hint": "Always merges the two smallest with a heap/PQ and cites the exchange argument for that order."
+    },
+    {
+     "id": "impl3",
+     "point": "Reading Books closed form is max(sum, 2·max); Gap/resource reuse: Two TVs / TV Shows track free end-times in a multiset; Fugitive matches sorted gaps to bridges with multiset lower_bound tightest fit.",
+     "weight": "core",
+     "evidence_hint": "States max(sum, 2·max) and/or multiset of free ends / lower_bound gap-to-bridge assignment."
+    },
+    {
+     "id": "impl4",
+     "point": "PriceFixed: buy cheapest from the left while unlocking discounts from the right (two pointers); Pairs of Segments: sort by end and when a conflict appears kill the farther-reaching partner.",
+     "weight": "extended",
+     "evidence_hint": "Describes left-cheap / right-unlock two pointers, or end-sorted conflict resolution against the farthest intruder."
+    },
+    {
+     "id": "impl5",
+     "point": "Air Conditioner maintains a feasible [lo,hi] grown/shrunk by elapsed time between customers and rejects when empty; Counting Kangaroos nests with sort + two pointers and at most ⌊n/2⌋ pockets.",
+     "weight": "extended",
+     "evidence_hint": "Updates a moving temperature window by elapsed time, or nests smaller into larger with the ⌊n/2⌋ bound."
+    }
+   ],
+   "probes": [
+    "How do you turn covering points with k tape segments into a gap calculation?",
+    "Walk through Stick Divisions’ merge rule and Reading Books’ closed form."
+   ],
+   "hints": {
+    "1": "Pick one core mechanic: gaps, two-smallest merges, or free-end multiset.",
+    "2": "Tape = span − (k-1) largest gaps; Stick Divisions always merges two smallest; Reading Books → max(sum, 2·max).",
+    "3": "Also: Two TVs/TV Shows free-end multiset, Fugitive lower_bound bridges, PriceFixed left/right unlock, Pairs of Segments kill farthest intruder."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Avoid time-range simulation and rely on event-driven heaps/multisets for available jobs and reusable resources.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Do not simulate every timestamp to 10^18; on idle, jump to the next arrival (Printing Machine available-pool).",
+     "weight": "core",
+     "evidence_hint": "Refuses looping over the full time axis to 10^18 and jumps idle time to the next job arrival."
+    },
+    {
+     "id": "cx2",
+     "point": "Available-pool keeps started jobs in a min-heap of deadlines; resource reuse keeps a multiset of free end-times (Two TVs / TV Shows); size-capped priority queues appear in sliding top-k loot (Knights).",
+     "weight": "core",
+     "evidence_hint": "Names deadline min-heap, free-end multiset, and/or size-capped loot PQ as the working structures."
+    },
+    {
+     "id": "cx3",
+     "point": "Gap matching (Fugitive) sorts gaps and bridges then assigns with multiset lower_bound rather than scanning all pairs.",
+     "weight": "extended",
+     "evidence_hint": "Sorts both sides and uses lower_bound tightest-fit assignment instead of pairwise search."
+    }
+   ],
+   "probes": [
+    "Why is simulating every time unit dangerous on large time bounds, and what do you do instead?",
+    "Which heap or multiset operations replace a full time-axis or all-pairs scan here?"
+   ],
+   "hints": {
+    "1": "Large horizons make per-timestamp loops unsafe.",
+    "2": "Jump idle to the next arrival; store live deadlines or free ends in a heap/multiset.",
+    "3": "Cite not simulating to 10^18, Printing Machine idle jump, free-end multiset, and Fugitive lower_bound matching."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch invalid comparators, unnecessary simulation, and wrong conflict or merge choices the depth ladder punishes.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "If the exchange-derived comparator is not a total order, the greedy is wrong.",
+     "weight": "core",
+     "evidence_hint": "Checks that the sort key induces a valid total order before trusting the greedy order."
+    },
+    {
+     "id": "pit2",
+     "point": "Don’t over-simulate two pointers for Reading Books when the bottleneck is the single longest book—the answer is max(sum, 2·max).",
+     "weight": "core",
+     "evidence_hint": "States the closed form and refuses an elaborate pairing simulation once the longest book is the bottleneck."
+    },
+    {
+     "id": "pit3",
+     "point": "On available-pool scheduling, do not simulate every timestamp to 10^18; jump idle to the next arrival.",
+     "weight": "extended",
+     "evidence_hint": "Corrects a time-loop approach to event jumps on the Printing Machine pattern."
+    },
+    {
+     "id": "pit4",
+     "point": "Conflict pairing: sort by end and resolve the earliest-ending conflict against the farthest intruder—not an arbitrary intersecting partner (Pairs of Segments).",
+     "weight": "extended",
+     "evidence_hint": "Sorts by end and always kills the farther-reaching partner of the earliest conflict."
+    }
+   ],
+   "probes": [
+    "When does an adjacent-swap comparator fail even if the delta formula looks right?",
+    "What goes wrong if you simulate Reading Books or Printing Machine more heavily than needed?"
+   ],
+   "hints": {
+    "1": "Ask whether the comparator is a total order and whether a closed form already exists.",
+    "2": "Invalid total order → wrong greedy; Reading Books → max(sum, 2·max); Printing Machine → jump idle, don’t walk to 10^18.",
+    "3": "Also for intersecting removals: earliest-ending conflict vs farthest-reaching partner, not a random pair."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Custom n=2 exchange comparator vs classic sort-by-end",
+   "strong_answer": "When order changes the objective by a closed-form adjacent delta, expand cost for i,j and sort by the sign of Δ (Stas: b−a). Classic earliest-end / duration keys are not enough once Movie-Festival / Tasks-Deadlines templates are automatic."
+  },
+  {
+   "topic": "Binary-search + greedy check vs one-pass schedule",
+   "strong_answer": "When feasibility is monotone in a guessed time/cost/mid, binary-search the answer and simulate a clear greedy (hardest constraints first, dump remainder cheaply)—Delivery Dilemma, Schedule Management, Exams, Salary Changing—rather than inventing a single forward pass."
+  },
+  {
+   "topic": "Forward available-pool earliest exit vs reverse-from-deadline",
+   "strong_answer": "If jobs have release times and you serve from a live pool, keep a min-heap of deadlines and jump idle to the next arrival (Printing Machine). When once available, always available, process time backward and always take the best live job (Portals / Money Buys)."
+  },
+  {
+   "topic": "Huffman two-smallest merges vs other merge orders",
+   "strong_answer": "Stick Divisions repeatedly combines the two current smallest costs; any other merge order can be exchanged toward this without raising cost."
+  },
+  {
+   "topic": "Closed form vs two-pointer simulation (Reading Books)",
+   "strong_answer": "After the greedy pairing insight, the answer is max(sum, 2·max); don’t over-simulate two pointers when the bottleneck is the single longest book."
+  },
+  {
+   "topic": "Buy-from-left vs unlock-from-right (PriceFixed)",
+   "strong_answer": "For 2-for-1 threshold buys, use two pointers: buy cheapest from the left while unlocking discounts from the right (or reverse spend unlocked by expensive items)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using an exchange-derived sort key that is not a total order.",
+   "correction": "The sign of Δ after an adjacent swap is only valid as a comparator if it defines a total order; otherwise the greedy is wrong."
+  },
+  {
+   "trap": "Simulating every timestamp out to 10^18 on release/deadline single-machine scheduling.",
+   "correction": "Keep started jobs in a min-heap of deadlines; on idle, jump to the next arrival (Printing Machine)."
+  },
+  {
+   "trap": "Over-simulating Reading Books with elaborate two-pointer pairing.",
+   "correction": "The answer is max(sum, 2·max) once the single longest book is the bottleneck."
+  },
+  {
+   "trap": "Covering points with k tape segments without dropping the right gaps.",
+   "correction": "Total span minus the (k-1) largest inter-break gaps."
+  },
+  {
+   "trap": "Merging sticks in an arbitrary order.",
+   "correction": "Always combine the two current smallest costs; other orders exchange toward Huffman without lowering cost."
+  },
+  {
+   "trap": "Resolving intersecting segment pairs by removing an arbitrary overlapping partner.",
+   "correction": "Sort by end; when a conflict appears, kill the farther-reaching partner (Pairs of Segments)."
+  },
+  {
+   "trap": "Treating Petya and Exam like a different cutoff template (e.g. 978G).",
+   "correction": "Sort by time and try every last-mandatory cutoff; it is not the same as 978G."
+  }
+ ]
+}

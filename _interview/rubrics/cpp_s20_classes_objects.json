@@ -1,0 +1,171 @@
+{
+ "id": "cpp_s20_classes_objects",
+ "title": "Classes and Objects",
+ "type": "FUND",
+ "relevance": "Classes and objects are the core OOP construct in C++; interviews probe access control, stack vs heap allocation, object layout/size, and forward declarations.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a class and object are, what they contain, and default access plus definition syntax.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A class is a user-defined type that acts as a blueprint; an object is a concrete instance built from that blueprint.",
+     "weight": "core",
+     "evidence_hint": "Candidate separates blueprint (class) from instance (object) without conflating the two."
+    },
+    {
+     "id": "fund2",
+     "point": "A class lists data members (state) and member functions (behaviours); by default everything inside a class is private, so public must be specified for outside access.",
+     "weight": "core",
+     "evidence_hint": "Mentions both data members and member functions, and that class members are private unless marked public."
+    },
+    {
+     "id": "fund3",
+     "point": "A class definition must end with a semicolon.",
+     "weight": "extended",
+     "evidence_hint": "States the trailing semicolon is required after the closing brace of the class."
+    }
+   ],
+   "probes": [
+    "What is the difference between a class and an object in C++, and what is the default access for class members?"
+   ],
+   "hints": {
+    "1": "Think blueprint versus instance, and what the language hides by default.",
+    "2": "List data members vs member functions, then say whether class members are public or private without an access specifier.",
+    "3": "Class = blueprint; object = instance; members default to private; the class definition ends with a semicolon."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how objects are created and accessed, how member functions are defined, how size works, and what forward declarations allow.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A stack object is declared like a local variable and members are accessed with the dot operator; each object holds its own independent copy of the data members.",
+     "weight": "core",
+     "evidence_hint": "Gives Account acc1; style construction and uses . for members; notes separate state per object."
+    },
+    {
+     "id": "mech2",
+     "point": "Heap allocation uses new, which returns a pointer; members are accessed with the arrow operator (->), equivalent to dereferencing then using dot; delete is required to avoid leaks.",
+     "weight": "core",
+     "evidence_hint": "Shows new Account(), pAcc->member, (*pAcc).member equivalence, and delete pAcc."
+    },
+    {
+     "id": "mech3",
+     "point": "A member function may be declared inside the class and defined outside using ClassName:: and the scope resolution operator.",
+     "weight": "extended",
+     "evidence_hint": "Writes something like int Rectangle::area() { ... } after a prototype inside the class."
+    },
+    {
+     "id": "mech4",
+     "point": "Object size is determined by non-static data members (plus possible padding); member-function code is stored once and does not increase object size; an empty class has size 1 byte so each object has a unique address.",
+     "weight": "core",
+     "evidence_hint": "Says sizeof reflects data members not methods; cites empty class size of 1 byte; may mention Point with two ints giving sizeof 8."
+    },
+    {
+     "id": "mech5",
+     "point": "A forward declaration introduces a class name without its layout; you may use pointers or references to the incomplete type, but not an object by value until the full definition exists.",
+     "weight": "extended",
+     "evidence_hint": "Employee* is OK after class Employee; Employee emp; is not until the class is fully defined."
+    }
+   ],
+   "probes": [
+    "How do you create an object on the stack versus the heap in C++, and how does that change member access? What determines sizeof an object?"
+   ],
+   "hints": {
+    "1": "Contrast Account acc; with Account* p = new Account(); and what operator each uses.",
+    "2": "Cover ., -> (as (*p).), delete, out-of-line ClassName::, size from data members only, and forward-declared pointers vs by-value.",
+    "3": "Stack + . ; heap new + -> + delete; out-of-line uses :: ; size from non-static data (+ padding), functions shared, empty class 1 byte; forward decl allows pointers/references only."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast where objects live and where member functions are defined, and when each choice is appropriate.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Stack allocation creates the object directly as a local without new; heap allocation uses new and a pointer, requiring manual delete, and is the pattern closer to how languages like Python always place objects on the heap via references.",
+     "weight": "core",
+     "evidence_hint": "Compares Account acc1; (no new) with new Account() and notes Python-style heap/reference instantiation as a contrast."
+    },
+    {
+     "id": "tr2",
+     "point": "Defining a member function fully inside the class versus declaring it inside and defining it outside with :: trades inline convenience against keeping the class definition clean.",
+     "weight": "core",
+     "evidence_hint": "Says out-of-line definitions keep the class body as prototypes only when you want a cleaner class definition."
+    }
+   ],
+   "probes": [
+    "When would you allocate an object on the stack versus the heap, and why define a member function out-of-line?"
+   ],
+   "hints": {
+    "1": "One path needs new/delete and a pointer; the other does not.",
+    "2": "Tie stack/dot vs heap/arrow/delete, then mention cleaning up the class body with ClassName::.",
+    "3": "Prefer stack for simple locals; heap when you need dynamic lifetime via pointer—and out-of-line :: when you want a slim class declaration."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply class/object rules to interview-style questions on layout, independence of instances, and incomplete types.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "For a class like Point with public int x and int y, sizeof(Point) reflects those data members (example output 8); move does not add to the object size because member functions are not duplicated per object.",
+     "weight": "core",
+     "evidence_hint": "Predicts sizeof from the two ints (8 in the example) and explicitly excludes the move function from the size."
+    },
+    {
+     "id": "app2",
+     "point": "Two stack objects of the same class (e.g. acc1 and acc2) can hold different balances because each has its own data members; a Department can hold Employee* manager after only a forward declaration of Employee.",
+     "weight": "core",
+     "evidence_hint": "Shows independent state across instances and a pointer/reference to a forward-declared type in another class."
+    }
+   ],
+   "probes": [
+    "What is the size of an object in C++? Can two Account objects have different balances, and can you store an Employee by value inside Department if Employee is only forward-declared?"
+   ],
+   "hints": {
+    "1": "Ask what the compiler allocates per object versus once for the whole program.",
+    "2": "Sum non-static data members; functions are shared; incomplete types only work as pointers or references.",
+    "3": "Size = data members (+ padding), not methods; empty class 1 byte; instances have separate state; Employee emp; needs the full class, Employee* does not."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Stack allocation vs heap allocation",
+   "strong_answer": "Stack: declare Account acc1; access with . ; no new. Heap: Account* pAcc = new Account(); access with -> (same as (*pAcc).); must delete to avoid leaks. C++ stack objects differ from Python, where objects are heap-allocated and held by references."
+  },
+  {
+   "topic": "Inline member function vs out-of-line definition",
+   "strong_answer": "Define fully inside the class for locality, or declare inside and define outside with ClassName:: to keep the class definition clean while still operating on that object's data members."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Forgetting the semicolon after a class definition",
+   "correction": "The class definition must end with a semicolon; the compiler often reports the error on the next line or even in a different file."
+  },
+  {
+   "trap": "Assuming C++ object creation works like Python Account() on the heap",
+   "correction": "In C++, Account acc1; instantiates directly on the stack without new; Python always instantiates on the heap via references."
+  },
+  {
+   "trap": "Thinking member functions increase sizeof the object",
+   "correction": "Size comes from non-static data members (plus padding); member-function code is stored once in the text segment and does not enlarge each object; empty class size is 1 byte, not 0."
+  },
+  {
+   "trap": "Using a forward-declared class by value",
+   "correction": "After class Employee; you may declare pointers or references (e.g. Employee* manager) but not Employee emp; until the full definition is available."
+  },
+  {
+   "trap": "Forgetting delete on a new-allocated object",
+   "correction": "Heap objects created with new must be destroyed with delete to prevent memory leaks."
+  }
+ ]
+}

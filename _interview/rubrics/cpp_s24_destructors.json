@@ -1,0 +1,173 @@
+{
+ "id": "cpp_s24_destructors",
+ "title": "Destructors",
+ "type": "FUND",
+ "relevance": "Interviewers use destructors to probe whether candidates understand deterministic cleanup, RAII, and the virtual-destructor rule that prevents leaks under polymorphic delete.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a destructor is, its syntax constraints, and when the compiler invokes it.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A destructor is a special member function that runs automatically when an object is destroyed; its primary job is cleanup of resources acquired during the object's lifetime.",
+     "weight": "core",
+     "evidence_hint": "Candidate says it auto-runs on destruction and exists to release owned resources, not to create the object."
+    },
+    {
+     "id": "fund2",
+     "point": "Destructor syntax is the class name preceded by a tilde; it takes no parameters (so cannot be overloaded), has no return type (not even void), and a class has exactly one destructor.",
+     "weight": "core",
+     "evidence_hint": "Candidate names ~ClassName and lists the three rules: no args, no return type, exactly one."
+    },
+    {
+     "id": "fund3",
+     "point": "Destructors are invoked automatically when a stack-allocated object goes out of scope or when a heap-allocated object is destroyed with delete.",
+     "weight": "core",
+     "evidence_hint": "Candidate names both scope-exit for locals and delete for heap objects as the two main trigger cases."
+    }
+   ],
+   "probes": [
+    "What is a destructor, and when does the compiler call it?"
+   ],
+   "hints": {
+    "1": "Think about what runs when an object's lifetime ends.",
+    "2": "Cover the ~Name syntax rules and the two invocation scenarios: leaving scope versus delete.",
+    "3": "A destructor is ~ClassName with no parameters and no return type; it runs on scope exit for stack objects and on delete for heap objects to perform cleanup."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain destruction order, when an explicit destructor is required, and how delete interacts with cleanup.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "When multiple local objects go out of scope, they are destroyed in the reverse order of construction.",
+     "weight": "core",
+     "evidence_hint": "Candidate states last-constructed is first-destroyed for locals leaving the same scope."
+    },
+    {
+     "id": "mech2",
+     "point": "An explicit destructor is needed when the object owns a resource that will not clean itself up, such as heap memory, an open file handle, or a network socket; for classes with only basic types the compiler-generated destructor is enough.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts POD/basic-type classes with ownership of heap, files, or sockets requiring user-written cleanup."
+    },
+    {
+     "id": "mech3",
+     "point": "delete on a pointer first calls the object's destructor to release internal resources, then frees the memory for the object itself.",
+     "weight": "extended",
+     "evidence_hint": "Candidate sequences destructor body before reclaiming the object's own storage, as in the Player inventory example."
+    },
+    {
+     "id": "mech4",
+     "point": "Unlike Python's garbage-collected cleanup at an unpredictable time (where __del__ is rarely used), C++ destruction is deterministic: the destructor fires when the object goes out of scope or is deleted.",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts deterministic C++ destructor timing with Python GC / __del__ unpredictability."
+    }
+   ],
+   "probes": [
+    "If several local objects leave scope together, in what order are their destructors run, and when must you write one yourself?"
+   ],
+   "hints": {
+    "1": "Consider construction order and whether the class owns something raw.",
+    "2": "Locals destroy opposite to construction; write a destructor only for owned non-self-cleaning resources; recall what delete does first.",
+    "3": "Destroy reverse of construction; write ~T when owning heap/file/socket; delete calls the destructor then frees the object; C++ timing is deterministic unlike Python GC."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Connect custom destructors to the Rule of Zero/Three/Five and to virtual versus non-virtual base destructors under polymorphism.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Writing a custom destructor strongly implies the class manually manages a resource, so the compiler-generated copy constructor and copy assignment will almost certainly be wrong (shallow copies leading to double-free); the Rule of Three says if you need a user-defined destructor, copy constructor, or copy assignment, you almost certainly need all three.",
+     "weight": "core",
+     "evidence_hint": "Candidate links custom destructor to resource ownership and states Rule of Three for destructor/copy ctor/copy assign."
+    },
+    {
+     "id": "tr2",
+     "point": "Modern C++ expands this to the Rule of Five (also move constructor and move assignment) and prefers the Rule of Zero: use smart pointers and standard containers so you need not write any of those special members.",
+     "weight": "core",
+     "evidence_hint": "Candidate names Rule of Five for moves and Rule of Zero as preferring library types over hand-rolled special members."
+    },
+    {
+     "id": "tr3",
+     "point": "If a base pointer owns a derived object and ~Base is not virtual, delete through the base pointer only runs ~Base, skipping the derived destructor; marking the base destructor virtual makes delete use dynamic dispatch so ~Derived runs first, then ~Base.",
+     "weight": "core",
+     "evidence_hint": "Candidate explains non-virtual base dtor skips derived cleanup and that virtual ~Base fixes the call order via dynamic dispatch."
+    }
+   ],
+   "probes": [
+    "If you write a destructor for a resource-owning class, what else should you consider, and why must a polymorphic base destructor be virtual?"
+   ],
+   "hints": {
+    "1": "Think about copying that class and about deleting a derived object through a base pointer.",
+    "2": "Rule of Three/Five versus Rule of Zero; non-virtual ~Base versus virtual ~Base under delete via Base*.",
+    "3": "Custom dtor implies Rule of Three (and Five with moves) or prefer Rule of Zero; without virtual ~Base, delete via Base* skips ~Derived and can leak or cause undefined behaviour."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply RAII and the virtual-destructor rule to safe resource and hierarchy designs.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "RAII binds resource acquisition to constructors and release to destructors so that stack unwinding on exceptions or early returns still runs local destructors and reclaims resources deterministically.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes acquire-in-ctor / release-in-dtor and that scope exit or exceptions still clean up via stack unwinding."
+    },
+    {
+     "id": "app2",
+     "point": "Practical RAII: tie a manual resource (open file or heap allocation) to a local stack object's lifetime so when that object dies its destructor cleans up the resource, as in FileLogger opening in the constructor and closing in the destructor.",
+     "weight": "core",
+     "evidence_hint": "Candidate walks an example like FileLogger: open on construct, close in destructor, safe even if processData throws or returns early."
+    },
+    {
+     "id": "app3",
+     "point": "For inheritance with polymorphic delete, the base class destructor must be virtual so deleting a derived object via a base pointer invokes the derived destructor and avoids memory leaks and undefined behaviour.",
+     "weight": "core",
+     "evidence_hint": "Candidate gives the interview answer: virtual base destructor ensures derived cleanup when deleted through Base*."
+    }
+   ],
+   "probes": [
+    "How does RAII prevent resource leaks when an exception is thrown, and why must a base class destructor be virtual?"
+   ],
+   "hints": {
+    "1": "Connect object lifetime on the stack to when cleanup code runs.",
+    "2": "Acquire in the constructor, release in the destructor; then consider Base* deleting a Derived.",
+    "3": "RAII: local object's destructor runs on unwind/scope exit and closes/frees the resource; virtual ~Base so delete via Base* runs ~Derived then ~Base."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Rule of Zero vs Rule of Three/Five",
+   "strong_answer": "A user-defined destructor signals manual resource ownership, so you almost certainly also need matching copy (Rule of Three) and, in modern C++, move operations (Rule of Five); prefer Rule of Zero by owning resources via smart pointers and standard containers so none of those special members are written by hand."
+  },
+  {
+   "topic": "Virtual vs non-virtual base destructor",
+   "strong_answer": "With polymorphism, a non-virtual base destructor means delete through Base* only runs ~Base and skips ~Derived (undefined behaviour / leaks); a virtual base destructor uses dynamic dispatch so ~Derived runs first, then ~Base."
+  },
+  {
+   "topic": "Compiler-generated destructor vs explicit destructor",
+   "strong_answer": "For classes holding only basic types, the automatically generated destructor is enough because object memory is reclaimed automatically; write an explicit destructor when the object owns a resource that will not clean itself up (heap memory, file handle, network socket)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Deleting a Derived object through a Base* when ~Base is not virtual",
+   "correction": "Only ~Base runs; ~Derived is skipped, so owned resources like a derived heap array leak and the behavior is undefined — mark the base destructor virtual so dynamic dispatch calls ~Derived then ~Base."
+  },
+  {
+   "trap": "Writing a custom destructor but leaving compiler-generated copy operations",
+   "correction": "Those copies are typically shallow for owned resources and can cause double-free; follow the Rule of Three (and Rule of Five with moves) or avoid custom special members via the Rule of Zero."
+  },
+  {
+   "trap": "Relying on Python-style thinking that cleanup happens sometime later via a garbage collector",
+   "correction": "In C++ destruction is deterministic: the destructor runs when the object leaves scope or is deleted, which is what makes RAII exception-safe."
+  }
+ ]
+}

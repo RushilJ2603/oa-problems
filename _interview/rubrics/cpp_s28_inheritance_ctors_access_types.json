@@ -1,0 +1,171 @@
+{
+ "id": "cpp_s28_inheritance_ctors_access_types",
+ "title": "Inheritance: Constructors, Access Control, and Types",
+ "type": "FUND",
+ "relevance": "SDE interviews use inheritance to probe whether candidates grasp object lifetime order, access boundaries, and diamond/virtual-inheritance layout—not just the is-a relationship.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish construction/destruction order, the protected access level, and the standard inheritance graph shapes.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "On construction the base-class constructor runs first, then the derived-class constructor.",
+     "weight": "core",
+     "evidence_hint": "Says base is built before derived / construction proceeds from the base outwards."
+    },
+    {
+     "id": "fund2",
+     "point": "On destruction the order reverses: derived destructor runs first, then the base destructor.",
+     "weight": "core",
+     "evidence_hint": "Says most-derived tears down first, then base cleans up the foundation."
+    },
+    {
+     "id": "fund3",
+     "point": "A protected member is inaccessible through an object from outside, but accessible inside derived classes (unlike private, which derived classes cannot access).",
+     "weight": "core",
+     "evidence_hint": "Contrasts private vs protected for derived access and notes outsiders cannot use obj.member on protected."
+    },
+    {
+     "id": "fund4",
+     "point": "Inheritance shapes include single, multilevel, hierarchical, multiple, and hybrid combinations.",
+     "weight": "extended",
+     "evidence_hint": "Names several of: one base, chain A→B→C, many from one base, one from many bases, or mixed graphs."
+    }
+   ],
+   "probes": [
+    "Walk through what prints when a Derived object that publicly inherits Base is created and then destroyed.",
+    "What does protected buy you that private and public do not, and who can access it?"
+   ],
+   "hints": {
+    "1": "Think about which part of the object must exist before the specialised part can run.",
+    "2": "Construction goes base→derived; destruction is the reverse; then contrast private/protected/public for derived vs outside.",
+    "3": "Base ctor first, derived ctor second; derived dtor first, base dtor second; protected acts private externally but is usable in derived classes."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how base constructors are invoked from derived classes and how the diamond problem arises and is fixed with virtual inheritance.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "By default a derived object invokes the base’s no-argument constructor; to pass arguments to a parameterised base constructor you must call it from the derived member-initialiser list.",
+     "weight": "core",
+     "evidence_hint": "Mentions default/no-arg base ctor and initialiser-list syntax like Entity(playerName) before the body."
+    },
+    {
+     "id": "mech2",
+     "point": "You cannot initialise base-class members directly in the derived constructor body or initialiser list; you must delegate to the base constructor.",
+     "weight": "core",
+     "evidence_hint": "Rejects e.g. initialising name in Player’s list and says call the Entity/base constructor instead."
+    },
+    {
+     "id": "mech3",
+     "point": "When a graph splits and merges (diamond), non-virtual multiple inheritance from a common base creates a distinct base subobject per path, causing name-lookup ambiguity and duplicated base-member footprint.",
+     "weight": "core",
+     "evidence_hint": "Explains two Person copies and why ta.age is ambiguous without qualification/virtual inheritance."
+    },
+    {
+     "id": "mech4",
+     "point": "Virtual inheritance (e.g. class B : virtual public A) makes intermediates share a single common-base subobject, typically reached via hidden pointers or offsets rather than embedding a duplicate in each path.",
+     "weight": "core",
+     "evidence_hint": "Says Teacher/Student use virtual public Person so TeachingAssistant has one shared Person."
+    }
+   ],
+   "probes": [
+    "If Entity only has Entity(std::string), how must Player’s constructor start Entity?",
+    "What goes wrong with ta.age in a Teacher/Student/Person diamond without virtual inheritance, and how does virtual inheritance change the layout?"
+   ],
+   "hints": {
+    "1": "Base subobjects are not free-form fields you assign in the derived ctor.",
+    "2": "Use the member-initialiser list to call the base ctor; for diamonds, count how many Person subobjects exist on each path.",
+    "3": "Player(...) : Entity(playerName), score(...); without virtual, two Person subobjects make age ambiguous; virtual public shares one Person via hidden offsets/pointers."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Weigh multiple inheritance’s power against complexity, and virtual inheritance’s sharing against layout/creation cost.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Multiple inheritance is powerful but adds significant structural complexity (and leads into challenges like the diamond problem).",
+     "weight": "core",
+     "evidence_hint": "Acknowledges MI capability while warning about graph complexity / diamond fallout."
+    },
+    {
+     "id": "tr2",
+     "point": "Virtual inheritance avoids duplicating the common base but makes object creation slightly slower and memory layouts heavier, which is why it is opt-in.",
+     "weight": "core",
+     "evidence_hint": "States sharing wins on duplication, with slower creation and heavier layouts as the cost of opting in."
+    }
+   ],
+   "probes": [
+    "When would you choose virtual inheritance over plain multiple inheritance from a shared base?",
+    "What costs make virtual inheritance opt-in rather than the default?"
+   ],
+   "hints": {
+    "1": "Duplication and ambiguity are the failure mode; sharing is the fix with a price.",
+    "2": "Compare duplicated base subobjects vs one shared subobject at the end of the most-derived object.",
+    "3": "Use virtual inheritance when paths would otherwise duplicate a common base; accept slightly slower creation and heavier layouts because sharing is not free."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the diamond-problem story and virtual-inheritance fix the way an interviewer expects it answered.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A classic answer names the diamond problem as duplicated base subobjects with ambiguous access, resolved in C++ by virtual inheritance so intermediates share a single base instance.",
+     "weight": "core",
+     "evidence_hint": "States ambiguity of duplicated bases and immediately cites class B : virtual public A / shared instance via hidden offsets."
+    },
+    {
+     "id": "app2",
+     "point": "The TeachingAssistant inheriting Teacher and Student, both from Person, is the concrete diamond scenario: without virtual inheritance age is ambiguous; with virtual public on the intermediates, a single Person exists and age can be set.",
+     "weight": "extended",
+     "evidence_hint": "Retells Person/Teacher/Student/TeachingAssistant and contrasts ambiguous age vs OK after virtual inheritance."
+    }
+   ],
+   "probes": [
+    "What is the diamond problem and how is it resolved in C++?",
+    "Sketch a TeachingAssistant that is both Teacher and Student under a shared Person—what breaks and what do you change?"
+   ],
+   "hints": {
+    "1": "Draw the inheritance graph that splits then merges.",
+    "2": "Ambiguity comes from two base subobjects; the language fix is on the intermediate inherits.",
+    "3": "Say duplicated Person subobjects make ta.age ambiguous; fix with Teacher/Student as virtual public Person so one Person is shared."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Plain multiple inheritance vs virtual inheritance",
+   "strong_answer": "Plain MI from a common non-virtual base keeps a distinct base subobject per path (simple embedding, but duplication and ambiguity). Virtual inheritance shares one base subobject via hidden pointers/offsets, preventing duplication at the cost of slightly slower creation and heavier layouts—so it is opt-in."
+  },
+  {
+   "topic": "Multiple inheritance power vs structural complexity",
+   "strong_answer": "MI lets one type combine several bases (e.g. SmartPhone from Phone and Camera) but introduces complex graphs that readily produce diamond duplication and harder reasoning about layout and name lookup."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Writing something like Player() : name(\"Bob\") {} to set a base member from the derived initialiser list or body.",
+   "correction": "Base members are not directly initialisable there; call the base constructor from the derived member-initialiser list and let it initialise its own members."
+  },
+  {
+   "trap": "Assuming ta.age works in a Teacher/Student/Person diamond without virtual inheritance.",
+   "correction": "Each path carries its own Person subobject, so age is an ambiguous name lookup until intermediates use virtual inheritance to share one Person."
+  },
+  {
+   "trap": "Expecting destruction to follow the same order as construction.",
+   "correction": "Destruction is exactly reversed: derived destructor first, then base."
+  },
+  {
+   "trap": "Treating protected like public for outside code via obj.member.",
+   "correction": "Protected is not accessible through an object from outside; only the defining class and derived classes may use it, while public remains the only level usable as obj.member from anywhere."
+  }
+ ]
+}

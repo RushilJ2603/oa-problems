@@ -1,0 +1,219 @@
+{
+ "id": "cpp_s38_templates",
+ "title": "C++ Templates",
+ "type": "FUND",
+ "relevance": "Templates underpin the STL and are a central C++ interview topic: compile-time code generation, specialisation, headers, and constraints.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that templates are compile-time blueprints that stamp out concrete typed code, not runtime constructs.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A template is a stencil/blueprint for generating classes or functions; it is not runnable code on its own.",
+     "weight": "core",
+     "evidence_hint": "Compares it to a cookie cutter or stencil and says the template itself is not the executable function/class."
+    },
+    {
+     "id": "fund2",
+     "point": "On instantiation, the compiler substitutes template arguments into parameters and generates a separate ordinary concrete function or class per type set in the binary.",
+     "weight": "core",
+     "evidence_hint": "Explains that calling with int and double produces two completely separate stamped-out functions at compile time."
+    },
+    {
+     "id": "fund3",
+     "point": "C++ needs templates because of strict static typing; Python can duck-type a single runtime function for any object supporting the needed operators.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts Python runtime duck typing with C++ compile-time generation of distinct typed functions."
+    }
+   ],
+   "probes": [
+    "What is a C++ template, and when does the compiler actually generate runnable code from it?",
+    "How does template instantiation differ from Python’s duck-typed generic functions?"
+   ],
+   "hints": {
+    "1": "Think about whether the template itself runs, or something else does.",
+    "2": "Describe what the compiler does when it sees a call with specific argument types.",
+    "3": "A template is a compile-time stencil; each instantiation (e.g. int vs double) stamps out a separate concrete function in the binary."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Cover function/class templates, deduction, dependent typename, non-type/default parameters, specialisation, and variadic packs.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "In a template parameter list, typename and class mean the same thing; typename is the conventional preference for generic types.",
+     "weight": "core",
+     "evidence_hint": "Says the two forms are entirely equivalent and notes typename is preferred in modern style while class appears in older code."
+    },
+    {
+     "id": "mech2",
+     "point": "The compiler usually deduces T from call arguments; conflicting deductions fail, and explicit arguments like add<double>(...) force the type and allow conversion.",
+     "weight": "core",
+     "evidence_hint": "Gives an example where mixed double/int deduction conflicts, then shows explicit <double> fixing it."
+    },
+    {
+     "id": "mech3",
+     "point": "Function templates may be overloaded with ordinary functions; a perfect-match ordinary function is preferred, and display<> forces the template.",
+     "weight": "core",
+     "evidence_hint": "Walks through display(42) hitting the ordinary int overload, display(3.14) instantiating the template, and display<>(42) forcing the template."
+    },
+    {
+     "id": "mech4",
+     "point": "typename is required when naming a nested type that depends on a template parameter (e.g. Container::const_iterator), to tell the compiler it is a type.",
+     "weight": "core",
+     "evidence_hint": "Explains dependent nested types need typename so they are not treated as static data members."
+    },
+    {
+     "id": "mech5",
+     "point": "Class-template members defined outside the class must repeat the template header and use the full scope name like Box<T>::.",
+     "weight": "extended",
+     "evidence_hint": "Shows template <typename T> T Box<T>::getContent() const { ... }."
+    },
+    {
+     "id": "mech6",
+     "point": "Non-type template parameters can be compile-time constants (e.g. std::size_t N) used as fixed sizes; template parameters can also have defaults.",
+     "weight": "extended",
+     "evidence_hint": "Mentions FixedArray<T, N> with N as a compile-time size and Buffer with defaults equivalent to Buffer<int, 10> when written Buffer<>."
+    },
+    {
+     "id": "mech7",
+     "point": "Full specialisation uses empty template <> and a concrete type; partial specialisation keeps some parameters generic (e.g. T*) and is allowed only for class templates, not function templates.",
+     "weight": "core",
+     "evidence_hint": "Contrasts Printer<bool> full specialisation with PointerPrinter<T*> partial specialisation and states partial is class-only."
+    },
+    {
+     "id": "mech8",
+     "point": "Variadic templates (C++11) use parameter packs (...); historically unpacked via recursive peeling plus a base case, while C++17 fold expressions reduce a pack over a binary operator.",
+     "weight": "extended",
+     "evidence_hint": "Describes printAll recursion with sizeof...(args) and sumAll using (... + args) as a fold."
+    }
+   ],
+   "probes": [
+    "How does template argument deduction work, and how do you resolve a conflict?",
+    "When must you write typename before a nested name like Container::const_iterator?",
+    "What is the difference between full and partial specialisation, and which applies to function templates?"
+   ],
+   "hints": {
+    "1": "Start with how the compiler picks T from the call site.",
+    "2": "Separate deduction/overloading, dependent-type typename, then specialisation and packs.",
+    "3": "Deduce T from args or use explicit <T>; prefer perfect-match non-templates; require typename for dependent nested types; full specialisation is template<> for one type, partial keeps some parameters and is class-only; packs unpack recursively or with C++17 folds."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast specialisation styles, constraint mechanisms, and where template definitions must live.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Full specialisation replaces the entire stencil for one concrete type; partial specialisation customises a pattern (e.g. all T*) while leaving other parameters open—and only for class templates.",
+     "weight": "core",
+     "evidence_hint": "Compares a complete Printer<bool> override with a PointerPrinter<T*> pattern and notes function templates use overloading instead of partial specialisation."
+    },
+    {
+     "id": "tr2",
+     "point": "SFINAE silently discards invalid substitutions instead of hard-erroring; C++20 Concepts give a direct, readable way to state the same kinds of constraints.",
+     "weight": "core",
+     "evidence_hint": "Defines Substitution Failure Is Not An Error and positions Concepts as the modern replacement for ad-hoc SFINAE constraints."
+    },
+    {
+     "id": "tr3",
+     "point": "Because of the separate-compilation model, template declarations and definitions must live together in headers; hiding the body in a .cpp prevents instantiation and causes linker failures.",
+     "weight": "core",
+     "evidence_hint": "Says the compiler needs the full definition at the instantiation site, so .h/.hpp holds both declaration and definition."
+    }
+   ],
+   "probes": [
+    "Why do template definitions belong in headers rather than .cpp files?",
+    "When would you use full specialisation versus partial specialisation?",
+    "How do Concepts relate to older SFINAE-based constraints?"
+   ],
+   "hints": {
+    "1": "Ask what the compiler must see when it stamps out a type.",
+    "2": "Compare specialised overrides, pack/constraint styles, and the header vs translation-unit split.",
+    "3": "Full = one concrete type via template<>; partial = pattern like T*, class-only; SFINAE discards bad substitutions, Concepts declare constraints; definitions must be in headers or the linker misses symbols."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply templates to interview explanations: generation model, specialisation choice, and header placement.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "In interviews, state clearly that templates are compile-time code generators, not runtime polymorphism or duck typing.",
+     "weight": "core",
+     "evidence_hint": "Leads with “compile-time stencil / code generation” and rejects “runtime generic function” wording."
+    },
+    {
+     "id": "app2",
+     "point": "Be ready to articulate full versus partial specialisation and why template definitions must be in headers, not separately compiled .cpp files.",
+     "weight": "core",
+     "evidence_hint": "Gives a crisp full-vs-partial contrast and ties header placement to instantiation and linker errors."
+    },
+    {
+     "id": "app3",
+     "point": "Use ordinary overloads for perfect matches, specialisation when a type needs a different implementation, and Concepts (or historically SFINAE) when you need to constrain which types may instantiate.",
+     "weight": "extended",
+     "evidence_hint": "Maps overload preference, Printer/bool-style specialisation, and Concepts/SFINAE to concrete design choices."
+    }
+   ],
+   "probes": [
+    "Explain templates as if answering a C++ interview: what are they, how do specialisations differ, and why headers?",
+    "Given a type that needs different printing behaviour and a constrained generic algorithm, which tools would you reach for?"
+   ],
+   "hints": {
+    "1": "Lead with compile-time generation, then specialisation and headers.",
+    "2": "Structure: what stamps out code → full vs partial → where definitions live → constraints.",
+    "3": "Templates generate typed code at compile time; full specialisation overrides one type, partial a pattern (classes only); put full definitions in headers; constrain with Concepts (or SFINAE)."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Full specialisation vs partial specialisation",
+   "strong_answer": "Full specialisation (template <> for a concrete type) replaces the whole implementation for that type; partial specialisation keeps some parameters generic (e.g. T*) and is only allowed on class templates—function templates use overloading instead."
+  },
+  {
+   "topic": "Ordinary function overload vs function template",
+   "strong_answer": "If an ordinary non-template function is a perfect match, the compiler prefers it; otherwise it instantiates the template. Syntax like display<> forces the template path even when an ordinary overload exists."
+  },
+  {
+   "topic": "Recursive pack expansion vs fold expressions",
+   "strong_answer": "Pre-C++17 style peels a parameter pack with a recursive template plus base case; C++17 fold expressions reduce the pack over a binary operator and remove that boilerplate."
+  },
+  {
+   "topic": "SFINAE vs Concepts",
+   "strong_answer": "SFINAE discards templates whose substitution yields invalid code, historically used to constrain instantiations; C++20 Concepts state those constraints directly in a readable language feature."
+  },
+  {
+   "topic": "Template definitions in headers vs .cpp",
+   "strong_answer": "The compiler must see the full template definition at each instantiation site; putting only a declaration in a header and the body in a .cpp breaks separate compilation and leads to linker errors, so both live in .h/.hpp."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Placing template definitions in a .cpp while only declaring them in a header.",
+   "correction": "Keep declaration and definition together in a header so every instantiation site can stamp out concrete code; otherwise the linker cannot find the symbols."
+  },
+  {
+   "trap": "Assuming the compiler fully type-checks template bodies before any instantiation.",
+   "correction": "Template code is not fully checked until it is actually instantiated."
+  },
+  {
+   "trap": "Trying to partially specialise a function template.",
+   "correction": "Partial specialisation is only for class templates; function templates rely on overloading instead."
+  },
+  {
+   "trap": "Writing Container::const_iterator inside a template without typename.",
+   "correction": "A nested name that depends on a template parameter needs typename so the compiler treats it as a type, not a static member."
+  },
+  {
+   "trap": "Calling a single-parameter function template with arguments of conflicting deduced types.",
+   "correction": "Deduction must agree for T; use an explicit template argument (e.g. add<double>(...)) so conversions can reconcile the call."
+  }
+ ]
+}

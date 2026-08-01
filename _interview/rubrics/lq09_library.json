@@ -1,0 +1,305 @@
+{
+ "id": "lq09_library",
+ "title": "Design a Library Management System",
+ "type": "LLD",
+ "relevance": "High — classic OOD / LLD question (campus + experienced); probes Book vs BookItem, State for copy lifecycle, Strategy for search/fines, Observer for holds, and concurrency on checkout.",
+ "difficulty": "mid",
+ "prereqs": [
+  "L01",
+  "L02",
+  "L03",
+  "L04",
+  "L05"
+ ],
+ "company_notes": "Very common campus/new-grad OOD/LLD or machine-coding warm-up in India (Flipkart/Uber/Amazon-style loops); SDE-2 follow-ups harden Book vs BookItem, State vs enum, holds, Fine Strategy, per-copy concurrency; FAANG OOD whiteboard classic (Google lore); among the most asked inventory-style LLD templates for resource+copy+reservation domains.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Clarify scope and lock mandatory FR/NFR before drawing classes.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Mandatory FR: add books with copies, register members, search catalog, checkout available copy, return copy, enforce borrow limit and loan duration.",
+     "weight": "core",
+     "evidence_hint": "Lists add/register/search/checkout/return plus borrow-limit and loan-duration enforcement as must-haves."
+    },
+    {
+     "id": "req2",
+     "point": "Ask clarifying questions: physical only or e-books, multi-branch, member tiers, max books and loan days, fines/cap, reservations/renewals, search axes, concurrency.",
+     "weight": "core",
+     "evidence_hint": "Walks through clarifying Qs before coding rather than assuming a fixed feature set."
+    },
+    {
+     "id": "req3",
+     "point": "State assumptions: single branch unless told otherwise, physical copies first, in-memory catalog OK for LLD, one open loan per copy.",
+     "weight": "extended",
+     "evidence_hint": "Explicitly calls out single-branch, physical-first, in-memory, one-loan-per-copy assumptions."
+    },
+    {
+     "id": "req4",
+     "point": "NFR: correct under concurrent checkout; extensible item types and search/fine policies; modular design (not one god class); working demo/CLI.",
+     "weight": "extended",
+     "evidence_hint": "Mentions concurrency correctness, extensibility of types/policies, modularity, and demo as non-functionals."
+    }
+   ],
+   "probes": [
+    "What are the mandatory functional requirements versus common extensions you would ask about?",
+    "Physical copies only, or e-books and multi-branch too?"
+   ],
+   "hints": {
+    "1": "Separate must-have circulation flows from optional holds/fines/roles.",
+    "2": "Mandatory FR is catalog + members + search + checkout/return + borrow/loan limits; extensions are hold/renew/fines.",
+    "3": "Clarify physical vs e-book, branch, tiers, limits, fines, holds, search axes, concurrency; assume single branch, physical first, in-memory, one loan per copy."
+   }
+  },
+  {
+   "phase": "entities",
+   "goal": "Name the core entities and the Book vs BookItem split that loans attach to.",
+   "must_hit": [
+    {
+     "id": "ent1",
+     "point": "Book/LibraryItem is catalog metadata (ISBN, title, authors); BookItem/BookCopy is a physical copy (barcode/copyId, rack, status).",
+     "weight": "core",
+     "evidence_hint": "Clearly separates metadata title from physical copy identity and status."
+    },
+    {
+     "id": "ent2",
+     "point": "Loans attach to a copy, never to the abstract book; Member.borrow(Book) is the classic fail.",
+     "weight": "core",
+     "evidence_hint": "Says checkout/loan is on BookCopy/BookItem, and calls out borrow(Book) as wrong."
+    },
+    {
+     "id": "ent3",
+     "point": "Hold/reservation waitlist attaches to the Book/LibraryItem (any returned copy can fulfill), not a specific copy.",
+     "weight": "core",
+     "evidence_hint": "Places the queue on the title/item metadata entity, not on one BookItem."
+    },
+    {
+     "id": "ent4",
+     "point": "Supporting entities include Member/Librarian (Account), Loan/BookLending, Catalog, Fine, optional Rack; copy states Available/CheckedOut/OnHold (and Lost).",
+     "weight": "extended",
+     "evidence_hint": "Names Member/Librarian, Loan, Catalog, Fine/Rack optionally, and the copy lifecycle states."
+    }
+   ],
+   "probes": [
+    "What is the difference between Book and BookItem, and what does a loan point to?",
+    "Where does the reservation queue live — on the book or on a copy?"
+   ],
+   "hints": {
+    "1": "Think catalog metadata versus something you can put a barcode on.",
+    "2": "LibraryItem/Book holds ISBN/title; BookCopy holds barcode and status; loans bind to the copy.",
+    "3": "Book = metadata; BookItem/BookCopy = physical copy; loans on copy; waitlist on Book so any returned copy can fulfill."
+   }
+  },
+  {
+   "phase": "class_design",
+   "goal": "Sketch the facade, item/copy hierarchy, State, and Strategy/Observer wiring.",
+   "must_hit": [
+    {
+     "id": "cd1",
+     "point": "LibraryManagementSystem/LibraryManager is a Facade orchestrating catalog, members, copy registry, checkout/return/hold/search.",
+     "weight": "core",
+     "evidence_hint": "Shows a single entry facade that coordinates subsystems rather than dumping logic everywhere."
+    },
+    {
+     "id": "cd2",
+     "point": "BookCopy delegates transitions to ItemState (Available | CheckedOut | OnHold) so illegal ops like return while available are impossible.",
+     "weight": "core",
+     "evidence_hint": "Draws State objects on the copy and routes checkout/return/hold through the current state."
+    },
+    {
+     "id": "cd3",
+     "point": "LibraryItem observes/holds a Member waitlist; ItemFactory creates Book vs Magazine; SearchStrategy and FineStrategy are pluggable.",
+     "weight": "core",
+     "evidence_hint": "Names Observer waitlist on LibraryItem, Factory for media types, Strategy for search and fines."
+    },
+    {
+     "id": "cd4",
+     "point": "Relationships: LibraryItem 1..* BookCopy; BookCopy 0..1 Loan → Member; Catalog search indexes; optional Account hierarchy Member|Librarian.",
+     "weight": "extended",
+     "evidence_hint": "Shows 1-to-many copies, optional active loan to member, catalog indexes, and role accounts."
+    }
+   ],
+   "probes": [
+    "Walk me through the class diagram and which patterns each class uses.",
+    "How does BookCopy interact with ItemState on checkout and return?"
+   ],
+   "hints": {
+    "1": "Start from facade + item/copy + member, then add patterns for lifecycle and search.",
+    "2": "Facade owns catalog/members; LibraryItem has copies and hold observers; BookCopy has ItemState; strategies plug into search/fines.",
+    "3": "LibraryManagementSystem facade; LibraryItem+Factory+Observer holds; BookCopy→ItemState; SearchStrategy/FineStrategy; Loan keyed by copy."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Name the API and the checkout/return/hold flows with lending rules.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Core API: addItem/addBookItem, registerMember, search, checkout(memberId, copyId), returnItem(copyId), placeHold(memberId, itemId); optional renew and calculateFine/collectFine.",
+     "weight": "core",
+     "evidence_hint": "Lists the key methods with checkout/return/hold signatures matching the research API."
+    },
+    {
+     "id": "impl2",
+     "point": "On return: if hold observers exist, move copy to ON_HOLD and notify next member; else AVAILABLE.",
+     "weight": "core",
+     "evidence_hint": "Describes return branching on nonempty waitlist → OnHold+notify, else Available."
+    },
+    {
+     "id": "impl3",
+     "point": "Lending rules: max books issued often 5, max lending days often 10–14; reject reference-only items; unpaid-fine threshold before new loans as extension.",
+     "weight": "extended",
+     "evidence_hint": "States borrow-count and loan-day limits using the file’s 5 and 10–14 figures, plus reference-only reject."
+    },
+    {
+     "id": "impl4",
+     "point": "FineStrategy.calculate(daysOverdue, member, item) — never bury rate math inside returnBook; cap at replacement cost if asked.",
+     "weight": "extended",
+     "evidence_hint": "Puts fine calculation in FineStrategy rather than inside returnItem."
+    }
+   ],
+   "probes": [
+    "Implement checkout and return — what happens if a hold queue is waiting?",
+    "What lending limits and reference-only checks do you enforce at checkout?"
+   ],
+   "hints": {
+    "1": "Name the facade methods first, then narrate return’s hold branch.",
+    "2": "checkout(memberId, copyId) and returnItem(copyId); on return check observers before AVAILABLE.",
+    "3": "API as listed; return → ON_HOLD+notify if waitlist else AVAILABLE; limits often 5 books / 10–14 days; FineStrategy outside returnBook."
+   }
+  },
+  {
+   "phase": "extensibility",
+   "goal": "Show OCP/SRP via Strategy, Factory, and split responsibilities.",
+   "must_hit": [
+    {
+     "id": "ext1",
+     "point": "Search via search(query, SearchStrategy) / inverted indexes — don’t forever if(byTitle) inside the facade (OCP).",
+     "weight": "core",
+     "evidence_hint": "Adds SearchStrategy (or indexes selected by strategy) instead of growing facade conditionals."
+    },
+    {
+     "id": "ext2",
+     "point": "New media types (magazines/e-books/audiobooks) via LibraryItem hierarchy + ItemFactory; e-books may use license count instead of physical scarcity.",
+     "weight": "core",
+     "evidence_hint": "Extends with subtypes + Factory and notes license-count for e-books."
+    },
+    {
+     "id": "ext3",
+     "point": "Different fine rates for student vs faculty via FineStrategy (or member-type policy), not if-branches inside returnItem.",
+     "weight": "extended",
+     "evidence_hint": "Swaps FineStrategy/policy by member tier without editing returnItem."
+    },
+    {
+     "id": "ext4",
+     "point": "SOLID: SRP splits catalog ≠ lending ≠ notifications; DIP depends on SearchStrategy/ItemState/FineStrategy abstractions; avoid god-class Library.",
+     "weight": "extended",
+     "evidence_hint": "Calls out SRP split and depending on abstractions; rejects one class that searches, bills, notifies, and persists."
+    }
+   ],
+   "probes": [
+    "How would you add magazines and different student/faculty fine rates without editing the facade’s return path?",
+    "Where does Strategy help search stay open for extension?"
+   ],
+   "hints": {
+    "1": "New behavior should plug in, not grow if-else in the facade.",
+    "2": "Factory for item types; SearchStrategy/FineStrategy for policies; keep catalog/lending/notifications separate.",
+    "3": "LibraryItem+ItemFactory; search(query, SearchStrategy); FineStrategy for tiers; SRP/DIP — no god-class Library."
+   }
+  },
+  {
+   "phase": "concurrency",
+   "goal": "Prevent double-checkout of the last copy with the right lock granularity.",
+   "must_hit": [
+    {
+     "id": "conc1",
+     "point": "Two librarians must not checkout the same last copy — race on read-then-write status; prefer synchronized(bookCopy) or atomic status CAS.",
+     "weight": "core",
+     "evidence_hint": "Names the double-checkout race and locks/CAS on the specific copy."
+    },
+    {
+     "id": "conc2",
+     "point": "ConcurrentHashMap for catalogs/members is necessary but not sufficient — map alone ≠ atomic occupy; still lock per BookCopy checkout.",
+     "weight": "core",
+     "evidence_hint": "Says concurrent maps help registries but checkout still needs per-copy synchronization."
+    },
+    {
+     "id": "conc3",
+     "point": "Coarse lock on the whole library works for demos but serializes all desks; per-copy lock shows senior thinking.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts global library lock (correct but serializing) with per-copy lock."
+    }
+   ],
+   "probes": [
+    "Two members checkout the last copy at once — how do you make that safe?",
+    "Is ConcurrentHashMap enough for correct checkout?"
+   ],
+   "hints": {
+    "1": "The bug is check-then-act on copy status, not missing a concurrent map.",
+    "2": "Synchronize or CAS the BookCopy; catalog ConcurrentHashMap alone is not enough.",
+    "3": "synchronized(bookCopy) or compareAndSet status; ConcurrentHashMap for maps only; avoid coarse whole-library lock except demos."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Book vs BookItem",
+   "strong_answer": "Skipping the split means you cannot track which copy is damaged/lost or fulfill holds correctly — call Book/LibraryItem (metadata) vs BookItem/BookCopy (physical) out first; loans attach to copies."
+  },
+  {
+   "topic": "Enum status vs State pattern",
+   "strong_answer": "Enum + switches ships faster; State wins when transitions/guards grow (e.g. hold-only checkout). Prefer State in OOD rounds; enum OK if timeboxed with centralized transitions."
+  },
+  {
+   "topic": "Waitlist on Book vs BookItem",
+   "strong_answer": "Book-level queue is correct because any returned copy can satisfy the hold; item-level waitlist breaks when a different copy returns first."
+  },
+  {
+   "topic": "Global lock vs per-copy lock",
+   "strong_answer": "synchronized checkout on the whole library is correct but serializes desks; per-copy lock/CAS addresses the double-checkout race without locking unrelated desks."
+  },
+  {
+   "topic": "Singleton Library vs DI",
+   "strong_answer": "Tutorials often Singleton the library/manager; prefer injecting a single instance for testability unless the interviewer wants classic Singleton."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Two members checkout the last copy at once",
+   "correction": "Race on read-then-write status — synchronize or compareAndSet on the copy; ConcurrentHashMap alone does not make occupy atomic."
+  },
+  {
+   "trap": "Modeling Member.borrow(Book) or attaching loans to metadata",
+   "correction": "Loans attach to BookItem/BookCopy; Book/LibraryItem is catalog metadata only."
+  },
+  {
+   "trap": "Reservation queue only on one BookItem",
+   "correction": "Queue lives on Book/LibraryItem so any returned copy can fulfill; item-level waitlist is wrong."
+  },
+  {
+   "trap": "Adding magazines/e-books/audiobooks via facade ifs",
+   "correction": "Use LibraryItem hierarchy + Factory; e-books may track license count instead of physical scarcity."
+  },
+  {
+   "trap": "Different fine rates with ifs inside returnItem",
+   "correction": "Use FineStrategy (or member-type policy); keep rate math out of returnBook."
+  },
+  {
+   "trap": "Renew when someone else holds the title",
+   "correction": "Reject renew; optionally force return into ON_HOLD and notify the waiter."
+  },
+  {
+   "trap": "Reference-only / rare books treated like normal copies",
+   "correction": "Flag on copy (e.g. is_reference_only); checkout returns false."
+  },
+  {
+   "trap": "God-class Library that searches, bills, notifies, and persists",
+   "correction": "Split SRP across catalog, lending, notifications — interviewer docks design score otherwise."
+  },
+  {
+   "trap": "Finishing optional notifications before mandatory flows",
+   "correction": "Ship checkout/return/search first; optional notifications are secondary."
+  }
+ ]
+}

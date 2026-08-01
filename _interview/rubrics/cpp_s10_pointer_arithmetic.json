@@ -1,0 +1,93 @@
+{
+ "id": "cpp_s10_pointer_arithmetic",
+ "title": "Pointer arithmetic",
+ "type": "FUND",
+ "relevance": "Checks that candidates know pointers move by element size, which is the basis for correctly walking arrays in C/C++.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that pointer arithmetic counts elements of the pointed-to type, not raw bytes.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Pointer arithmetic is defined in terms of the elements a pointer points at, not in raw bytes.",
+     "weight": "core",
+     "evidence_hint": "Says adding to a pointer advances by elements of its type, whatever that element's size is."
+    },
+    {
+     "id": "fund2",
+     "point": "Adding one to a pointer advances it to the next element of its type.",
+     "weight": "core",
+     "evidence_hint": "States that +1 means next element, not +1 byte."
+    },
+    {
+     "id": "fund3",
+     "point": "An array name decays to the address of its first element, so a pointer can act as a cursor through the array.",
+     "weight": "extended",
+     "evidence_hint": "Mentions int* p = A pointing at A[0] because the array name decays to that address."
+    }
+   ],
+   "probes": [
+    "What does it mean that pointer arithmetic is defined in terms of elements rather than bytes?",
+    "If p points at A[0], what does p + 1 refer to?"
+   ],
+   "hints": {
+    "1": "Think about what ‘next’ means for a typed pointer, not a raw address.",
+    "2": "Relate the step size to the pointed-to type’s element width.",
+    "3": "p++ / +1 moves to the next element of that type; the array name decays to &A[0]."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how increments, integer adds, and pointer subtraction are scaled by element size.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "The compiler scales every pointer addition by the size of the pointed-to type: p++ does not add 1 to the address; it adds 1 × sizeof(*p).",
+     "weight": "core",
+     "evidence_hint": "Explicitly contrasts ‘add 1 to the address’ with adding 1 × sizeof(*p)."
+    },
+    {
+     "id": "mech2",
+     "point": "Integer offsets jump by element counts: e.g. from address 200, p+2 lands on 206 for 2-byte ints (four bytes), or advances eight bytes for 4-byte ints—always two elements.",
+     "weight": "core",
+     "evidence_hint": "Walks the table/example: p++, p--, p+2, p-2 move among 200/202/206 in element steps."
+    },
+    {
+     "id": "mech3",
+     "point": "Subtracting two pointers into the same array yields how many elements apart they are (not bytes); the sign records direction.",
+     "weight": "core",
+     "evidence_hint": "Gives q-p = 3 and p-q = -3, and notes division by element size is automatic."
+    }
+   ],
+   "probes": [
+    "If each int is 2 bytes and p holds 200, what address does p+2 produce, and why?",
+    "What does q - p mean when p and q point into the same array?"
+   ],
+   "hints": {
+    "1": "Ask whether the machine adds the integer you wrote, or a scaled offset.",
+    "2": "Separate addition/increment (move by N elements) from subtraction of two pointers (count elements between).",
+    "3": "p++ adds 1×sizeof(*p); q-p is (address gap)/sizeof(int), so 206-200 with 2-byte ints gives 3, and the sign shows ahead vs behind."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Element-scaled pointer steps vs raw byte offsets",
+   "strong_answer": "All pointer arithmetic—increment, adding an integer, and subtracting two pointers—counts in elements; addresses move in multiples of the pointed-to type’s size so a pointer can step cleanly from one array element to the next, rather than by raw bytes."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming p++ adds 1 to the stored address.",
+   "correction": "p++ adds 1 × sizeof(*p), advancing one element of the pointed-to type."
+  },
+  {
+   "trap": "Assuming pointer subtraction returns a byte distance.",
+   "correction": "The language reports the gap in elements; e.g. addresses 206 and 200 with 2-byte ints yield 3, and the sign shows which pointer is ahead."
+  }
+ ]
+}

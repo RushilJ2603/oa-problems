@@ -1,0 +1,268 @@
+{
+ "id": "04_prefix_sums_difference_arrays__deep",
+ "title": "Prefix sums & difference arrays (Depth Pass)",
+ "type": "CP",
+ "relevance": "High — once the template ladder is done, OA/Div2 C–D still hide prefix rewrites (median gather, ratio counts, BS+diff, 2D imos); this list is the post-famous band through CM.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Minimum cost to gather special indices → Arranging The Sheep / median + prefix (Amazon/Google OA flavor). Timestamped login/logout histograms → ABC221 D / Covered Points (imos + compression). First query index when every watched segment is satisfied → Tracking Segments (BS + diff). Maximize median of a long enough window → Max Median (BS-on-answer + ±1 prefixes).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot depth prefix/imos problems that need a rewrite before the base range-sum or difference template applies.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Recognize when many static range questions, many offline range adds, or count-subarrays properties expressible from pref[r]−pref[l−1] appear under contest packing.",
+     "weight": "core",
+     "evidence_hint": "Names static ranges, offline range adds, or a property checkable from pref[r]−pref[l−1] as the cue."
+    },
+    {
+     "id": "rec2",
+     "point": "Statements force a rewrite first: gather cost → median + prefix counts; good cuts → prefix of runs; coverage histograms → compressed sweep; median/subarray tricks → map values to ±1 and track prefix minima; 2D paint/paths → inclusion–exclusion or cascade diffs.",
+     "weight": "core",
+     "evidence_hint": "Maps the prompt to one of those rewrites before coding a plain prefix or imos."
+    },
+    {
+     "id": "rec3",
+     "point": "Same engines as the base topic — range aggregates via prefixes, range updates via difference/imos — but the ask is hidden until the invariant is rewritten.",
+     "weight": "extended",
+     "evidence_hint": "Says the engines are still prefix aggregates / difference updates after the rewrite."
+    }
+   ],
+   "probes": [
+    "What tells you this is a prefix/imos depth problem rather than a plain array scan or segment tree?",
+    "Which rewrite does the statement force: median gather, ratio counts, compressed coverage, ±1 median check, or 2D paint/cascade?"
+   ],
+   "hints": {
+    "1": "Ask whether the property can be phrased with range aggregates or offline range adds.",
+    "2": "Look for a forced rewrite: median/gather, runs, coverage histogram, ±1 median, or 2D paint.",
+    "3": "Say: static ranges / offline adds / pref[r]−pref[l−1] subarray counts under contest packing, after rewriting to a prefix invariant."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Choose the right depth rewrite: compressed imos, constructive diff, BS+diff, ±1 order stats, pref/suf transforms, or nested prefixes.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Compressed sweep: emit +1 at l and −1 at r+1 on a sorted coordinate list; between consecutive events coverage is constant — multiply length by coverage, never loop the axis.",
+     "weight": "core",
+     "evidence_hint": "Places +1/−1 events, sorts coordinates, and multiplies gap length by current coverage."
+    },
+    {
+     "id": "appr2",
+     "point": "BS + difference: binary-search the first moment a segment becomes full; for a mid, apply the first mid point updates on a diff array and prefix-check each segment’s coverage.",
+     "weight": "core",
+     "evidence_hint": "Binary-searches time, rebuilds coverage with the first mid updates, and prefix-checks segments."
+    },
+    {
+     "id": "appr3",
+     "point": "±1 prefix for order statistics: replace ≥x by +1 else −1; a subarray median ≥x iff some prefix difference is positive (or a prefix minimum stays controlled); init map/min carefully at index 0.",
+     "weight": "core",
+     "evidence_hint": "Maps the threshold check to a ±1 array and argues via prefix differences or controlled prefix minima with a careful index-0 init."
+    },
+    {
+     "id": "appr4",
+     "point": "Contribution / constructive diff: mark the derivative of the desired contribution array, then prefix once — build the array that induces the scores, not the scores themselves.",
+     "weight": "extended",
+     "evidence_hint": "Describes writing difference marks for the target contribution and recovering the array with one prefix."
+    },
+    {
+     "id": "appr5",
+     "point": "Pref/suf of b[i]+i and b[i]−i: a length-3 score b[i]+b[j]+b[k]-(k−i) splits into independent left/right maxima — classic prefix of transformed values.",
+     "weight": "extended",
+     "evidence_hint": "Splits the length-3 score into left/right maxima of b[i]+i and b[i]−i style transforms."
+    },
+    {
+     "id": "appr6",
+     "point": "Nested prefixes: answers are prefixes of the prefix-sum array — precompute pref, prefpref, and sometimes i·pref[i] closed forms for sum-of-subarray-sums queries.",
+     "weight": "extended",
+     "evidence_hint": "Names pref/prefpref (and optionally i·pref[i]) for range sums of all subarray sums."
+    }
+   ],
+   "probes": [
+    "For coverage histograms on a large axis, how do you use difference events without looping every coordinate?",
+    "How do you combine binary search with a difference array to find the first time a segment is full?",
+    "How does a ±1 rewrite turn “median ≥ x” into a prefix check?"
+   ],
+   "hints": {
+    "1": "Decide compressed imos vs BS+diff vs ±1 median vs constructive/nested prefixes before coding.",
+    "2": "Coverage → +1 at l, −1 at r+1, multiply gaps; time/threshold → BS then one diff rebuild; median → ±1 and prefix min/diff.",
+    "3": "Also: constructive derivative-then-prefix; Running Miles pref/suf of b[i]±i; Sums of Segments via pref/prefpref."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Show concrete imos/prefix mechanics for compressed events, dual pref/suf aggregates, 2D marks, and CF hygiene.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Compressed difference/imos: sort events (pos,+v)/(pos+1,−v); multiply gap length by current coverage.",
+     "weight": "core",
+     "evidence_hint": "Builds sorted open/close events and accumulates answer as gap_length × coverage."
+    },
+    {
+     "id": "impl2",
+     "point": "Maintain both prefix and suffix aggregates (min/max, b[i]+i, b[i]−i) when the optimum splits into left + pivot + right.",
+     "weight": "core",
+     "evidence_hint": "Precomputes left and right aggregates of the transformed values and combines around a pivot."
+    },
+    {
+     "id": "impl3",
+     "point": "Always long long on CF; clamp r+1; for compression include r+1 as a coordinate so open/close events stay correct.",
+     "weight": "core",
+     "evidence_hint": "Uses long long, clamps r+1, and puts r+1 into the compressed coordinate list."
+    },
+    {
+     "id": "impl4",
+     "point": "2D cascade/diagonal update: still O(1) marks on a 2D difference (or two 1D diffs on diagonals), then one prefix rebuild — same imos idea as timeline compression.",
+     "weight": "extended",
+     "evidence_hint": "Places O(1) 2D (or diagonal) difference marks and rebuilds with one prefix pass."
+    },
+    {
+     "id": "impl5",
+     "point": "Zero-Sum Prefixes: between editable zeros the running prefix is fixed; greedily set the next zero so the most frequent prefix in the segment becomes 0 (freq map of prefixes).",
+     "weight": "extended",
+     "evidence_hint": "Uses a prefix frequency map between zeros and rewrites the next zero toward the mode prefix."
+    }
+   ],
+   "probes": [
+    "Walk through the compressed imos event list and how you turn gaps into coverage counts.",
+    "What do you store on both sides when the score splits into left + pivot + right?",
+    "What CF-specific hygiene do you apply around r+1 and types?"
+   ],
+   "hints": {
+    "1": "Start from sorted +v/−v events and a running coverage.",
+    "2": "Answer adds gap×coverage; keep pref and suf transforms when the optimum splits three ways; use long long and include r+1.",
+    "3": "Also: O(1) 2D/diagonal imos marks then one rebuild; Zero-Sum Prefixes greedy via prefix freq between zeros."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Keep depth solutions on compressed sweeps / one rebuilds / O(1) imos marks — not axis loops or segment trees.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Compressed sweep never loops the axis: between consecutive events coverage is constant, so multiply length by coverage.",
+     "weight": "core",
+     "evidence_hint": "Refuses per-coordinate axis loops and charges work to consecutive compressed events only."
+    },
+    {
+     "id": "cx2",
+     "point": "2D rectangle paint counts, value-grid rectangle sums, and cascade/diagonal updates are still inclusion–exclusion or 2D imos — not a segment tree; cascade marks are O(1) then one prefix rebuild.",
+     "weight": "core",
+     "evidence_hint": "Chooses inclusion–exclusion or 2D imos with O(1) marks plus one rebuild instead of a segment tree."
+    },
+    {
+     "id": "cx3",
+     "point": "Binary search on time / length / threshold plus one difference rebuild to validate is the standard CF C/D combo.",
+     "weight": "extended",
+     "evidence_hint": "States BS on the answer axis with a single diff-array rebuild per mid check."
+    }
+   ],
+   "probes": [
+    "Why is looping the full coordinate axis the wrong complexity move for Covered Points-style histograms?",
+    "When do you use 2D imos / inclusion–exclusion instead of reaching for a segment tree?",
+    "What work do you redo on each mid in a BS + difference solution?"
+   ],
+   "hints": {
+    "1": "Ask whether coverage is constant between compressed events.",
+    "2": "Multiply gap×coverage; use O(1) imos marks + one prefix rebuild; BS reuses one diff rebuild per mid.",
+    "3": "Cite never looping the axis, 2D imos not segtree, and BS + one difference rebuild as the CF C/D pattern."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch sentinel, compression-endpoint, type, and wrong-structure mistakes the depth ladder punishes.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "For ±1 order-statistic prefixes, init map/min carefully at index 0; hash frequencies carefully with a 0 sentinel.",
+     "weight": "core",
+     "evidence_hint": "Mentions an explicit index-0 / empty-prefix sentinel before scanning ±1 prefixes."
+    },
+    {
+     "id": "pit2",
+     "point": "Always long long on CF; clamp r+1; for compression include r+1 as a coordinate so open/close events stay correct.",
+     "weight": "core",
+     "evidence_hint": "Catches missing r+1 in the coordinate list, unclamped r+1, or int overflow on CF prefixes."
+    },
+    {
+     "id": "pit3",
+     "point": "Do not loop the coverage axis; between consecutive events multiply length by coverage.",
+     "weight": "extended",
+     "evidence_hint": "Corrects a per-point axis walk to gap_length × coverage on the compressed event list."
+    },
+    {
+     "id": "pit4",
+     "point": "Do not reach for a segment tree on 2D paint/paths or cascade/diagonal updates when inclusion–exclusion or 2D imos suffices.",
+     "weight": "extended",
+     "evidence_hint": "Redirects from segtree to inclusion–exclusion or 2D difference marks plus one prefix rebuild."
+    }
+   ],
+   "probes": [
+    "What breaks if you omit the empty-prefix sentinel on a ±1 median check?",
+    "What goes wrong if r+1 is missing from coordinate compression?",
+    "When is a segment tree the wrong tool for a 2D paint or cascade update?"
+   ],
+   "hints": {
+    "1": "Check sentinels, r+1 endpoints, and whether an axis loop or segtree appeared.",
+    "2": "Init at index 0 / hash with a 0 sentinel; include and clamp r+1; multiply gaps instead of looping.",
+    "3": "Also refuse segtree for 2D paint/cascade when inclusion–exclusion or O(1) imos marks plus one rebuild work."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Compressed sweep (gap × coverage) vs looping the axis",
+   "strong_answer": "Emit +1 at l and −1 at r+1 on a sorted coordinate list; between consecutive events coverage is constant — multiply length by coverage, never loop the axis (Covered Points / Snuke Prime)."
+  },
+  {
+   "topic": "Constructive difference vs building subarray-sum scores directly",
+   "strong_answer": "To force subarray-sum scores, mark the derivative of the desired contribution array, then prefix once — build the array that induces the scores, not the scores themselves (Sum on Subarrays)."
+  },
+  {
+   "topic": "Binary search + difference rebuild vs one-pass coverage",
+   "strong_answer": "When you need the first moment a segment becomes full, binary-search that moment; for a mid, apply the first mid point updates on a diff array and prefix-check each segment’s coverage (Tracking Segments)."
+  },
+  {
+   "topic": "±1 prefix / BS+±1 minima vs computing medians directly",
+   "strong_answer": "Replace ≥x by +1 else −1; a subarray median ≥x iff some prefix difference is positive or a prefix minimum stays controlled — used for Median on Segments and Max Median (BS on answer + ±1 prefix minima)."
+  },
+  {
+   "topic": "Pref/suf of b[i]±i vs searching all length-3 triples",
+   "strong_answer": "A length-3 score b[i]+b[j]+b[k]-(k−i) splits into independent left/right maxima via prefixes/suffixes of b[i]+i and b[i]−i (Running Miles)."
+  },
+  {
+   "topic": "2D imos / inclusion–exclusion vs segment tree",
+   "strong_answer": "Rectangle paint counts, value-grid rectangle sums, and cascade/diagonal updates are still inclusion–exclusion or 2D imos (O(1) marks then one prefix rebuild) — not a segment tree."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Omitting the empty-prefix sentinel when using ±1 prefixes for median / order statistics.",
+   "correction": "Init map/min carefully at index 0; hash frequencies carefully with a 0 sentinel."
+  },
+  {
+   "trap": "Forgetting r+1 when clamping or compressing open/close coverage events.",
+   "correction": "Clamp r+1; for compression include r+1 as a coordinate so open/close events stay correct."
+  },
+  {
+   "trap": "Looping every coordinate on a large coverage axis.",
+   "correction": "Sort compressed events; between consecutive events multiply length by coverage."
+  },
+  {
+   "trap": "Reaching for a segment tree on 2D paint, value-grid sums, or diagonal cascade updates.",
+   "correction": "Use inclusion–exclusion or 2D imos — cascade/diagonal updates are still O(1) marks then one prefix rebuild."
+  },
+  {
+   "trap": "Using int aggregates on Codeforces prefix/imos problems.",
+   "correction": "Always long long on CF."
+  },
+  {
+   "trap": "Coding the base prefix/diff template before rewriting the ask.",
+   "correction": "Rewrite to a prefix invariant first: median gather, ratio a:b, coverage counts, median ≥ x, or sum-of-subarray-sums."
+  }
+ ]
+}

@@ -1,0 +1,220 @@
+{
+ "id": "m05_company_patterns",
+ "title": "Company-specific SD/LLD interview patterns (FAANG + Indian product cos)",
+ "type": "CONCEPT",
+ "relevance": "High — same HLD/LLD skeleton, different scoring weights and formats; knowing “what this company probes” is the 10% that moves meet-bar → strong-hire (campus + experienced).",
+ "difficulty": "mid",
+ "prereqs": [
+  "m01",
+  "l06"
+ ],
+ "company_notes": "Campus/early-career India: coding plus often one LLD or machine-coding, with HLD lighter or merged into design discussion (Flipkart/Swiggy/PhonePe/Atlassian Bengaluru still expect clarify → structure → bottlenecks). Experienced SDE-2/senior India product + FAANG India: usually separate LLD and HLD (or Craft + systems design at Atlassian); Meta/Google/Amazon India follow parent-company flavors. FAANG global: Meta & Google HLD-centric (Meta may split Product Architecture); Amazon HLD + LLD by level + LPs; Microsoft team-domain HLD or coded LLD; Uber standard HLD. Consult this module before every company-targeted mock; re-read flavor notes the night before each loop; pair with M01/L06 for delivery.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that the HLD/LLD delivery skeleton is shared and company flavor is a re-weighting of what scores.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Framework is shared across companies: requirements → API/entities → HLD or class design → deep dives → tradeoffs (M01/L06); companies only re-weight emphasis.",
+     "weight": "core",
+     "evidence_hint": "Candidate states the common skeleton first, then says flavor is scoring delta not a different interview genre."
+    },
+    {
+     "id": "fund2",
+     "point": "Google: vague one-liner where you set scope; prefer mechanisms over managed-service names; if you say queue, expect to build the queue; standalone design mainly L5+ while L3/L4 often folds scaling into coding.",
+     "weight": "core",
+     "evidence_hint": "Mentions scoping the vague prompt and first-principles/build-it depth rather than naming AWS/GCP products."
+    },
+    {
+     "id": "fund3",
+     "point": "Meta: design products Meta ships (feed, Messenger, storage, CDN); track split System Design (infra) vs Product Architecture (APIs + UX); drive Meta-scale sharding, fan-out, and caches proactively.",
+     "weight": "core",
+     "evidence_hint": "Names the track split and says they push sharding/caching without waiting to be asked."
+    },
+    {
+     "id": "fund4",
+     "point": "Amazon: resiliency first (circuit breakers, isolation, degradation); Leadership Principles scored inside the design round; junior loops often OOD/LLD; senior = HLD and sometimes reverse design of a past system.",
+     "weight": "extended",
+     "evidence_hint": "Leads with failure isolation and LP language, and distinguishes junior OOD from senior HLD/reverse design."
+    }
+   ],
+   "probes": [
+    "Walk me through what stays the same across FAANG system-design interviews and what actually changes by company.",
+    "How would you adjust the same notification-system prompt for Google versus Meta versus Amazon?"
+   ],
+   "hints": {
+    "1": "Start from the shared delivery skeleton, then name what each company re-weights.",
+    "2": "Map Google→mechanisms/depth, Meta→product+scale, Amazon→resiliency+LPs.",
+    "3": "Say: same Requirements→design→deep-dives flow; Google builds the queue, Meta drives sharding/fan-out, Amazon leads with circuit breakers and LPs inside the round."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how specific companies run format, time box, and in-round probes so the candidate opens and paces correctly.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Microsoft: hiring team writes the prompt (Azure/M365/gaming flavor); explicitly ask HLD whiteboard vs coded LLD up front; raise auth, privacy, and compliance early because the round is a level-setter.",
+     "weight": "core",
+     "evidence_hint": "Opens by asking format and unprompted brings security/compliance."
+    },
+    {
+     "id": "mech2",
+     "point": "Atlassian: official 60-min systems design with laddering follow-ups mid-round; separate code design/Craft (LLD) needing working extensible code; product-shaped prompts plus multi-tenancy; Values can veto a strong technical packet.",
+     "weight": "core",
+     "evidence_hint": "Describes laddering adaptation without full redraw, plus Craft code quality and Values as first-class."
+    },
+    {
+     "id": "mech3",
+     "point": "Indian product cos (Flipkart, Swiggy, Zomato, PhonePe, Razorpay, Cred, Walmart GT, etc.): expect both HLD and LLD—often machine-coding with working code + tests in ~90–120 min or take-home plus diagram HLD; themes include flash sales/inventory, payments idempotency, dispatch/geo, search/catalog.",
+     "weight": "core",
+     "evidence_hint": "Mentions machine-coding plus separate HLD and India-flavored themes like flash sales or idempotent payments."
+    },
+    {
+     "id": "mech4",
+     "point": "Uber (and similar marketplace cos): classic 45–60 min HLD with clarify → simple HLD → deep dive → bottlenecks; intermediate prompts are often generic, not only design Uber.",
+     "weight": "extended",
+     "evidence_hint": "States the classic pacing and that prompts may be generic marketplace/systems rather than brand-specific."
+    }
+   ],
+   "probes": [
+    "You open a Microsoft design round—what is the first question you ask, and why?",
+    "How does an Atlassian systems-design hour differ from a Flipkart-style loop that includes machine coding?"
+   ],
+   "hints": {
+    "1": "Think about format gates and which round types each company splits out.",
+    "2": "Microsoft asks HLD vs coded LLD; Atlassian ladders requirements and has Craft; India often pairs ~90–120 min machine-coding with HLD.",
+    "3": "Answer: ask Microsoft format first and raise compliance early; Atlassian expects 60-min laddering + separate extensible Craft code; India expects working LLD/machine-coding plus practical HLD."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose company-appropriate depth axes—LLD vs HLD lean, scale vs resiliency vs cost—without applying the wrong bar.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "LLD/machine-coding heavy: Amazon junior, Atlassian Craft, Flipkart/Swiggy/PhonePe/Cred-class India loops. HLD heavy: Meta, Google L5+, Uber HLD round. Mixed/ambiguous: Microsoft (ask), Amazon L5+, Atlassian (both rounds).",
+     "weight": "core",
+     "evidence_hint": "Correctly buckets companies into heavy LLD, heavy HLD, or ask/both."
+    },
+    {
+     "id": "tr2",
+     "point": "Product-name drops without tradeoffs fail everywhere; the same Kafka/Redis choice should be justified as mechanism (Google), failure blast radius (Amazon), or QPS/fan-out (Meta).",
+     "weight": "core",
+     "evidence_hint": "Refuses bare product names and reties the choice to the company’s scored signal."
+    },
+    {
+     "id": "tr3",
+     "point": "Defaulting to Google-scale / design for 1B MAU is the wrong cost signal at many India product cos; ask traffic assumptions and design for stated NFRs, where cost and realistic India-scale matter more.",
+     "weight": "extended",
+     "evidence_hint": "Asks for traffic/NFRs and avoids unprompted billion-MAU overdesign for India loops."
+    }
+   ],
+   "probes": [
+    "Same prompt at Meta and at a Flipkart-class company—what deep dives do you pick differently and why?",
+    "If you reach for Redis in a Google round versus an Amazon round, how does your justification change?"
+   ],
+   "hints": {
+    "1": "Name what each company scores highest before picking deep dives.",
+    "2": "Contrast Meta fan-out/QPS vs Amazon blast radius vs India cost/realistic scale vs Google build-the-mechanism.",
+    "3": "Say: Meta pushes proactive sharding/caching; Amazon ties storage/queue choices to isolation/degradation; India asks assumptions instead of assuming 1B MAU; Google explains internals as if the product name were banned."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Demonstrate company-flavor muscle memory with concrete attack plans for mocks and live loops.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Flavor cheat sheet: for each target company write HLD vs LLD vs both, time box, #1 scored signal, likely prompts, and one unprompted phrase (e.g. Meta: sharding; Amazon: circuit breaker; Atlassian: tenant isolation; Razorpay: idempotency).",
+     "weight": "core",
+     "evidence_hint": "Produces a per-company five-line card with format, signal, prompts, and an unprompted phrase."
+    },
+    {
+     "id": "app2",
+     "point": "Same-prompt drill: run Design a notification system as Meta (fan-out at scale), Amazon (failure isolation + LP language), and Flipkart/Atlassian (multi-tenant / cost / extensibility), then diff deep-dive picks.",
+     "weight": "core",
+     "evidence_hint": "Shows three different deep-dive sets for one prompt aligned to each flavor."
+    },
+    {
+     "id": "app3",
+     "point": "India machine-coding then HLD: ~90 min requirements → classes → working code → edge-case tests (e.g. parking lot / Splitwise / rate limiter), then convert the same problem into an HLD diagram for a separate Flipkart-style HLD round.",
+     "weight": "extended",
+     "evidence_hint": "Describes finishing working LLD with tests, then re-skinning into an HLD diagram without treating them as one round."
+    },
+    {
+     "id": "app4",
+     "point": "Atlassian laddering drill: start design a task board, then mid-round inject multi-org / custom fields / plugin CPU spike constraints and adapt without redrawing from scratch while narrating multi-tenancy options.",
+     "weight": "extended",
+     "evidence_hint": "Adapts the existing design under layered requirements and talks tenant isolation options."
+    }
+   ],
+   "probes": [
+    "Target company is Amazon L5 next week—outline your prep drills for both OOD and HLD/reverse design.",
+    "Walk me through how you would run the notification-system prompt three ways for Meta, Amazon, and Flipkart."
+   ],
+   "hints": {
+    "1": "Pick drills that match the company’s #1 scored signal, not generic HLD only.",
+    "2": "Amazon needs OOD cadence plus reverse-design resiliency narration; Meta needs proactive scale; India needs machine-coding then HLD.",
+    "3": "Spell the drills: Amazon clarify→API→classes→extensibility and reverse design with SPOF/circuit breaker/on-call; Meta fan-out/sharding unprompted; India 90-min working code then separate HLD diagram."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Shared HLD/LLD skeleton vs company scoring flavor",
+   "strong_answer": "Keep Requirements → API/entities → design → deep dives → tradeoffs fixed; re-weight to Google first-principles depth, Meta product+proactive scale, Amazon resiliency+LPs, Microsoft domain+security, Atlassian laddering+multi-tenancy, and Indian product cos LLD/machine-coding + realistic India scale."
+  },
+  {
+   "topic": "Heavy LLD/machine-coding vs heavy HLD company lean",
+   "strong_answer": "Bias practice to Amazon junior / Atlassian Craft / Flipkart-Swiggy-PhonePe-Cred-class for LLD and machine-coding; to Meta, Google L5+, and Uber for HLD; treat Microsoft, Amazon L5+, and Atlassian as mixed—ask or expect both rounds."
+  },
+  {
+   "topic": "Meta System Design vs Product Architecture",
+   "strong_answer": "Same prompt can be infra/zoomed-in backend (System Design) or user-facing APIs+UX flows (Product Architecture); confirm SWE-Product vs SWE-Infra, and still cover APIs and scale on either track."
+  },
+  {
+   "topic": "Google-scale default vs India realistic NFRs",
+   "strong_answer": "Unprompted design-for-1B-MAU is overkill and a bad cost signal at many India product cos; ask traffic assumptions and optimize for stated NFRs, flash-sale/UPI-style constraints, and cost."
+  },
+  {
+   "topic": "Managed service name vs mechanism / failure / scale justification",
+   "strong_answer": "Everywhere, product-name drops without tradeoffs fail; at Google explain how to build the mechanism, at Amazon tie to blast radius and degradation, at Meta tie to QPS and fan-out."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Answering “Why Kafka/Redis here?” with only a product-name drop.",
+   "correction": "Retie to company signal: Google expects the mechanism; Amazon expects failure blast radius; Meta expects QPS/fan-out; include tradeoffs everywhere."
+  },
+  {
+   "trap": "Preparing the wrong Meta track (treating Product Architecture like Design Memcached-only).",
+   "correction": "Confirm SWE-Product vs SWE-Infra; Product Architecture ≠ pure infra cache design, but either track still needs APIs and scale coverage."
+  },
+  {
+   "trap": "Junior Amazon prep that is HLD-only.",
+   "correction": "Many SDE I/II loops want OOD classes (parking lot / chess / coupons), not only distributed boxes."
+  },
+  {
+   "trap": "Assuming a Microsoft “design” round means endpoints and DBs on a whiteboard.",
+   "correction": "Ask HLD vs coded LLD first; candidates who assume architecture stall when told to code something like a file system."
+  },
+  {
+   "trap": "India loop prep from only Alex Xu / Grokking-style HLD guides.",
+   "correction": "That under-preps machine-coding/LLD and Craft-style rounds that Flipkart-class and Atlassian loops treat as first-class."
+  },
+  {
+   "trap": "Atlassian: strong HLD with weak Values or Craft.",
+   "correction": "Laddering adaptation, clean extensible Craft code, and Values stories are first-class; tech-only prep is incomplete because Values can veto a strong technical packet."
+  },
+  {
+   "trap": "Always designing for Google-scale by default.",
+   "correction": "Ask traffic assumptions; at many India product cos, cost and realistic stated NFRs beat unprompted billion-user overdesign."
+  },
+  {
+   "trap": "DE Shaw / systems-depth loops treated like Flipkart machine-coding volume, or skipping DSA for SD-only prep.",
+   "correction": "DE Shaw stays coding/CS-fundamentals/systems-depth first; experienced loops may add LLD and crisp CAP/partition/failure HLD—don’t skip DSA."
+  }
+ ]
+}

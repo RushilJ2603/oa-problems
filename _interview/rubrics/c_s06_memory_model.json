@@ -1,0 +1,183 @@
+{
+ "id": "c_s06_memory_model",
+ "title": "Memory Model & Storage Classes",
+ "type": "FUND",
+ "relevance": "Interviewers use process layout, storage duration, linkage, and stack-vs-heap to test whether candidates can reason about C program state, bugs, and lifetimes without guessing.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish how a process’s virtual address space is partitioned and how C storage durations map onto that layout.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A process gets an isolated virtual address space illusion from address zero up to the architectural maximum; every byte in RAM has a unique numeric address.",
+     "weight": "core",
+     "evidence_hint": "Mentions virtual memory / per-process address space and that addresses uniquely identify RAM bytes."
+    },
+    {
+     "id": "fund2",
+     "point": "Typical layout has five segments: Text (read-only code), Initialized Data (explicit non-zero globals/statics), BSS (uninitialized or zero globals/statics, zeroed at startup), Heap (dynamic, grows upward), Stack (calls/locals, grows downward from a high address).",
+     "weight": "core",
+     "evidence_hint": "Names the five regions and notes heap grows up / stack grows down toward each other."
+    },
+    {
+     "id": "fund3",
+     "point": "The C standard defines four storage durations—Automatic, Static, Allocated, and Thread (C11 `_Thread_local`)—and never requires the words stack or heap, though compilers use them for automatic and allocated objects.",
+     "weight": "extended",
+     "evidence_hint": "Lists the four durations and notes stack/heap are implementation practice, not standard vocabulary."
+    },
+    {
+     "id": "fund4",
+     "point": "String literals live in read-only memory (typically with/near Text), not stack or heap; modifying them is Undefined Behavior and often segfaults.",
+     "weight": "extended",
+     "evidence_hint": "Places literals in read-only/Text-adjacent storage and flags modification as UB."
+    }
+   ],
+   "probes": [
+    "Walk through where `public_count`, `pending_flags`, `local_temp`, and a `malloc`’d array live in the process address space, and why stack and heap grow toward each other."
+   ],
+   "hints": {
+    "1": "Think of the process like an office: code library, public globals, private locals, and a warehouse for custom-sized allocations.",
+    "2": "Map each object to Text / Data / BSS / Heap / Stack, and recall which end each of heap and stack starts from.",
+    "3": "Initialized non-zero globals → Data; zero/uninit globals → BSS; locals → stack; `malloc` → heap growing up; stack from high addresses growing down."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how storage-class specifiers, linkage, scope, and default initialization actually control lifetime and visibility.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "`static` means different things by placement: file-scope `static` gives internal linkage (private to the translation unit); block-scope `static` keeps local scope but changes duration to static—initialized once and retains value across calls.",
+     "weight": "core",
+     "evidence_hint": "Contrasts file-scope internal linkage vs block-scope persistent lifetime without calling block-scope static “constant.”"
+    },
+    {
+     "id": "mech2",
+     "point": "Linkage: no linkage (locals), internal (`static` at file scope), external (globals/functions by default). Declare freely with `extern`, but define exactly once (ODR-style): `extern` in a header, one definition in a single `.c` file.",
+     "weight": "core",
+     "evidence_hint": "Distinguishes declare vs define and the header-`extern` + one-`.c`-definition pattern."
+    },
+    {
+     "id": "mech3",
+     "point": "Scope (where you may name it) ≠ lifetime (when the object exists): block, file, function (`goto` labels), and function-prototype scopes; a block-scope `static` can have local scope and program-long lifetime.",
+     "weight": "extended",
+     "evidence_hint": "Separates spatial/lexical scope from temporal lifetime and names the four scope kinds."
+    },
+    {
+     "id": "mech4",
+     "point": "Default init: static/thread objects zero/`NULL` if uninitialized; automatic and allocated objects have indeterminate values if not explicitly initialized—reading an uninit automatic can be UB (trap representation) or garbage.",
+     "weight": "extended",
+     "evidence_hint": "States zero-init for static/thread vs indeterminate for automatic/allocated, and warns about reading locals cold."
+    },
+    {
+     "id": "mech5",
+     "point": "`auto` is redundant for locals; `register` is a mostly obsolete register-allocation hint and forbids taking the variable’s address with `&`.",
+     "weight": "extended",
+     "evidence_hint": "Mentions redundancy of `auto` and that `&` is illegal on `register` objects."
+    }
+   ],
+   "probes": [
+    "Explain what `static` does in `static int global_hidden` versus `static int calls` inside a function, and how that differs from linkage and from “constant.”"
+   ],
+   "hints": {
+    "1": "Ask where the `static` appears—outside any function or inside a block.",
+    "2": "Outside: visibility across files (linkage). Inside: when the object is created/destroyed (duration), not whether you can assign to it.",
+    "3": "File-scope `static` → internal linkage; block-scope `static` → static duration, local scope, persists and is mutable; not “unchangeable.”"
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare stack and heap as engineering choices for where data lives and how it fails.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Stack allocation is extremely fast (adjust the stack pointer) and auto-cleaned with the function, but capacity is small (often 1MB to 8MB) and overuse causes stack overflow and an immediate crash.",
+     "weight": "core",
+     "evidence_hint": "Cites speed via stack pointer, automatic cleanup, small OS-limited size, and overflow crash."
+    },
+    {
+     "id": "tr2",
+     "point": "Heap is slower (`malloc` bookkeeping / OS pages), lasts until `free`, can be huge (RAM/virtual memory limited), and fails via leaks or use-after-free UB if mismanaged.",
+     "weight": "core",
+     "evidence_hint": "Contrasts manual lifetime, larger capacity, and leak / use-after-free failure modes."
+    }
+   ],
+   "probes": [
+    "When would you put a large buffer on the heap instead of as a local array, and what goes wrong if you get the choice wrong?"
+   ],
+   "hints": {
+    "1": "Compare allocation cost and who frees the memory.",
+    "2": "Locals die with the frame; heap outlives the call but needs `free`.",
+    "3": "Huge locals risk stack overflow (often 1MB–8MB); heap is slower and leak/UAF-prone but can hold large lasting data."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply layout, duration, and linkage rules to classic bugs and multi-file / classification scenarios.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Returning a pointer to a local is a critical bug: the stack frame is popped, the pointer dangles, later calls overwrite that memory, and use is Undefined Behavior.",
+     "weight": "core",
+     "evidence_hint": "Names dangling pointer after return and UB on later access."
+    },
+    {
+     "id": "app2",
+     "point": "Block-scope `static` is shared by all threads calling that function, so multithreaded use without a mutex races.",
+     "weight": "extended",
+     "evidence_hint": "Flags shared mutable static locals across threads and need for synchronization."
+    },
+    {
+     "id": "app3",
+     "point": "Classification pattern: file-scope non-`static` → static duration + external linkage; file-scope `static` → static duration + internal linkage; block automatic → automatic + no linkage; block `static` → static duration + no linkage; `malloc` object → allocated duration, no name/scope, no linkage.",
+     "weight": "core",
+     "evidence_hint": "Can place `alpha`/`beta`/`gamma`/`delta`/`epsilon`’s object into those buckets correctly."
+    }
+   ],
+   "probes": [
+    "Why is returning `&local_temp` (or a pointer to any automatic local) unsafe, and how would you classify scope, duration, and linkage for a file-scope `static` vs a block-scope `static` vs `malloc`’d memory?"
+   ],
+   "hints": {
+    "1": "Ask what happens to the stack frame when the function returns.",
+    "2": "Separate “can I name it here?” from “is the memory still alive?” and from linkage across `.c` files.",
+    "3": "Local’s frame is gone → dangling pointer/UB; file `static` = internal linkage + static duration; block `static` = no linkage + static duration; heap object = allocated, nameless, no linkage."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Stack vs Heap",
+   "strong_answer": "Stack: very fast (stack-pointer bump), lifetime tied to the function, auto cleanup, but small (often 1MB–8MB) and overflows crash. Heap: slower via `malloc` bookkeeping, manual `free`, can be huge, but leaks and use-after-free are UB."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating string literals like writable stack/heap buffers (`char *s = \"Hi\"; s[0] = 'h';`).",
+   "correction": "Literals live in read-only memory (typically with/near Text); modification is Undefined Behavior and often segfaults."
+  },
+  {
+   "trap": "Assuming block-scope `static` means constant/unchangeable.",
+   "correction": "It means persistent: same memory cell for the whole program run, still freely modifiable, initialized once."
+  },
+  {
+   "trap": "Using block-scope `static` state in multithreaded code without protection.",
+   "correction": "That object is shared by all threads calling the function; protect with a mutex or avoid shared mutable statics."
+  },
+  {
+   "trap": "Reading uninitialized automatic (or assuming allocated memory is zeroed).",
+   "correction": "Only static/thread objects default to zero/`NULL`; automatic/allocated values are indeterminate—always initialize locals; trap representations can make reads UB."
+  },
+  {
+   "trap": "Returning a pointer to a local variable.",
+   "correction": "The stack frame is invalidated on return; the pointer dangles and later use is Undefined Behavior."
+  },
+  {
+   "trap": "Defining the same global in multiple `.c` files while sharing it.",
+   "correction": "Put `extern` declarations in a header and exactly one definition (no `extern`) in a single `.c` file."
+  }
+ ]
+}

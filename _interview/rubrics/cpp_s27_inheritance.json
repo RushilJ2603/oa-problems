@@ -1,0 +1,188 @@
+{
+ "id": "cpp_s27_inheritance",
+ "title": "Inheritance",
+ "type": "FUND",
+ "relevance": "Inheritance is core C++ OOP: interviewers probe is-a modeling, access remapping, upcasting as the base of polymorphism, and classic trivia on what is not inherited.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what inheritance is, base vs derived, and how generalisation and specialisation organise code.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Inheritance lets a new class build on an existing one, absorbing its data and behaviour while adding its own, and is how C++ models an is-a relationship.",
+     "weight": "core",
+     "evidence_hint": "Candidate says a derived class reuses a base and gives an is-a example such as Car is a Vehicle or Cuboid is a Rectangle."
+    },
+    {
+     "id": "fund2",
+     "point": "The original reused class is the base class (parent/superclass); the new inheriting class is the derived class (child/subclass).",
+     "weight": "core",
+     "evidence_hint": "Candidate names base/parent/superclass vs derived/child/subclass correctly."
+    },
+    {
+     "id": "fund3",
+     "point": "Generalisation extracts shared traits from several classes into one base; specialisation extends a general class into a more specific one that reuses the base and adds only what is unique.",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts pulling Dog/Cat/Bird common behaviour into Animal versus extending Rectangle with height into Cuboid."
+    }
+   ],
+   "probes": [
+    "What is inheritance in C++, and what relationship does it model?",
+    "What is the difference between generalisation and specialisation when designing a class hierarchy?"
+   ],
+   "hints": {
+    "1": "Think about reusing an existing class versus inventing everything from scratch.",
+    "2": "Name the two classes in the relationship, then say whether you are extracting common behaviour upward or adding specifics downward.",
+    "3": "Inheritance absorbs base data and behaviour into a derived class for is-a (e.g. Car is a Vehicle); generalisation builds Animal from Dog/Cat/Bird, specialisation builds Cuboid from Rectangle."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain derivation syntax, access remapping, protected members, upcasting limits, and what is not inherited.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A derived class declares the base after a colon with an access specifier, usually public, and absorbs base members so it can use them as if declared locally.",
+     "weight": "core",
+     "evidence_hint": "Candidate writes or describes class Derived : public Base and notes inherited members like x are usable inside Derived."
+    },
+    {
+     "id": "mech2",
+     "point": "Inheritance mode remaps inherited member access: under public inheritance public stays public and protected stays protected; under protected inheritance public and protected become protected; under private inheritance public and protected become private; private base members stay inaccessible in all modes.",
+     "weight": "core",
+     "evidence_hint": "Candidate walks the remapping table and stresses private base members are never directly accessible regardless of mode."
+    },
+    {
+     "id": "mech3",
+     "point": "protected means a member is hidden from the outside world like private but remains accessible to derived classes.",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts outside code cannot touch protected, but a derived class member function can."
+    },
+    {
+     "id": "mech4",
+     "point": "Public inheritance enables safe implicit upcasting: a base pointer or reference can bind to a derived object but can only access the base portion of that object.",
+     "weight": "core",
+     "evidence_hint": "Candidate shows Animal& ref = myDog; ref.eat() works, while calling bark through the Animal interface does not."
+    },
+    {
+     "id": "mech5",
+     "point": "Constructors, destructors, assignment operators (operator=), and friendships are not inherited; friendship is granted explicitly and a Base friend does not automatically access Derived private members.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists those four and notes base constructors still run during derived construction but are not inherited as the derived class’s own constructors."
+    }
+   ],
+   "probes": [
+    "How do you write a derived class in C++, and what does the inheritance access mode do to member visibility?",
+    "What is upcasting, and what can you access through a base reference to a derived object?",
+    "What is not inherited in C++?"
+   ],
+   "hints": {
+    "1": "Look at the colon after the derived class name and at which members you can touch from outside vs inside the hierarchy.",
+    "2": "Separate three ideas: how public/protected/private inheritance remaps access, that upcasting exposes only the base interface, and identity-tied members that never transfer.",
+    "3": "Syntax is class Derived : public Base; private base data stays inaccessible; Animal& can call eat but not bark; not inherited: constructors, destructors, operator=, friends."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast public, protected, and private inheritance for interface exposure and is-a versus implemented-in-terms-of.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Public inheritance is the standard choice: it keeps the base interface and strictly models is-a, so public members stay public and protected stay protected.",
+     "weight": "core",
+     "evidence_hint": "Candidate says use public inheritance when the derived type truly is a base type and clients should still see the public base API."
+    },
+    {
+     "id": "tr2",
+     "point": "Private inheritance makes base public and protected members private in the derived class, seals them from grandchildren, and models implemented-in-terms-of rather than is-a.",
+     "weight": "core",
+     "evidence_hint": "Candidate says private inheritance reuses implementation without presenting the derived type as a public base subtype."
+    },
+    {
+     "id": "tr3",
+     "point": "Protected inheritance makes base public and protected members protected in the derived class: inaccessible to the outside world, but a grandchild can still see them.",
+     "weight": "extended",
+     "evidence_hint": "Candidate places protected inheritance between public and private for further derived classes versus external clients."
+    }
+   ],
+   "probes": [
+    "When would you choose public inheritance versus private inheritance?",
+    "How does protected inheritance differ from private inheritance for a grandchild class?"
+   ],
+   "hints": {
+    "1": "Ask whether clients should treat the derived object as a base object.",
+    "2": "Compare what happens to public base members in the derived class and whether a class derived from that derived class can still reach them.",
+    "3": "Public = is-a and keeps the interface; private = implemented-in-terms-of and blocks grandchildren from base members; protected hides from the world but grandchildren can still access."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply inheritance access rules and upcasting correctly in concrete class hierarchies.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "With public inheritance, outside code may use inherited public members on the derived object; with private inheritance those remapped members are not usable from outside.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts PublicDerived allowing pubD.pub access versus PrivateDerived rejecting external access to pub."
+    },
+    {
+     "id": "app2",
+     "point": "A derived class must use the base’s public or protected functions to interact with private base data because it never has direct access to private base members.",
+     "weight": "core",
+     "evidence_hint": "Candidate refuses direct priv access in a derived member function and routes through base public/protected APIs."
+    },
+    {
+     "id": "app3",
+     "point": "Through a base reference bound to a derived object you may call base operations, but derived-only operations are not part of the base interface.",
+     "weight": "extended",
+     "evidence_hint": "Candidate accepts ref.eat() on an Animal& to a Dog and rejects ref.bark() without a cast or Dog-typed handle."
+    }
+   ],
+   "probes": [
+    "Given PublicDerived and PrivateDerived from the same Base, what can main() legally assign on each?",
+    "If you have Animal& ref = myDog, which calls are valid and why?"
+   ],
+   "hints": {
+    "1": "Check the inheritance mode before deciding what outside code can see.",
+    "2": "For private base fields, only ask what the derived class itself can touch; for upcasting, only ask what the static base type declares.",
+    "3": "pubD.pub is OK under public inheritance; privD.pub is an error under private inheritance; ref.eat() works, ref.bark() does not because Animal does not know bark."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "public inheritance vs private inheritance",
+   "strong_answer": "Public inheritance keeps the base interface and models is-a. Private inheritance remaps base public and protected members to private, blocks grandchildren from those members, and models implemented-in-terms-of rather than is-a."
+  },
+  {
+   "topic": "protected inheritance vs private inheritance",
+   "strong_answer": "Both hide the base from the outside world by remapping public base members away from public. Protected inheritance leaves them protected so a grandchild can still access them; private inheritance makes them private in the derived class so a grandchild cannot access any of the original base members."
+  },
+  {
+   "topic": "generalisation vs specialisation",
+   "strong_answer": "Generalisation pulls shared behaviour from several classes into one base to remove duplication. Specialisation extends a general base into a more specific derived class that reuses the base design and adds only unique state or behaviour."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming a derived class can directly read or write private members of its base because it inherits from it.",
+   "correction": "A derived class never has direct access to private base members under any inheritance mode; it must go through the base’s public or protected functions."
+  },
+  {
+   "trap": "Treating a base reference or pointer to a derived object as if it exposes derived-only members.",
+   "correction": "Upcasting is safe and implicit, but the base interface only sees the base portion; derived-only calls like bark() through an Animal reference are invalid."
+  },
+  {
+   "trap": "Believing friendships, constructors, destructors, or operator= are inherited like ordinary members.",
+   "correction": "Those are tied to class identity and are not inherited; friendship is not transitive to the derived class’s private members."
+  },
+  {
+   "trap": "Expecting private inheritance to still behave like is-a for further derived classes or external clients.",
+   "correction": "Under private inheritance, remapped base members are private in the derived class, sealed from grandchildren, and the relationship is implemented-in-terms-of, not is-a."
+  }
+ ]
+}

@@ -1,0 +1,177 @@
+{
+ "id": "cpp_s10_type_qualifiers",
+ "title": "Type Qualifiers & Specifiers",
+ "type": "FUND",
+ "relevance": "Interviewers probe const-correctness, volatile, and restrict to test whether candidates understand compiler contracts, UB, and when optimizers may legally break naive code.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that type qualifiers/specifiers change the contract with the compiler, not how data is fundamentally represented.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Type qualifiers and specifiers are metadata on C declarations that dictate what the compiler may and may not do when optimizing, rather than typically changing memory representation.",
+     "weight": "core",
+     "evidence_hint": "Candidate says they alter the contract with the compiler/optimizer, not the fundamental layout of the data."
+    },
+    {
+     "id": "fund2",
+     "point": "const declares that an object's value will not be modified after initialization and underpins const-correctness: functions advertise whether they modify data passed to them.",
+     "weight": "core",
+     "evidence_hint": "Mentions post-init immutability and functions promising read-only access (e.g. strlen taking const char *)."
+    },
+    {
+     "id": "fund3",
+     "point": "A pointer-to-const parameter is a binding promise not to write through that pointer; attempting to write yields a compile error and lets callers pass read-only data safely.",
+     "weight": "extended",
+     "evidence_hint": "Cites strlen/strcpy-style contracts: read src, never mutate it through the const-qualified pointer."
+    }
+   ],
+   "probes": [
+    "What do type qualifiers actually change in a C program, and what does const promise about a function parameter?"
+   ],
+   "hints": {
+    "1": "Think about what the compiler is allowed to assume, not about bits in memory.",
+    "2": "Separate representation of the object from the contract about mutation after initialization.",
+    "3": "const means no modification after init; a const-qualified pointees parameter means the callee will not write through that pointer."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Pin down const placement on pointers, volatile's effect on loads/stores, and restrict's anti-aliasing promise.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "const position relative to * yields four cases: int *p (both mutable); const int *p / int const *p (data immutable through p, pointer movable); int * const p (pointer fixed, data mutable); const int * const p (neither address nor data changeable through p).",
+     "weight": "core",
+     "evidence_hint": "Walks the four combinations and reads declarations with the right-left rule."
+    },
+    {
+     "id": "mech2",
+     "point": "volatile tells the compiler an object can change outside known control flow: do not cache it in registers, do not elide reads/writes, and respect the abstract-machine sequence of accesses as physical reads/writes.",
+     "weight": "core",
+     "evidence_hint": "Explains register caching of loop reads vs forced fresh memory access each iteration for volatile."
+    },
+    {
+     "id": "mech3",
+     "point": "restrict (C99) promises that for the pointer's lifetime, if the pointed-to object is modified, all accesses go through that restrict pointer (or pointers derived from it)—i.e. no aliasing via other paths.",
+     "weight": "core",
+     "evidence_hint": "States the non-aliasing promise and contrasts memcpy (restrict) with memmove (no such promise)."
+    },
+    {
+     "id": "mech4",
+     "point": "Global or static const objects are typically placed in a read-only segment (often .rodata in ELF); casting away const and modifying an object originally defined as const is undefined behavior.",
+     "weight": "extended",
+     "evidence_hint": "Mentions .rodata/read-only placement and UB/segfault risk if const is cast away and written."
+    }
+   ],
+   "probes": [
+    "Explain the difference between const int *p and int * const p, then what volatile and restrict each force the compiler to assume."
+   ],
+   "hints": {
+    "1": "Read from the identifier outward: where const sits relative to * matters.",
+    "2": "Map three ideas: what may mutate (const), what must hit memory every time (volatile), and whether two pointers may overlap (restrict).",
+    "3": "const int * = movable pointer, immutable data through it; int * const = fixed pointer; volatile = every abstract read/write is a real access; restrict = sole access path if the object is modified."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast tools that look similar—volatile vs _Atomic, and restricted vs unrestricted copy—and when const combines with volatile.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "volatile provides visibility against compiler caching for hardware/ISRs but is not atomic and not a memory barrier; _Atomic (C11) provides atomicity and memory ordering for OS threads.",
+     "weight": "core",
+     "evidence_hint": "Says use volatile for hardware/interrupts; use _Atomic or mutexes for threads—not volatile alone."
+    },
+    {
+     "id": "tr2",
+     "point": "memcpy uses restrict and may vectorize assuming non-overlapping buffers; memmove makes no restrict promise, is safe for overlapping memory, but may be slower.",
+     "weight": "core",
+     "evidence_hint": "Names the overlap-safety vs optimization tradeoff between memcpy and memmove."
+    },
+    {
+     "id": "tr3",
+     "point": "const volatile is coherent for a read-only hardware register: volatile forces re-reads because hardware changes it; const forbids the C program from writing it.",
+     "weight": "extended",
+     "evidence_hint": "Gives a status/timer register example that hardware updates but software must only read."
+    }
+   ],
+   "probes": [
+    "Is volatile enough to share data between threads? How does that compare to _Atomic, and why do memcpy and memmove differ?"
+   ],
+   "hints": {
+    "1": "Ask what each keyword prevents: compiler elision versus torn updates across cores.",
+    "2": "Split audience: hardware/ISR vs threads; then split copy APIs by overlap permission.",
+    "3": "volatile ≠ atomic/barrier; threads need _Atomic or mutexes; memcpy's restrict enables faster non-overlap copies, memmove allows overlap."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply qualifiers to real sites: MMIO, ISRs/signals, polling loops, and const-correct APIs.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "volatile is required for memory-mapped hardware registers, globals modified by an ISR, and sig_atomic_t variables modified in a signal handler.",
+     "weight": "core",
+     "evidence_hint": "Lists MMIO, ISR-shared globals, and volatile sig_atomic_t for signal handlers."
+    },
+    {
+     "id": "app2",
+     "point": "Without volatile, a polling loop on a flag the compiler thinks is unchanged can hoist the load and become an infinite loop; with volatile, each iteration emits a fresh load so hardware updates are observed.",
+     "weight": "core",
+     "evidence_hint": "Traces non-volatile wait loop optimized to if (flag==0) while(1); versus per-iteration loads with volatile."
+    },
+    {
+     "id": "app3",
+     "point": "Passing overlapping buffers to memcpy breaks the restrict promise and is undefined behavior; the compiler may have vectorized assuming no overlap, causing corruption.",
+     "weight": "extended",
+     "evidence_hint": "States overlapping memcpy is UB due to broken restrict, unlike memmove."
+    }
+   ],
+   "probes": [
+    "Walk through a hardware-flag polling loop with and without volatile, and say when you would mark a pointer const volatile."
+   ],
+   "hints": {
+    "1": "Imagine something outside the C abstract machine changing a location between your statements.",
+    "2": "Consider optimizer hoisting of loop loads, then MMIO/ISR/signal cases, then restrict lies.",
+    "3": "Non-volatile flag can become if (0) infinite spin; volatile reloads each time; const volatile fits read-only async hardware registers; overlapping memcpy is UB."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "volatile vs _Atomic",
+   "strong_answer": "volatile ensures compiler-visible memory accesses for hardware and ISRs but gives neither atomicity nor a CPU memory barrier; _Atomic (C11) gives atomicity and ordering for thread communication—use volatile for hardware/interrupts, _Atomic or mutexes for OS threads."
+  },
+  {
+   "topic": "memcpy (restrict) vs memmove",
+   "strong_answer": "memcpy promises non-overlapping dest/src via restrict and can use aggressive vectorization; memmove makes no restrict promise, correctly handles overlap, and may be slower."
+  },
+  {
+   "topic": "const vs volatile on hardware registers",
+   "strong_answer": "const alone would allow caching of a value that hardware still changes; volatile alone would allow the program to write a read-only register; const volatile forces fresh reads while forbidding C-side writes."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Casting away const and modifying an object that was originally defined as const (e.g. string literal or const global).",
+   "correction": "That is undefined behavior; the object may live in read-only memory (.rodata) and the OS may segfault on the write."
+  },
+  {
+   "trap": "Using volatile for inter-thread synchronization (the concurrency myth).",
+   "correction": "volatile is not atomic and not a memory barrier; it does not stop data races or CPU reordering—use _Atomic or mutexes."
+  },
+  {
+   "trap": "Passing overlapping buffers to memcpy because it “just copies memory.”",
+   "correction": "That breaks the restrict promise and is undefined behavior; use memmove when overlap is possible."
+  },
+  {
+   "trap": "Omitting volatile on a flag polled in a tight loop that hardware or an ISR updates.",
+   "correction": "The optimizer may hoist the read and turn the wait into an infinite loop that never observes the update."
+  }
+ ]
+}

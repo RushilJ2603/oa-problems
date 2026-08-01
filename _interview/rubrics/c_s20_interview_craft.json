@@ -1,0 +1,295 @@
+{
+ "id": "c_s20_interview_craft",
+ "title": "C Interview Craft and Classic Gotchas",
+ "type": "FUND",
+ "relevance": "Interviewers use classic C gotchas to test memory safety, undefined-behavior awareness, and whether candidates understand how foundational rules interact at their edges.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the core C distinctions interviewers probe first: pointer operators, memory ownership, string storage, and static.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "*p++ (same as *(p++)) dereferences then advances the pointer; (*p)++ increments the pointed-to value because ++ binds tighter than *.",
+     "weight": "core",
+     "evidence_hint": "States both meanings and that post-increment binds more tightly than dereference."
+    },
+    {
+     "id": "fund2",
+     "point": "A dangling pointer points to freed or out-of-scope memory (using it is UB); a memory leak is allocated memory never freed after all pointers to it are lost.",
+     "weight": "core",
+     "evidence_hint": "Separates stale/invalid pointer from unreclaimable allocated memory until process death."
+    },
+    {
+     "id": "fund3",
+     "point": "char *s = \"hello\" points at a read-only string literal (typically .rodata); char s[] = \"hello\" copies into a mutable array that is safe to modify.",
+     "weight": "core",
+     "evidence_hint": "Contrasts read-only literal vs mutable copy and notes modifying the literal can segfault."
+    },
+    {
+     "id": "fund4",
+     "point": "static inside a function extends lifetime to the whole program while keeping local scope; at file scope it gives internal linkage to that translation unit.",
+     "weight": "extended",
+     "evidence_hint": "Names both meanings: lifetime between calls, and linkage restricted to the current file."
+    }
+   ],
+   "probes": [
+    "What is the difference between *p++, (*p)++, and *(p++)?",
+    "What is the difference between a dangling pointer and a memory leak?",
+    "What is the difference between char *s = \"hello\" and char s[] = \"hello\"?",
+    "What are the two distinct meanings of the static keyword?"
+   ],
+   "hints": {
+    "1": "Think about what the operator applies to: the pointer or the value it points at.",
+    "2": "Separate operator precedence, storage duration/linkage, and where string data actually lives.",
+    "3": "*p++ advances p after yielding *p; (*p)++ changes *p; dangling vs leak is freed/out-of-scope vs never-freed; literal vs array is .rodata vs mutable copy; static is lifetime inside functions and internal linkage at file scope."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how declaration precedence, sizeof vs strlen, macros, padding, bits, and endianness actually evaluate.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "int *p[10] is an array of 10 pointers to int; int (*p)[10] is a pointer to an array of 10 ints because [] binds tighter than * unless parentheses force * first.",
+     "weight": "core",
+     "evidence_hint": "Uses spiral/precedence rule and does not treat pointer-to-array as int **."
+    },
+    {
+     "id": "mech2",
+     "point": "For char s[10] = \"hi\"; strlen(s) returns 2 (chars before null) while sizeof(s) is 10 (compile-time allocated array size).",
+     "weight": "core",
+     "evidence_hint": "Gives both results and warns sizeof on a decayed parameter yields pointer size, not array length."
+    },
+    {
+     "id": "mech3",
+     "point": "#define SQUARE(x) x * x is unsafe: SQUARE(1 + 2) expands to 1 + 2 * 1 + 2 evaluating to 5 not 9; SQUARE(i++) evaluates the argument twice and can cause UB; fix with ((x)*(x)) or prefer inline functions.",
+     "weight": "core",
+     "evidence_hint": "Shows textual expansion, the 5-not-9 case, double evaluation, and parenthesized or inline fix."
+    },
+    {
+     "id": "mech4",
+     "point": "sizeof(struct { char a; int b; }) can be 8 not 5 because the compiler inserts 3 padding bytes so int b is 4-byte aligned.",
+     "weight": "extended",
+     "evidence_hint": "Names padding/alignment and the serialization hazard of assuming packed layout."
+    },
+    {
+     "id": "mech5",
+     "point": "A non-zero unsigned integer is a power of two iff (x & (x - 1)) == 0 because a power of two has exactly one bit set.",
+     "weight": "extended",
+     "evidence_hint": "Gives the bitwise test and the one-bit-set rationale, not a divide-by-2 loop."
+    },
+    {
+     "id": "mech6",
+     "point": "Runtime endianness: set int num = 1, view as char *, and if *byte == 1 the machine is little-endian; endianness is byte layout, not bit-order.",
+     "weight": "extended",
+     "evidence_hint": "Describes the byte-view test and distinguishes byte-order from bit-order."
+    }
+   ],
+   "probes": [
+    "How do you read int *p[10] versus int (*p)[10]?",
+    "How do strlen(s) and sizeof(s) differ for char s[10] = \"hi\";?",
+    "What is the pitfall of #define SQUARE(x) x * x?",
+    "Why might sizeof(struct { char a; int b; }) be 8 instead of 5?",
+    "How do you test if a non-zero unsigned integer is a power of two?"
+   ],
+   "hints": {
+    "1": "Ask what binds first and what is being measured: type layout, string length, or macro text.",
+    "2": "Walk declaration spiral, compile-time sizeof vs runtime strlen, macro expansion before evaluation, and alignment padding.",
+    "3": "Array-of-pointers vs pointer-to-array; strlen 2 / sizeof 10; SQUARE(1+2)→5; 3 pad bytes for 4-byte int alignment; (x&(x-1))==0; little-endian if low byte of 1 is 1."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose constants, interview pacing, and synchronization tools with the constraints the file spells out.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer const for typed/scoped non-modifiable values, #define for untyped preprocessor text with no scope, and enum for related named integer constants (better than #define for state machines); const int may not size a static array in C89 while #define or enum can.",
+     "weight": "core",
+     "evidence_hint": "Maps each tool to typed/scoped vs textual vs grouped integers and mentions the C89 array-size issue."
+    },
+    {
+     "id": "tr2",
+     "point": "C interview drive strategy: clarify constraints (e.g. 32-bit int, whether string.h is allowed), ship a simple safe baseline first, then refine to bitwise/pointer tricks, walk NULL/empty/max edges, and reject shortcuts that rely on signed overflow or strict-aliasing violations.",
+     "weight": "core",
+     "evidence_hint": "Orders clarify → brute force → optimize → edge cases → call out UB rather than jumping to clever code."
+    },
+    {
+     "id": "tr3",
+     "point": "Inline functions are vastly preferred over function-like macros for logic because macros are not function calls and mishandle precedence and multiple evaluation.",
+     "weight": "extended",
+     "evidence_hint": "Rejects treating macros as functions and prefers inlines for logic."
+    }
+   ],
+   "probes": [
+    "When should you use const vs #define vs enum for constants?",
+    "How should you approach writing C in an interview versus jumping straight to a clever solution?",
+    "Why prefer inline functions over macros for logic?"
+   ],
+   "hints": {
+    "1": "Think about type, scope, and whether you need a working baseline before cleverness.",
+    "2": "Contrast typed constants, preprocessor text, and enums; then separate correctness pacing from micro-optimizations.",
+    "3": "const typed/scoped, #define textual/unscoped, enum for related ints (C89 array-size caveat); clarify→safe baseline→optimize→edges→name UB; prefer inline over macros."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the rules under pressure: stack returns, volatile/ISR hazards, UB meaning, and classic output puzzles.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Returning a pointer to a local is disastrous: the stack object is destroyed on return, so the caller holds an invalid address that the next call will overwrite; \"sometimes works\" is still always UB.",
+     "weight": "core",
+     "evidence_hint": "Ties stack lifetime to invalid returned address and rejects \"it worked once\" as defined."
+    },
+    {
+     "id": "app2",
+     "point": "volatile forbids caching reads/writes when a value may change outside the current thread; required for memory-mapped registers and globals written by an ISR and read by the main loop; it does not give atomicity or stop CPU cache reordering, so it is not thread synchronization.",
+     "weight": "core",
+     "evidence_hint": "Lists the two required cases and explicitly denies using volatile to sync threads."
+    },
+    {
+     "id": "app3",
+     "point": "Read-modify-write like x |= 0x01 is load/OR/store; an ISR between load and store can change x and be overwritten; x++ and bitwise ops are almost never atomic on a 32-bit MCU—disable interrupts briefly or use atomics.",
+     "weight": "core",
+     "evidence_hint": "Explains the three-step RMW race and the interrupt-disable or atomic fix."
+    },
+    {
+     "id": "app4",
+     "point": "Do not call malloc or printf in an ISR: they are non-deterministic and lock-based; if the main loop held the lock, the ISR re-enter can deadlock.",
+     "weight": "extended",
+     "evidence_hint": "Links ISR determinism to lock re-entry deadlock for stdio/allocation."
+    },
+    {
+     "id": "app5",
+     "point": "Common UB includes NULL/uninitialized dereference, out-of-bounds access, and signed overflow; UB is not merely crash-or-wrap—the compiler may assume it never happens and optimize unpredictably.",
+     "weight": "extended",
+     "evidence_hint": "Names those three examples and the aggressive-assumption meaning of UB."
+    },
+    {
+     "id": "app6",
+     "point": "Passing char str[] = \"Antigravity\" (12 chars) into char arr[] decays to a pointer, so sizeof(arr) prints pointer size (usually 8 on 64-bit, 4 on 32-bit), not 12.",
+     "weight": "extended",
+     "evidence_hint": "States array-to-pointer decay and pointer-sized sizeof result."
+    },
+    {
+     "id": "app7",
+     "point": "Mixing unsigned int a = 10 with int b = -20 promotes b to unsigned (e.g. 4294967276 on 32-bit), so a+b > 10 is true and prints Greater.",
+     "weight": "extended",
+     "evidence_hint": "Cites usual arithmetic conversions and the Greater outcome."
+    },
+    {
+     "id": "app8",
+     "point": "Writing a float via an unsigned int * violates strict aliasing (except char *); the compiler may ignore the write and still print 1.000000; do it safely with memcpy or a union in C99+.",
+     "weight": "extended",
+     "evidence_hint": "Names strict aliasing, possible stale 1.000000 print, and memcpy/union fix."
+    }
+   ],
+   "probes": [
+    "Why is returning a pointer to a local variable disastrous?",
+    "What exactly does volatile do, and when is it required?",
+    "What is the read-modify-write atomicity hazard?",
+    "Why can't you call malloc or printf inside an ISR?",
+    "Name three common examples of Undefined Behavior.",
+    "What does the sizeof-on-decayed-array puzzle print, and why?"
+   ],
+   "hints": {
+    "1": "Ask what still exists after return, what the compiler may cache, and what an ISR can interrupt.",
+    "2": "Connect stack lifetime, volatile vs atomics, RMW load/store windows, lock re-entry in ISRs, and conversion/aliasing rules in the puzzles.",
+    "3": "Locals die on return; volatile for MMIO/ISR shared state only; RMW is three steps; no malloc/printf in ISR; UB examples plus compiler freedom; decayed sizeof is pointer width; unsigned wins in a+b; float via int* is strict-aliasing UB."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "const vs #define vs enum",
+   "strong_answer": "const gives a typed, scoped non-modifiable object (useful for parameters like const char *); #define is untyped textual substitution with no scope; enum groups related named integer constants with type and scope and is better than #define for state machines. In C89 a const int is not a constant expression for static array size, while #define or enum works."
+  },
+  {
+   "topic": "brute-force baseline vs early bitwise/pointer cleverness",
+   "strong_answer": "Clarify sizes and library constraints, write the simple safe version first, then refine; only after a working baseline move to bitwise or pointer-arithmetic tricks, and explicitly reject shortcuts that depend on signed overflow or strict aliasing."
+  },
+  {
+   "topic": "function-like macros vs inline functions",
+   "strong_answer": "Macros ignore precedence and evaluate arguments multiple times (SQUARE(1+2)→5; SQUARE(i++) can be UB). Inline functions are vastly preferred for logic."
+  },
+  {
+   "topic": "volatile vs real synchronization",
+   "strong_answer": "volatile only stops compiler elision of loads/stores for MMIO and ISR-shared globals; it does not guarantee atomicity or prevent CPU cache reordering, so it must not be used to synchronize threads—use proper atomics or locks instead."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming *p++ increments the pointed-to value",
+   "correction": "*p++ / *(p++) yields the current *p then advances p; use (*p)++ to increment the value."
+  },
+  {
+   "trap": "Treating a pointer to an array like int **",
+   "correction": "int (*p)[10] has different pointer-arithmetic scale than a double pointer; they are not interchangeable."
+  },
+  {
+   "trap": "Believing free(p) sets p to NULL",
+   "correction": "free only returns memory to the allocator; p still holds the stale address unless you clear it yourself."
+  },
+  {
+   "trap": "Thinking returning a pointer to a local \"sometimes works\" so it is okay",
+   "correction": "It is always undefined behavior even if the stack slot has not been overwritten yet."
+  },
+  {
+   "trap": "Passing char *s = \"hello\" into a string-reversal that writes through s",
+   "correction": "The literal is read-only; modification can segfault—use a mutable char array copy."
+  },
+  {
+   "trap": "Using sizeof on a function parameter declared char s[] expecting array or string length",
+   "correction": "The parameter has decayed to a pointer; sizeof yields pointer size, not the original array size."
+  },
+  {
+   "trap": "Confusing static's scope with its lifetime or forgetting linkage",
+   "correction": "Inside a function static changes lifetime; at file scope it changes linkage to internal for that translation unit."
+  },
+  {
+   "trap": "Using a const int as a static array size in C89",
+   "correction": "It is not a constant expression there; use #define or enum (or a newer standard that allows it)."
+  },
+  {
+   "trap": "Treating macros like function calls",
+   "correction": "They are textual; parenthesize aggressively or prefer inline functions to avoid precedence and double-evaluation bugs."
+  },
+  {
+   "trap": "Detecting a power of two with a divide-by-2 loop only",
+   "correction": "Prefer (x & (x - 1)) == 0 for a non-zero unsigned value with exactly one bit set."
+  },
+  {
+   "trap": "Confusing bit-order with endianness",
+   "correction": "Endianness is about byte layout in memory, not bit order within a byte."
+  },
+  {
+   "trap": "Assuming structs pack with no padding when serializing",
+   "correction": "Padding for alignment (e.g. 3 bytes after a char before an int) makes sizeof larger; do not blast raw structs to the network or a file."
+  },
+  {
+   "trap": "Believing UB just means crash or wraparound",
+   "correction": "The compiler may assume UB never happens and optimize away checks, yielding unpredictable code."
+  },
+  {
+   "trap": "Using volatile to synchronize threads",
+   "correction": "It only inhibits compiler caching; it does not provide atomicity or stop CPU reordering."
+  },
+  {
+   "trap": "Assuming x++ or bitwise updates are atomic on a 32-bit MCU",
+   "correction": "They are almost never atomic; protect with briefly disabled interrupts or atomic instructions."
+  },
+  {
+   "trap": "Calling malloc or printf inside an ISR",
+   "correction": "They can lock and deadlock if the interrupted context already held the lock; keep ISRs fast and deterministic."
+  },
+  {
+   "trap": "Modifying a variable twice without a sequence point (e.g. i = i++ + 1)",
+   "correction": "That is undefined behavior; the printed result is not predictable."
+  }
+ ]
+}

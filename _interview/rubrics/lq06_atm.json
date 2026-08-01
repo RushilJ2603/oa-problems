@@ -1,0 +1,286 @@
+{
+ "id": "lq06_atm",
+ "title": "Design an ATM",
+ "type": "LLD",
+ "relevance": "High — canonical State + Chain-of-Responsibility LLD / machine-coding question (campus + experienced); especially common at fintech / payments loops (Paytm, PhonePe, Razorpay, Visa, banks) and product cos probing FSM modeling, hardware orchestration, and transactional safety.",
+ "difficulty": "mid",
+ "prereqs": [
+  "l01_oop_solid",
+  "l02_patterns_creational",
+  "l03_patterns_structural",
+  "l04_patterns_behavioral",
+  "l05_concurrency_lld",
+  "lq05_vending_machine"
+ ],
+ "company_notes": "Campus/machine-coding (Flipkart, Uber, Swiggy, Amazon new-grad, Indian product cos): common design+code in 90 min where working State FSM + withdraw/deposit beats a half-finished pattern zoo. Fintech/payments/banks (Paytm, PhonePe, Razorpay, Visa, GS/JPM-style): especially frequent; expect PIN lockout, atomic debit/dispense, and denomination COR probes. Experienced LLD (FAANG / Atlassian / Microsoft): same core with deeper concurrency, failure-reversal, and extensibility; often paired with vending machine (State) and parking lot. Top-tier canonical LLD — the State + COR showcase after parking lot and vending machine.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock mandatory FRs, common extensions, NFRs, and scale assumptions before drawing the FSM or classes.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Mandatory FR: authenticate via card + PIN; balance inquiry; cash withdrawal (check balance + ATM cash); cash deposit; eject/cancel ends session.",
+     "weight": "core",
+     "evidence_hint": "Lists card+PIN auth, balance, withdraw with both checks, deposit, and eject/cancel ending the session."
+    },
+    {
+     "id": "req2",
+     "point": "Clarify extensions before coding: transfer; mini-statement; PIN change; daily withdrawal limit; operator refill; receipt print; Checking vs Savings selection; denominations & greedy largest-first; PIN retry / card retain; one user at a time; simulate bank vs real network.",
+     "weight": "core",
+     "evidence_hint": "Asks clarifying questions on which txns, denominations, PIN lockout, daily limits, and bank simulation rather than silently assuming."
+    },
+    {
+     "id": "req3",
+     "point": "NFR: correct state transitions; no debit without successful dispense (or auto-reversal); thread-safe account + inventory; extensible states/denominations/txns; working demo / CLI.",
+     "weight": "extended",
+     "evidence_hint": "Mentions FSM correctness, debit/dispense safety with reversal, concurrency, extensibility, and a runnable demo."
+    },
+    {
+     "id": "req4",
+     "point": "State assumptions: one customer at a time per machine; fixed denominations; bank simulated in-memory; no multi-currency unless asked; use cases include wrong PIN ×3 → card blocked and ATM out of notes → refuse withdrawal but allow balance.",
+     "weight": "extended",
+     "evidence_hint": "States single-session machine, in-memory bank, fixed denominations, and the PIN×3 / out-of-notes use cases."
+    }
+   ],
+   "probes": [
+    "What clarifying questions do you ask before drawing classes?",
+    "Which transactions are in scope for v1, and what happens after 3 wrong PINs?"
+   ],
+   "hints": {
+    "1": "Start from customer and operator use cases, not patterns.",
+    "2": "Separate mandatory FR (auth, balance, withdraw, deposit, eject) from extensions (transfer, mini-statement, daily limit, refill, receipt).",
+    "3": "Say: one customer per machine; fixed denominations; in-memory bank; PIN×3 locks/retains card; out of notes refuses withdraw but allows balance."
+   }
+  },
+  {
+   "phase": "entities",
+   "goal": "Name the domain objects and who owns session state, money movement, and physical cash.",
+   "must_hit": [
+    {
+     "id": "ent1",
+     "point": "Core entities: ATM / ATMSystem (context + Facade); ATMState hierarchy; Card; Account; BankService / BankNetwork; CashDispenser + denomination chain; Transaction hierarchy (Withdraw / Deposit / BalanceInquiry).",
+     "weight": "core",
+     "evidence_hint": "Names ATM context, states, Card, Account, BankService, CashDispenser/chain, and Transaction types — not one god class."
+    },
+    {
+     "id": "ent2",
+     "point": "Optional hardware ports: CardReader, Keypad, Screen, Printer, DepositSlot — ATM orchestrates them; BankService is authority for balances; Dispenser is the physical cash constraint separate from account balance.",
+     "weight": "core",
+     "evidence_hint": "Separates hardware I/O, bank money authority, and dispenser inventory responsibilities."
+    },
+    {
+     "id": "ent3",
+     "point": "Session model: one physical ATM → one active card/session; card stays until cancel/eject; cancel anytime → eject + Idle; PIN attempt counter lives on session/state, not sprinkled through ATM methods.",
+     "weight": "extended",
+     "evidence_hint": "Describes single active session, eject-on-cancel, and attempt counter scoped to session/state."
+    },
+    {
+     "id": "ent4",
+     "point": "Money units: prefer integer minor units (cents/paise) in production; demos often use int dollars — never rely on double equality for cash math.",
+     "weight": "extended",
+     "evidence_hint": "Rejects double for cash; uses int minor units or int dollars with that caveat."
+    }
+   ],
+   "probes": [
+    "What are the main entities and who owns balances vs cash inventory vs session state?",
+    "Where does the PIN attempt counter live?"
+   ],
+   "hints": {
+    "1": "List nouns from the happy path: ATM, card, account, bank, dispenser, transaction.",
+    "2": "ATM is Facade+context; states own legality; BankService owns balances; CashDispenser owns notes.",
+    "3": "Sketch ATM → ATMState + BankService + CashDispenser(COR) + Card/Account; optional CardReader/Keypad/Screen/Printer; attempt counter on session/state."
+   }
+  },
+  {
+   "phase": "class_design",
+   "goal": "Draw Facade + State + COR so transitions and note handling live in pluggable types, not a giant switch.",
+   "must_hit": [
+    {
+     "id": "cd1",
+     "point": "ATMSystem / ATM holds currentState, currentCard, bankService, cashDispenser; exposes insertCard / enterPin / selectOperation / ejectCard that delegate to state, plus changeState; ATM must not become a giant if/else on state.",
+     "weight": "core",
+     "evidence_hint": "Shows context fields and state-delegated public API with changeState, not nested state×op switches."
+    },
+    {
+     "id": "cd2",
+     "point": "ATMState interface defines insertCard / enterPin / selectOperation / ejectCard; concrete IdleState | HasCardState | AuthenticatedState | (OutOfServiceState); each state implements valid behavior and calls atm.changeState(...).",
+     "weight": "core",
+     "evidence_hint": "Lists the state interface methods and concrete states with transitions inside states."
+    },
+    {
+     "id": "cd3",
+     "point": "CashDispenser wraps DispenseChain; NoteDispenser chain e.g. NoteDispenser100 → 50 → 20 (or NoteDispenser2000 → 500 → 200 → 100 / $100→$50→$20→$10); BankService holds accounts/cards maps with authenticate / getBalance / withdrawMoney / depositMoney; optional Transaction as Command.",
+     "weight": "extended",
+     "evidence_hint": "Shows COR dispenser hierarchy linked to BankService APIs and optional Transaction Command types."
+    }
+   ],
+   "probes": [
+    "Walk me through the class diagram and where state transitions live.",
+    "How is the cash dispenser structured?"
+   ],
+   "hints": {
+    "1": "Draw Idle → HasCard → Authenticated → Dispensing → Idle before naming classes.",
+    "2": "Facade delegates to ATMState; CashDispenser sits beside BankService as COR.",
+    "3": "ATMState with Idle/HasCard/Authenticated; NoteDispenser100→50→20 chain; BankService for PIN/balance/debit; Transaction optional Command."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Implement FSM behavior, PIN lockout, COR dispense with dry-run, and debit/dispense with reversal on failure.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Happy path FSM: Idle → HasCard (PIN) → Authenticated → (Processing/Dispensing) → Idle; invalid actions reject / no-op — never allow withdraw from Idle.",
+     "weight": "core",
+     "evidence_hint": "Narrates legal transitions and explicit reject for illegal ops like withdraw while Idle."
+    },
+    {
+     "id": "impl2",
+     "point": "PIN security: max 3 attempts → lock/retain card → reset to Idle; reset attempts on success.",
+     "weight": "core",
+     "evidence_hint": "Implements attempt counting with lock/retain after 3 failures and Idle after eject."
+    },
+    {
+     "id": "impl3",
+     "point": "COR cash: each cassette num = min(amount/denom, stock), reduce stock, forward remainder; dry-run canDispense before debiting the account.",
+     "weight": "core",
+     "evidence_hint": "Describes per-denom cassette math, remainder forwarding, and canDispense before any debit."
+    },
+    {
+     "id": "impl4",
+     "point": "Validation-before-commit: check account balance, ATM inventory / canDispense, optional daily limit — then debit; if hardware dispense fails → credit back / reverse.",
+     "weight": "extended",
+     "evidence_hint": "Orders balance + canDispense (+ daily limit) before debit and names reversal on dispense failure."
+    }
+   ],
+   "probes": [
+    "Walk through withdrawCash from Authenticated state end to end.",
+    "What happens if the dispenser jams after the account was debited?"
+   ],
+   "hints": {
+    "1": "Code Idle → HasCard → Authenticated happy path before extensions.",
+    "2": "canDispense dry-run, then debit, then dispense; reverse on hardware fail.",
+    "3": "COR largest-first with stock; PIN×3 lock/retain; withdrawCash = canDispense → debit → dispense with try/catch reverse."
+   }
+  },
+  {
+   "phase": "extensibility",
+   "goal": "Show OCP hooks for new states, denominations, and transaction types without rewriting ATM.",
+   "must_hit": [
+    {
+     "id": "ext1",
+     "point": "State pattern over enum-switch for OCP: adding OutOfService / Maintenance / CardBlocked should not edit a giant switch in ATM; each new state is a class.",
+     "weight": "core",
+     "evidence_hint": "Prefers State classes so new modes plug in without touching a central switch."
+    },
+    {
+     "id": "ext2",
+     "point": "Add ₹200 notes or a new txn type via new NoteDispenser link in chain / new Transaction + operation enum — no edit to IdleState; OCP = new state / denomination / transaction type without editing ATM.",
+     "weight": "core",
+     "evidence_hint": "Adds denomination or txn as new types/links without changing IdleState or the ATM god switch."
+    },
+    {
+     "id": "ext3",
+     "point": "SOLID: SRP = state owns transitions, dispenser owns notes, bank owns balances; DIP = depend on ATMState / DispenseChain / BankService abstractions; Singleton OK for one physical machine demo, prefer DI for tests / multi-ATM fleets.",
+     "weight": "extended",
+     "evidence_hint": "Maps SRP/DIP to concrete abstractions and qualifies Singleton with DI for tests/fleets."
+    }
+   ],
+   "probes": [
+    "How would you add OutOfService or a new denomination without rewriting ATM?",
+    "When is Singleton justified here?"
+   ],
+   "hints": {
+    "1": "Ask what should change without editing the Facade.",
+    "2": "New behavior → new State, NoteDispenser link, or Transaction — not more ifs.",
+    "3": "OutOfServiceState / CardBlocked as states; new NoteDispenser in COR; Singleton only for one machine demo, inject for tests/fleets."
+   }
+  },
+  {
+   "phase": "concurrency",
+   "goal": "Keep the physical ATM single-session while making BankService accounts and CashDispenser inventory safe under contention.",
+   "must_hit": [
+    {
+     "id": "conc1",
+     "point": "Physical ATM is usually single-user (session lock), but BankService accounts and CashDispenser inventory must be thread-safe if claiming concurrent ATMs or admin refill mid-session.",
+     "weight": "core",
+     "evidence_hint": "Separates single-user session from synchronized account and dispenser inventory."
+    },
+    {
+     "id": "conc2",
+     "point": "Hot path = canDispense + debit + dispense under contention → synchronized withdraw/deposit on Account, synchronized dispense/canDispense on dispenser; ConcurrentHashMap for accounts (awesome-lld pattern); don’t lock the whole bank for unrelated accounts.",
+     "weight": "core",
+     "evidence_hint": "Names per-account and dispenser synchronization plus ConcurrentHashMap, not a global bank lock."
+    },
+    {
+     "id": "conc3",
+     "point": "Two ATMs, same account: bank-side locking / optimistic balance check; local synchronized on one ATM’s demo map is not enough for a real fleet; fleet scale (if asked): ATM is thin client, bank/switch owns ledger, local inventory eventually reconciled via operator + settlement logs.",
+     "weight": "extended",
+     "evidence_hint": "Escalates from single-ATM locks to bank-side consistency for multi-ATM same-account."
+    }
+   ],
+   "probes": [
+    "Two ATMs hit the same account — what protects the balance?",
+    "Can an operator refill cassettes while a withdrawal is in progress?"
+   ],
+   "hints": {
+    "1": "Think one customer session on one machine, shared bank across machines.",
+    "2": "Session-lock the ATM; synchronize Account and CashDispenser separately.",
+    "3": "synchronized Account debit/credit + synchronized canDispense/dispense; ConcurrentHashMap accounts; fleet needs bank-side locking, not only local demo maps."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Enum FSM vs State pattern classes",
+   "strong_answer": "Enum + switch is faster to code; State classes win OCP when interviewers add Maintenance / CardBlocked / OutOfCash. Prefer State in OOD rounds (same lesson as vending machine)."
+  },
+  {
+   "topic": "Greedy COR vs DP for notes",
+   "strong_answer": "Greedy largest-first matches interview demos and canonical denominations; mention DP / alternate strategies if denominations are awkward or minimize note count under stock constraints is probed."
+  },
+  {
+   "topic": "Debit-then-dispense vs dispense-then-debit",
+   "strong_answer": "Industry ATM flows debit (or hold) then dispense; must reverse on hardware failure. Never leave debited but no cash without a recovery path."
+  },
+  {
+   "topic": "Singleton ATM",
+   "strong_answer": "OK for one physical machine demo; prefer DI for tests / multi-ATM fleets."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Withdraw before PIN / withdraw from Idle",
+   "correction": "State rejects; only Authenticated (or PINEntered) allows txns — never allow withdraw from Idle."
+  },
+  {
+   "trap": "Ignoring 3 wrong PINs",
+   "correction": "Lock card / retain; reset attempts on success; transition to Idle after eject."
+  },
+  {
+   "trap": "ATM has total cash ≥ amount but wrong denominations (e.g. need $30 with only $20s)",
+   "correction": "canDispense fails even if total cash ≥ amount; don’t debit."
+  },
+  {
+   "trap": "Dispense hardware jammed after debit",
+   "correction": "Reverse credit + error screen; log for operator; don’t eject until safe (senior probe: card retention ordering)."
+  },
+  {
+   "trap": "God-class ATM with nested if (state) × if (op)",
+   "correction": "State pattern is the expected fix — transitions belong in state classes via changeState."
+  },
+  {
+   "trap": "Using double for cash or skipping dry-run and overdrafting the cassette",
+   "correction": "Prefer integer minor units; dry-run canDispense before debit; fail closed rather than partial silent dispense unless product asks."
+  },
+  {
+   "trap": "Two ATMs, same account — only local synchronized on one ATM’s demo map",
+   "correction": "Need bank-side locking / optimistic balance check; local map sync is not enough for a real fleet."
+  },
+  {
+   "trap": "Adding ₹200 notes or a new txn type by editing IdleState / ATM switch",
+   "correction": "New NoteDispenser link in chain / new Transaction + operation enum; no edit to IdleState."
+  }
+ ]
+}

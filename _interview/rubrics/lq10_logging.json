@@ -1,0 +1,283 @@
+{
+ "id": "lq10_logging",
+ "title": "Design a Logging Framework",
+ "type": "LLD",
+ "relevance": "High — classic LLD / machine-coding round that packs Chain of Responsibility, Strategy, Singleton/Factory, Observer-style fan-out, and concurrency into one problem; asked at Uber, Google, Atlassian, Amazon, and many Indian product cos.",
+ "difficulty": "mid",
+ "prereqs": [
+  "l01_oop_solid",
+  "l02_patterns_creational",
+  "l03_patterns_structural"
+ ],
+ "company_notes": "Campus/new-grad machine-coding or LLD in India (Amazon, Flipkart, Uber, Walmart, Atlassian-style): working console+file logger with levels and a clear class diagram. SDE-2 probes hierarchy/additivity, async backpressure, per-appender levels, MDC, lock granularity, Log4j/SLF4J comparison. FAANG OOD whiteboard emphasizes clarifying questions and pattern naming. Standard LLD set piece for Chain of Responsibility plus concurrency.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Clarify in-process library scope, mandatory FRs/NFRs, and what to defer as optional extensions.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Scope as an in-process logging library (Log4j/SLF4J-style), not a distributed aggregator; call out async, hierarchy, rotation, and remote sinks as optional extensions.",
+     "weight": "core",
+     "evidence_hint": "Candidate asks library vs Kafka→ELK aggregator and states the interview wants the library, with advanced features optional."
+    },
+    {
+     "id": "req2",
+     "point": "Mandatory FR: log at DEBUG/INFO/WARN/ERROR/FATAL; each record has timestamp, level, and message; configurable min level; write to console and/or file; extensible for new destinations.",
+     "weight": "core",
+     "evidence_hint": "Lists levels, record fields, threshold config, console/file sinks, and extensibility for new destinations."
+    },
+    {
+     "id": "req3",
+     "point": "NFR: thread-safe (no interleaved lines), low overhead when a level is disabled, OCP for new sinks/formats, and a simple client API like logger.info.",
+     "weight": "core",
+     "evidence_hint": "Names thread-safety, disabled-level short-circuit, OCP, and a clean info/debug-style API."
+    },
+    {
+     "id": "req4",
+     "point": "Common extensions to ask about: multiple appenders, custom formatters (plain/JSON), async path, named hierarchical loggers with additivity, Database/Kafka appender, rolling files, MDC.",
+     "weight": "extended",
+     "evidence_hint": "Proactively lists multi-appender, formatters, async, hierarchy/additivity, remote sinks, rolling files, and MDC as ask-first extensions."
+    }
+   ],
+   "probes": [
+    "Is this an in-process library or a distributed log aggregator, and which features are in v1 vs optional?",
+    "What must every log record include, and which destinations are mandatory for the first cut?"
+   ],
+   "hints": {
+    "1": "Start by asking library vs aggregator before listing features.",
+    "2": "Separate mandatory FR (levels, console/file, min level) from optional FR (async, hierarchy, Kafka).",
+    "3": "State: in-process library; DEBUG…FATAL; timestamp+level+message; console and/or file; thread-safe; OCP; async/hierarchy as extensions."
+   }
+  },
+  {
+   "phase": "entities",
+   "goal": "Identify the core data objects and how log events and levels are modeled.",
+   "must_hit": [
+    {
+     "id": "ent1",
+     "point": "Log levels are an ordered enum TRACE < DEBUG < INFO < WARN < ERROR < FATAL; emit only if messageLevel >= configuredLevel.",
+     "weight": "core",
+     "evidence_hint": "Shows an ordered level enum and a >= threshold rule for emission."
+    },
+    {
+     "id": "ent2",
+     "point": "LogMessage (or LogRecord) is an immutable event carrying level, message, timestamp, logger name, and optionally thread name.",
+     "weight": "core",
+     "evidence_hint": "Describes an immutable LogMessage with those fields built after the level check."
+    },
+    {
+     "id": "ent3",
+     "point": "Optional LoggerConfig holds min level and the list of appenders rather than hardcoding setup inside log().",
+     "weight": "extended",
+     "evidence_hint": "Mentions a config object or factory setup for min level and appenders at startup."
+    }
+   ],
+   "probes": [
+    "What fields belong on a LogMessage, and when is it created relative to the level check?",
+    "How do you represent log levels so threshold filtering is a simple comparison?"
+   ],
+   "hints": {
+    "1": "Think enum for levels and a single event object for each log call.",
+    "2": "Level check first, then allocate the immutable LogMessage.",
+    "3": "Ordered enum TRACE…FATAL; LogMessage(level, message, timestamp, loggerName, threadName?); optional LoggerConfig(minLevel, appenders)."
+   }
+  },
+  {
+   "phase": "class_design",
+   "goal": "Sketch Logger, LogManager, Appender/Formatter strategies, hierarchy, and pattern roles.",
+   "must_hit": [
+    {
+     "id": "cd1",
+     "point": "LogManager/LoggerFactory is a Singleton registry of named Loggers via getLogger(name)—not a single Singleton Logger for the whole app.",
+     "weight": "core",
+     "evidence_hint": "Draws LogManager.getLogger(name) returning named loggers from a registry."
+    },
+    {
+     "id": "cd2",
+     "point": "Compose Formatter and Appender independently (Strategy): Console/File/DB appenders each use a LogFormatter (plain or JSON)—avoid JsonFileAppender × PlainConsoleAppender explosion.",
+     "weight": "core",
+     "evidence_hint": "Shows LogAppender uses LogFormatter; same formatter works across destinations."
+    },
+    {
+     "id": "cd3",
+     "point": "Logger fans out to a list of LogAppenders (Observer-style); hierarchy uses parent Logger for effective level and additivity/propagate bubble-up (production CoR), not an INFO→DEBUG→ERROR handler class chain.",
+     "weight": "core",
+     "evidence_hint": "List of appenders for fan-out; parent pointer + getEffectiveLevel and additivity; contrasts with the teaching-only level-handler chain."
+    },
+    {
+     "id": "cd4",
+     "point": "AsyncAppender Decorator wraps another Appender; Template Method shape is filter → format → emit on the handler path.",
+     "weight": "extended",
+     "evidence_hint": "Names Decorator for async wrapper and the filter/format/emit skeleton."
+    }
+   ],
+   "probes": [
+    "Why is Singleton on Logger a junior smell, and what should own the registry instead?",
+    "How do hierarchy CoR and list-of-appenders differ from an INFO→DEBUG→ERROR handler chain?"
+   ],
+   "hints": {
+    "1": "Name Strategy, Observer fan-out, and Factory/registry before coding.",
+    "2": "LogManager 1—* Logger; Logger—* Appender; Appender→Formatter; parent Logger for hierarchy.",
+    "3": "Prefer LogManager.getLogger registry + appender list + parent additivity; AsyncAppender as Decorator."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Describe the log pipeline, client API, and a working sync console/file path with level gating.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Pipeline: Logger.log(level, msg) → level check via getEffectiveLevel → build LogMessage → optional filters → callAppenders (each formats then writes) → bubble to parent if additivity.",
+     "weight": "core",
+     "evidence_hint": "Walks level gate, immutable message, fan-out, format-then-write, optional parent bubble."
+    },
+    {
+     "id": "impl2",
+     "point": "Put the level check before allocating or formatting so disabled DEBUG does not pay String.format / concatenation cost.",
+     "weight": "core",
+     "evidence_hint": "Emphasizes ordinal compare and early return before new LogMessage or string work."
+    },
+    {
+     "id": "impl3",
+     "point": "Client API: LogManager.getLogger(name); debug/info/warn/error/fatal; log(level, message); setLevel/addAppender/setAdditivity; LogManager.shutdown to flush and close.",
+     "weight": "core",
+     "evidence_hint": "Sketches named getLogger, level helpers, mutators, and shutdown."
+    },
+    {
+     "id": "impl4",
+     "point": "Timed drill target: Logger + LogLevel + ConsoleAppender/FileAppender + level filter + thread-safe writes, then multi-appender list.",
+     "weight": "extended",
+     "evidence_hint": "Plans a sync console+file demo first, then multi-appender, with async/hierarchy as sketch."
+    }
+   ],
+   "probes": [
+    "Walk through what happens on logger.info(\"…\") from API call to bytes on disk.",
+    "Where exactly do you short-circuit a disabled DEBUG call?"
+   ],
+   "hints": {
+    "1": "Start with sync ConsoleAppender and FileAppender plus a level gate.",
+    "2": "Effective level check → LogMessage → each appender’s formatter → write.",
+    "3": "getEffectiveLevel early return; then message; callAppenders; parent if additivity; shutdown flushes."
+   }
+  },
+  {
+   "phase": "extensibility",
+   "goal": "Show OCP for new sinks/formats and senior extensions like hierarchy, per-appender levels, and remote appenders.",
+   "must_hit": [
+    {
+     "id": "ext1",
+     "point": "New Slack/Kafka/DB sink = new LogAppender implementation without editing Logger.log if-else; new JSON vs plain = LogFormatter Strategy swap on the same appender.",
+     "weight": "core",
+     "evidence_hint": "Adds a class implementing LogAppender/LogFormatter; Logger stays closed for modification."
+    },
+    {
+     "id": "ext2",
+     "point": "Named hierarchical loggers with dotted names; child inherits effective level from nearest configured ancestor; additivity=false stops bubble-up to parent appenders.",
+     "weight": "core",
+     "evidence_hint": "Explains parent walk for getEffectiveLevel and additivity controlling propagate."
+    },
+    {
+     "id": "ext3",
+     "point": "Per-appender (or per-destination) thresholds enable console DEBUG with file only WARN—not one global filter only.",
+     "weight": "extended",
+     "evidence_hint": "Each appender holds its own min level so destinations filter independently."
+    }
+   ],
+   "probes": [
+    "How do you add a Kafka sink without touching Logger?",
+    "How can console be DEBUG while the file appender only accepts WARN?"
+   ],
+   "hints": {
+    "1": "Depend on LogAppender/LogFormatter abstractions (DIP/OCP).",
+    "2": "Hierarchy for level inheritance; per-appender min level for multi-threshold.",
+    "3": "New Appender impl; Formatter Strategy; getEffectiveLevel walk; additivity=false; per-appender threshold."
+   }
+  },
+  {
+   "phase": "concurrency",
+   "goal": "Ensure thread-safe registry/appender lists, non-interleaved writes, and a sound async/backpressure story.",
+   "must_hit": [
+    {
+     "id": "conc1",
+     "point": "Synchronize per appender (or use a single-writer async thread) so one record’s bytes never interleave; use CopyOnWriteArrayList/snapshot for appender lists and ConcurrentHashMap for the logger registry.",
+     "weight": "core",
+     "evidence_hint": "Rejects only a global synchronized log() as the long-term answer; locks inside appenders or serializes via one async worker; COW list + concurrent registry."
+    },
+    {
+     "id": "conc2",
+     "point": "Async logging enqueues LogMessage on a bounded BlockingQueue / single-thread executor so callers return fast; name backpressure (drop / block / write-inline when full) and flush on shutdown.",
+     "weight": "core",
+     "evidence_hint": "Describes queue + drain thread or AsyncAppender; policies when full; LogManager.shutdown / shutdown hook."
+    },
+    {
+     "id": "conc3",
+     "point": "Appender failures must not crash the app (catch + fallback stderr/error handler); process exit must not silently lose the async queue.",
+     "weight": "extended",
+     "evidence_hint": "Mentions try/catch around append and explicit shutdown flush for async."
+    }
+   ],
+   "probes": [
+    "Two threads log at once and lines garble—where is the race and how do you fix it?",
+    "How do you make logging non-blocking, and what happens when the queue is full or the process exits?"
+   ],
+   "hints": {
+    "1": "Shared PrintStream/file handle needs synchronization or a single writer.",
+    "2": "Per-appender lock or async consumer; concurrent registry; COW appender list.",
+    "3": "Bounded queue + backpressure policy; shutdown flush; catch appender errors; avoid global lock serializing the whole app."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Singleton Logger vs Singleton Factory + many named Loggers",
+   "strong_answer": "Singleton on Logger blocks per-module levels/appenders (junior smell). Prefer LogManager.getLogger(name) registry so each named logger can have its own level and appenders (CalibreOS senior bar)."
+  },
+  {
+   "topic": "Handler CoR vs list-of-appenders + hierarchy CoR",
+   "strong_answer": "INFO→DEBUG→ERROR class chain teaches CoR but is not the Log4j model. Prefer appenders as a fan-out list and hierarchy for level inheritance plus additivity; mention both, implement list+hierarchy."
+  },
+  {
+   "topic": "Sync vs async append",
+   "strong_answer": "Sync is correct and simpler for demos; async decouples caller latency but risks loss on crash or a full queue—explicitly name the backpressure policy and shutdown flush."
+  },
+  {
+   "topic": "Global lock vs per-appender lock / single-writer",
+   "strong_answer": "Global synchronized log() is correct but serializes the app; prefer locking inside each appender or one async consumer thread so producers only contend on the queue."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Two threads logging at once produce garbled lines on a shared PrintStream or file handle.",
+   "correction": "Synchronize append() per appender or use a single-writer async thread so record bytes never interleave."
+  },
+  {
+   "trap": "Assuming one global level filter when the interviewer wants console DEBUG but file only WARN.",
+   "correction": "Use per-appender or per-destination thresholds, not only a single global filter."
+  },
+  {
+   "trap": "Adding Slack/Kafka/DB by extending if-else inside Logger.log.",
+   "correction": "Add a new LogAppender implementation; keep Logger closed for modification (OCP)."
+  },
+  {
+   "trap": "Concatenating strings like \"user=\"+id before the level check.",
+   "correction": "That allocates even when DEBUG is off; prefer lazy or parameterized messages and check level first."
+  },
+  {
+   "trap": "An appender throw crashes the application.",
+   "correction": "Catch appender failures and fall back to stderr or an error handler."
+  },
+  {
+   "trap": "Process exit drops messages still sitting in the async queue.",
+   "correction": "Register a shutdown hook or call LogManager.shutdown() to flush and close appenders."
+  },
+  {
+   "trap": "Making logging non-blocking without defining queue-full and shutdown behavior.",
+   "correction": "Use AsyncAppender Decorator or a shared processor queue; discuss drop vs block vs write-inline when full; flush on shutdown."
+  },
+  {
+   "trap": "Named logger com.app should inherit INFO but candidate has no parent walk or additivity control.",
+   "correction": "Parent pointer plus getEffectiveLevel() walk; additivity=false stops bubble-up to parent appenders."
+  }
+ ]
+}

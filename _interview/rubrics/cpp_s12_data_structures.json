@@ -1,0 +1,235 @@
+{
+ "id": "cpp_s12_data_structures",
+ "title": "Data Structures in C",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs expect candidates to implement and reason about arrays, lists, trees, and hash tables from scratch in C using structs, pointers, and malloc.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that C has no built-in containers and that core structures are built from structs, pointers, and heap allocation.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "C has no standard containers like vector or List; you build them from structs, pointers, and malloc.",
+     "weight": "core",
+     "evidence_hint": "States you shape data yourself with structs/pointers/malloc rather than using a standard library container type."
+    },
+    {
+     "id": "fund2",
+     "point": "A dynamic array struct tracks a heap pointer plus current length and capacity, and typically doubles capacity when full.",
+     "weight": "core",
+     "evidence_hint": "Mentions data/len/cap fields and resizing by doubling when len equals cap."
+    },
+    {
+     "id": "fund3",
+     "point": "A singly linked list is a chain of self-referential nodes each holding a value and a next pointer, ending at NULL.",
+     "weight": "core",
+     "evidence_hint": "Describes head-to-tail pointer chasing and that you cannot jump to an arbitrary index."
+    },
+    {
+     "id": "fund4",
+     "point": "In a BST, for any node N all left-subtree values are less than N and all right-subtree values are greater than N.",
+     "weight": "core",
+     "evidence_hint": "States the left < N < right ordering invariant clearly."
+    },
+    {
+     "id": "fund5",
+     "point": "A hash table maps keys to bucket indices via a hash function; collisions are commonly resolved with separate chaining (bucket linked lists).",
+     "weight": "extended",
+     "evidence_hint": "Explains hashing into a finite bucket array and appending colliding entries to a per-bucket list."
+    }
+   ],
+   "probes": [
+    "Why can't you use something like std::vector in C, and what three pieces of state does a dynamic array need?",
+    "What is the BST ordering rule, and how does a hash table handle two keys hashing to the same bucket?"
+   ],
+   "hints": {
+    "1": "Think about what C gives you natively versus what you allocate and link yourself.",
+    "2": "Cover dynamic arrays (len/cap), linked nodes (next/NULL), BST left/right order, and hash buckets with chaining.",
+    "3": "Say: no built-in containers—use malloc/structs; vec has data/len/cap and doubles; list nodes end at NULL; BST left < N < right; hash collisions go into per-bucket linked lists."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how resize, pointer updates, BST delete cases, ring buffers, rehashing, and generics actually operate in C.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "When a dynamic array is full, allocate a larger block (often cap * 2), copy elements over (memcpy/realloc), and free the old block; amortized append is O(1) though a resize is O(n).",
+     "weight": "core",
+     "evidence_hint": "Walks through doubling, copy, free/realloc, and amortized O(1) vs occasional O(n)."
+    },
+    {
+     "id": "mech2",
+     "point": "Before freeing a list node you must stash current->next; freeing first makes the rest of the list unreachable (Lost Node Trap).",
+     "weight": "core",
+     "evidence_hint": "Says save next in a temporary, then free, then advance—never free then read next."
+    },
+    {
+     "id": "mech3",
+     "point": "BST deletion has three cases: leaf (parent to NULL); one child (relink parent to child); two children (replace with in-order successor—smallest in right subtree—then delete that successor).",
+     "weight": "core",
+     "evidence_hint": "Names all three cases and defines successor as smallest in the right subtree."
+    },
+    {
+     "id": "mech4",
+     "point": "A circular/ring buffer uses a fixed array with head and tail indices that wrap with modulo (%), giving O(1) enqueue/dequeue without shifting or malloc.",
+     "weight": "extended",
+     "evidence_hint": "Mentions fixed size, head/tail, wrap via %, no element shifting."
+    },
+    {
+     "id": "mech5",
+     "point": "When hash-table load factor (entries/buckets) exceeds a threshold (often 0.75), allocate a larger array and re-hash all keys into it.",
+     "weight": "extended",
+     "evidence_hint": "Defines load factor and describes grow-and-rehash at about 0.75."
+    },
+    {
+     "id": "mech6",
+     "point": "Generic C containers hold void* and take function pointers (e.g. compare/free) because the container cannot interpret opaque element types.",
+     "weight": "extended",
+     "evidence_hint": "Mentions void* storage plus callbacks like compare and free_element."
+    }
+   ],
+   "probes": [
+    "Walk through appending to a full dynamic array, then deleting a singly linked list node safely.",
+    "How do you delete a BST node with two children, and when must a hash table rehash?"
+   ],
+   "hints": {
+    "1": "Focus on what you save or copy before you free or overwrite a pointer.",
+    "2": "Order: resize copy path; stash-next-before-free; BST leaf/one/two-child; ring wrap; load-factor rehash.",
+    "3": "Double via cap*2 then memcpy/realloc; temp=next before free; two-child uses in-order successor; ring uses head/tail %; rehash past load factor often 0.75; generics need void* plus function pointers."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare structure choices for access, insert/delete, balance, and memory ownership.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Linked lists excel at mid-sequence insert/delete via pointer updates with no shifting, but lose O(1) random access because nodes are non-contiguous.",
+     "weight": "core",
+     "evidence_hint": "Contrasts no-shift middle edits against pointer-chasing access versus arrays."
+    },
+    {
+     "id": "tr2",
+     "point": "A doubly linked list adds prev for bidirectional walk and O(1) deletion given a node pointer, at the cost of more pointer updates per operation.",
+     "weight": "core",
+     "evidence_hint": "States bidirectional traversal and O(1) delete-if-you-have-the-node versus extra pointer management."
+    },
+    {
+     "id": "tr3",
+     "point": "Stacks/queues are ADTs: array-backed stacks push/pop at the end; list-backed queues keep head and tail pointers for dequeue/enqueue.",
+     "weight": "extended",
+     "evidence_hint": "Separates LIFO/FIFO abstraction from array-end vs head/tail list backing."
+    },
+    {
+     "id": "tr4",
+     "point": "Unbalanced BSTs give O(log n) search/insert/delete when balanced but degrade to O(n) if sorted inserts create a linked-list shape; hash tables target O(1) average lookup when log n is not enough.",
+     "weight": "core",
+     "evidence_hint": "Mentions degeneration to a list and hash tables for average O(1) vs BST log n."
+    },
+    {
+     "id": "tr5",
+     "point": "Node-based ownership must be explicit: owning containers free element data in list_free; borrowing containers only free nodes and leave data to the caller—ambiguity causes leaks or double-frees.",
+     "weight": "extended",
+     "evidence_hint": "Distinguishes own vs borrow and ties mistakes to leaks/double-frees."
+    }
+   ],
+   "probes": [
+    "When would you pick a linked list over a dynamic array, and when is a doubly linked list worth the extra pointers?",
+    "What goes wrong with a plain BST on sorted input, and how does that push you toward a hash table or a balanced tree?"
+   ],
+   "hints": {
+    "1": "Compare random access and shifting costs first, then balance and ownership.",
+    "2": "Array vs list access/insert; singly vs doubly; stack/queue backing; BST skew vs hash O(1) avg; own vs borrow frees.",
+    "3": "List: mid insert without shift, no O(1) index; doubly: O(1) delete with node pointer but more links; sorted BST inserts -> O(n); hash for O(1) avg; document whether free walks element data."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply classic pointer and tree techniques used in interviews on these structures.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Detect a list cycle with Floyd's tortoise and hare: slow moves one step, fast moves two; meeting means a cycle, fast hitting NULL means none.",
+     "weight": "core",
+     "evidence_hint": "Names Floyd / tortoise-hare and states one-vs-two step rules and both outcomes."
+    },
+    {
+     "id": "app2",
+     "point": "Find the middle of a list with the same slow/fast pointer technique.",
+     "weight": "extended",
+     "evidence_hint": "Says slow/fast until fast ends; slow is at the middle."
+    },
+    {
+     "id": "app3",
+     "point": "Iteratively reverse a singly linked list with three pointers (prev, curr, next): save next, reverse curr->next to prev, advance prev and curr.",
+     "weight": "core",
+     "evidence_hint": "Describes the three-pointer loop and returns prev as the new head."
+    },
+    {
+     "id": "app4",
+     "point": "Validate a binary tree as a BST by tracking allowed min and max during recursive descent; build a queue using two stacks.",
+     "weight": "extended",
+     "evidence_hint": "Mentions min/max bounds for BST validation and the two-stack queue construction."
+    }
+   ],
+   "probes": [
+    "How do you detect a cycle in a linked list, and how do you reverse one in place?",
+    "How would you check that a binary tree satisfies the BST property?"
+   ],
+   "hints": {
+    "1": "Interview classics here are mostly two-pointer list tricks and BST bounds.",
+    "2": "Cycle and middle use slow/fast; reverse uses prev/curr/next; BST check uses min/max ranges.",
+    "3": "Floyd: slow +1, fast +2, meet => cycle; reverse stashes next then flips link; validate BST with recursive min/max; queue from two stacks is another common ask."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Dynamic array vs singly linked list",
+   "strong_answer": "Arrays give contiguous storage and O(1) index access but mid insert/delete costs O(n) shifting; linked lists insert/delete in the middle by updating a few pointers with no shifting, but access is O(n) pointer chasing and cache-unfriendly scatter."
+  },
+  {
+   "topic": "Singly vs doubly linked list",
+   "strong_answer": "Doubly linked lists add a prev pointer for bidirectional traversal and O(1) deletion when you already hold the node, at the cost of maintaining more pointers on every update."
+  },
+  {
+   "topic": "Array-backed vs list-backed stack/queue",
+   "strong_answer": "An array-backed stack is a dynamic array restricted to end push/pop; a list-backed queue keeps head and tail so dequeue and enqueue stay efficient without shifting. In embedded settings without malloc, a fixed circular buffer with head/tail modulo wrap is preferred."
+  },
+  {
+   "topic": "BST vs hash table",
+   "strong_answer": "BSTs support ordered lookup and sorted in-order iteration at O(log n) when balanced, but sorted inserts can degenerate to O(n); hash tables aim for O(1) average search/insert/delete via hashing and chaining, without inherent sorted iteration."
+  },
+  {
+   "topic": "Owning vs borrowing containers",
+   "strong_answer": "If the structure owns element data, teardown must free each payload before freeing nodes; if it only borrows references, only node structs are freed and the caller frees data—unclear ownership causes leaks or double-frees."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Updating or freeing a list pointer before saving its successor (Lost Node Trap).",
+   "correction": "Stash current->next in a temporary before free or reassignment; e.g. never free(current); current = current->next."
+  },
+  {
+   "trap": "Walking a list with the head pointer itself and losing the original head.",
+   "correction": "Use a separate current pointer for traversal so head remains usable."
+  },
+  {
+   "trap": "Inserting already-sorted keys into an unbalanced BST (Degeneration Trap).",
+   "correction": "Recognize the tree becomes a linked list and search drops from O(log n) to O(n); production code uses self-balancing trees (e.g. AVL or Red-Black) for O(log n) depth."
+  },
+  {
+   "trap": "Assuming hash lookup is always cheap without considering load.",
+   "correction": "Track load factor (entries/buckets) and when it exceeds a threshold (often 0.75), grow the bucket array and re-hash all keys."
+  },
+  {
+   "trap": "Leaving memory ownership of node payloads unspecified.",
+   "correction": "Document whether the container owns or borrows data, and free accordingly to avoid leaks and double-frees."
+  }
+ ]
+}

@@ -1,0 +1,152 @@
+{
+ "id": "cpp_s06_control_flow",
+ "title": "Control flow and statement-level features",
+ "type": "FUND",
+ "relevance": "Short-circuit side effects and switch fall-through are classic C++ OA and interview traps that silently change control or skip updates.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish how &&/|| short-circuit and what a switch may select on.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Logical && and || evaluate operands left to right and stop as soon as the result is certain (short-circuit evaluation).",
+     "weight": "core",
+     "evidence_hint": "Candidate names short-circuit and left-to-right evaluation for both operators."
+    },
+    {
+     "id": "fund2",
+     "point": "For a && b, if a is false then b is not evaluated; for a || b, if a is true then b is not evaluated.",
+     "weight": "core",
+     "evidence_hint": "States the false-left skip for && and the true-left skip for ||."
+    },
+    {
+     "id": "fund3",
+     "point": "A switch controlling expression must be an integer or character type (int or char).",
+     "weight": "core",
+     "evidence_hint": "Says the switch expression is integral—int or char—and cases compare against that value."
+    }
+   ],
+   "probes": [
+    "How do && and || decide whether to evaluate their right-hand operand?",
+    "What types are legal for a switch controlling expression?"
+   ],
+   "hints": {
+    "1": "Think about when the whole boolean result is already known.",
+    "2": "Contrast a false left side of && with a true left side of ||; then name the allowed switch expression types.",
+    "3": "&& skips b when a is false; || skips b when a is true; switch needs int or char (including character case labels)."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how skipped operands, if-init scope, and missing break actually behave.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "If the left operand of && is false, a side-effecting right operand is never run—so with a=5, b=7, i=5 and if (a > b && ++i < b), ++i does not run and i remains 5.",
+     "weight": "core",
+     "evidence_hint": "Walks through a > b as false, notes ++i is skipped, and concludes i stays 5."
+    },
+    {
+     "id": "mech2",
+     "point": "From C++17 an if may use an init-statement (if (int k = exp; k < a)); k is created when the if is reached, visible only inside that if, and destroyed when the if finishes.",
+     "weight": "core",
+     "evidence_hint": "Describes the semicolon-separated init, condition use of k, and scope ending with the if."
+    },
+    {
+     "id": "mech3",
+     "point": "Control enters at the matching case and falls through into following cases until a break or the end of the switch.",
+     "weight": "core",
+     "evidence_hint": "Explains fall-through: matched case continues into later cases unless break stops it."
+    }
+   ],
+   "probes": [
+    "In if (a > b && ++i < b) with a false left side, what happens to i?",
+    "How does an init-statement inside if affect where the declared variable lives?",
+    "What happens in a switch if a case has no break?"
+   ],
+   "hints": {
+    "1": "Ask whether the right operand of && runs when the left is false.",
+    "2": "Tie skipped evaluation to ++i; then separate if-init lifetime from switch fall-through without break.",
+    "3": "Left false ⇒ ++i never runs and i stays 5; C++17 if-init scopes k to the if; no break ⇒ execution continues into the next cases."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Connect short-circuit and scoped if-init to why interviewers care about placement and lifetime.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Declaring a variable in the if condition limits its lifetime so the surrounding scope stays uncluttered and the function activation record holds it only while the if is active.",
+     "weight": "core",
+     "evidence_hint": "Mentions tighter scope and stack/activation record growing only for the duration of the if."
+    },
+    {
+     "id": "tr2",
+     "point": "Putting an increment, decrement, or other side-effecting expression in the second or later operand of a logical operator trades readability for silent skipping when the earlier operand already decides the result.",
+     "weight": "core",
+     "evidence_hint": "States the firm rule against side effects in later logical operands because short-circuit may skip them."
+    }
+   ],
+   "probes": [
+    "Why declare a variable inside an if instead of in the enclosing function scope?",
+    "Why is a side-effecting expression in the right operand of && or || considered a bad idea?"
+   ],
+   "hints": {
+    "1": "Compare how long the name is visible and whether later code can accidentally use it.",
+    "2": "Link scoped if-init to a smaller activation footprint; link logical-operator side effects to conditional evaluation.",
+    "3": "If-init keeps the outer scope clean and shrinks the frame after the if; side effects in later &&/|| operands may never run depending on the first operand."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the traps: side effects under short-circuit and switch cases that must stand alone.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Do not place an increment, decrement, or any other side-effecting expression in the second or later operand of a logical operator—it may be skipped depending on the first operand.",
+     "weight": "core",
+     "evidence_hint": "Gives the rule and ties it to short-circuit skipping the side effect."
+    },
+    {
+     "id": "app2",
+     "point": "Each case that should stand alone must end with its own break; omitting break usually executes the matched case and every case after it.",
+     "weight": "core",
+     "evidence_hint": "Says missing break causes fall-through through subsequent cases and is usually a bug."
+    }
+   ],
+   "probes": [
+    "Where should you not put ++ or other side effects when writing a boolean condition?",
+    "How do you keep one switch case from also running the next case’s body?"
+   ],
+   "hints": {
+    "1": "Look at the operand that short-circuit might never evaluate.",
+    "2": "For conditions: keep side effects out of later &&/|| operands; for switch: end standalone cases explicitly.",
+    "3": "No side effects in second-or-later logical operands; every standalone case needs its own break or execution falls through."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "If-init scoped variable vs declaring in the enclosing scope",
+   "strong_answer": "An init-statement in the if (C++17) creates the variable when the if is reached, limits visibility to that statement, and destroys it when the if finishes, so the surrounding scope stays uncluttered and the activation record only holds it while the if is active."
+  },
+  {
+   "topic": "Side-effecting expression in a later &&/|| operand vs a separate statement",
+   "strong_answer": "Short-circuit may skip the later operand entirely, so increments, decrements, or other side effects there can silently not run; keep those effects outside the logical operands so evaluation does not depend on whether the result was already certain."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Writing something like if (a > b && ++i < b) and assuming i always updates.",
+   "correction": "If a > b is false, && does not evaluate ++i < b, so ++i never runs; with a=5, b=7, i=5 the program still prints 5 for i."
+  },
+  {
+   "trap": "Omitting break after a switch case that should stand alone.",
+   "correction": "Control falls through into the following cases until a break or the end of the switch, so later case bodies also run—usually unintended."
+  }
+ ]
+}

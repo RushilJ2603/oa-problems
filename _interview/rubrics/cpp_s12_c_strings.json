@@ -1,0 +1,199 @@
+{
+ "id": "cpp_s12_c_strings",
+ "title": "C-style strings and <cstring>",
+ "type": "FUND",
+ "relevance": "OAs and early SDE rounds still test null-terminated char arrays and the classic <cstring> operations for I/O, copy, search, compare, parse, and tokenize.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a C-style string is and what <cstring> provides.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A C-style string is a character array terminated by the null character '\\0'.",
+     "weight": "core",
+     "evidence_hint": "States that the terminator marks where the text ends inside an array that may be larger than the text."
+    },
+    {
+     "id": "fund2",
+     "point": "The <cstring> header is the C++ name for C's string.h and supplies the family of functions for these strings.",
+     "weight": "core",
+     "evidence_hint": "Names <cstring> / string.h as the library for C-style string operations."
+    }
+   ],
+   "probes": [
+    "What is a C-style string, and which header do you use for the classic string helpers in C++?"
+   ],
+   "hints": {
+    "1": "Think about how the end of the text is marked inside a char array.",
+    "2": "Mention the terminator character and the C++ header that wraps string.h.",
+    "3": "A C-style string is a char array ended by '\\0'; <cstring> is C++'s name for string.h."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Check how the core <cstring> operations and related I/O actually behave.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "cin.getline takes the array and its capacity; for char s[100], getline(s, 100) reads up to 99 chars plus '\\0' so it does not overrun the buffer.",
+     "weight": "core",
+     "evidence_hint": "Explains that passing the size leaves room for the terminating '\\0'."
+    },
+    {
+     "id": "mech2",
+     "point": "strcpy(destination, source) copies source character by character, including its '\\0', into destination; destination must hold source plus terminator.",
+     "weight": "core",
+     "evidence_hint": "Describes full copy including terminator and the size requirement."
+    },
+    {
+     "id": "mech3",
+     "point": "strncpy(destination, source, length) copies at most length characters, capping how much is written.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts the bounded copy with unbounded strcpy."
+    },
+    {
+     "id": "mech4",
+     "point": "strcat appends source starting at destination's existing '\\0' and adds a fresh terminator; strncat appends at most length characters of source.",
+     "weight": "core",
+     "evidence_hint": "Can say appending \"Morning\" onto \"Good\" yields \"GoodMorning\", and name the bounded form."
+    },
+    {
+     "id": "mech5",
+     "point": "strstr finds the first substring occurrence and returns a pointer to that match; strchr/strrchr find the first/last occurrence of a character and return a pointer into the string from there.",
+     "weight": "core",
+     "evidence_hint": "Uses an example like strstr(\"Programming\", \"gram\") returning \"gramming\", and notes the extra r in strrchr means reverse/last."
+    },
+    {
+     "id": "mech6",
+     "point": "strcmp compares lexicographically by sign: 0 if equal, negative if str1 orders before str2, positive if after; it walks until the first differing character and compares ASCII codes, so case matters ('a' is 97, 'A' is 65).",
+     "weight": "core",
+     "evidence_hint": "Mentions sign of return value and that lowercase codes are larger than uppercase, e.g. \"apple\" vs \"banana\" is negative because 'a' (97) precedes 'b' (98)."
+    },
+    {
+     "id": "mech7",
+     "point": "strtol(str, NULL, base) parses a leading long int in the given base; strtof(str, NULL) parses a float; the middle argument can capture the first unparsed character or be NULL to discard it.",
+     "weight": "extended",
+     "evidence_hint": "Recalls examples like strtol(\"235\", NULL, 10) and strtof(\"54.78\", NULL)."
+    },
+    {
+     "id": "mech8",
+     "point": "strtok splits on any delimiter characters: first call passes the string, later calls pass NULL to continue, and NULL is returned when no tokens remain.",
+     "weight": "core",
+     "evidence_hint": "Describes the first-call / NULL-continue pattern and that delimiters are the caller's choice."
+    }
+   ],
+   "probes": [
+    "Walk through strcpy/strncpy, strcat/strncat, the search functions, strcmp's return value, and how strtok is called repeatedly."
+   ],
+   "hints": {
+    "1": "Group the APIs: copy, append, search, compare, parse, tokenize.",
+    "2": "For each, say what is written or returned, and call out bounded forms and strtok's NULL continuation.",
+    "3": "strcpy copies including '\\0'; strncpy caps length; strcat/strncat append at the old '\\0'; strstr/strchr/strrchr return pointers; strcmp's sign is the result; strtok(str,...) then strtok(NULL,...)."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast unbounded vs bounded string writes and first vs last character search.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "strcpy is a full unbounded copy including the terminator, while strncpy lets the caller cap writes to at most length characters.",
+     "weight": "core",
+     "evidence_hint": "States that strcpy needs a large enough destination, whereas strncpy bounds how much is written."
+    },
+    {
+     "id": "tr2",
+     "point": "strcat appends the whole source (then a terminator), while strncat appends at most length characters of the source.",
+     "weight": "core",
+     "evidence_hint": "Names both forms and the length cap on the bounded append."
+    },
+    {
+     "id": "tr3",
+     "point": "strchr finds the first occurrence of a character; strrchr finds the last (the extra r stands for reverse).",
+     "weight": "extended",
+     "evidence_hint": "Clearly distinguishes first vs last match and the naming cue."
+    }
+   ],
+   "probes": [
+    "When would you reach for strncpy/strncat instead of strcpy/strcat, and how do strchr and strrchr differ?"
+   ],
+   "hints": {
+    "1": "Compare the unbounded helpers to their length-capped siblings.",
+    "2": "Also separate first-occurrence vs last-occurrence character search.",
+    "3": "strcpy/strcat need enough room and write fully; strncpy/strncat take a length cap; strchr is first, strrchr is last."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply getline, conversion, and strtok to concrete input and parsing tasks.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Read a whole line including spaces into a char array with cin.getline(array, capacity), passing size so the buffer is not overrun.",
+     "weight": "core",
+     "evidence_hint": "Gives a pattern like char s[100]; cin.getline(s, 100); and notes room for '\\0'."
+    },
+    {
+     "id": "app2",
+     "point": "Use strtol/strtof to convert leading numeric text in a C-string into long int or float (e.g. base 10 for strtol).",
+     "weight": "extended",
+     "evidence_hint": "Mentions converting strings like \"235\" and \"54.78\" via those functions."
+    },
+    {
+     "id": "app3",
+     "point": "With strtok and delimiters \"=;\", \"x=10;y=20;z=35\" yields tokens x, 10, y, 20, z, 35; using only \";\" yields the key-value chunks \"x=10\", \"y=20\", \"z=35\".",
+     "weight": "core",
+     "evidence_hint": "Explains that delimiter choice controls whether you get separate keys/values or whole pairs."
+    }
+   ],
+   "probes": [
+    "How would you read a full name into a char buffer, convert numeric text, and tokenize \"x=10;y=20;z=35\" as either flat tokens or key-value pairs?"
+   ],
+   "hints": {
+    "1": "Start with getline for spaced input, then parsing/tokenizing.",
+    "2": "Tie strtol/strtof to numeric strings and strtok's delimiter set to the desired split.",
+    "3": "getline(s, 100); strtol/strtof for numbers; strtok with \"=;\" for six tokens or \";\" for three key-value pairs."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "strcpy vs strncpy",
+   "strong_answer": "strcpy copies the entire source including '\\0' and requires a destination large enough for source plus terminator; strncpy copies at most a caller-chosen length, capping how much is written."
+  },
+  {
+   "topic": "strcat vs strncat",
+   "strong_answer": "strcat appends all of source starting at destination's existing '\\0' and adds a fresh terminator; strncat appends at most length characters of source."
+  },
+  {
+   "topic": "strchr vs strrchr",
+   "strong_answer": "strchr returns a pointer to the first occurrence of a character; strrchr returns a pointer to the last (the extra r stands for reverse)."
+  },
+  {
+   "topic": "strtok delimiter set vs key-value layout",
+   "strong_answer": "Delimiters \"=;\" on \"x=10;y=20;z=35\" produce x, 10, y, 20, z, 35; choosing only \";\" yields \"x=10\", \"y=20\", \"z=35\" as key-value pair chunks—the delimiter set is entirely the caller's choice."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Calling strcpy without ensuring the destination is large enough.",
+   "correction": "The destination must be large enough to hold the source plus its terminating '\\0'."
+  },
+  {
+   "trap": "Using cin.getline without passing the buffer capacity.",
+   "correction": "Pass the size so getline stops before overrunning the buffer and leaves room for '\\0' (e.g. getline(s, 100) on char s[100] reads up to 99 chars plus '\\0')."
+  },
+  {
+   "trap": "Expecting strcmp to ignore letter case.",
+   "correction": "Comparison uses ASCII codes of the first differing characters; lowercase letters have larger codes than uppercase ('a' is 97, 'A' is 65), so case affects ordering."
+  },
+  {
+   "trap": "Passing the original string on every strtok call instead of continuing correctly.",
+   "correction": "The first call passes the string; each later call passes NULL to continue from where the previous one stopped; NULL is returned once no tokens remain."
+  }
+ ]
+}

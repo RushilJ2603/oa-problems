@@ -1,0 +1,185 @@
+{
+ "id": "cpp_s36_type_casting",
+ "title": "Type casting (the four cast operators)",
+ "type": "FUND",
+ "relevance": "Interviewers use C++ cast operators to check whether candidates express conversion intent clearly and choose the safe cast for downcasting, const, and low-level reinterpretation.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish why C-style casts are unsafe and what each of the four named cast operators is for.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A C-style cast is dangerous because it is permissive, does not state intent, silently picks whichever conversion compiles, and is hard to search for.",
+     "weight": "core",
+     "evidence_hint": "Says C-style casts hide intent and can perform unexpected conversions that are hard to grep."
+    },
+    {
+     "id": "fund2",
+     "point": "Modern C++ provides four named cast operators—static_cast, dynamic_cast, const_cast, and reinterpret_cast—each expressing a single specific intent and searchable in code.",
+     "weight": "core",
+     "evidence_hint": "Names all four operators and contrasts them with the single C-style syntax."
+    },
+    {
+     "id": "fund3",
+     "point": "C++ still supports C-style (Type)expression and functional Type(expression) casts, but they should be avoided in modern C++.",
+     "weight": "extended",
+     "evidence_hint": "Mentions both old forms and recommends avoiding them entirely."
+    }
+   ],
+   "probes": [
+    "Why prefer the named cast operators over a C-style cast?"
+   ],
+   "hints": {
+    "1": "Think about what a C-style cast communicates versus what the compiler allows.",
+    "2": "Compare one terse syntax that can do many conversions with operators that each name one intent.",
+    "3": "C-style casts are hard to search, hide intent, and can silently act as const_cast, static_cast, or reinterpret_cast until one compiles."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how each named cast works, including RTTI requirements and failure behavior for dynamic_cast.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "static_cast does compile-time checked conversions between related types: numeric conversions, upcasting, explicit downcasting without a run-time check, void* to typed pointer, and forcing an explicit constructor or conversion operator.",
+     "weight": "core",
+     "evidence_hint": "Lists several static_cast uses and notes downcasting assumes you know the real type."
+    },
+    {
+     "id": "mech2",
+     "point": "dynamic_cast does safe run-time checked polymorphic downcasting using RTTI; it requires a polymorphic type (base has at least one virtual function), returns nullptr for failed pointer casts, and throws std::bad_cast for failed reference casts.",
+     "weight": "core",
+     "evidence_hint": "Ties dynamic_cast to RTTI/vtable, polymorphism, nullptr vs bad_cast."
+    },
+    {
+     "id": "mech3",
+     "point": "const_cast is the only cast that can add or remove const or volatile qualifiers.",
+     "weight": "core",
+     "evidence_hint": "States exclusivity for cv-qualifier changes, often for legacy non-const APIs."
+    },
+    {
+     "id": "mech4",
+     "point": "reinterpret_cast reinterprets bits between unrelated pointer or integer types without data conversion; behaviour is largely implementation-defined and non-portable.",
+     "weight": "extended",
+     "evidence_hint": "Describes bit-pattern reinterpretation for systems/hardware/allocator work, not a value conversion."
+    },
+    {
+     "id": "mech5",
+     "point": "RTTI tracks dynamic types at run time and also provides typeid (in <typeinfo>), which yields a std::type_info for the run-time type.",
+     "weight": "extended",
+     "evidence_hint": "Defines RTTI and mentions typeid alongside dynamic_cast."
+    }
+   ],
+   "probes": [
+    "What is the difference between static_cast and dynamic_cast?",
+    "What is RTTI?"
+   ],
+   "hints": {
+    "1": "Start with when each cast is checked: compile time versus run time.",
+    "2": "For downcasts, contrast blind trust versus asking the run-time system via the vtable.",
+    "3": "static_cast is compile-time and fast but unsafe if the actual type is wrong; dynamic_cast uses RTTI on a polymorphic type and returns nullptr or throws on failure."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare when to use each cast and why C-style casts obscure the intended conversion.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer static_cast for well-defined safe conversions or to reverse an implicit conversion; prefer dynamic_cast when you need a run-time-checked polymorphic downcast.",
+     "weight": "core",
+     "evidence_hint": "Maps static_cast to intended related-type conversions and dynamic_cast to safely querying a derived type."
+    },
+    {
+     "id": "tr2",
+     "point": "A C-style cast silently tries const_cast, then static_cast, then reinterpret_cast until one compiles, which can mask bugs when only a static_cast was intended.",
+     "weight": "core",
+     "evidence_hint": "Describes the silent fallback sequence and why it obscures intent."
+    },
+    {
+     "id": "tr3",
+     "point": "reinterpret_cast is reserved for low-level systems work (hardware, custom allocators) because it is inherently dangerous compared with the more constrained named casts.",
+     "weight": "extended",
+     "evidence_hint": "Says use it sparingly for raw bit/pointer reinterpretation, not routine conversions."
+    }
+   ],
+   "probes": [
+    "When would you choose dynamic_cast over static_cast for a downcast?"
+   ],
+   "hints": {
+    "1": "Ask whether you need a run-time check that the object really is the derived type.",
+    "2": "static_cast assumes you are sure; dynamic_cast verifies via RTTI on a polymorphic hierarchy.",
+    "3": "Use dynamic_cast when safety matters and you can handle nullptr or std::bad_cast; use static_cast only when the type is certain and you accept no run-time check."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the casts to safe downcasting, legacy APIs, and recognizing undefined or compile-time failure cases.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Safely downcast with dynamic_cast on a pointer and check whether the result is nullptr before using the derived interface.",
+     "weight": "core",
+     "evidence_hint": "Shows pointer dynamic_cast plus a null check, contrasting with reference casts that throw."
+    },
+    {
+     "id": "app2",
+     "point": "Use const_cast to pass const data into legacy C APIs that take non-const pointers but do not actually modify the data.",
+     "weight": "core",
+     "evidence_hint": "Gives the legacy API interop pattern as the typical const_cast use."
+    },
+    {
+     "id": "app3",
+     "point": "dynamic_cast on a hierarchy with no virtual functions is a compile-time error; the base typically needs a virtual destructor to be polymorphic.",
+     "weight": "extended",
+     "evidence_hint": "States the polymorphic requirement and virtual destructor habit."
+    }
+   ],
+   "probes": [
+    "How do you safely downcast?",
+    "What goes wrong if you const_cast away const and then modify an object that was originally declared const?"
+   ],
+   "hints": {
+    "1": "For downcasting, prefer the cast that can report failure at run time.",
+    "2": "Use dynamic_cast to a pointer and test for nullptr; for const, only strip const if the object is truly mutable.",
+    "3": "Safe path: dynamic_cast<Derived*>(basePtr) then null-check; modifying after stripping const from an originally const object is undefined behaviour."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "static_cast vs dynamic_cast",
+   "strong_answer": "static_cast does compile-time conversions with no run-time overhead, so it is fast but unsafe for downcasting if the actual type is wrong. dynamic_cast does a safe RTTI-checked polymorphic downcast, returning nullptr or throwing std::bad_cast on failure, and requires a polymorphic class."
+  },
+  {
+   "topic": "named casts vs C-style cast",
+   "strong_answer": "Named casts each express one intent and let the compiler enforce rules. A C-style cast silently attempts const_cast, then static_cast, then reinterpret_cast until one compiles, masking bugs and obscuring intent."
+  },
+  {
+   "topic": "pointer vs reference dynamic_cast failure",
+   "strong_answer": "Failed pointer dynamic_cast returns nullptr; failed reference dynamic_cast throws std::bad_cast because there is no null reference."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using dynamic_cast on a class hierarchy with no virtual functions.",
+   "correction": "That is a compile-time error; the base must be polymorphic (typically with a virtual destructor)."
+  },
+  {
+   "trap": "const_cast to strip const from an object originally declared const, then modifying it.",
+   "correction": "That is undefined behaviour; only cast away const if the underlying object is truly mutable."
+  },
+  {
+   "trap": "Using static_cast for a downcast when the object's actual type might be wrong.",
+   "correction": "static_cast has no run-time check; use dynamic_cast when you need verification via RTTI."
+  },
+  {
+   "trap": "Relying on a C-style cast when you only meant a static_cast.",
+   "correction": "It can silently degrade into const_cast or reinterpret_cast; use the named operator that matches your intent."
+  }
+ ]
+}

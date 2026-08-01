@@ -1,0 +1,313 @@
+{
+ "id": "lq17_kv_store",
+ "title": "Design an In-Memory Key-Value Store",
+ "type": "LLD",
+ "relevance": "High — systems-flavored LLD / machine-coding staple (campus + experienced); Lyft, Uber, Coinbase, Anchorage, Amazon, Google, Meta, Atlassian, and Flipkart-style loops probe get/set/delete, TTL, nested or MULTI-style transactions, CAS, eviction Strategy, and concurrency.",
+ "difficulty": "mid",
+ "prereqs": [
+  "l01_oop_solid",
+  "l02_patterns_creational",
+  "l03_patterns_structural",
+  "l04_patterns_behavioral",
+  "l05_concurrency_lld"
+ ],
+ "company_notes": "Campus/new-grad machine-coding often wants HashMap store + TTL or KV + nested transactions with concurrency and data-structure design. Experienced/SDE-2+ rounds harden on optimistic vs nested txn, conditional remove races, striped locks, capacity eviction Strategy, injectable clock, and persistence stretch (Lyft/Uber/Coinbase-style txn DB; Amazon/Meta/Google systems LLD). Sibling rounds: lq13_cache_lld (eviction), hq14_distributed_cache / ByteByteGo KV (distributed HLD), h03_caching. High-frequency infra OOP staple alongside rate limiter, logger, and LRU cache.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock functional/non-functional scope: core map ops, optional TTL/txn/CAS/eviction, and single-process in-memory assumptions.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Mandatory FR: get(key), set(key, value), delete(key) with O(1) average; miss returns null / empty.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists get/set/delete first and states average O(1) lookup/update without scanning the map."
+    },
+    {
+     "id": "req2",
+     "point": "Ask about common extensions: per-key TTL, capacity + eviction, nested transactions or MULTI/EXEC/DISCARD, compareAndSet, exists/ttl, typed values.",
+     "weight": "core",
+     "evidence_hint": "They explicitly ask the interviewer which of TTL, capacity, txn shape, and CAS are in scope before coding."
+    },
+    {
+     "id": "req3",
+     "point": "NFR: thread-safe concurrent clients, no stale reads of expired keys, extensible eviction/storage, injectable Clock for tests, bounded memory if capacity set.",
+     "weight": "extended",
+     "evidence_hint": "Mentions thread-safety, expired-key correctness, and deterministic Clock injection alongside memory bounds."
+    },
+    {
+     "id": "req4",
+     "point": "State assumptions: single JVM/process in-memory unless told otherwise; no disk durability unless asked; HLD sharding/replication is stretch only.",
+     "weight": "extended",
+     "evidence_hint": "Clarifies single-process LLD vs distributed Dynamo/Redis Cluster and keeps durability out unless prompted."
+    }
+   ],
+   "probes": [
+    "Which features are in scope—TTL, capacity eviction, nested begin/commit/abort, or Redis MULTI/WATCH—and is this single-process only?"
+   ],
+   "hints": {
+    "1": "Start by listing mandatory ops versus optional extensions before sketching classes.",
+    "2": "Separate FR (get/set/delete + asked extensions) from NFR (thread-safety, expiry freshness, extensibility, Clock).",
+    "3": "Mandatory: O(1) get/set/delete; ask TTL, capacity, nested txn or MULTI, CAS; assume single-process in-memory, no durability unless asked."
+   }
+  },
+  {
+   "phase": "entities",
+   "goal": "Name the core objects: facade store, storage map, entry metadata, optional txn manager, eviction policy, clock/sweeper.",
+   "must_hit": [
+    {
+     "id": "ent1",
+     "point": "KeyValueStore / InMemoryDB is the facade over Storage (map) holding Entry / VersionedValue.",
+     "weight": "core",
+     "evidence_hint": "Draws a store facade that delegates to a Storage map of entries rather than dumping logic in one class."
+    },
+    {
+     "id": "ent2",
+     "point": "Entry holds value plus optional absolute expireAt and optional version for optimistic txn/CAS.",
+     "weight": "core",
+     "evidence_hint": "Entry fields include value, expireAtMs (or none), and version—not just a bare string value."
+    },
+    {
+     "id": "ent3",
+     "point": "Optional Transaction / TransactionManager owns isolation (nested stack or writeSet/readSet/deleteSet).",
+     "weight": "extended",
+     "evidence_hint": "Mentions a txn manager or transaction object separate from the map for begin/commit/abort or MULTI."
+    },
+    {
+     "id": "ent4",
+     "point": "Optional EvictionPolicy Strategy, Clock, and ExpirySweeper for capacity and active TTL.",
+     "weight": "extended",
+     "evidence_hint": "Names eviction policy, injectable clock, and a background sweeper as optional collaborators."
+    }
+   ],
+   "probes": [
+    "What objects own the value metadata, transaction isolation, and eviction victim selection?"
+   ],
+   "hints": {
+    "1": "Think facade store, map storage, and an entry that carries more than the raw value.",
+    "2": "Split Entry (value/version/expireAt), optional TransactionManager, and EvictionPolicy/Clock/Sweeper.",
+    "3": "KeyValueStore facade → Storage of Entry/VersionedValue; optional TransactionManager, EvictionPolicy, Clock, ExpirySweeper."
+   }
+  },
+  {
+   "phase": "class_design",
+   "goal": "Show interfaces and relationships: Facade, Storage, EvictionPolicy, Entry, Transaction shapes.",
+   "must_hit": [
+    {
+     "id": "cd1",
+     "point": "KeyValueStore facade validates, lazy-expires, delegates to Storage, notifies EvictionPolicy, enforces capacity.",
+     "weight": "core",
+     "evidence_hint": "Describes the request path through the facade: validate → expire check → storage → policy/capacity."
+    },
+    {
+     "id": "cd2",
+     "point": "Storage interface with HashMapStorage / ConcurrentMapStorage; EvictionPolicy interface with LRU/LFU/FIFO/NoEviction.",
+     "weight": "core",
+     "evidence_hint": "Shows Storage and EvictionPolicy as interfaces with concrete strategies, not hard-wired types inside the facade."
+    },
+    {
+     "id": "cd3",
+     "point": "Transaction either nested stack frame Map<key,(newVal,oldVal)> or optimistic writeSet/deleteSet plus readSet of versions.",
+     "weight": "extended",
+     "evidence_hint": "Picks one txn model and sketches either delta frames or readSet/writeSet/deleteSet on the Transaction type."
+    },
+    {
+     "id": "cd4",
+     "point": "EvictionPolicy hooks: onAccess/onPut/onRemove and evictCandidate(); DIP inject Storage, EvictionPolicy, Clock.",
+     "weight": "extended",
+     "evidence_hint": "Policy methods update on map events and return a victim; constructors take injected dependencies, not a Singleton."
+    }
+   ],
+   "probes": [
+    "Sketch the class diagram—where do Facade, Storage, Entry, TransactionManager, and EvictionPolicy sit?"
+   ],
+   "hints": {
+    "1": "Prefer interfaces for storage and eviction behind a single KeyValueStore API.",
+    "2": "Facade orchestrates; Storage holds Entry; TransactionManager optional; EvictionPolicy returns victims.",
+    "3": "KeyValueStore → Storage + optional EvictionPolicy/TransactionManager/ExpirySweeper/Clock; Entry has value, version, expireAtMs."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Implement O(1) map ops, Redis-style TTL, and either nested delta transactions or optimistic versioned commit, plus CAS.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Default data plane: ConcurrentHashMap of Entry for O(1) average get/set/delete.",
+     "weight": "core",
+     "evidence_hint": "Uses ConcurrentHashMap<K,Entry> (or equivalent) and keeps hot path average O(1), not a full-map scan on get."
+    },
+    {
+     "id": "impl2",
+     "point": "TTL lazy/passive: on access if now >= expireAt, delete and return miss; prefer absolute expireAt on the entry.",
+     "weight": "core",
+     "evidence_hint": "get/set path checks absolute deadline and removes expired entries before returning a value."
+    },
+    {
+     "id": "impl3",
+     "point": "Active expiry samples keys periodically so cold expired keys do not leak memory (Redis-style; sample work O(sample) not full sweep).",
+     "weight": "extended",
+     "evidence_hint": "Adds a sweeper/sampler for TTL keys and contrasts it with lazy-only leakage on never-read keys."
+    },
+    {
+     "id": "impl4",
+     "point": "Nested delta stack: begin pushes change-log; abort restores; nested commit merges to parent; space O(keys touched) not full DB copy.",
+     "weight": "extended",
+     "evidence_hint": "Implements begin/commit/abort with a delta log sized to touched keys, rejecting whole-map snapshots."
+    },
+    {
+     "id": "impl5",
+     "point": "Optimistic/WATCH shape: buffer writes, track versions in readSet; commit aborts if any read version changed, else apply atomically.",
+     "weight": "extended",
+     "evidence_hint": "On commit/EXEC, validates versions then applies writeSet/deleteSet or aborts on conflict."
+    },
+    {
+     "id": "impl6",
+     "point": "CAS via compareAndSet(key, expected, new) or version check for set-if-unchanged without a global lock.",
+     "weight": "core",
+     "evidence_hint": "Shows atomic replace/version check returning boolean success/failure for concurrent updates."
+    }
+   ],
+   "probes": [
+    "How do get/set honor TTL, and how do you implement nested begin/commit/abort or optimistic commit without copying the whole map?"
+   ],
+   "hints": {
+    "1": "Map + Entry with expireAt covers the happy path; transactions are either a delta stack or versioned buffers.",
+    "2": "Lazy expire on access; optional active sampler; txn = O(keys touched) deltas or validate-on-commit versions.",
+    "3": "ConcurrentHashMap of Entry; lazy delete when now >= expireAt; nested change-log or readSet/writeSet validate-on-commit; CAS/version replace."
+   }
+  },
+  {
+   "phase": "extensibility",
+   "goal": "Show OCP/DIP via Strategy/Factory/Command so new eviction, storage, or MULTI queuing does not rewrite call sites.",
+   "must_hit": [
+    {
+     "id": "ext1",
+     "point": "Strategy: swap LRU/LFU/FIFO/TTL-only eviction or HashMap vs custom table storage behind interfaces.",
+     "weight": "core",
+     "evidence_hint": "New eviction or storage is a new class implementing the policy/storage interface."
+    },
+    {
+     "id": "ext2",
+     "point": "Factory builds store from config (capacity, policy, TTL defaults); Facade exposes get/set/delete/expire.",
+     "weight": "core",
+     "evidence_hint": "Config-driven factory constructs the facade with chosen capacity/policy rather than hard-coding one setup."
+    },
+    {
+     "id": "ext3",
+     "point": "OCP: add LFU tomorrow via new EvictionPolicy + Factory branch with zero edits to get/set call sites; Command queues MULTI ops / undo on abort.",
+     "weight": "extended",
+     "evidence_hint": "Explains adding LFU without touching callers, and optionally Command for queued MULTI/undo."
+    },
+    {
+     "id": "ext4",
+     "point": "Avoid cargo-cult Singleton; prefer DI for Storage, EvictionPolicy, and Clock.",
+     "weight": "extended",
+     "evidence_hint": "Rejects global Singleton store in favor of injected collaborators for testability."
+    }
+   ],
+   "probes": [
+    "How would you add LFU eviction tomorrow without changing every get/set call site?"
+   ],
+   "hints": {
+    "1": "Eviction and storage should be pluggable, not baked into the facade.",
+    "2": "Strategy + Factory + DIP: new policy class and factory branch; inject Clock/Storage.",
+    "3": "New EvictionPolicy implementation + Factory config; Facade/Storage call sites unchanged; prefer DI over Singleton."
+   }
+  },
+  {
+   "phase": "concurrency",
+   "goal": "Make single-key ops and compound/txn apply correct under concurrent clients without over-locking.",
+   "must_hit": [
+    {
+     "id": "conc1",
+     "point": "Single-key ops use ConcurrentHashMap methods / per-key lock; pair with compute/remove(k,v) for atomic check-and-set.",
+     "weight": "core",
+     "evidence_hint": "Uses map atomics or per-key locking for get/set/delete/CAS rather than only unsynchronized HashMap."
+    },
+    {
+     "id": "conc2",
+     "point": "Compound ops (RMW, txn apply, evict-then-put) need one critical section or CAS retry—never check-then-act without atomicity.",
+     "weight": "core",
+     "evidence_hint": "Identifies multi-step map sequences and wraps them in a lock/CAS loop instead of separate check then act."
+    },
+    {
+     "id": "conc3",
+     "point": "Prefer striped / per-key locks over one global synchronized on the facade under load; Redis single-threaded command loop is an alternative model.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts global lock demos with striped locks or a single-threaded apply loop under contention."
+    },
+    {
+     "id": "conc4",
+     "point": "ExpirySweeper must use conditional remove(key, expectedEntry)/CAS so it never deletes a fresher entry that replaced an expired one.",
+     "weight": "extended",
+     "evidence_hint": "Sweeper removal is conditional on the exact expired Entry instance, not blind remove(key)."
+    }
+   ],
+   "probes": [
+    "Two threads CAS the same key—how do you ensure only one succeeds, and how does the sweeper avoid deleting a just-refreshed key?"
+   ],
+   "hints": {
+    "1": "Separate single-key map atomics from multi-step critical sections.",
+    "2": "Use ConcurrentHashMap/CAS for one key; lock or validate for txn apply; conditional remove in the sweeper.",
+    "3": "Map atomics or per-key locks for single ops; critical section/CAS retry for compound/txn; remove(key, expectedEntry) in the sweeper; mention striped locks or Redis single-thread loop."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Full snapshot vs delta stack for transactions",
+   "strong_answer": "Copying the whole map per begin is simple but O(n) memory; a delta log is O(keys touched) and is the expected Hello Interview answer—abort restores previous values, nested commit merges into the parent."
+  },
+  {
+   "topic": "Lazy-only vs lazy+active TTL",
+   "strong_answer": "Lazy alone leaks memory on write-heavy never-read keys; active sampling deletes expired cold keys without a huge per-key timer heap (Redis model). A min-heap of expiries is more exact but costlier under churn."
+  },
+  {
+   "topic": "Global lock vs ConcurrentHashMap / per-key lock",
+   "strong_answer": "Global synchronized is correct for demos; seniors want map atomics plus narrow critical sections for compound ops and txn apply, preferring striped/per-key locks over one facade lock under load."
+  },
+  {
+   "topic": "Optimistic vs pessimistic transactions",
+   "strong_answer": "Optimistic versions/WATCH maximize concurrency and retry on conflict; pessimistic locks keys for the txn duration—simpler reasoning but worse under contention."
+  },
+  {
+   "topic": "In-memory LLD vs distributed KV",
+   "strong_answer": "Partitioning, replication, and quorum are HLD (hq14 / ByteByteGo); mention as stretch and stay on classes unless prompted—do not build Dynamo mid-LLD."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Nested transaction abort undoes outer levels or loses inner commits incorrectly.",
+   "correction": "Inner commit merges child deltas into the parent; abort restores previous values only for the popped frame."
+  },
+  {
+   "trap": "Two threads both appear to succeed on CAS.",
+   "correction": "Use a version check or replace(key, oldEntry, newEntry) / compareAndSet so only one atomic update wins."
+  },
+  {
+   "trap": "Expired keys remain in memory forever with lazy-only expiry.",
+   "correction": "Add active expiry sampling; lazy alone is insufficient for cold keys."
+  },
+  {
+   "trap": "Sweeper deletes a key that was just refreshed with a new value/TTL.",
+   "correction": "Use conditional remove(key, expectedEntry) / CAS, not blind remove(key)."
+  },
+  {
+   "trap": "Adding LFU requires editing get/set call sites.",
+   "correction": "New EvictionPolicy class plus Factory branch; zero edits to get/set callers (OCP); detail in lq13."
+  },
+  {
+   "trap": "Treating the round as pure LeetCode LRU / DLL surgery.",
+   "correction": "Draw the store facade, TTL, and concurrency story; reuse LRU as an EvictionPolicy Strategy, do not stop at the linked-list."
+  },
+  {
+   "trap": "Assuming Redis MULTI rolls back like SQL on mid-EXEC failure.",
+   "correction": "Queued commands run atomically; a failed command mid-EXEC does not undo siblings; WATCH provides optimistic abort before EXEC."
+  },
+  {
+   "trap": "Jumping to multi-node durability/cluster in the LLD.",
+   "correction": "AOF/snapshot and consistent hashing / Redis Cluster are stretch; hand off to hq14 / ByteByteGo unless asked."
+  }
+ ]
+}

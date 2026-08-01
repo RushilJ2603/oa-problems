@@ -1,0 +1,195 @@
+{
+ "id": "l04_patterns_behavioral",
+ "title": "Design Patterns: Behavioral (Strategy, Observer, State, Command, Iterator)",
+ "type": "CONCEPT",
+ "relevance": "High — LLD / machine-coding rounds lean hardest on Strategy + Observer + State (pricing, notifications, elevator/vending/order lifecycles); Command for undo/remote; Iterator rarely named but expected via collection traversal.",
+ "difficulty": "campus",
+ "prereqs": [
+  "l01_oop_solid",
+  "l02_patterns_creational",
+  "l03_patterns_structural"
+ ],
+ "company_notes": "Campus / new-grad LLD & machine coding (India product cos, FAANG new-grad): Strategy and Observer are nearly mandatory vocabulary; State dominates elevator / vending / traffic-light / booking-lifecycle problems; Command shows up for undo or remote-control style prompts; Iterator is background knowledge. Experienced / SDE-2 LLD: expect State vs Strategy clarity, Observer vs event-bus tradeoffs, Command + undo with Memento, and restraint (don’t pattern-stamp every conditional). Among all GoF families, these five (especially Strategy/Observer/State) appear inside the largest share of canonical LLD problems — even when the round isn’t titled “design patterns.”",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that behavioral patterns govern object collaboration and when to reach for Strategy, Observer, State, Command, or Iterator.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Behavioral patterns answer how objects collaborate — algorithms, event notification, lifecycle transitions, request encapsulation, and traversal — without hard-wiring every caller to every callee.",
+     "weight": "core",
+     "evidence_hint": "Says collaboration/responsibility assignment rather than class structure or object creation, and names at least algorithms vs events vs lifecycle."
+    },
+    {
+     "id": "fund2",
+     "point": "Interview pick order: Strategy when behavior variants share one interface; Observer when many components must react to one change; State when valid operations depend on lifecycle mode; Command when you need undo/queue/decouple UI from actions; Iterator when hiding collection shape or offering custom walks.",
+     "weight": "core",
+     "evidence_hint": "Walks the decision cues without forcing every pattern onto a single design."
+    },
+    {
+     "id": "fund3",
+     "point": "Modern shorthand: Strategy ≈ injectable policy / function object / Comparator; Observer ≈ event listeners / reactive streams; Command ≈ task / runnable / undo stack; Iterator ≈ language iteration protocols — name the pattern when it clarifies design; don’t cargo-cult classes for one variant.",
+     "weight": "extended",
+     "evidence_hint": "Maps patterns to everyday language constructs and refuses naming patterns that don’t clarify the design."
+    }
+   ],
+   "probes": [
+    "What problem do behavioral patterns solve, and how do you choose among Strategy, Observer, State, Command, and Iterator in an LLD round?"
+   ],
+   "hints": {
+    "1": "Ask what varies: the algorithm, who must react, the object’s mode, a request to store/undo, or how a collection is walked.",
+    "2": "Map each cue: shared algorithm interface → Strategy; one-to-many reaction → Observer; lifecycle-gated ops → State; undo/queue/UI decoupling → Command; hide traversal → Iterator.",
+    "3": "Strategy = interchangeable algorithms; Observer = attach/detach/notify; State = mode with transitions; Command = request as object; Iterator = traversal without exposing representation — and only name them when they clarify."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how Strategy, Observer, State, Command, and Iterator are structured and what each owns.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Strategy extracts varying algorithms behind a common interface; Context holds a Strategy and delegates; client or factory chooses/swaps the strategy at runtime (payment methods, fare/pricing, sorting/compression, route modes) preferring composition over if (type == …) switches (OCP).",
+     "weight": "core",
+     "evidence_hint": "Sketches Context → Strategy interface → concrete strategies and mentions runtime swap without editing the context."
+    },
+    {
+     "id": "mech2",
+     "point": "Observer: Subject maintains an observer list with attach / detach / notify and depends only on the Observer interface; know push (event carries data) vs pull (observers query the subject); don’t confuse with Mediator (hub for many-to-many) or Message Queues (distributed async).",
+     "weight": "core",
+     "evidence_hint": "Names attach/detach/notify, contrasts push vs pull, and separates in-process Observer from Mediator/queues."
+    },
+    {
+     "id": "mech3",
+     "point": "State: Context delegates to a current State object; each state implements the same action interface differently and may call context.setState(...); models FSMs (elevator, vending, order/document lifecycle); states often know sibling states while Strategies almost never do. Command wraps a request (method + args + receiver) as an object with execute() and often undo(), so an Invoker can queue, log, macro, or undo without knowing receivers. Iterator separates traversal from storage via createIterator() and hasNext()/next() (or language for-each / Iterable), supporting multiple independent cursors and alternate traversals without leaking internals.",
+     "weight": "extended",
+     "evidence_hint": "Separates State transitions on the context, Command as a request object with history, and Iterator as traversal encapsulation."
+    }
+   ],
+   "probes": [
+    "Walk through Strategy, Observer, State, Command, and Iterator — what each object owns, and how Context/Subject/Invoker/collection clients interact with them."
+   ],
+   "hints": {
+    "1": "For each pattern, name the roles: Context/Strategy, Subject/Observer, Context/State, Invoker/Command/Receiver, Aggregate/Iterator.",
+    "2": "Strategy delegates an algorithm; Observer notifies listeners; State changes mode via setState; Command stores a request; Iterator walks without exposing representation.",
+    "3": "Context holds Strategy or current State; Subject does attach/detach/notify (push vs pull); Command has execute/undo for invokers; Iterator exposes hasNext/next via createIterator."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Discriminate State vs Strategy, Command vs Strategy, and when Observer/State/Iterator patterns are overkill.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "State vs Strategy share the same shape (composition + interface) but differ in intent: Strategy = interchangeable ways to do one job, chosen by the client, strategies unaware of each other; State = behavior is the object’s mode, transitions are domain rules often initiated by states themselves (algorithm variants → Strategy; whole-object condition + transitions → State).",
+     "weight": "core",
+     "evidence_hint": "States same structure, different intent, and that states often transition each other while strategies do not."
+    },
+    {
+     "id": "tr2",
+     "point": "Command vs Strategy: Command is an action to perform (often once, with history) enabling undo/redo, macros, queuing, logging, remote execution; Strategy is how to do an ongoing algorithm for the same responsibility.",
+     "weight": "core",
+     "evidence_hint": "Contrasts request-object/history with pluggable ongoing algorithm and rejects a “LightOnStrategy” story for undo."
+    },
+    {
+     "id": "tr3",
+     "point": "Restraint: two–three stable branches may stay as conditionals — reach for Strategy when variants grow, ship independently, or must swap at runtime; few states + rare transitions → enum + small switch is fine, explode into State classes when every method branches on state and transitions multiply; Observer in LLD is in-process Subject↔listeners, not Kafka/distributed pub-sub; usually don’t implement Iterator from scratch — know the intent and use Iterable/Iterator, customizing only for filtered/special traversals.",
+     "weight": "extended",
+     "evidence_hint": "Gives when to keep conditionals/enum-switch, scopes Observer to in-process, and refuses hand-rolled iterators by default."
+    }
+   ],
+   "probes": [
+    "How do you tell State from Strategy and Command from Strategy, and when would you refuse State classes, a Strategy extraction, or a from-scratch Iterator?"
+   ],
+   "hints": {
+    "1": "Ask who chooses the variant, whether modes transition each other, and whether you need history/undo versus an ongoing algorithm.",
+    "2": "Same UML shape ≠ same intent; Command stores a request; two–three stable branches or few rare transitions may not need pattern classes.",
+    "3": "Strategy = client-selected algorithms that don’t transition each other; State = self-driven lifecycle modes; Command = request object for undo/queue; keep small switches when variants/states stay few; Observer ≠ Kafka; use language iterators unless traversal is special."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Map behavioral patterns onto naming drills, whiteboard sketches, and canonical LLD problems.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Name-the-pattern drill: fare calculation Card/UPI/Wallet → Strategy; stock tick updates multiple displays → Observer; elevator Idle/Moving/DoorOpen → State; text-editor undo/redo → Command; walk a tree of files without exposing nodes → Iterator.",
+     "weight": "core",
+     "evidence_hint": "Assigns each one-liner to the right pattern and briefly says why not a neighbor."
+    },
+    {
+     "id": "app2",
+     "point": "Whiteboard drills: PaymentService with PaymentStrategy so adding NetBanking is a new class only (then mention Function/Comparator-style lambda and when an interface is still worth it); OrderSubject notifying Inventory/Email/Analytics once with push update(OrderEvent e) and once with pull update() then getState(), plus the concurrency hazard of notify while iterating (copy-on-write / snapshot the list).",
+     "weight": "core",
+     "evidence_hint": "Shows OCP add-a-class for Strategy and contrasts push vs pull with a list-snapshot concurrency note."
+    },
+    {
+     "id": "app3",
+     "point": "State/Command/LLD mapping: vending Idle → ItemSelected → HasMoney → Dispensing with class-per-state so dispense() in Idle is a no-op/error inside IdleState, not a giant switch; LightOnCommand/LightOffCommand with invoker history (undo as inverse ops; Memento when inverse is hard); map Strategy/Observer/State/Command onto problems like Parking Lot pricing, Elevator, Snake & Ladder, Logging, Splitwise.",
+     "weight": "extended",
+     "evidence_hint": "Puts behavior in state classes, sketches command history/undo, and names which patterns sit where on a class diagram for a canonical LLD."
+    }
+   ],
+   "probes": [
+    "For Card/UPI/Wallet fares, stock-tick displays, elevator modes, editor undo, and file-tree walks — which pattern fits each, and how would you whiteboard PaymentStrategy, Observer push vs pull, a vending state machine, or Command undo?"
+   ],
+   "hints": {
+    "1": "Ask what varies: algorithm, subscribers, lifecycle mode, stored action, or traversal.",
+    "2": "Strategy for payment/fare variants; Observer for multi-display updates; State for elevator/vending modes; Command for undo history; Iterator for hidden tree walks.",
+    "3": "Card/UPI/Wallet = Strategy; stock ticks = Observer; elevator modes = State; undo/redo = Command; file tree walk = Iterator — then PaymentStrategy add-class-only, push vs pull + snapshot notify, IdleState owns illegal dispense, and command stack undo (Memento if inverse is hard)."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Strategy vs State",
+   "strong_answer": "Same structure (composition + interface), different intent. Strategy = interchangeable ways to do one job, chosen by the client; strategies are unaware of each other. State = behavior is the object’s mode; transitions are domain rules, often initiated by states themselves. Discriminator: algorithm variants → Strategy; whole-object condition + transitions → State."
+  },
+  {
+   "topic": "Strategy vs if/else",
+   "strong_answer": "Two–three stable branches may stay as conditionals. Reach for Strategy when variants grow, ship independently, or must swap at runtime — prefer composition over if (type == …) switches for OCP."
+  },
+  {
+   "topic": "Command vs Strategy",
+   "strong_answer": "Command is a request object (method + args + receiver) with execute()/undo() for queue, log, macros, undo/redo, or remote execution — often once, with history. Strategy is how to do an ongoing algorithm for the same responsibility. A “LightOnStrategy” is the wrong story for undo."
+  },
+  {
+   "topic": "Observer vs Kafka/pub-sub",
+   "strong_answer": "Same idea at process scale, but in LLD Observer is in-process Subject↔listeners with attach/detach/notify. Say the distributed version when HLD follows; don’t equate Observer with Message Queues."
+  },
+  {
+   "topic": "State classes vs enum + switch",
+   "strong_answer": "Few states + rare transitions → enum + small switch is fine. Explode into State classes when every method branches on state and transitions multiply — put illegal ops as no-op/error inside the state class, not a giant switch in the context."
+  },
+  {
+   "topic": "Push vs pull Observer updates",
+   "strong_answer": "Push: notify carries data (e.g. update(OrderEvent e)). Pull: observers get update() then query getState(). Subject still depends only on the Observer interface; watch the concurrency hazard of notify while iterating — copy-on-write / snapshot the list."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating Strategy and State as the same because the UML looks the same",
+   "correction": "Same structure, different intent: client-selected algorithms vs self-driven lifecycle modes. Strategies don’t transition each other; states often do."
+  },
+  {
+   "trap": "Extracting Strategy for every if/else",
+   "correction": "Two–three stable branches may stay as conditionals; use Strategy when variants grow, ship independently, or must swap at runtime."
+  },
+  {
+   "trap": "Equating Observer with Kafka / distributed pub-sub",
+   "correction": "In LLD, Observer is in-process Subject↔listeners. Mention the distributed version when HLD follows."
+  },
+  {
+   "trap": "Calling Command and Strategy the same because both plug in behavior",
+   "correction": "Command = request object for queue/undo/history; Strategy = pluggable algorithm for the same ongoing responsibility."
+  },
+  {
+   "trap": "Exploding a tiny lifecycle into State classes",
+   "correction": "Few states + rare transitions → enum + small switch is fine; use State classes when every method branches on state and transitions multiply."
+  },
+  {
+   "trap": "Implementing Iterator from scratch in a Java/C++/Python interview by default",
+   "correction": "Usually no — know the intent, use Iterable/Iterator (or language for-each), and custom iterators only for filtered/special traversals."
+  }
+ ]
+}

@@ -1,0 +1,197 @@
+{
+ "id": "m01_hld_framework",
+ "title": "HLD interview framework & rubric",
+ "type": "CONCEPT",
+ "relevance": "High — the pacing/structure and scoring lens for every 45-min “design X” HLD round (campus + experienced); FAANG and Indian product cos (Atlassian, Uber, Flipkart, etc.) grade how you run requirements → architecture → deep dives → tradeoffs, not a memorized diagram alone.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Campus/early-career India product cos (Flipkart, Uber, Atlassian, etc.) often run one HLD-style or lighter design-at-scale discussion after coding and still expect clarify → diagram → bottlenecks; FAANG/big-tech mid+ typically a 45–60 min HLD with delivery and tradeoff depth (new-grad loops may skip or shorten); this framework is meta for every later HLD question.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that a 45-min HLD round grades process, judgment, and collaboration—not a memorized “correct” diagram.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Candidate leads a 45-min design conversation; the interviewer grades process and judgment under time, not a unique correct diagram.",
+     "weight": "core",
+     "evidence_hint": "Says they own pacing, announce phases, and expect redirects—not a single right architecture."
+    },
+    {
+     "id": "fund2",
+     "point": "FRs are “users can…” capabilities (top 3 features); NFRs are quantified qualities, not vague “highly available / fast / secure.”",
+     "weight": "core",
+     "evidence_hint": "Gives concrete FR wording and quantified NFR examples like feed p99 < 200ms or availability-over-consistency on a timeline."
+    },
+    {
+     "id": "fund3",
+     "point": "Exponent-style scoring covers requirements, design+tradeoffs, scalability/performance, fault tolerance/reliability, and communication/collaboration (weak → very strong maps to hire advocacy).",
+     "weight": "extended",
+     "evidence_hint": "Lists those five buckets and ties weak/strong ratings to how interviewers advocate hire vs no-hire."
+    }
+   ],
+   "probes": [
+    "What is the interviewer actually grading in a 45-min design-X HLD round?",
+    "How do you distinguish a strong FR/NFR set from a weak one?"
+   ],
+   "hints": {
+    "1": "Think process and scoring lens, not a diagram you memorized.",
+    "2": "Separate what users can do from quantified system qualities, then name the rubric buckets.",
+    "3": "Lead the 45-min convo; FRs = top 3 “users can…”; NFRs quantified; score requirements, design+tradeoffs, scale/perf, fault tolerance, and communication."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Lock the merged 45-min skeleton: time-boxed requirements → entities → API → simple HLD → deep dives → wrap, with working path before complexity.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Merged skeleton: FR+NFR+out-of-scope (~5) → core entities (~2) → API/interface (~5) → simple HLD for FRs (~10–15) → deep dives on NFRs/bottlenecks (~10) → wrap (~3–5).",
+     "weight": "core",
+     "evidence_hint": "Walks the phases in order with those time boxes and mentions announcing them so the interviewer can pace/redirect."
+    },
+    {
+     "id": "mech2",
+     "point": "Working system first: complete path for core APIs before caches, queues, or shards; unfinished HLD is the #1 mid-level fail.",
+     "weight": "core",
+     "evidence_hint": "Draws happy-path boxes/arrows for every core API, notes “add cache later,” and refuses to stall on one box."
+    },
+    {
+     "id": "mech3",
+     "point": "Optional early estimation only if numbers change the design; otherwise estimate the crux in the deep dive—avoid ritual QPS theater.",
+     "weight": "extended",
+     "evidence_hint": "States when they would skip upfront math vs when sharding/cache/replication depends on a crux number."
+    },
+    {
+     "id": "mech4",
+     "point": "Deep dive signals seniority: juniors follow probes; senior+ self-pick 1–2 hard spots (hot read path, write fan-out, consistency edge, SPOF) and drive tradeoffs.",
+     "weight": "extended",
+     "evidence_hint": "Names 1–2 bottleneck spots from their HLD and starts option A vs B without waiting to be asked."
+    }
+   ],
+   "probes": [
+    "Walk me through how you’d spend a 45-min HLD round minute by minute.",
+    "When do you estimate, and what must be on the board before Redis/Kafka/sharding?"
+   ],
+   "hints": {
+    "1": "Start from Hello Interview’s delivery pacing, then merge the wrap.",
+    "2": "Time-box requirements and API, then a complete FR path before scale toys; estimate only if it changes architecture class.",
+    "3": "~5 reqs → ~2 entities → ~5 API → ~10–15 simple HLD → ~10 deep dives → ~3–5 wrap; working path first; senior+ pick 1–2 hard spots."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Show justified alternatives for major choices, plus ops/cost/failure signal and collaborative buy-in—not buzzword drops.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Tradeoff language wins: name rejected alternatives (SQL vs NoSQL, fan-out-on-write vs read, sync vs async) and why for this NFR; naming Kafka/Redis without a reason is a red flag.",
+     "weight": "core",
+     "evidence_hint": "For each major choice, states option rejected, option chosen, and the NFR that decided it."
+    },
+    {
+     "id": "tr2",
+     "point": "Ops/cost are no longer optional: mention failure modes + mitigation, monitoring/alerts, and rough cost/right-sizing when relevant.",
+     "weight": "core",
+     "evidence_hint": "Unprompted, ties a component failure to user impact, mitigation, and a monitoring or cost note."
+    },
+    {
+     "id": "tr3",
+     "point": "Collaborate, don’t monologue: check in after HLD for buy-in, leave room for deep-dive probes, absorb hints.",
+     "weight": "extended",
+     "evidence_hint": "Pauses after HLD to ask if the shape looks right and invites the interviewer into the deep dive."
+    }
+   ],
+   "probes": [
+    "You chose that store/queue—what did you reject and why for these NFRs?",
+    "What happens if this component dies, and how would you know in production?"
+   ],
+   "hints": {
+    "1": "Every major box needs an alternative you considered.",
+    "2": "Tie the choice to a named NFR, then add failure impact and how you’d watch it.",
+    "3": "State A vs B + NFR reason; cover SPOF/mitigation/monitoring/cost; ask for buy-in after HLD."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the framework under timers: distill requirements, gate estimation, map APIs, HLD happy path, then deep-dive and wrap.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Requirements drill: for a prompt like Design Instagram, produce ≤3 FRs + ≤4 quantified NFRs, mark out-of-scope, and confirm with the interviewer (about a 5–7 min box).",
+     "weight": "core",
+     "evidence_hint": "Stops with a short confirmed FR/NFR/out-of-scope list instead of feature sprawl or vague adjectives."
+    },
+    {
+     "id": "app2",
+     "point": "HLD-only discipline: map each FR to 1–2 APIs/events first; then ~12 min boxes/arrows for happy path only—no Redis/Kafka/sharding until every FR has a path.",
+     "weight": "core",
+     "evidence_hint": "Shows API contract on the board, then narrates data/state through a complete simple HLD before scale components."
+    },
+    {
+     "id": "app3",
+     "point": "Full timed dry run ends with a 60-sec wrap: design summary, top tradeoffs, and what you’d improve with more time; leave ≥10 min for deep dives.",
+     "weight": "extended",
+     "evidence_hint": "Protects deep-dive time, picks weakest NFR spots + SPOF with A vs B, and closes in about a minute."
+    }
+   ],
+   "probes": [
+    "Design Instagram—run only the requirements script, then tell me if you’d estimate before HLD.",
+    "You have about 12 minutes—draw the happy-path HLD for your APIs with no cache or queue yet."
+   ],
+   "hints": {
+    "1": "Treat this as a timed script, not a feature brainstorm.",
+    "2": "Confirm ≤3 FRs and ≤4 NFRs; APIs before boxes; forbid scale toys until paths exist.",
+    "3": "5–7 min requirements → APIs → 12 min simple HLD → ≥10 min deep dives → 60-sec wrap of summary, tradeoffs, next steps."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Upfront estimation vs estimate-in-deep-dive",
+   "strong_answer": "Do capacity math only when numbers change architecture class (sharding/cache/replication); otherwise skip ritual DAU→QPS theater and estimate the crux during deep dive."
+  },
+  {
+   "topic": "Simple working HLD vs early microservices/Kafka/cache",
+   "strong_answer": "Draw a complete monolith-style path that satisfies FRs first; introduce async, cache, or split services as deep-dive upgrades tied to specific NFRs—not as the opening diagram."
+  },
+  {
+   "topic": "SQL vs NoSQL (and similar store choices)",
+   "strong_answer": "Name both options and pick from this problem’s NFRs (consistency, access pattern, scale lever)—never “NoSQL scales better” without peak QPS, read/write ratio, and a concrete lever."
+  },
+  {
+   "topic": "Fan-out-on-write vs fan-out-on-read",
+   "strong_answer": "State both, map to write amplification vs read latency/cost for this workload, and say which NFR wins."
+  },
+  {
+   "topic": "Sync vs async between components",
+   "strong_answer": "Sync when the user path needs the result now; async when NFRs allow eventual work (queues) and you can describe failure/retry behavior."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Estimating first every time because it feels expected.",
+   "correction": "Numbers only when they pick architecture class; ritual DAU→QPS ending in “so… it’s a lot” wastes signal."
+  },
+  {
+   "trap": "Jumping to microservices, Kafka, or Redis before a working HLD.",
+   "correction": "Over-engineering; simple path first, then async/cache as deep-dive upgrades tied to NFRs."
+  },
+  {
+   "trap": "Making a major design choice with no alternatives or “why.”",
+   "correction": "Every major choice needs a rejected alternative and an NFR reason—silence tanks the technical-design rubric bucket."
+  },
+  {
+   "trap": "Saying a component “is replicated” as fault tolerance.",
+   "correction": "Cover SPOF, redundancy, retries/backoff, degraded mode, and user impact plus mitigation."
+  },
+  {
+   "trap": "Burning the round on schema/requirements and starving deep dives.",
+   "correction": "Time-box requirements (~5) and HLD; leave ≥10 min for deep dives; schema fields that don’t drive design are noise."
+  },
+  {
+   "trap": "Claiming scale with vague “NoSQL scales better.”",
+   "correction": "Tie to peak QPS, read/write ratio, and a concrete lever (replicas, shard key, cache, CDN, queue)."
+  }
+ ]
+}

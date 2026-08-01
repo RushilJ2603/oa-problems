@@ -1,0 +1,208 @@
+{
+ "id": "l05_concurrency_lld",
+ "title": "Concurrency in LLD: thread-safety, locks, producer-consumer, thread-safe singleton",
+ "type": "CONCEPT",
+ "relevance": "High — LLD / machine-coding follow-ups and senior LLD rounds (parking lot double-book, logging, inventory, bounded queue, connection pool); Flipkart/Uber/Swiggy machine coding + FAANG/experienced “make it thread-safe”",
+ "difficulty": "mid",
+ "prereqs": [
+  "l01_oop_solid",
+  "l02_patterns_creational"
+ ],
+ "company_notes": "Campus / machine coding (India product cos): often optional until the happy path works — then “make parking / booking / logging thread-safe”; Flipkart, Uber, Swiggy, Amazon loops commonly add this as a follow-up. Experienced / SDE-2+ LLD: concurrency is in-scope from the start (rate limiter, connection pool, scheduler, bounded queue, concurrent cache); Hello Interview–style correctness/coordination/scarcity language scores well. Frequency: nearly every shared-mutable LLD design gets a concurrency probe at mid-level; explicit “design a blocking queue / thread pool” prompts are common at product cos and FAANG-adjacent loops once OOP/patterns are assumed.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what thread-safety means and how to diagnose Correctness vs Coordination vs Scarcity before picking a primitive.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Thread-safety means correct results under concurrent access: no lost updates, no torn reads, and visibility of writes across threads (happens-before)—not merely “I used a lock somewhere.”",
+     "weight": "core",
+     "evidence_hint": "Names visibility/happens-before alongside mutual exclusion, not only locking."
+    },
+    {
+     "id": "fund2",
+     "point": "A race/critical section is shared mutable state with overlapping read-modify-write or check-then-act (two threads both see “spot free” / “qty=1” and both commit); fix by making check+act atomic under one lock or one atomic op.",
+     "weight": "core",
+     "evidence_hint": "Gives a check-then-act example and says the check and act must be one atomic critical section."
+    },
+    {
+     "id": "fund3",
+     "point": "Hello Interview interview map: diagnose Correctness (locks/atomics) → Coordination (blocking queue / producer-consumer) → Scarcity (semaphore / pool); do not reach for a thread pool before the shared-state race is fixed.",
+     "weight": "extended",
+     "evidence_hint": "Orders the three categories and refuses thread-pool-first when the bug is a shared-state race."
+    }
+   ],
+   "probes": [
+    "What does thread-safety require beyond “using a lock,” and how do you classify a concurrency bug as Correctness, Coordination, or Scarcity?"
+   ],
+   "hints": {
+    "1": "Separate mutual exclusion from whether other threads can even see your writes.",
+    "2": "Ask whether the failure is a shared-state race, a handoff/wait problem, or a limited resource.",
+    "3": "Thread-safety = no lost updates/torn reads + happens-before visibility; map Correctness→locks/atomics, Coordination→blocking queue/P-C, Scarcity→semaphore/pool—fix the race before adding a pool."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how locks, condition waiting, BlockingQueue producer-consumer, atomics, deadlock prevention, and thread-safe Singleton are implemented in interview answers.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Locks (mutex / synchronized / ReentrantLock) give mutual exclusion for multi-field invariants; prefer the smallest critical section that still keeps the invariant; coarse lock is simpler with less parallelism, fine-grained gives more throughput with deadlock risk.",
+     "weight": "core",
+     "evidence_hint": "States smallest-safe critical section and contrasts coarse simplicity vs fine-grained throughput/deadlock."
+    },
+    {
+     "id": "mech2",
+     "point": "Condition waiting with wait/notify or Condition.await/signal must always wait in a while (not if) re-checking the predicate because of spurious wakeups and lost notify; for producer-consumer prefer BlockingQueue put/take over hand-rolled wait/notify—multi-producer/multi-consumer safe, shut down with poison pills or interrupt + shutdownNow.",
+     "weight": "core",
+     "evidence_hint": "Insists on while-recheck and names BlockingQueue put/take as the interview default for P-C."
+    },
+    {
+     "id": "mech3",
+     "point": "Bounded producer-consumer: producers put into a buffer, consumers take; a bounded queue gives backpressure (producer blocks when full) and prevents unbounded memory growth; empty → consumer blocks efficiently (no busy-spin). Atomics/CAS suit single counters/flags but are not enough when two fields must change together (need a lock or redesign). Deadlock is circular wait—prevent with consistent lock order, tryLock+backoff, or fewer locks; know starvation/livelock as progress cousins.",
+     "weight": "extended",
+     "evidence_hint": "Links bounded buffer to backpressure, limits CAS to single-variable RMW, and names ordered locks/tryLock for deadlock."
+    },
+    {
+     "id": "mech4",
+     "point": "Thread-safe Singleton Java checklist: naive lazy is broken → synchronized getInstance → DCL + volatile → Bill Pugh static holder → enum Singleton (serialization/reflection-safe); eager init is fine if always needed; prefer DI/shared instance unless truly process-global.",
+     "weight": "extended",
+     "evidence_hint": "Sketches the progression and names volatile on DCL plus holder or enum as strong answers."
+    }
+   ],
+   "probes": [
+    "Walk through locking a multi-field invariant, waiting on a condition correctly, implementing bounded producer-consumer with BlockingQueue, and making a Java Singleton thread-safe."
+   ],
+   "hints": {
+    "1": "Start from what is shared and what must stay consistent, then pick lock vs queue vs atomic.",
+    "2": "Smallest critical section; while around wait; BlockingQueue for P-C; DCL needs volatile; enum/holder beat naive lazy.",
+    "3": "Mutex/synchronized/ReentrantLock for multi-field invariants; while-recheck wait/notify; bounded buffer backpressure via put/take; CAS only for single counters; Singleton: synchronized → DCL+volatile → Bill Pugh → enum."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose coarse vs fine locks, volatile vs compound synchronization, BlockingQueue vs hand-rolled waiting, ConcurrentHashMap vs external locks, and Singleton vs DI.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Coarse-grained locking is simpler and safer but reduces parallelism; fine-grained locking raises throughput and deadlock risk—interviewers want the shared resource locked (spot map, inventory row), not every unrelated method synchronized on the whole class.",
+     "weight": "core",
+     "evidence_hint": "Rejects class-wide sync by default and ties lock grain to the shared resource and deadlock risk."
+    },
+    {
+     "id": "tr2",
+     "point": "volatile gives visibility for a single field, not atomic check-then-act on compound state; DCL needs volatile so a half-constructed Singleton is not published. ConcurrentHashMap is great for independent key ops but multi-key invariants (transfer between two keys, check-then-put-if-absent across structures) still need external coordination.",
+     "weight": "core",
+     "evidence_hint": "Separates visibility from atomic compound updates and limits ConcurrentHashMap to independent-key cases."
+    },
+    {
+     "id": "tr3",
+     "point": "Prefer BlockingQueue over hand-rolled wait/notify for producer-consumer; leave synchronized for ReentrantLock when you need tryLock / interruptible acquire and unlock in try-finally. Unbounded queues coordinate without backpressure and can blow memory under burst—prefer capacity plus block/reject. Singleton instance creation being thread-safe does not make mutating methods thread-safe.",
+     "weight": "extended",
+     "evidence_hint": "Defaults to BlockingQueue, names tryLock as a ReentrantLock reason, and separates Singleton creation safety from method sync."
+    }
+   ],
+   "probes": [
+    "When do you choose coarse vs fine locks, volatile vs a lock, BlockingQueue vs wait/notify, ConcurrentHashMap alone vs external locking, and Singleton vs DI?"
+   ],
+   "hints": {
+    "1": "Ask what must be atomic together and whether the problem is visibility, handoff, or multi-key consistency.",
+    "2": "Lock the shared resource not the whole class; volatile ≠ compound check-then-act; BlockingQueue beats hand-rolled P-C; CHM does not cover multi-key invariants.",
+    "3": "Coarse = simple/less parallel; fine = throughput + deadlock risk; volatile for single-field visibility/DCL; BlockingQueue + bounded capacity for backpressure; CHM for independent keys only; Singleton creation ≠ method safety—prefer DI unless process-global."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the Correctness/Coordination/Scarcity map and standard drills: park check-then-act, bounded queue, Singleton whiteboard, logging/cache, and account-transfer deadlock.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Name-the-failure drill: (a) two parkers grab one spot → Correctness (lock/CAS); (b) API threads hand jobs to workers → Coordination (blocking queue / P-C); (c) at most 5 DB connections → Scarcity (semaphore / pool).",
+     "weight": "core",
+     "evidence_hint": "Labels each scenario with the Hello Interview category and a matching primitive."
+    },
+    {
+     "id": "app2",
+     "point": "Check-then-act fix: park(vehicle) does findSpot + occupy under one lock (or CAS on spot state); synchronizing only findSpot still races. Bounded P-C drill: fixed-capacity buffer with ReentrantLock + two Conditions (notFull/notEmpty), then rewrite with ArrayBlockingQueue; state what changes for N producers / M consumers.",
+     "weight": "core",
+     "evidence_hint": "Keeps find+occupy atomic and can sketch lock+two Conditions then ArrayBlockingQueue."
+    },
+    {
+     "id": "app3",
+     "point": "Whiteboard Singleton: broken lazy → synchronized → DCL+volatile → Bill Pugh → enum; state one testing downside and the DI alternative. Logging/cache: locate the lock; ConcurrentHashMap may help; keep record write vs map put atomic when required. Deadlock hunt: transfer(A→B) locking both accounts reverse-order deadlocks; fix with ordered lock IDs or tryLock timeout.",
+     "weight": "extended",
+     "evidence_hint": "Runs Singleton progression, names a logging/cache atomicity boundary, and fixes transfer deadlock with lock ordering or tryLock."
+    }
+   ],
+   "probes": [
+    "Classify parking double-book, worker handoff, and a 5-connection pool; then fix park check-then-act, sketch a bounded queue, and hunt a reverse-order account-transfer deadlock."
+   ],
+   "hints": {
+    "1": "Tag each prompt as shared-state race, work handoff, or limited permits before coding.",
+    "2": "One lock around find+occupy; ReentrantLock + notFull/notEmpty or ArrayBlockingQueue; ordered locks on transfer.",
+    "3": "Spot race→Correctness; API→workers→Coordination; 5 DB connections→Scarcity; park under one lock; bounded buffer then BlockingQueue; Singleton DCL+volatile/holder/enum; transfer with ordered lock IDs or tryLock timeout."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Coarse-grained vs fine-grained locking",
+   "strong_answer": "Coarse lock is simpler with less parallelism; fine-grained raises throughput and deadlock risk. Prefer the smallest critical section that still keeps the invariant; lock the shared resource (spot map, inventory row), not every unrelated method on the whole class."
+  },
+  {
+   "topic": "synchronized vs ReentrantLock",
+   "strong_answer": "Stay with synchronized for straightforward mutual exclusion. Move to ReentrantLock when you need tryLock, interruptible acquire, multiple Conditions, and explicit unlock in try-finally."
+  },
+  {
+   "topic": "volatile vs lock/atomic for compound state",
+   "strong_answer": "volatile gives visibility for a single field, not atomic check-then-act on compound state. DCL needs volatile so you do not publish a half-constructed Singleton. Multi-field invariants need a lock (or redesign); CAS/atomics suit single counters/flags only."
+  },
+  {
+   "topic": "Hand-rolled wait/notify vs BlockingQueue",
+   "strong_answer": "Hand-rolled wait/notify or Condition.await/signal must use while-recheck. Interview default for producer-consumer is BlockingQueue put/take (multi-producer/multi-consumer safe); shut down with poison pills or interrupt + shutdownNow."
+  },
+  {
+   "topic": "Bounded vs unbounded queue",
+   "strong_answer": "Bounded queue gives backpressure—producer blocks when full—and prevents unbounded memory growth; empty consumers block without busy-spin. Unbounded coordination without backpressure risks memory blow-up under burst; prefer capacity plus block/reject."
+  },
+  {
+   "topic": "ConcurrentHashMap vs external locks",
+   "strong_answer": "ConcurrentHashMap is great for independent key ops. Multi-key invariants (transfer between two keys, check-then-put-if-absent across structures) still need external coordination."
+  },
+  {
+   "topic": "Thread-safe Singleton vs DI/shared instance",
+   "strong_answer": "Java progression: naive lazy (broken) → synchronized getInstance → DCL+volatile → Bill Pugh holder → enum (serialization/reflection-safe); eager init if always needed. Prefer DI/shared instance unless truly process-global; creation safety does not make mutating methods thread-safe."
+  },
+  {
+   "topic": "Correctness vs Coordination vs Scarcity",
+   "strong_answer": "Diagnose first: Correctness → locks/atomics; Coordination → blocking queue / producer-consumer; Scarcity → semaphore / pool. Do not reach for a thread pool before the shared-state race is fixed."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming volatile is enough for compound check-then-act",
+   "correction": "volatile gives visibility for a single field, not atomic check-then-act on compound state. DCL needs volatile so you don’t publish a half-constructed Singleton."
+  },
+  {
+   "trap": "Using if instead of while around wait",
+   "correction": "Spurious wakeups and multiple waiters mean you must always re-test the condition after waking—wait in a while, not if."
+  },
+  {
+   "trap": "Synchronizing the whole class by default",
+   "correction": "Works but kills concurrency; lock the shared resource (spot map, inventory row), not every unrelated method."
+  },
+  {
+   "trap": "Treating an unbounded queue as fine for coordination",
+   "correction": "Without backpressure, bursts can blow memory; prefer capacity plus block/reject."
+  },
+  {
+   "trap": "Assuming Singleton is automatically thread-safe end-to-end",
+   "correction": "Only the instance creation story is covered; methods that mutate shared fields still need their own synchronization."
+  },
+  {
+   "trap": "Replacing all locks with ConcurrentHashMap",
+   "correction": "Great for independent key ops; multi-key invariants (transfer between two keys, check-then-put-if-absent across structures) still need external coordination."
+  }
+ ]
+}

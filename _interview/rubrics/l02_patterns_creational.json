@@ -1,0 +1,193 @@
+{
+ "id": "l02_patterns_creational",
+ "title": "Design Patterns: Creational (Singleton, Factory, Builder, Prototype)",
+ "type": "CONCEPT",
+ "relevance": "High — LLD / machine-coding rounds ask you to name and apply these when creating objects (parking lot vehicle types, notification channels, HTTP clients, game entities); Singleton + Factory come up most at campus; Builder/Prototype at mid-level product cos.",
+ "difficulty": "campus",
+ "prereqs": [
+  "l01_oop_solid"
+ ],
+ "company_notes": "Campus/new-grad LLD and machine coding (India product cos, FAANG new-grad): Factory (simple or method) and Singleton are nearly mandatory; Builder when entities have many optional attributes; Prototype less often unless games/templates. Experienced/SDE-2 LLD: precise Factory Method vs Abstract Factory, thread-safe Singleton tradeoffs, choosing not to Singleton everything, fluent Builder for request/query objects. Creational patterns are the first pattern family probed and show up inside almost every canonical LLD problem as how you create X.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what creational patterns are for and when to reach for each one in an interview.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Creational patterns control how objects are created so clients depend on abstractions rather than scattering new ConcreteX() everywhere.",
+     "weight": "core",
+     "evidence_hint": "Candidate says construction logic is centralized/flexible and clients program to interfaces, not concrete classes."
+    },
+    {
+     "id": "fund2",
+     "point": "Singleton means one instance with global access via a private constructor and static getInstance; prefer DI/shared instance unless the domain truly needs a process-wide single resource.",
+     "weight": "core",
+     "evidence_hint": "Names private ctor + getInstance and gives logger/config/connection pool as the rare justified cases."
+    },
+    {
+     "id": "fund3",
+     "point": "Interview pick order: simple factory/Factory Method when type varies at runtime; Builder when configuration is complex; Abstract Factory when families must match; Prototype when copy-from-template beats rebuild; Singleton last and only when truly global.",
+     "weight": "extended",
+     "evidence_hint": "Walks the decision order without stacking every pattern by default."
+    }
+   ],
+   "probes": [
+    "What problem do creational patterns solve, and how would you choose among Factory, Builder, Abstract Factory, Prototype, and Singleton in an LLD round?"
+   ],
+   "hints": {
+    "1": "Think about what varies: the concrete type, the configuration knobs, a matching family, or an expensive template.",
+    "2": "Start from runtime type variation → complex optional config → consistent product families → clone-from-template → only then a true process-wide single instance.",
+    "3": "Simple factory/Factory Method for type; Builder for config; Abstract Factory for families; Prototype for copy-from-template; Singleton last only if truly global."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how each major creational pattern is structured and how the common interview variants work.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Thread-safe Singleton checklist in Java: naive lazy is broken under races; then synchronized getInstance; then double-checked locking with volatile; then Bill Pugh static holder; enum Singleton is serialization/reflection-safe; eager init is fine if always needed.",
+     "weight": "core",
+     "evidence_hint": "Can sketch the progression and name enum or Bill Pugh as the strong Java answers."
+    },
+    {
+     "id": "mech2",
+     "point": "Simple factory (not GoF) is one class/method with if/switch returning a product interface; Factory Method has Creator declare createProduct() and ConcreteCreators override to return ConcreteProducts so new types are added via subclasses (OCP).",
+     "weight": "core",
+     "evidence_hint": "Contrasts conditional one-class factory with polymorphic creators and Product interface use by clients."
+    },
+    {
+     "id": "mech3",
+     "point": "Abstract Factory creates a family of related products that must stay consistent together; Builder does step-by-step construction for many optional fields (fluent withX().build(), optional Director for named recipes); Prototype creates by cloning via clone()/copy(), with registries returning clones never the live prototype.",
+     "weight": "extended",
+     "evidence_hint": "Gives family consistency for Abstract Factory, telescoping-constructor pain for Builder, and clone/registry for Prototype."
+    }
+   ],
+   "probes": [
+    "Walk through Factory Method versus a simple factory, then explain how Abstract Factory, Builder, and Prototype each structure object creation."
+   ],
+   "hints": {
+    "1": "Separate “one place with conditionals” from “subclass chooses the product.”",
+    "2": "For Abstract Factory talk families; for Builder talk optional fields and build(); for Prototype talk clone and registry.",
+    "3": "Simple factory = if/switch; Factory Method = Creator/createProduct overrides; Abstract Factory = matching family; Builder = fluent steps + optional Director; Prototype = clone, registry never hands out the live prototype."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Judge when each pattern helps versus when it is overkill or harmful.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Singleton is hard to mock, violates SRP, and needs concurrency care; production often prefers an injected shared instance over a true Singleton.",
+     "weight": "core",
+     "evidence_hint": "States testability/global-state cost and offers DI as the alternative."
+    },
+    {
+     "id": "tr2",
+     "point": "Abstract Factory is overkill if you only ever create one product type; Factory Method or simple factory is enough—families are the trigger.",
+     "weight": "core",
+     "evidence_hint": "Refuses Abstract Factory for a single varying interface and reserves it for coordinated product sets."
+    },
+    {
+     "id": "tr3",
+     "point": "Builder plus private constructor can enforce invariants at build() and yield an immutable product; setters allow half-built mutable objects.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts incomplete mutable setter objects with a build()-gated immutable result."
+    }
+   ],
+   "probes": [
+    "When would you reject Singleton or Abstract Factory, and why prefer Builder over setters for a complex object?"
+   ],
+   "hints": {
+    "1": "Ask whether you truly need global uniqueness or a whole matching family.",
+    "2": "Singleton costs SRP/testability; Abstract Factory needs multiple related product types; Builder’s win is invariants at build time.",
+    "3": "Prefer injected shared instance over Singleton; skip Abstract Factory for one product type; Builder+private ctor beats setters for immutability and invariants."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Map creational patterns onto typical LLD prompts and attack drills interviewers use.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Pattern mapping drills: notification Email/SMS/Push → factory; HTTP request with 8 optional fields → Builder; light/dark UI widget set → Abstract Factory; spawn 100 similarly configured enemies → Prototype; app-wide logger → Singleton.",
+     "weight": "core",
+     "evidence_hint": "Assigns each prompt to one pattern with a one-sentence justification."
+    },
+    {
+     "id": "app2",
+     "point": "Factory Method vs Abstract Factory drill: PaymentProcessor factory for card/UPI/wallet, then when each channel needs matching ReceiptFormatter and FraudChecker, refactor to Abstract Factory because mixing families is wrong.",
+     "weight": "core",
+     "evidence_hint": "Shows single-product factory first, then family consistency as the reason to upgrade."
+    },
+    {
+     "id": "app3",
+     "point": "Prototype shallow vs deep: an object with List inventory shows why shallow clone corrupts both copies when one mutates the list; deep-copy fixes it; optional registry keyed by enemy type.",
+     "weight": "extended",
+     "evidence_hint": "Explains shared mutable list under shallow copy and how deep copy/registry clones isolate instances."
+    }
+   ],
+   "probes": [
+    "For notifications, an HTTP request with many optional fields, a themed UI widget set, many similar enemies, and a logger—which creational pattern fits each and why?"
+   ],
+   "hints": {
+    "1": "Match each scenario to what varies: type, optional config, family consistency, clone-from-template, or global instance.",
+    "2": "Factory for channel types; Builder for optional HTTP fields; Abstract Factory for matching UI families; Prototype for similar enemies; Singleton only for the logger case.",
+    "3": "Email/SMS/Push = factory; 8-field HTTP request = Builder; light/dark widgets = Abstract Factory; 100 enemies = Prototype; app-wide logger = Singleton."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Simple factory vs Factory Method",
+   "strong_answer": "Simple factory is one class with conditionals returning a product interface; Factory Method uses polymorphic creators so types extend via new subclasses (OCP). Most campus answers use simple factory and that is OK if named honestly; interviewers often say factory and mean the simple form."
+  },
+  {
+   "topic": "Factory Method vs Abstract Factory",
+   "strong_answer": "Factory Method varies one product type through Creator subclasses. Abstract Factory is a factory of related factories for a consistent family (e.g., Button+Checkbox for a theme/OS). Use Abstract Factory only when products must stay consistent together; it is overkill for a single varying type."
+  },
+  {
+   "topic": "Singleton vs dependency injection",
+   "strong_answer": "Singleton gives one instance and global access but is hard to mock, violates SRP, and needs concurrency care. Prefer DI/shared instance passed in unless the domain truly needs a process-wide resource (logger, config, connection pool). In toy LLD a Logger Singleton is common; in production prefer injected shared instance and call out the testability cost."
+  },
+  {
+   "topic": "Builder vs setters / telescoping constructors",
+   "strong_answer": "Builder replaces telescoping constructors for complex objects with many optional fields; fluent withX().build() is interview-friendly and an optional Director encodes named recipes. Setters allow half-built mutable objects; Builder with a private constructor can enforce invariants at build() and yield an immutable product."
+  },
+  {
+   "topic": "Prototype clone vs external new + copy fields",
+   "strong_answer": "External copy breaks encapsulation of private fields and couples to concrete classes; clone()/copy() keeps copying inside the type hierarchy. Always distinguish shallow vs deep copy; registries should return clones, never the live prototype."
+  },
+  {
+   "topic": "Stacking creational patterns",
+   "strong_answer": "Factory Method often evolves into Abstract Factory, Builder, or Prototype; Abstract Factories, Builders, and Prototypes can themselves be Singletons—but do not stack patterns without a reason."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating a static create() method as a Factory Method",
+   "correction": "No—static creation methods cannot be overridden; Factory Method relies on subclassing. See the Factory Comparison distinction among creation method, simple factory, Factory Method, and Abstract Factory."
+  },
+  {
+   "trap": "Defaulting the Logger to a Singleton without discussion",
+   "correction": "Often yes in toy LLD; in production prefer an injected shared instance. Interview win is acknowledging testability and global-state cost."
+  },
+  {
+   "trap": "Confusing simple factory with Factory Method",
+   "correction": "Simple factory = one class with conditionals; Factory Method = polymorphic creators. Campus answers using simple factory are fine if named honestly."
+  },
+  {
+   "trap": "Reaching for Abstract Factory when only one product type varies",
+   "correction": "If you only ever create one product type (one interface), Factory Method or simple factory is enough; families are the trigger."
+  },
+  {
+   "trap": "Using setters instead of Builder for complex construction",
+   "correction": "Setters allow half-built mutable objects; Builder plus private constructor can enforce invariants at build() and yield an immutable product."
+  },
+  {
+   "trap": "Prototype via external field copying, or ignoring shallow vs deep",
+   "correction": "External copy breaks encapsulation and couples to concrete classes; clone() keeps copying in the type hierarchy. Always ask shallow vs deep—e.g., a shared List inventory means shallow clone corrupts both copies on mutation."
+  }
+ ]
+}

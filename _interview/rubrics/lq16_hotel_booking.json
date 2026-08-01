@@ -1,0 +1,309 @@
+{
+ "id": "lq16_hotel_booking",
+ "title": "Design a Hotel Booking System",
+ "type": "LLD",
+ "relevance": "High — canonical date-range inventory LLD / OOD (campus + SDE-2); Flipkart/Uber/Swiggy-style machine coding and FAANG whiteboards; Hotel Management or Booking.com/Airbnb framing; concurrency + overlap checks are the probe.",
+ "difficulty": "mid",
+ "prereqs": [
+  "L01",
+  "L02",
+  "L03",
+  "L04",
+  "L05",
+  "L06"
+ ],
+ "company_notes": "Campus/machine-coding at Flipkart, Uber, Swiggy, Amazon new-grad and Indian product cos common as Hotel Management/Booking LLD (overlap correctness over pattern zoo; concurrency as stretch). SDE-2/FAANG-adjacent and Booking.com/Airbnb-style loops expect date-range modeling, TTL holds, payment failure paths, Strategy pricing, and may bridge to HLD. Top-tier LLD alongside Parking Lot, Movie Booking, Library — canonical temporal inventory OOD.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Clarify single-hotel vs platform scope, FRs, NFRs, and stated assumptions before classes.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Clarify one hotel vs chain/aggregator, book by room number vs RoomType, payment/cancel/housekeeping scope, and whether concurrency + hold TTL are required.",
+     "weight": "core",
+     "evidence_hint": "Candidate asks scope questions first: single-property Hotel Management vs multi-hotel booking platform, specific room vs type then assign at check-in, hold TTL, cancel/refund, concurrency."
+    },
+    {
+     "id": "req2",
+     "point": "Typical single-hotel FRs: manage room types + rooms; search for half-open [checkIn, checkOut); create/cancel reservation; check-in/out; payment; mark maintenance.",
+     "weight": "core",
+     "evidence_hint": "Lists searchAvailable, book/cancel, check-in/check-out, process payment, and admin maintenance as core use cases."
+    },
+    {
+     "id": "req3",
+     "point": "NFR: no double-booking, thread-safe concurrent holds, extensible pricing/payment, modular services (not one god class).",
+     "weight": "core",
+     "evidence_hint": "States correctness (no double-book), concurrency safety, and extensibility of pricing/payment without a god facade."
+    },
+    {
+     "id": "req4",
+     "point": "State demo assumptions such as one hotel, about 50–200 rooms, hold of 10–15 min, mocked payment, in-memory OK, half-open date ranges.",
+     "weight": "extended",
+     "evidence_hint": "Explicitly pins demo knobs: one hotel, ~50–200 rooms, 10–15 min hold, payment mocked, in-memory LLD, half-open ranges."
+    }
+   ],
+   "probes": [
+    "Is this one hotel’s PMS or a Booking.com-style multi-hotel search-and-book platform?",
+    "Is payment and hold TTL in scope for this round?"
+   ],
+   "hints": {
+    "1": "Start by clarifying single property vs aggregator before drawing classes.",
+    "2": "Separate FR (search/book/cancel/check-in/out/pay) from NFR (no double-book, concurrent holds).",
+    "3": "Assume one hotel demo, ~50–200 rooms, 10–15 min hold, mocked payment, half-open [checkIn, checkOut) unless told otherwise."
+   }
+  },
+  {
+   "phase": "entities",
+   "goal": "Identify Hotel/Room/RoomType/Guest/Reservation and that inventory lives on a per-room reservation calendar.",
+   "must_hit": [
+    {
+     "id": "ent1",
+     "point": "RoomType is category (STANDARD/DELUXE/SUITE + base rate); Room is physical unit with roomNumber — inventory conflicts live on Room, not only on the type enum.",
+     "weight": "core",
+     "evidence_hint": "Separates RoomType enum from concrete Room; says search may be by type but overlap is checked on rooms (or typed pool counts with careful accounting)."
+    },
+    {
+     "id": "ent2",
+     "point": "Each Room holds reservations: List<Reservation> as the inventory calendar; isAvailable(checkIn, checkOut) means no overlap with active stays.",
+     "weight": "core",
+     "evidence_hint": "Puts a reservation list/calendar on Room and names isAvailable as overlap over that calendar, not a single BOOKED bit."
+    },
+    {
+     "id": "ent3",
+     "point": "Reservation carries checkIn/checkOut and status PENDING|CONFIRMED|CHECKED_IN|CHECKED_OUT|CANCELLED (plus optional lockedBy/expiresAt for holds).",
+     "weight": "core",
+     "evidence_hint": "Sketches Reservation with date range, lifecycle statuses, and hold fields when payment is in scope."
+    },
+    {
+     "id": "ent4",
+     "point": "RoomState (AVAILABLE|OCCUPIED|MAINTENANCE|DIRTY) is for ops, not multi-stay inventory — status alone cannot express booked Mar 13–15 but free Mar 17–22.",
+     "weight": "extended",
+     "evidence_hint": "Calls out issue #31: flipping Room.status to BOOKED wrongly blocks later non-overlapping stays; ops status vs calendar."
+    }
+   ],
+   "probes": [
+    "What objects own availability for a date range?",
+    "Can Room.status alone model two future non-overlapping stays?"
+   ],
+   "hints": {
+    "1": "Name Hotel, Room, RoomType, Guest, Reservation before patterns.",
+    "2": "Put the reservation calendar on Room; keep RoomState for occupied/dirty/maintenance.",
+    "3": "Room.reservations + isAvailable via overlap; RoomType is category only; Reservation status includes PENDING with expiresAt for holds."
+   }
+  },
+  {
+   "phase": "class_design",
+   "goal": "Sketch Facade + services and pattern roles without a god class owning inventory alone.",
+   "must_hit": [
+    {
+     "id": "cd1",
+     "point": "HotelManagerFacade / HotelManagementSystem orchestrates RoomService, BookingService, PaymentService with searchAvailable / hold / confirm / cancel / checkIn / checkOut.",
+     "weight": "core",
+     "evidence_hint": "Draws a thin facade over room/booking/payment services and names the booking and stay APIs."
+    },
+    {
+     "id": "cd2",
+     "point": "Room owns the overlap invariant (isAvailable/book under lock); BookingService orchestrates hold → price → pay → confirm/release.",
+     "weight": "core",
+     "evidence_hint": "Does not scatter the overlap predicate across services; Room checks overlap; BookingService coordinates the two-phase flow."
+    },
+    {
+     "id": "cd3",
+     "point": "Map patterns: State for room/reservation lifecycle, Strategy for pricing and payment, Factory for rooms, optional Observer and amenity Decorator.",
+     "weight": "extended",
+     "evidence_hint": "Names State, PricingStrategy/PaymentStrategy, RoomFactory, and optionally Observer/Decorator without forcing Singleton beyond demos."
+    },
+    {
+     "id": "cd4",
+     "point": "Avoid a god-class facade that also prices, pays, emails, and persists — split SRP or design score drops.",
+     "weight": "extended",
+     "evidence_hint": "Keeps facade thin; pricing/payment/notify live in strategies/services, not one mega-class."
+    }
+   ],
+   "probes": [
+    "Who owns the overlap check — Room or a random service method?",
+    "Which patterns earn points here without turning the facade into a god class?"
+   ],
+   "hints": {
+    "1": "Sketch the facade and three services before coding.",
+    "2": "Room owns isAvailable; BookingService owns hold/confirm orchestration.",
+    "3": "Facade + Room calendar + State/Strategy/Factory; Observer/Decorator optional; no Singleton requirement in production."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Implement half-open overlap, search/book/cancel/stay APIs, and optional two-phase hold.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Ranges [start, end) overlap iff A.start < B.end && B.start < A.end; half-open end so checkout day equals next guest’s check-in day is free.",
+     "weight": "core",
+     "evidence_hint": "Writes the overlap predicate and explains same-day checkout/check-in works with half-open intervals."
+    },
+    {
+     "id": "impl2",
+     "point": "searchAvailable(type, checkIn, checkOut) filters rooms with no overlapping active reservations; book/cancel/checkIn/checkOut named on the facade or services.",
+     "weight": "core",
+     "evidence_hint": "Implements search against the calendar and names cancel, checkIn (occupy/assign), checkOut (bill + housekeeping/available)."
+    },
+    {
+     "id": "impl3",
+     "point": "When payment is in scope: hold room+dates atomically to PENDING + expiresAt, then confirm after pay or release on fail/TTL — never jump AVAILABLE→OCCUPIED while payment is in flight.",
+     "weight": "core",
+     "evidence_hint": "Describes two-phase hold→confirm like movie seats but with date ranges; payment failure releases hold."
+    },
+    {
+     "id": "impl4",
+     "point": "Booked Mar 13–15 still allows Mar 17–20 if date ranges are modeled; status-bit BOOKED would incorrectly block it (issue #31).",
+     "weight": "extended",
+     "evidence_hint": "Walks the non-overlapping future-booking example and rejects single-status inventory."
+    }
+   ],
+   "probes": [
+    "Write the overlap condition for two date ranges.",
+    "If someone booked Mar 13–15, can another guest book Mar 17–20?"
+   ],
+   "hints": {
+    "1": "Availability is date-range overlap, not a boolean room flag.",
+    "2": "Use half-open [checkIn, checkOut) and the A.start < B.end && B.start < A.end test.",
+    "3": "hold → PENDING+expiresAt → confirm after pay; search scans Room.reservations for non-overlap."
+   }
+  },
+  {
+   "phase": "extensibility",
+   "goal": "Show how pricing, payment, amenities, and platform stretch plug in without rewriting the critical section.",
+   "must_hit": [
+    {
+     "id": "ext1",
+     "point": "PricingStrategy (flat/seasonal/occupancy) and PaymentStrategy (cash/card/UPI) swap without touching the overlap critical section.",
+     "weight": "core",
+     "evidence_hint": "Places Strategy outside the lock path; BookingService calls strategies after hold or around confirm."
+    },
+    {
+     "id": "ext2",
+     "point": "Decorator layers amenity pricing (breakfast/spa) on base room; Factory creates STANDARD/DELUXE/SUITE rooms.",
+     "weight": "extended",
+     "evidence_hint": "Mentions amenity Decorator and RoomFactory as in awesome-LLD-style solutions."
+    },
+    {
+     "id": "ext3",
+     "point": "Book RoomType with late assignment at check-in increases occupancy vs booking a specific Room, but needs a pool count/assignment step.",
+     "weight": "extended",
+     "evidence_hint": "Compares specific-room booking simplicity vs type-level booking + assign at check-in."
+    },
+    {
+     "id": "ext4",
+     "point": "Platform stretch: searchHotels(city, dates, guests) and hold→pay→confirm across properties; keep full PMS/OTA/ML yield out of scope until asked.",
+     "weight": "extended",
+     "evidence_hint": "Adds multi-hotel search API only as stretch; defers housekeeping schedules, keys, OTAs, yield ML, real PGW."
+    }
+   ],
+   "probes": [
+    "How would you add seasonal pricing without rewriting book()?",
+    "Book by RoomType now and assign a concrete room later — what changes?"
+   ],
+   "hints": {
+    "1": "Pricing and payment should be swappable strategies.",
+    "2": "Keep Strategy/Decorator outside the per-room lock; Factory for room kinds.",
+    "3": "PricingStrategy + PaymentStrategy + optional amenity Decorator; type-level book needs pool accounting and check-in assignment."
+   }
+  },
+  {
+   "phase": "concurrency",
+   "goal": "Prevent double-booking with per-room atomic check+insert, TTL-safe confirm, and strong hold path.",
+   "must_hit": [
+    {
+     "id": "conc1",
+     "point": "Two guests racing same room+dates: synchronize per room (or lock inventory rows); check+insert in one critical section; loser gets failure/409.",
+     "weight": "core",
+     "evidence_hint": "Uses synchronized(room) or equivalent per-room lock; no global hotel lock; loser fails cleanly."
+    },
+    {
+     "id": "conc2",
+     "point": "TTL/scheduler releases PENDING holds; confirm conditional on status=PENDING AND locked_by=? AND expires_at > now; must no-op if already CONFIRMED or held by another guest.",
+     "weight": "core",
+     "evidence_hint": "Expiry never frees a CONFIRMED stay; unlock only PENDING→available; abandon checkout frees via TTL."
+    },
+    {
+     "id": "conc3",
+     "point": "Search may be slightly stale; hold+confirm must be strongly consistent; multi-instance needs Redis TTL hold plus DB fence (SELECT FOR UPDATE or GiST exclusion) — Redlock alone is not the correctness fence.",
+     "weight": "core",
+     "evidence_hint": "Splits browse vs book consistency; cites DB exclusion/row lock as truth over Redis lock claims."
+    },
+    {
+     "id": "conc4",
+     "point": "Partial multi-room success → all-or-nothing with ordered lock acquisition by roomId; payment retries use idempotency key / conditional confirm on PENDING.",
+     "weight": "extended",
+     "evidence_hint": "Orders locks to avoid deadlock; confirm is idempotent so double pay retry does not double-create."
+    }
+   ],
+   "probes": [
+    "Two users book the same room for overlapping dates — what happens?",
+    "User never pays — how does inventory free without releasing a confirmed booking?",
+    "Would Redis Redlock alone make booking correct across instances?"
+   ],
+   "hints": {
+    "1": "Think check-then-act on one room under a lock.",
+    "2": "Per-room critical section for overlap check+insert; TTL only for PENDING.",
+    "3": "Atomic per-room check+insert; conditional confirm; Redis hold + Postgres EXCLUDE USING GIST / FOR UPDATE as final fence — not Redlock alone."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Status-bit inventory vs date-range calendar",
+   "strong_answer": "Status-bit (AVAILABLE|BOOKED|OCCUPIED) is simpler but wrong for non-overlapping future stays (issue #31); prefer a reservation calendar + overlap predicate, or per-night inventory rows at platform scale. Ops status stays for occupied/dirty/maintenance only."
+  },
+  {
+   "topic": "Hold-then-pay vs one-shot book",
+   "strong_answer": "One-shot bookRoom is OK for demos; two-phase hold→PENDING+expiresAt→confirm after pay (or release on fail/TTL) matches real booking and is what concurrency follow-ups expect — same pattern as movie seats with date ranges."
+  },
+  {
+   "topic": "Per-room lock vs DB FOR UPDATE vs GiST exclusion",
+   "strong_answer": "Per-room synchronized is the correct LLD demo; use a short DB row lock only to set PENDING+expires_at (do not hold the lock while the user pays); EXCLUDE USING GIST (room_id WITH =, stay WITH &&) is the structural final fence."
+  },
+  {
+   "topic": "Book specific Room vs book RoomType",
+   "strong_answer": "Specific room is simpler for LLD; type-level booking + late assignment at check-in can raise occupancy but needs pool counts and an assignment step — inventory still must not live only on the type enum."
+  },
+  {
+   "topic": "Optimistic vs pessimistic concurrency",
+   "strong_answer": "Popular weekends conflict often → pessimistic or conditional insert preferred; OCC alone leads to pay-then-fail unless you still hold first."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using Room.status=BOOKED as the only inventory signal",
+   "correction": "Non-overlapping later stays get blocked; model a date-range calendar per room and check overlap (issue #31)."
+  },
+  {
+   "trap": "Closed date intervals so same-day checkout and check-in conflict",
+   "correction": "Use half-open [checkIn, checkOut) so checkout day is free for the next check-in."
+  },
+  {
+   "trap": "TTL or unlock frees a CONFIRMED reservation or another guest’s hold",
+   "correction": "Release only PENDING held by the same guest; confirm is conditional on PENDING, locked_by, and expires_at > now."
+  },
+  {
+   "trap": "Payment retry double-charges or double-creates a booking",
+   "correction": "Idempotency key / reservation id; confirm only while still PENDING."
+  },
+  {
+   "trap": "Partial success when booking multiple rooms",
+   "correction": "All-or-nothing transaction; acquire locks ordered by roomId to avoid deadlock."
+  },
+  {
+   "trap": "Claiming Redis Redlock alone makes distributed booking correct",
+   "correction": "Use Redis SET NX PX for holds plus DB as source of truth (FOR UPDATE or GiST exclusion); Redlock is not the correctness fence."
+  },
+  {
+   "trap": "God-class facade that prices, pays, emails, and persists",
+   "correction": "Keep a thin Facade; split BookingService / PaymentService / Observer notify for SRP."
+  },
+  {
+   "trap": "Putting inventory only on RoomType",
+   "correction": "Physical conflicts live on Room (or typed pool counts with careful accounting), not solely on the type enum."
+  }
+ ]
+}

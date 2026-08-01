@@ -1,0 +1,238 @@
+{
+ "id": "03_two_pointers_sliding_window",
+ "title": "Two Pointers & Sliding Window",
+ "type": "CP",
+ "relevance": "High (appears constantly in modern OAs and interviews, especially FAANG).",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Longest continuous server uptime / longest continuous subarray → sliding window for a longest segment under a sum/condition. Maximum items within a budget / subarray sum equals K → shrink left when the sum exceeds the budget (array strictly positive). Target sum from two databases/lists → opposite-ends or two-array pointers on sorted inputs. Minimum window to cover all required skills (Amazon/Google) → Minimum Window Substring reskin.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Establish that the problem is two pointers or sliding window: a contiguous segment or pair under a monotone condition.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "The core idea is maintaining a valid segment with two index pointers L and R, exploiting monotonicity of a property (e.g., as the segment grows, its sum only increases).",
+     "weight": "core",
+     "evidence_hint": "Names L/R on a contiguous segment and cites a monotone property such as growing sum."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognize it when you need a contiguous subarray, substring, or pair satisfying a condition, or when the ask is longest, shortest, or number of valid contiguous sequences.",
+     "weight": "core",
+     "evidence_hint": "Maps the prompt to contiguous subarray/substring/pair or longest/shortest/count of valid contiguous sequences."
+    },
+    {
+     "id": "rec3",
+     "point": "OA disguises include longest continuous server uptime / longest continuous subarray, maximum items within a budget / subarray sum equals K, target sum from two lists, and minimum window to cover all required skills.",
+     "weight": "extended",
+     "evidence_hint": "Maps the wording to one of those four OA/interview disguises from the Where-it-appears section."
+    }
+   ],
+   "probes": [
+    "What in the statement says this is a contiguous L/R segment (or sorted pair) rather than a nested brute scan?",
+    "Is the ask longest, shortest, count of valid contiguous sequences, or a pair/target from two lists—and which disguise does that match?"
+   ],
+   "hints": {
+    "1": "Ask whether the answer lives in a contiguous segment or a pair of indices under a monotone condition.",
+    "2": "Look for longest/shortest/number-of contiguous sequences, or a target pair from sorted inputs.",
+    "3": "Name L/R + monotonicity, and map to uptime/budget-sum, two-list target sum, or skills-cover minimum window."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Choose the right pointer pattern—sliding window, opposite ends, or two arrays—and the counting/state rule before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Sliding window: expand with R and shrink by advancing L only when constraints are violated, never resetting L, so the scan stays linear.",
+     "weight": "core",
+     "evidence_hint": "Describes expand-R / shrink-L with L moving only forward under the constraint."
+    },
+    {
+     "id": "appr2",
+     "point": "Opposite ends pointers: on a sorted array set L = 0 and R = N - 1 to find pairs (Two Sum II pattern).",
+     "weight": "core",
+     "evidence_hint": "States L and R at opposite ends of a sorted array moving toward a target pair."
+    },
+    {
+     "id": "appr3",
+     "point": "Two pointers on two arrays: traverse A and B simultaneously without nested loops (e.g., merging sorted arrays or finding the closest pair).",
+     "weight": "core",
+     "evidence_hint": "Says advance pointers across two sequences in one coordinated pass, not nested loops."
+    },
+    {
+     "id": "appr4",
+     "point": "Counting subarrays: when window [L, R] is valid, it adds R - L + 1 valid subarrays ending at R.",
+     "weight": "extended",
+     "evidence_hint": "Gives the R - L + 1 contribution for each valid right endpoint R."
+    }
+   ],
+   "probes": [
+    "Which pattern fits—sliding window, opposite ends on sorted input, or two-array pointers—and why?",
+    "If the problem asks for a count of valid contiguous subarrays, what do you add when [L, R] is valid?"
+   ],
+   "hints": {
+    "1": "Classify as window on one array, opposite ends on sorted, or coordinated pointers on two arrays.",
+    "2": "Window: expand R and advance L only when invalid; pairs: L = 0, R = N - 1; two arrays: one pass, no nesting.",
+    "3": "For counts, when [L, R] is valid add R - L + 1 subarrays ending at R."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Code the concrete expand/shrink loop, opposite-ends or two-array walk, and O(1) window state structures.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "The O(N) sliding window template: a for loop for R expanding the window, and a while loop inside advancing L to shrink when constraints are violated.",
+     "weight": "core",
+     "evidence_hint": "Writes or describes for-R expand plus inner while advancing L on violation."
+    },
+    {
+     "id": "impl2",
+     "point": "Opposite ends implementation: L = 0 and R = N - 1 on sorted arrays to find pairs (Two Sum II).",
+     "weight": "core",
+     "evidence_hint": "Initializes opposite ends and moves L/R based on how the pair sum compares to the target."
+    },
+    {
+     "id": "impl3",
+     "point": "Monotonic queue extension: maintain a std::deque to retrieve the sliding maximum/minimum of a window in O(1) amortized time.",
+     "weight": "core",
+     "evidence_hint": "Uses a deque of indices/values to answer window max/min as the window slides."
+    },
+    {
+     "id": "impl4",
+     "point": "Frequency map states: use an array or std::unordered_map plus an integer distinct_count so each pointer move updates conditions in O(1), avoiding recalculation.",
+     "weight": "extended",
+     "evidence_hint": "Increments/decrements freq and distinct_count on L/R moves instead of rescanning the window."
+    }
+   ],
+   "probes": [
+    "Walk through the for-R / while-L sliding window template on a longest-window-with-sum constraint.",
+    "How do you keep window max/min or distinctness updated in O(1) per pointer move?"
+   ],
+   "hints": {
+    "1": "Start from expand R; say when and how L advances.",
+    "2": "Template: for R, while invalid advance L; pairs: L = 0, R = N - 1; state via deque or freq + distinct_count.",
+    "3": "Name std::deque for sliding max/min and freq/distinct_count updates that avoid full recalculation."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Justify the linear scan and O(1) per-move state updates versus nested or rescanning approaches.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "By not resetting L, nested loops O(N^2) optimize down to a linear O(N) scan.",
+     "weight": "core",
+     "evidence_hint": "Contrasts resetting L (quadratic nested loops) with monotone L advances yielding O(N)."
+    },
+    {
+     "id": "cx2",
+     "point": "A std::deque for sliding maximum/minimum answers each query in O(1) amortized time.",
+     "weight": "core",
+     "evidence_hint": "States amortized O(1) window max/min via the monotonic deque."
+    },
+    {
+     "id": "cx3",
+     "point": "Frequency map plus distinct_count tracks conditions in O(1) time per pointer movement, avoiding recalculation.",
+     "weight": "extended",
+     "evidence_hint": "Claims O(1) work per L or R step via incremental freq/distinct updates."
+    }
+   ],
+   "probes": [
+    "Why is the sliding-window scan O(N) rather than O(N^2)?",
+    "What makes each pointer move O(1) when you need max/min or distinctness in the window?"
+   ],
+   "hints": {
+    "1": "Ask whether L ever moves backward or restarts from the left.",
+    "2": "Each index enters and leaves the window at most once → O(N); keep state incremental.",
+    "3": "Cite O(N^2)→O(N) by not resetting L, deque max/min in O(1) amortized, and freq/distinct_count O(1) per move."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch resetting L, illegal sum-window shrinks, bad counting, and full-window recalculation.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Resetting L for each R (or otherwise re-scanning from scratch) reintroduces nested O(N^2) behavior and loses the linear scan.",
+     "weight": "core",
+     "evidence_hint": "Refuses restarting L at 0 for every R and insists L only advances."
+    },
+    {
+     "id": "pit2",
+     "point": "For budget / subarray-sum shrink-from-left windows, shrinking when the sum exceeds the constraint is valid only if the array is strictly positive.",
+     "weight": "core",
+     "evidence_hint": "Calls out the strictly-positive requirement before using classic sum-exceeds shrink."
+    },
+    {
+     "id": "pit3",
+     "point": "When counting valid contiguous subarrays, forgetting that a valid [L, R] contributes R - L + 1 endings at R undercounts.",
+     "weight": "extended",
+     "evidence_hint": "Uses R - L + 1 per valid R rather than counting only the full window once."
+    },
+    {
+     "id": "pit4",
+     "point": "Rescanning the whole window to recompute frequencies or distinctness instead of updating on each pointer move wastes the O(1)-per-move design.",
+     "weight": "extended",
+     "evidence_hint": "Updates freq/distinct_count on L/R moves rather than rebuilding from the segment."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you reset L every time R advances?",
+    "When is shrink-on-sum-exceeds unsafe, and how do you count all valid subarrays ending at R?"
+   ],
+   "hints": {
+    "1": "Check whether L only moves forward and whether sums are monotone.",
+    "2": "No L reset; sum-shrink needs a strictly positive array; counts add R - L + 1.",
+    "3": "Also keep freq/distinct_count incremental—do not rescan the window each step."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Nested O(N^2) scan vs O(N) two pointers",
+   "strong_answer": "Resetting L for each R is nested O(N^2); advancing L only forward under monotonicity yields a linear O(N) scan."
+  },
+  {
+   "topic": "Opposite-ends pair search vs sliding window on a contiguous segment",
+   "strong_answer": "Opposite ends (L = 0, R = N - 1 on sorted input) finds pairs (Two Sum II); sliding window maintains a contiguous L..R segment for longest/shortest/count under a constraint."
+  },
+  {
+   "topic": "Two-array pointers vs nested loops over A and B",
+   "strong_answer": "Traverse A and B simultaneously with two pointers (merge / closest pair style) instead of nested loops over both arrays."
+  },
+  {
+   "topic": "Rescanning window state vs frequency map + distinct_count",
+   "strong_answer": "Prefer an array or std::unordered_map plus distinct_count updated in O(1) per pointer move over recalculating the whole window."
+  },
+  {
+   "topic": "Rescanning for window max/min vs monotonic deque",
+   "strong_answer": "A std::deque keeps sliding maximum/minimum in O(1) amortized time as the window moves (Sliding Window Maximum pattern)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Resetting L for every new R (nested loops).",
+   "correction": "Advance L only when the constraint is violated so each index moves at most once and the scan is O(N)."
+  },
+  {
+   "trap": "Using shrink-when-sum-exceeds on an array that is not strictly positive.",
+   "correction": "Classic left-shrink for budget / subarray sum needs a strictly positive array so growing/shrinking the window is monotone in sum."
+  },
+  {
+   "trap": "Counting only one subarray per valid window instead of all endings at R.",
+   "correction": "When [L, R] is valid, add R - L + 1 valid subarrays ending at R."
+  },
+  {
+   "trap": "Recomputing frequencies or distinctness by scanning the whole window after each move.",
+   "correction": "Maintain freq (array or std::unordered_map) and distinct_count so each pointer movement updates state in O(1)."
+  },
+  {
+   "trap": "Recomputing the window maximum/minimum by scanning the segment each time.",
+   "correction": "Maintain a std::deque for sliding max/min in O(1) amortized time."
+  }
+ ]
+}

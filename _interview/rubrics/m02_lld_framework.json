@@ -1,0 +1,205 @@
+{
+ "id": "m02_lld_framework",
+ "title": "LLD interview framework & rubric",
+ "type": "CONCEPT",
+ "relevance": "High — the pacing + scoring model for every LLD / OOD / machine-coding round (campus + experienced); Flipkart, Uber, Swiggy, PhonePe, Atlassian, Amazon, Google, Meta grade the same axes: problem analysis → class design → code quality → extensibility → communication.",
+ "difficulty": "campus",
+ "prereqs": [
+  "l01_oop_solid"
+ ],
+ "company_notes": "Campus/India product cos (Flipkart, Uber, Swiggy, PhonePe, Cred, Ola) often put machine-coding first onsite at 90–120 min against the workat/Flipkart bar; FAANG/big-tech OOD–LLD (Google, Amazon, Meta, Microsoft-style) lean discussion + class structure + extensibility on Hello Interview pacing, with formal UML uncommon and patterns only when justified; meta skill reused on every LLD problem (parking lot, Splitwise, elevator, games, booking).",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that LLD/OOD discussion and machine coding share one modeling skill, scored on a five-axis process rubric.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Two formats, one skill: OOD/LLD discussion (45–60 min whiteboard/pseudocode) vs machine coding (60–120 min runnable demo)—same modeling, different design-heavy vs code-heavy time split.",
+     "weight": "core",
+     "evidence_hint": "Names both formats with those time ranges and says modeling is shared while pacing differs."
+    },
+    {
+     "id": "fund2",
+     "point": "Five rubric axes: Problem analysis (clarify, MUST vs NICE, out-of-scope); Class design (entities, ownership, APIs); Code quality (encapsulation, naming, SoC, composition over deep inheritance); Extensibility (absorb “add X” without rewrite / OCP); Communication (narrate tradeoffs, use-case trace).",
+     "weight": "core",
+     "evidence_hint": "Lists all five axes with a one-line meaning for each."
+    },
+    {
+     "id": "fund3",
+     "point": "Announce the delivery pipeline: Requirements & scope → entities/relationships → class APIs (state + behavior) → core methods/demo → extensibility follow-ups; interviewers score process, not only the final diagram.",
+     "weight": "extended",
+     "evidence_hint": "Walks the pipeline in order and says process is graded alongside the diagram."
+    }
+   ],
+   "probes": [
+    "What does an LLD interviewer actually grade, and how do OOD discussion rounds differ from machine coding?",
+    "Walk the delivery phases you would announce at the start of an LLD round."
+   ],
+   "hints": {
+    "1": "Start from two interview formats, then the scoring axes.",
+    "2": "Name the five Hello Interview axes, then the Requirements → Entities → APIs → demo → extensibility loop.",
+    "3": "Say: 45–60 min OOD vs 60–120 min machine coding, same modeling; score Problem analysis, Class design, Code quality, Extensibility, Communication; announce Requirements → entities → class APIs → demo → extensibility."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Lock requirements-first modeling: noun filter, state/behavior ownership, patterns-last, and the machine-coding demo bar.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Requirements first: actors, ops, rules/state transitions, invalid inputs, concurrency if asked; write 4–8 bullets and never invent a notification engine nobody requested.",
+     "weight": "core",
+     "evidence_hint": "Lists those requirement buckets, mentions a short bullet list, and refuses unsolicited features."
+    },
+    {
+     "id": "mech2",
+     "point": "Noun filter: nouns with state/rules become classes, mere info becomes field/enum, verbs become methods; aim ~4–7 core entities plus one orchestrator/Facade.",
+     "weight": "core",
+     "evidence_hint": "Separates classes from fields/enums and names an orchestrator alongside a small core entity set."
+    },
+    {
+     "id": "mech3",
+     "point": "Class design ties requirements → state → behavior; keep rules with the owner of the state (tell-don’t-ask); formal UML optional—ask; boxes + method stubs usually win.",
+     "weight": "core",
+     "evidence_hint": "Puts rules on the state owner and prefers boxes/stubs unless asked for formal UML."
+    },
+    {
+     "id": "mech4",
+     "point": "Patterns last and only when something varies (Strategy/Factory/Observer/State); 1–2 justified patterns beat five name-drops; over-engineering fails KISS/YAGNI.",
+     "weight": "extended",
+     "evidence_hint": "Places patterns after APIs, limits to justified variation points, and cites KISS/YAGNI against pattern stuffing."
+    },
+    {
+     "id": "mech5",
+     "point": "Machine-coding bar: working + demonstrable, functionally correct, modular/readable, SoC, easy new requirements, Main/driver demo, graceful exceptions—UI/DB usually out of scope; mandatory > optional.",
+     "weight": "extended",
+     "evidence_hint": "Uses Flipkart/workat language and says ship must-haves with a Main demo before optional polish."
+    }
+   ],
+   "probes": [
+    "Given Design Parking Lot, how do you go from nouns to classes and where does the orchestrator sit?",
+    "When do you introduce a pattern, and what does a strong machine-coding demo need to show?"
+   ],
+   "hints": {
+    "1": "Lock scope before drawing classes.",
+    "2": "Filter nouns into classes vs fields, bind rules to state owners, delay patterns until something varies.",
+    "3": "4–8 requirement bullets → ~4–7 entities + Facade → state/behavior on owners → 1–2 patterns only if needed → working Main demo of must-haves."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Show judgment on time split, notation, patterns, and mandatory vs optional under the rubric.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "OOD discussion is design-heavy (class design often 10–15 min); machine coding is code-heavy (quick design ≤15–20% time, then bottom-up impl)—same entities/APIs, different depth of runnable code.",
+     "weight": "core",
+     "evidence_hint": "Contrasts the two time splits with those design budgets and says modeling stays the same."
+    },
+    {
+     "id": "tr2",
+     "point": "Communication > notation: offer boxes/stubs; switch to formal UML only if they insist—ceremony UML is not the default win.",
+     "weight": "core",
+     "evidence_hint": "Prefers boxes/method stubs and upgrades to formal UML only on request."
+    },
+    {
+     "id": "tr3",
+     "point": "Mandatory > optional in machine coding: working must-haves beat half-finished extensibility; leave NICE as TODOs with comments and say what you’d add next.",
+     "weight": "extended",
+     "evidence_hint": "Prioritizes a clean demo of MUST features and parks NICE as commented TODOs."
+    }
+   ],
+   "probes": [
+    "You have a Flipkart-style machine-coding round—how do you split design vs code time versus a Hello Interview OOD round?",
+    "Interviewer asks why you skipped full UML and whether you should finish optional features first."
+   ],
+   "hints": {
+    "1": "Compare the two formats’ clocks before defending notation or scope cuts.",
+    "2": "Boxes beat ceremony UML; ship MUST before NICE extensibility.",
+    "3": "OOD: 10–15 min class design; MC: ≤15–20% design then code; boxes/stubs unless asked; working must-haves + TODO NICE."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Run a timed attack script: requirements → entities → class design → implement/demo → verify and extensibility.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Practice script: Requirements (3–5 min) MUST vs NICE sign-off → Entities (~3 min) noun-extract + orchestrator → Class design (10–15 min OOD / ≤15–20% MC) with 0–2 shared interfaces → implement 2–3 hot methods (OOD) or bottom-up enums→models→service→Main (MC).",
+     "weight": "core",
+     "evidence_hint": "Recites those phase time boxes and the OOD vs MC implementation difference."
+    },
+    {
+     "id": "app2",
+     "point": "Close with verification & extensibility (last 5 min): one happy path + 2–3 edge cases (e.g. self-vote, full lot, illegal move); answer “add undo / new vehicle type / surge pricing” by pointing at the variation point, not rewriting.",
+     "weight": "core",
+     "evidence_hint": "Traces a scenario plus edge cases, then extends via an open interface/strategy."
+    },
+    {
+     "id": "app3",
+     "point": "Timed dry run: 45 min OOD or 90 min machine coding on one awesome-LLD problem; score yourself aloud on the five rubric axes.",
+     "weight": "extended",
+     "evidence_hint": "Picks one format timer and self-scores Problem analysis through Communication."
+    }
+   ],
+   "probes": [
+    "Design Tic-Tac-Toe—run only the first 3–5 minutes of requirements, then name your entities and orchestrator.",
+    "You have the last 5 minutes—verify a happy path and show how you’d add surge pricing without a rewrite."
+   ],
+   "hints": {
+    "1": "Treat it as a timed script with sign-off before coding.",
+    "2": "MUST/NICE → nouns/orchestrator → APIs/interfaces → hot methods or Main demo → trace + variation point.",
+    "3": "3–5 min requirements → ~3 min entities → 10–15 min OOD design (or ≤15–20% MC) → 2–3 methods or bottom-up Main → last 5 min happy path + 2–3 edges + extensibility pointer; dry-run 45 or 90 min."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "OOD/LLD discussion vs machine coding",
+   "strong_answer": "Same modeling skill; OOD (45–60 min) is design-heavy with pseudocode of 2–3 hot methods, machine coding (60–120 min) is code-heavy with ≤15–20% quick design then a runnable Main demo."
+  },
+  {
+   "topic": "Boxes/method stubs vs formal UML",
+   "strong_answer": "Default to boxes and stubs because communication beats notation; switch to formal UML only if the interviewer insists."
+  },
+  {
+   "topic": "Justified patterns vs pattern name-dropping",
+   "strong_answer": "Introduce Strategy/Factory/Observer/State only after entities/APIs when something varies; 1–2 justified patterns beat five name-drops—over-engineering fails KISS/YAGNI on Code Quality."
+  },
+  {
+   "topic": "Mandatory must-haves vs optional extensibility (machine coding)",
+   "strong_answer": "Ship working MUST features with a clean demo; leave NICE as TODOs with comments—half-finished extensibility loses to a demonstrable core."
+  },
+  {
+   "topic": "God-class Manager vs anemic models",
+   "strong_answer": "Orchestrator/Facade coordinates; domain objects own rules (tell-don’t-ask)—neither dump-everything-in-Manager nor getters-only bags."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Skipping requirements and jumping straight to code.",
+   "correction": "Fails Problem Analysis; lock actors/ops/rules/MUST vs NICE and out-of-scope first."
+  },
+  {
+   "trap": "Drawing full ceremony UML by default.",
+   "correction": "Communication > notation—offer boxes/stubs; use formal diamonds only if they insist."
+  },
+  {
+   "trap": "Forcing Singleton/Factory everywhere before entities/APIs are clear.",
+   "correction": "Patterns come after class design, only at real variation points; unjustified patterns are a Code Quality red flag."
+  },
+  {
+   "trap": "God class or anemic models.",
+   "correction": "Orchestrator coordinates; domain objects own state rules—avoid dump-everything Manager and getters-only bags."
+  },
+  {
+   "trap": "Finishing optional extensibility instead of a working demo in machine coding.",
+   "correction": "Mandatory > optional: working must-haves beat half-finished extensibility; say what you’d add next."
+  },
+  {
+   "trap": "Answering “how would you extend this?” with “rewrite the whole thing.”",
+   "correction": "Point to the interface/strategy variation point you left open—rewrite fails Extensibility."
+  }
+ ]
+}

@@ -1,0 +1,155 @@
+{
+ "id": "cpp_s07_arrays_vectors",
+ "title": "Arrays and Vectors",
+ "type": "FUND",
+ "relevance": "Interviewers use arrays vs vectors to check whether candidates understand fixed vs dynamic storage, stack vs heap placement, and safe default choices in C++.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that arrays are fixed-size and vectors are dynamic, and where each lives in memory.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "An array is a fixed-size block of memory; a vector is a dynamic, resizable array that can grow or shrink at runtime.",
+     "weight": "core",
+     "evidence_hint": "States fixed versus growable as the core distinction between array and vector."
+    },
+    {
+     "id": "fund2",
+     "point": "Arrays usually live on the stack; std::vector always stores its elements on the heap.",
+     "weight": "core",
+     "evidence_hint": "Contrasts stack for arrays with heap for vector element storage."
+    },
+    {
+     "id": "fund3",
+     "point": "Array size must be known at compile time; vector size is determined at runtime.",
+     "weight": "extended",
+     "evidence_hint": "Ties compile-time sizing to arrays and runtime sizing to vectors."
+    }
+   ],
+   "probes": [
+    "What is the fundamental difference between a C++ array and a std::vector, and where does each live in memory?"
+   ],
+   "hints": {
+    "1": "Think about whether the size can change after creation.",
+    "2": "Fixed size lets the compiler place storage on the stack; unknown growth forces heap allocation.",
+    "3": "Array: fixed size, usually stack, size at compile time. Vector: resizable, always heap, size at runtime."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how vector growth works via capacity and reallocation, and why raw arrays are risky.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A vector holds a fixed capacity; when insertion would exceed it, it allocates a larger heap block (typically double the current size), copies existing elements, and releases the old block.",
+     "weight": "core",
+     "evidence_hint": "Describes capacity, reallocation steps, and typically doubling."
+    },
+    {
+     "id": "mech2",
+     "point": "Because capacity doubles when exhausted, reallocations occur exponentially less often as the vector grows, so amortized insertion cost stays small.",
+     "weight": "core",
+     "evidence_hint": "Links doubling growth to rare reallocations and small average cost."
+    },
+    {
+     "id": "mech3",
+     "point": "Prefer std::array over raw C-style arrays: same performance, plus bounds checking and other safety features.",
+     "weight": "extended",
+     "evidence_hint": "Names std::array as the safer fixed-size alternative to int arr[]."
+    }
+   ],
+   "probes": [
+    "What happens internally when a std::vector runs out of capacity on push_back?"
+   ],
+   "hints": {
+    "1": "It does not grow by a single element each time.",
+    "2": "Walk through allocate-new-block, copy, free-old-block, and how much larger the new block typically is.",
+    "3": "Typically doubles capacity, copies all elements to the new heap block, then releases the old one; doubling keeps amortized cost low."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare rigidity/speed/memory exactness of arrays against flexibility and resizing overhead of vectors.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Arrays are extremely fast with zero overhead and use exactly the memory they need; vectors are still fast but pay slight resizing overhead and over-allocate for growth.",
+     "weight": "core",
+     "evidence_hint": "Pairs zero-overhead exact sizing for arrays with slight overhead and over-allocation for vectors."
+    },
+    {
+     "id": "tr2",
+     "point": "The array-versus-vector choice is flexibility versus rigidity: fixed stack-friendly storage versus growable heap storage.",
+     "weight": "core",
+     "evidence_hint": "Frames the decision as fixed/rigid versus dynamic/flexible."
+    }
+   ],
+   "probes": [
+    "When would you accept a vector's over-allocation instead of an array's exact memory use?"
+   ],
+   "hints": {
+    "1": "Compare what each optimizes for: speed and exact size versus room to grow.",
+    "2": "Mention zero overhead and exact fit for arrays versus slight resize cost and spare capacity for vectors.",
+    "3": "Prefer vector when size may change; accept over-allocation because amortized growth cost stays small and out-of-bounds risk drops."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "State the practical default: use std::vector unless the size is truly known in advance.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Default to std::vector for almost everything; heap allocation cost is negligible for most programs and flexibility removes a class of out-of-bounds errors.",
+     "weight": "core",
+     "evidence_hint": "Says vector is the default and cites negligible cost plus fewer OOB mistakes."
+    },
+    {
+     "id": "app2",
+     "point": "Reach for std::array only when the element count is genuinely known in advance, such as holding the three coordinates of a point.",
+     "weight": "core",
+     "evidence_hint": "Gives a fixed-size example like three point coordinates for std::array."
+    }
+   ],
+   "probes": [
+    "In new C++ code, when do you choose std::vector versus std::array?"
+   ],
+   "hints": {
+    "1": "Ask whether the count is known before the program runs.",
+    "2": "Default one way; reserve the fixed wrapper for truly compile-time sizes.",
+    "3": "Default to std::vector; use std::array only for known-ahead sizes like three coordinates of a point."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Array vs std::vector",
+   "strong_answer": "Arrays are fixed-size, usually stack-resident, compile-time sized, zero-overhead, and memory-exact; vectors are runtime-sized, always heap-backed, slightly slower due to resizing, and over-allocate so they can grow."
+  },
+  {
+   "topic": "std::vector vs std::array",
+   "strong_answer": "Default to std::vector for flexibility and fewer out-of-bounds errors; use std::array only when the size is genuinely known in advance and a fixed stack-resident block is enough and maximally efficient."
+  },
+  {
+   "topic": "Raw C-style array vs std::array",
+   "strong_answer": "Prefer std::array over raw int arr[]: same performance as a fixed array, with bounds checking and other safety features."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Declaring an array for ten items and later needing an eleventh has no recourse—writing past the end overflows the array's storage.",
+   "correction": "Array size is locked at creation; use a growable container like std::vector when the count may increase, or size the fixed storage correctly up front."
+  },
+  {
+   "trap": "Assuming a vector grows by one element at a time on each insertion.",
+   "correction": "It keeps a capacity and only reallocates when full: typically allocates a doubled heap block, copies elements over, and frees the old block."
+  },
+  {
+   "trap": "Reaching for raw C-style arrays by default for fixed sequences.",
+   "correction": "Prefer std::array for fixed sizes (same performance, more safety) and std::vector when the size is not known in advance."
+  }
+ ]
+}

@@ -1,0 +1,297 @@
+{
+ "id": "lq12_notification_lld",
+ "title": "Design a Notification Service",
+ "type": "LLD",
+ "relevance": "High — staple LLD / machine-coding + bridge-to-HLD question (campus + experienced); Uber, Microsoft, Amazon, Flipkart, Meta, LinkedIn, Airbnb-style loops probe multi-channel Strategy/Adapter, Observer decoupling, preferences, retries, and concurrency.",
+ "difficulty": "mid",
+ "prereqs": [
+  "l01_oop_solid",
+  "l02_patterns_creational",
+  "l03_patterns_structural",
+  "l04_patterns_behavioral",
+  "l05_concurrency_lld"
+ ],
+ "company_notes": "Campus/new-grad machine-coding or LLD in India (Amazon, Flipkart, Uber, Swiggy, Microsoft-style) expects a working multi-channel demo plus pattern names; SDE-2/experienced probes Adapter failover, retries/DLQ, idempotency, rate limits, async boundaries, and priority vs promo isolation; FAANG/product OOD often starts as LLD then expands toward HLD (queues, APNs/FCM, preferences DB). Among the most asked design-a-service LLD problems after parking lot / rate-limiter utilities.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock mandatory multi-channel FR/NFR, preference and status behavior, and in-scope extensions before designing classes.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Mandatory FR: send via at least Email, SMS, and Push; create a notification from an event/request; respect user channel preferences; track basic success/fail status.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists Email/SMS/Push, event-driven create, preference gating, and status tracking as non-negotiable."
+    },
+    {
+     "id": "req2",
+     "point": "NFR: new channels without rewriting the orchestrator (OCP), no tight coupling to vendor SDKs, correctness under concurrent sends; optional async queue for scale talk.",
+     "weight": "core",
+     "evidence_hint": "Mentions extensibility, vendor decoupling, concurrent correctness, and may note async enqueue as a stretch NFR."
+    },
+    {
+     "id": "req3",
+     "point": "Common extensions to ask: templates, priorities (HIGH/MED/LOW), retries + fallback, rate limits / quiet hours, scheduled send, digests, in-app inbox, delivery webhooks.",
+     "weight": "extended",
+     "evidence_hint": "Proactively asks which extensions are in scope rather than coding all of them."
+    },
+    {
+     "id": "req4",
+     "point": "State assumptions: in-memory prefs/templates OK for machine coding; third-party APIs mocked; at-least-once OK unless exactly-once is required.",
+     "weight": "extended",
+     "evidence_hint": "Explicitly states in-memory mocks and at-least-once delivery assumption."
+    }
+   ],
+   "probes": [
+    "What must we support on day one versus what is an extension we should clarify first?",
+    "Walk an Order placed, OTP, Push-fails-fallback-SMS, and promo-opt-out scenario against your FR list."
+   ],
+   "hints": {
+    "1": "Start by naming channels and whether preferences apply to every event type.",
+    "2": "Split mandatory FR (multi-channel send, prefs, status) from extensions (templates, retries, quiet hours, digests).",
+    "3": "Say: Email/SMS/Push mandatory; OTP ignores promo opt-out; Push fail may fall back to SMS; in-memory prefs and mocked providers for machine coding."
+   }
+  },
+  {
+   "phase": "entities",
+   "goal": "Name the core nouns and their responsibilities so routing, prefs, and channels are separable.",
+   "must_hit": [
+    {
+     "id": "ent1",
+     "point": "Core entities include Notification/NotificationRequest (id, userId, type, priority, payload/context, status), Channel, NotificationTemplate with render, and UserPreferences (opt-in per type×channel, quiet hours, caps).",
+     "weight": "core",
+     "evidence_hint": "Lists notification request fields, template render, and preference dimensions without dumping everything into one god object."
+    },
+    {
+     "id": "ent2",
+     "point": "NotificationChannel/ChannelHandler is the Strategy send leaf; optional NotificationProvider Adapter wraps Twilio/SendGrid/FCM; NotificationService is the Facade/orchestrator.",
+     "weight": "core",
+     "evidence_hint": "Separates channel strategy, optional vendor adapter, and service facade roles."
+    },
+    {
+     "id": "ent3",
+     "point": "Optional supporting types: RetryPolicy, RateLimiter, queue/NotificationTask for async dispatch and reliability.",
+     "weight": "extended",
+     "evidence_hint": "Names retry/rate-limit/queue task types as optional collaborators, not mandatory for every scope."
+    }
+   ],
+   "probes": [
+    "What objects appear if we start from a food-delivery OrderPlaced story?",
+    "Where do templates and preferences live relative to the channel that actually sends?"
+   ],
+   "hints": {
+    "1": "List nouns from the story: notification, channel, template, preference, retry.",
+    "2": "Keep NotificationRequest/status separate from Channel Strategy and Template.render.",
+    "3": "Sketch Notification + Template + UserPreferences + NotificationChannel + NotificationService (+ optional Provider/RetryPolicy)."
+   }
+  },
+  {
+   "phase": "class_design",
+   "goal": "Wire Facade, Strategy/Factory, optional Adapter/Observer/Decorator so producers and vendors stay decoupled.",
+   "must_hit": [
+    {
+     "id": "cd1",
+     "point": "Dual decoupling: producers (Order/Payment) must not import Email/SMS SDKs (Observer/event bus/Pub-Sub); orchestrator must not hardcode Twilio/SendGrid (Strategy + optional Adapter behind send).",
+     "weight": "core",
+     "evidence_hint": "Explains both producer fan-out decoupling and vendor/channel send decoupling."
+    },
+    {
+     "id": "cd2",
+     "point": "NotificationService uses UserPreferences, TemplateRegistry, ChannelFactory/Map of NotificationChannel, and optional RateLimiter/RetryPolicy/Queue; Email/SMS/Push/InApp implement NotificationChannel.",
+     "weight": "core",
+     "evidence_hint": "Draws Facade depending on prefs, templates, factory/map, and channel strategies—not a switch forest in the service."
+    },
+    {
+     "id": "cd3",
+     "point": "Patterns that earn points: Strategy, Factory, Adapter, Observer, Decorator (timestamp/encrypt/retry), Facade, Command (queueable send), optional Singleton manager (prefer DI in production).",
+     "weight": "extended",
+     "evidence_hint": "Names Strategy/Factory/Facade at minimum and can place Adapter/Observer/Decorator/Command where they fit."
+    },
+    {
+     "id": "cd4",
+     "point": "SOLID signal: OCP for new channel/provider/event without editing orchestrator; SRP across template/channel/preference/service; DIP on NotificationChannel/NotificationProvider abstractions.",
+     "weight": "extended",
+     "evidence_hint": "Ties class boundaries to OCP/SRP/DIP rather than only naming patterns."
+    }
+   ],
+   "probes": [
+    "Why must Checkout not import Email/SMS/Push directly?",
+    "Where does Factory sit relative to NotificationChannel and optional vendor Adapters?"
+   ],
+   "hints": {
+    "1": "Avoid a god notify() that scatters send calls and hardcodes vendors.",
+    "2": "Facade orchestrates; Strategy per channel; Factory resolves channel; Observer for event fan-out.",
+    "3": "OrderService publishes; NotificationService observes; ChannelFactory.get returns Email/SMS/Push strategies that may call Adapters."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Show the routing pipeline and method surface: prefs → channels → render → rate-limit → dispatch → status.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Routing is the hard path: event → load preferences → pick channels → render template → rate-limit → dispatch; sending is the easy leaf.",
+     "weight": "core",
+     "evidence_hint": "Narrates preference-gated channel selection and template render before any channel.send."
+    },
+    {
+     "id": "impl2",
+     "point": "API surface includes notify(userId, eventType, context) or notify(NotificationRequest), setPreferences, registerTemplate, getStatus; OOD methods: isAllowed, Template.render, Channel.send, ChannelFactory.get, RetryPolicy.shouldRetry/nextDelay.",
+     "weight": "core",
+     "evidence_hint": "Sketches Facade notify plus prefs/template/channel/factory/retry method signatures."
+    },
+    {
+     "id": "impl3",
+     "point": "Templates store subject/body with placeholders; Template.render(context) keeps copy out of if (type == ORDER_PLACED) god methods.",
+     "weight": "extended",
+     "evidence_hint": "Shows placeholder templates rendered with context instead of hardcoded bodies in the service."
+    },
+    {
+     "id": "impl4",
+     "point": "Preferences & compliance: opt-out promotional; never opt-out security/OTP (or force Email+SMS); quiet hours skip Push/SMS but allow CRITICAL; frequency caps per channel.",
+     "weight": "extended",
+     "evidence_hint": "Gates by type×channel and explains OTP/CRITICAL overrides vs promo quiet-hours/caps."
+    }
+   ],
+   "probes": [
+    "Walk notify for Order placed → Email receipt + Push through your classes.",
+    "How do quiet hours and OTP/CRITICAL interact with UserPreferences.isAllowed?"
+   ],
+   "hints": {
+    "1": "Sending is easy; preference and template routing is the design.",
+    "2": "Service: validate → prefs/rate limits → render → per-channel dispatch → record status.",
+    "3": "Call isAllowed, render template, ChannelFactory.get(channel).send, then update status; OTP bypasses promo opt-out."
+   }
+  },
+  {
+   "phase": "extensibility",
+   "goal": "Show how new channels, fallbacks, digests, and async scale talk extend the design without rewriting the Facade.",
+   "must_hit": [
+    {
+     "id": "ext1",
+     "point": "Add WhatsApp without changing NotificationService by adding WhatsAppChannel and Factory registration (OCP); fail if you switch inside the service.",
+     "weight": "core",
+     "evidence_hint": "Registers a new strategy in the factory/map and leaves the Facade untouched."
+    },
+    {
+     "id": "ext2",
+     "point": "Push failed → try SMS via fallback chain / Chain of Responsibility or explicit FallbackPolicy—not buried inside one channel class.",
+     "weight": "core",
+     "evidence_hint": "Places fallback policy outside a single channel implementation."
+    },
+    {
+     "id": "ext3",
+     "point": "Strategy-only vs Strategy+Adapter: Strategy enough for mocks; Adapter lets you swap Twilio without touching channel policy (failover providers).",
+     "weight": "extended",
+     "evidence_hint": "Explains when a vendor Adapter layer is worth adding for provider failover."
+    },
+    {
+     "id": "ext4",
+     "point": "Digest example: buffer low-priority events then flush on timer (batching vs real-time); async stretch enqueues NotificationTask with per-channel workers and retry/DLQ outside the request thread.",
+     "weight": "extended",
+     "evidence_hint": "Describes digest buffering and optionally queue/workers/DLQ without building Kafka unless asked."
+    }
+   ],
+   "probes": [
+    "Add WhatsApp without editing NotificationService—what changes?",
+    "If Push fails, where does fallback SMS live in the object model?"
+   ],
+   "hints": {
+    "1": "New channel should be a new class, not a new case in the service.",
+    "2": "Factory registration + optional FallbackPolicy/CoR for channel failover.",
+    "3": "WhatsAppChannel + factory entry; FallbackPolicy maps Push→SMS; digests buffer then flush; narrate Kafka workers/DLQ in minutes if asked."
+   }
+  },
+  {
+   "phase": "concurrency",
+   "goal": "Keep preference reads and dispatches safe, avoid double-send, and prevent Observer notify/unsubscribe deadlocks.",
+   "must_hit": [
+    {
+     "id": "conc1",
+     "point": "Concurrency needs: thread-safe preference reads; concurrent dispatches across users; don’t double-send the same notificationId (idempotency key).",
+     "weight": "core",
+     "evidence_hint": "Mentions safe pref reads, parallel per-user dispatch care, and idempotency on notificationId."
+    },
+    {
+     "id": "conc2",
+     "point": "Two workers on the same message: idempotency key + status CAS (PENDING→SENT); gotcha of naive at-least-once.",
+     "weight": "core",
+     "evidence_hint": "Uses CAS/status transition so retries do not spam (e.g. OTP twice)."
+    },
+    {
+     "id": "conc3",
+     "point": "Pub-sub notify must not mutate the subscriber list unsafely—copy-on-write / concurrent structures; calling Observer notify while holding a lock while a subscriber unsubscribes can deadlock—copy the listener list first.",
+     "weight": "extended",
+     "evidence_hint": "Copies listeners before notify and avoids holding the subscription lock across subscriber callbacks."
+    },
+    {
+     "id": "conc4",
+     "point": "Fan-out: parallelize channel sends per user carefully; never share mutable notification status without sync; isolate slow SMS from email workers with per-channel limiters.",
+     "weight": "extended",
+     "evidence_hint": "Synchronizes status updates and isolates channel workers/rate limiters under load."
+    }
+   ],
+   "probes": [
+    "Two workers pick up the same notification—how do you avoid sending OTP twice?",
+    "What goes wrong if you notify observers while holding the subscriber-list lock?"
+   ],
+   "hints": {
+    "1": "Think idempotency and shared status, not only more threads.",
+    "2": "Idempotency key + PENDING→SENT CAS; copy listener list before Observer notify.",
+    "3": "At-least-once workers claim via CAS on notificationId; never notify under lock while unsubscribe can run."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Strategy-only vs Strategy+Adapter",
+   "strong_answer": "Strategy alone is enough for mocked multi-channel sends in machine coding; adding Adapter around Twilio/SendGrid/FCM shows provider failover and swapping vendors without changing channel policy."
+  },
+  {
+   "topic": "Sync send vs queue",
+   "strong_answer": "Sync send is demable in a timed machine-coding round; for scale/retries say you’d enqueue NotificationTask and use per-channel workers/DLQ—don’t build Kafka unless asked."
+  },
+  {
+   "topic": "Observer in-process vs message bus",
+   "strong_answer": "In-process Observer is same-JVM and simple for LLD; Pub-Sub/queue is durable and multi-service—name both and pick based on interview scope."
+  },
+  {
+   "topic": "Batching digests vs real-time",
+   "strong_answer": "Low-priority social events can buffer and flush on a timer for digests; critical/OTP paths stay real-time and must not sit behind promo blasts (priority vs surge isolation)."
+  },
+  {
+   "topic": "Idempotency under at-least-once",
+   "strong_answer": "At-least-once workers need notificationId/idempotency key and status CAS so retries don’t double-send OTP; exactly-once is out of scope unless asked."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "God-class NotificationService with hardcoded bodies and vendor HTTP calls.",
+   "correction": "Split Template.render, Channel Strategy send, optional Provider Adapter, and Facade orchestration."
+  },
+  {
+   "trap": "Adding WhatsApp by switching inside NotificationService.",
+   "correction": "New WhatsAppChannel plus Factory registration (OCP)—do not edit the Facade’s channel switch."
+  },
+  {
+   "trap": "Burying Push→SMS fallback inside one channel class.",
+   "correction": "Use an explicit FallbackPolicy or Chain of Responsibility outside a single channel."
+  },
+  {
+   "trap": "Honoring promo opt-out for OTP/security notifications.",
+   "correction": "Gate by notification type; security/OTP overrides preferences (force Email+SMS as needed)."
+  },
+  {
+   "trap": "Quiet hours blocking CRITICAL alerts.",
+   "correction": "CRITICAL bypasses quiet hours/rate limits; promo does not."
+  },
+  {
+   "trap": "Naive at-least-once: two workers process the same message and spam.",
+   "correction": "Idempotency key plus status CAS (PENDING→SENT)."
+  },
+  {
+   "trap": "Calling Observer notify while holding a lock as a subscriber unsubscribes.",
+   "correction": "Copy the listener list first (or use concurrent/copy-on-write structures) so notify cannot deadlock with unsubscribe."
+  }
+ ]
+}

@@ -1,0 +1,268 @@
+{
+ "id": "07_number_theory_math__deep",
+ "title": "Number Theory & Math — Depth Pass",
+ "type": "CP",
+ "relevance": "Medium-High — second wave of CF Div2 C/D number-theory after sieve/GCD/binpow templates; these are the observation + factorization drills that show up in harder OAs and cyan→blue contests.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "k-th divisor / reconstruct from almost-all divisors (762A / 1165D): O(√n) enumeration and consistency checks. Raise array gcd / share a prime (Enlarge GCD / Bash's Big Day / ABC177E), often as group-compatible IDs. Trailing zeros under multiply-budget ≤m or smallest N with K|N! (Make It Round / ABC280D): Legendre + binary search in quant/OA math. GCD of all aᵢ+x or gcd of pairwise LCMs (Row GCD / Orac and LCM): one-line identity rewrite over brute force.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot depth-pass NT where a hidden rewritten invariant replaces an announced sieve/GCD/binpow template.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "After T-primes / Fadi-LCM / Orac-Models, contest NT hides a rewritten invariant: gcd of shifts → gcd of differences; gcd of pairwise LCMs → second-min exponents; floor(n/i) jumps in √n blocks; “make equal in k divides” → total Ω-count.",
+     "weight": "core",
+     "evidence_hint": "Names at least one of those rewrites (diffs, second-min exponents, floor blocks, or Ω-count) instead of a plain template name."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognize it when constraints are n·√A or A log A feasible, values ≤1e6 invite SPF sieves, or the statement mixes GCD/LCM/divisors with construction, games, or range queries.",
+     "weight": "core",
+     "evidence_hint": "Cites n·√A / A log A feasibility, ≤1e6 SPF, or GCD/LCM mixed with construction/games/range queries."
+    },
+    {
+     "id": "rec3",
+     "point": "OA/interview skins include k-th divisor / reconstruct from almost-all divisors, raise gcd by deleting fewest or sharing a prime, trailing zeros under multiply ≤m / smallest N with K|N!, and GCD of all aᵢ+x or of pairwise LCMs.",
+     "weight": "extended",
+     "evidence_hint": "Maps the prompt to one of those four skins from Where it appears."
+    }
+   ],
+   "probes": [
+    "What rewritten invariant or constraint cue says this is depth-pass NT rather than a plain sieve/GCD/binpow template?",
+    "If values are ≤1e6, or you see GCD/LCM mixed with construction/games/queries, what do you reach for?"
+   ],
+   "hints": {
+    "1": "Ask whether the statement hides a rewrite (diffs, second-min exponents, floor blocks, Ω-count) instead of naming a template.",
+    "2": "Cue triad: n·√A or A log A feasible; values ≤1e6 → SPF; GCD/LCM mixed with construction, games, or range queries.",
+    "3": "Say: gcd(shifts)→diffs; pairwise-LCM gcd→second-min exponents; floor(n/i) in √n blocks; skins are k-th/reconstruct divisors, raise/share-prime gcd, trailing zeros/K|N!, and Row-GCD/Orac-LCM identities."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Choose the right identity rewrite—floor blocks, GCD-of-diffs, second-min exponents, SPF pairwise check, or Legendre/Ω—before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Floor blocks: ⌊n/i⌋ is constant on [i, n/⌊n/i⌋]; jump the right endpoint (Everyone is a Winner / CSES Sum of Divisors).",
+     "weight": "core",
+     "evidence_hint": "States the constant segment [i, n/⌊n/i⌋] and jumping the right endpoint."
+    },
+    {
+     "id": "appr2",
+     "point": "GCD of shifts: gcd(a+x,b+x)=gcd(a−b,b+x); Row GCD reduces an n×m family to one gcd of pairwise diffs plus each bⱼ.",
+     "weight": "core",
+     "evidence_hint": "States the gcd(a+x,b+x)=gcd(a−b,b+x) identity and precomputing gcd of diffs."
+    },
+    {
+     "id": "appr3",
+     "point": "GCD of pairwise LCMs: per prime keep the two smallest exponents; answer uses the second-min (Orac and LCM)—not “min of all”, and not Orac and Models.",
+     "weight": "core",
+     "evidence_hint": "Keeps two smallest exponents and takes second-min; rejects plain min-of-all and Orac-and-Models confusion."
+    },
+    {
+     "id": "appr4",
+     "point": "SPF pairwise vs setwise: pairwise-coprime iff each prime appears in ≤1 element; setwise iff global gcd=1 (ABC177E / Bash's Big Day).",
+     "weight": "extended",
+     "evidence_hint": "Separates pairwise (each prime ≤1 element) from setwise (global gcd=1)."
+    },
+    {
+     "id": "appr5",
+     "point": "Trailing zeros / K|N!: only primes 2 and 5 matter for roundness—balance min(v₂,v₅) under multiply-budget (Make It Round); factorial multiples use Legendre counts + binary search on N (ABC280D).",
+     "weight": "extended",
+     "evidence_hint": "Balances 2/5 under budget m, or factors K and binary-searches N with Legendre counts."
+    }
+   ],
+   "probes": [
+    "How do you rewrite floor sums or gcd(aᵢ+x) / gcd of pairwise LCMs before coding?",
+    "When do you use SPF pairwise checks versus Legendre/2×5 trailing-zero balance?"
+   ],
+   "hints": {
+    "1": "Look for a floor-segment jump, a shift→diff identity, or a per-prime exponent rule before brute force.",
+    "2": "Floor → [i, n/⌊n/i⌋]; Row GCD → gcd of diffs; Orac LCM → second-min exponents; SPF → each prime ≤1 element; zeros → 2 and 5 / Legendre.",
+    "3": "Say: jump floor blocks; gcd(a+x,b+x)=gcd(a−b,b+x); second-min exponents not min-of-all; pairwise ≠ setwise; balance min(v₂,v₅) or BS N with Legendre."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Show O(√n) divisor listing, SPF factoring, floor-block loops, and the concrete constructions interviewers ask to sketch.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "k-th divisor / Almost All Divisors: collect both i and n/i, sort, pick k-th; candidate n=min·max then verify the sorted proper-divisor list matches.",
+     "weight": "core",
+     "evidence_hint": "Collects i and n/i (or states n=min·max plus verify), not a half-list without the pair."
+    },
+    {
+     "id": "impl2",
+     "point": "SPF precompute: sieve spf[x] up to max Aᵢ, then factor each value in O(log A); count frequency per prime for “share a factor” (Bash's Big Day).",
+     "weight": "core",
+     "evidence_hint": "Sieves SPF to max Aᵢ and factors in O(log A), then buckets by prime."
+    },
+    {
+     "id": "impl3",
+     "point": "Floor-block sum/list: rewrite ∑σ(i) as ∑ᵢ i·⌊n/i⌋ and advance i to the end of each constant ⌊n/i⌋ segment in O(√n).",
+     "weight": "core",
+     "evidence_hint": "Writes the i·⌊n/i⌋ rewrite and jumps i to the segment end."
+    },
+    {
+     "id": "impl4",
+     "point": "Exponent vectors mod k (Power Products): map each a to its prime-exponent vector mod k; pair with the complementary vector so the product is a perfect k-th power (every exponent ≡0 mod k).",
+     "weight": "extended",
+     "evidence_hint": "Hashes residue vectors and looks up the complement for a perfect k-th power."
+    },
+    {
+     "id": "impl5",
+     "point": "GCD on ranges of diffs (Integers Have Friends): a subarray shares a common divisor >1 iff gcd of consecutive |diffs|>1; sparse table / stack on those diffs while gcd stays >1.",
+     "weight": "extended",
+     "evidence_hint": "Builds RMQ/sparse-table (or stack) over consecutive diffs and expands while gcd>1."
+    }
+   ],
+   "probes": [
+    "Walk through listing the k-th divisor or reconstructing n from almost-all divisors.",
+    "How do you implement SPF factoring, a floor-block sum, or complementary exponent vectors mod k?"
+   ],
+   "hints": {
+    "1": "Start from collecting paired divisors or sieving SPF before any fancy DS.",
+    "2": "k-th → i and n/i then sort; reconstruct → min·max + verify; floor → jump segment ends; Power Products → residue vector + complement.",
+    "3": "Say: collect i and n/i; n=min·max then verify; spf up to max Aᵢ then O(log A) factor; ∑ i·⌊n/i⌋ with right-endpoint jumps; hash exponent vectors mod k and look up complements; sparse-table gcd of diffs."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Match the feasible bound—O(√n) floor/divisors, SPF O(log A) per factor, or n·√A / A log A—to the constraint.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Distinct ⌊n/i⌋ values and divisor-sum rewrites run in O(√n) floor blocks—required when n≤1e12 (CSES Sum of Divisors); never loop i=1..n.",
+     "weight": "core",
+     "evidence_hint": "States O(√n) floor blocks and rejects a 1..n loop for n≤1e12."
+    },
+    {
+     "id": "cx2",
+     "point": "With values ≤1e6, SPF sieve once then factor in O(log A) beats per-query O(√n) factorization across many aᵢ.",
+     "weight": "core",
+     "evidence_hint": "Cites ≤1e6 SPF precompute and O(log A) per factor versus repeated √n peels."
+    },
+    {
+     "id": "cx3",
+     "point": "Depth-pass NT is in play when the intended bound is n·√A or A log A feasible (harmonic sieves on frequencies, Enlarge GCD-style multiples counts).",
+     "weight": "extended",
+     "evidence_hint": "Names n·√A or A log A (or harmonic multiples on frequencies) as the feasible regime."
+    }
+   ],
+   "probes": [
+    "For n≤1e12 floor sums, what complexity is acceptable and what loop is forbidden?",
+    "When Aᵢ are ≤1e6, why prefer SPF over per-query √n factorization?"
+   ],
+   "hints": {
+    "1": "Match the loop shape to n versus max Aᵢ.",
+    "2": "Large single n → O(√n) floor blocks; many bounded Aᵢ → SPF + O(log A); array+divisor frequency work → n·√A / A log A.",
+    "3": "Say: O(√n) floor blocks for n≤1e12 (never i=1..n); SPF to ≤1e6 then O(log A) factors; harmonic/Enlarge-GCD style fits n·√A or A log A."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch second-min vs min, pairwise vs setwise, a=1 edges, and the n=1e12 floor-loop trap.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Orac and LCM: answer exponent is the second-minimum among aᵢ (min if unique)—using “min of all” is wrong; also not the same problem as Orac and Models.",
+     "weight": "core",
+     "evidence_hint": "Corrects min-of-all to second-min and separates Orac and Models."
+    },
+    {
+     "id": "pit2",
+     "point": "Never loop i=1..n for floor(n/i) work when n=1e12 (Everyone is a Winner / CSES Sum of Divisors)—jump each constant segment’s right endpoint.",
+     "weight": "core",
+     "evidence_hint": "Rejects the 1..n loop and states segment-end jumps for n=1e12."
+    },
+    {
+     "id": "pit3",
+     "point": "Plus and Multiply: reverse by /a while divisible else −b, but handle the a=1 edge carefully.",
+     "weight": "core",
+     "evidence_hint": "Calls out the a=1 edge in the peel/subtract loop."
+    },
+    {
+     "id": "pit4",
+     "point": "ABC177E: pairwise-coprime is “each prime hits ≤1 element,” not the same as setwise coprime (global gcd=1).",
+     "weight": "extended",
+     "evidence_hint": "States both tests and refuses collapsing them into one gcd check."
+    },
+    {
+     "id": "pit5",
+     "point": "Almost All Divisors: candidate n=min·max is not enough—must verify the sorted proper-divisor list matches.",
+     "weight": "extended",
+     "evidence_hint": "Requires the verify step after n=min·max."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you take the minimum exponent instead of the second-minimum for gcd of pairwise LCMs?",
+    "Which traps show up on n=1e12 floor loops, a=1 in Plus and Multiply, or pairwise vs setwise coprime?"
+   ],
+   "hints": {
+    "1": "Check exponent rule, floor-loop shape, a=1, and pairwise vs setwise wording.",
+    "2": "Orac LCM → second-min not min; n=1e12 → jump segments; Plus and Multiply → a=1; ABC177E → each prime ≤1 vs global gcd=1.",
+    "3": "Also: Orac and LCM ≠ Orac and Models; Almost All Divisors needs verify after n=min·max."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Floor-block jumps vs looping i=1..n",
+   "strong_answer": "⌊n/i⌋ is constant on [i, n/⌊n/i⌋]; jump the right endpoint in O(√n). Never loop i=1..n for n=1e12 (Everyone is a Winner / CSES Sum of Divisors)."
+  },
+  {
+   "topic": "GCD identity rewrite vs brute force over shifts or pairwise LCMs",
+   "strong_answer": "gcd(a+x,b+x)=gcd(a−b,b+x) reduces Row GCD to gcd of diffs plus each bⱼ; gcd of pairwise LCMs collapses per prime to the second-min exponent—interviewers prefer the one-line rewrite over brute force."
+  },
+  {
+   "topic": "Second-min exponents vs min of all (Orac and LCM)",
+   "strong_answer": "Per prime keep the two smallest exponents across the array; the answer uses the second-min (min if unique)—not “min of all”, and not Orac and Models."
+  },
+  {
+   "topic": "Pairwise-coprime SPF check vs setwise gcd=1",
+   "strong_answer": "Pairwise iff each prime appears in ≤1 element; setwise iff global gcd=1 (ABC177E)—different predicates."
+  },
+  {
+   "topic": "SPF O(log A) factoring vs per-query O(√n) when values ≤1e6",
+   "strong_answer": "Sieve spf[x] up to max Aᵢ and factor in O(log A); that regime is what ≤1e6 invites, versus repeated √n peels."
+  },
+  {
+   "topic": "Trailing-zero 2×5 balance vs full factorization for K|N!",
+   "strong_answer": "Roundness only cares about primes 2 and 5—balance min(v₂,v₅) under multiply-budget m (Make It Round); smallest N with K|N! factors K and binary-searches N with Legendre counts (ABC280D)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using the minimum exponent across the array for gcd of pairwise LCMs.",
+   "correction": "Per prime, keep the two smallest exponents; answer exponent is the second-minimum (min if unique)—Orac and LCM, not “min of all”."
+  },
+  {
+   "trap": "Treating Orac and LCM like Orac and Models.",
+   "correction": "They are different problems; Orac and LCM is the second-min-exponent rewrite for gcd of pairwise LCMs."
+  },
+  {
+   "trap": "Looping i=1..n for distinct ⌊n/i⌋ or ∑ i·⌊n/i⌋ when n=1e12.",
+   "correction": "Jump i to the end of each constant ⌊n/i⌋ segment; the work is O(√n)."
+  },
+  {
+   "trap": "Ignoring a=1 in Plus and Multiply’s reverse /a or −b walk.",
+   "correction": "While n divisible by a, peel; else subtract b—handle a=1 carefully."
+  },
+  {
+   "trap": "Collapsing pairwise-coprime into “global gcd=1”.",
+   "correction": "Pairwise: each prime hits ≤1 element (SPF); setwise: global gcd=1 (ABC177E)."
+  },
+  {
+   "trap": "Taking n=min·max from a divisor list without verification.",
+   "correction": "Almost All Divisors: candidate n=min·max, then verify the sorted proper-divisor list matches."
+  },
+  {
+   "trap": "Forgetting that trailing zeros / roundness only involve primes 2 and 5.",
+   "correction": "Balance min(v₂,v₅) under the multiply-budget m (Make It Round); same Legendre idea as ABC280D factorial multiples."
+  }
+ ]
+}

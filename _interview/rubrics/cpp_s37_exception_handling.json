@@ -1,0 +1,211 @@
+{
+ "id": "cpp_s37_exception_handling",
+ "title": "Exception Handling",
+ "type": "FUND",
+ "relevance": "Interviewers probe C++ exception mechanics—catch-by-const-reference, stack unwinding/RAII, noexcept, and exception-safety guarantees—as core language fundamentals for robust SDE code.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish try/throw/catch, the catch-by-const-reference idiom, the standard exception hierarchy, ordered multi-catch, and catch-all/rethrow.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Exception handling uses throw to signal an error, try to enclose code that may throw, and catch to handle a matching exception type.",
+     "weight": "core",
+     "evidence_hint": "Names the three keywords and their roles: signal, enclose risky code, handle by type."
+    },
+    {
+     "id": "fund2",
+     "point": "The standard idiom is to throw exception objects and catch them by const reference to avoid copy overhead and object slicing.",
+     "weight": "core",
+     "evidence_hint": "Says catch (const T& e) / const std::exception&; mentions slicing or lost dynamic type if catching by value."
+    },
+    {
+     "id": "fund3",
+     "point": "std::exception has two main branches: std::logic_error for preventable programmer errors and std::runtime_error for errors hard to predict before run; what() returns a const char* description.",
+     "weight": "core",
+     "evidence_hint": "Contrasts logic_error (e.g. invalid_argument, out_of_range) with runtime_error (e.g. overflow/underflow) and mentions virtual what()."
+    },
+    {
+     "id": "fund4",
+     "point": "Multiple catch blocks are tried in declaration order; most-derived handlers must come before base-class handlers or the base intercepts everything.",
+     "weight": "extended",
+     "evidence_hint": "States order matters: out_of_range before logic_error before exception; base-first makes later catches unreachable."
+    },
+    {
+     "id": "fund5",
+     "point": "catch (...) catches any exception; a bare throw; rethrows the exact same exception object up the chain.",
+     "weight": "extended",
+     "evidence_hint": "Distinguishes catch-all for cleanup/logging from bare throw; that preserves original type and state."
+    }
+   ],
+   "probes": [
+    "Walk through try, throw, and catch: what each does, and why we catch standard exceptions by const reference.",
+    "How should you order multiple catch blocks for out_of_range, logic_error, and exception—and what is catch (...) for?"
+   ],
+   "hints": {
+    "1": "Start from the three keywords and what happens when throw runs.",
+    "2": "Tie the idiom to copying/slicing, then the logic_error vs runtime_error split and catch order.",
+    "3": "Best practice is catch (const std::exception& e); put most-derived catches first; use catch (...) plus bare throw; to log and propagate."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain stack unwinding with RAII, constructor/destructor throw rules, and noexcept behavior.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Stack unwinding pops frames searching for a matching catch and runs destructors of fully constructed automatic objects in reverse order of creation.",
+     "weight": "core",
+     "evidence_hint": "Describes climbing the call stack and automatic destructor calls for abandoned locals before the handler runs."
+    },
+    {
+     "id": "mech2",
+     "point": "RAII ties resource lifetime to objects so unwinding releases memory, files, and locks held in types like unique_ptr or lock_guard.",
+     "weight": "core",
+     "evidence_hint": "Links unwinding’s destructor calls to leak-free cleanup via RAII wrappers."
+    },
+    {
+     "id": "mech3",
+     "point": "If a constructor throws, that object’s destructor is not called, but destructors of fully constructed members and bases still run.",
+     "weight": "core",
+     "evidence_hint": "Object never fully built → no dtor for it; already-built subobjects cleaned up; raw new in ctor can leak, smart pointers do not."
+    },
+    {
+     "id": "mech4",
+     "point": "An exception escaping a destructor during unwinding leaves two active exceptions and the runtime calls std::terminate().",
+     "weight": "core",
+     "evidence_hint": "Never let exceptions escape destructors; wrap possibly-throwing dtor work in local try/catch that swallows."
+    },
+    {
+     "id": "mech5",
+     "point": "noexcept promises a function will not throw; violating it calls std::terminate(); destructors are implicitly noexcept; the noexcept operator is a compile-time check.",
+     "weight": "extended",
+     "evidence_hint": "Separates the specifier (optimize / terminate on violation) from the operator (true if expression cannot throw); mentions implicit noexcept on destructors."
+    }
+   ],
+   "probes": [
+    "What is stack unwinding, and how does RAII keep resources safe when an exception propagates?",
+    "What happens if a constructor throws versus if a destructor throws during unwinding? When would you mark a function noexcept?"
+   ],
+   "hints": {
+    "1": "Picture the call stack being searched while local objects are destroyed on the way up.",
+    "2": "Contrast incomplete construction (no object dtor) with a throwing dtor during an already-active exception.",
+    "3": "Unwinding runs dtors in reverse creation order; ctor-throw skips that object’s dtor; dtor-throw → std::terminate(); noexcept violation also terminates."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Classify exception-safety guarantees and the catch/rethrow choices that preserve type and program state.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Nothrow/no-fail means the function never throws and is required for destructors and swap; strong means commit-or-rollback with unchanged state on failure.",
+     "weight": "core",
+     "evidence_hint": "Names nothrow for dtors/swap and strong as all-or-nothing rollback semantics."
+    },
+    {
+     "id": "tr2",
+     "point": "Basic guarantee: on throw, no leaks and invariants hold, but state may be valid yet unpredictable; no guarantee (leaks/corruption) is unacceptable in modern C++.",
+     "weight": "core",
+     "evidence_hint": "Contrasts basic (valid, possibly messy) with no guarantee (corrupt/leak)."
+    },
+    {
+     "id": "tr3",
+     "point": "Prefer bare throw; over throw e; after catching e, because throw e; slices and throws a new copy of the static type.",
+     "weight": "extended",
+     "evidence_hint": "Bare throw; keeps exact original object; throw e; loses derived type via slicing."
+    }
+   ],
+   "probes": [
+    "Define the nothrow, strong, and basic exception-safety guarantees—and which apply to destructors and swap.",
+    "Inside a catch, when should you write throw; instead of throw e;?"
+   ],
+   "hints": {
+    "1": "Think in levels of what the caller can assume if the function throws.",
+    "2": "Map nothrow → never throws; strong → unchanged state; basic → valid but maybe changed.",
+    "3": "Destructors/swap need nothrow; strong is commit-or-rollback; use bare throw; so you do not slice."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply hierarchy and RAII in practice: custom exceptions, no finally, and classic interview traps.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Custom exceptions typically inherit from std::runtime_error (or another suitable standard type) and pass a message to the base constructor.",
+     "weight": "core",
+     "evidence_hint": "Sketch inheriting from runtime_error, forwarding msg to the base, optionally adding domain fields."
+    },
+    {
+     "id": "app2",
+     "point": "C++ has no finally; cleanup relies on RAII so destructors run on both success and exception paths.",
+     "weight": "core",
+     "evidence_hint": "Contrasts Python try/except/finally with C++ RAII for guaranteed cleanup."
+    },
+    {
+     "id": "app3",
+     "point": "Constructors should throw to signal failed initialization because they have no return type; prefer RAII members so partial construction does not leak.",
+     "weight": "extended",
+     "evidence_hint": "Throw from ctor when valid state cannot be built; smart-pointer/RAII members clean up if a later step throws."
+    }
+   ],
+   "probes": [
+    "How would you write a domain-specific exception type, and how do you guarantee cleanup without finally?",
+    "Why is throwing from a constructor the right failure signal, and what resource style should members use?"
+   ],
+   "hints": {
+    "1": "Reuse the standard hierarchy instead of inventing an unrelated root type.",
+    "2": "Inherit from runtime_error, forward the message, and manage resources with RAII objects.",
+    "3": "class MyError : public std::runtime_error { ... }; no finally—destructors/RAII clean up; ctor throw = only failure channel, with RAII members."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Catch by value vs catch by const reference",
+   "strong_answer": "Catching by value copies and can slice a derived exception to the base static type; catching by const reference avoids the copy and preserves the polymorphic dynamic type—the standard idiom."
+  },
+  {
+   "topic": "Bare throw; vs throw e;",
+   "strong_answer": "Bare throw; rethrows the exact same exception object with original type and state; throw e; throws a new copy sliced to e’s static type."
+  },
+  {
+   "topic": "Strong guarantee vs basic guarantee",
+   "strong_answer": "Strong is commit-or-rollback: on throw, program state is unchanged as if the call never happened; basic only promises no leaks and preserved invariants, with state possibly changed but still valid."
+  },
+  {
+   "topic": "Python finally vs C++ RAII",
+   "strong_answer": "Python uses finally for cleanup on success or failure; C++ has no finally and relies on RAII so stack unwinding runs destructors and releases resources automatically."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Putting a base-class catch before more-derived catches.",
+   "correction": "Handlers are matched in order; a base catch intercepts derived exceptions and later catches become unreachable—most-derived first, bases last."
+  },
+  {
+   "trap": "Catching exceptions by value.",
+   "correction": "By-value catch copies and can slice; catch by const reference to avoid copy overhead and keep the dynamic type."
+  },
+  {
+   "trap": "Using throw e; to propagate after catch (T& e).",
+   "correction": "That slices and throws a new static-typed copy; use bare throw; to rethrow the original object."
+  },
+  {
+   "trap": "Letting an exception escape a destructor, especially during unwinding.",
+   "correction": "A second active exception during unwinding is unresolvable; the runtime calls std::terminate(). Swallow throwing work in a local try/catch inside the destructor."
+  },
+  {
+   "trap": "Assuming a constructor-thrown object still runs its destructor.",
+   "correction": "The object was never fully constructed, so its destructor is not called; only fully constructed bases/members are destroyed—use RAII members, not raw owning pointers."
+  },
+  {
+   "trap": "Throwing out of a noexcept function.",
+   "correction": "Violating the noexcept promise immediately calls std::terminate(); destructors are implicitly noexcept by default."
+  }
+ ]
+}

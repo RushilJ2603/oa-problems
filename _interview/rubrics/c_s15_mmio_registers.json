@@ -1,0 +1,189 @@
+{
+ "id": "c_s15_mmio_registers",
+ "title": "Memory-Mapped I/O & Registers",
+ "type": "FUND",
+ "relevance": "Bare-metal and embedded SDE interviews test whether candidates can drive peripherals from C via MMIO, volatile access, and safe register bit manipulation without an OS.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that peripherals are controlled by reading and writing fixed addresses in the same space as memory.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Memory-Mapped I/O maps peripheral control and data registers into the same address space as program memory and RAM; reads/writes to those addresses trigger hardware actions.",
+     "weight": "core",
+     "evidence_hint": "Candidate says MMIO puts peripheral registers in the CPU address map so ordinary loads/stores talk to hardware."
+    },
+    {
+     "id": "fund2",
+     "point": "A memory address in an embedded system may point to a physical wire or peripheral register, not only data storage.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts normal RAM addresses with addresses wired to GPIO/UART/timers via the data bus."
+    },
+    {
+     "id": "fund3",
+     "point": "MMIO reads and writes are not guaranteed symmetrical: a write may trigger an action and a read may return status or sensor data rather than the value written.",
+     "weight": "extended",
+     "evidence_hint": "Candidate rejects the assumption that writing X then reading the same address returns X."
+    }
+   ],
+   "probes": [
+    "What is memory-mapped I/O, and how does it differ from ordinary RAM?",
+    "If an address maps to a hardware timer that keeps ticking, what happens if you read that address twice in a row?"
+   ],
+   "hints": {
+    "1": "Think about where a load or store actually goes on the chip’s bus.",
+    "2": "Some address ranges are RAM/Flash; others are wired to peripheral control circuits.",
+    "3": "MMIO means peripheral registers share the address space; accessing them causes hardware side effects, and read-back need not match what you wrote."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how C reaches hardcoded MMIO addresses safely and how bits in registers are updated.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "volatile on an MMIO pointer/member forbids the compiler from caching the value in a CPU register or optimizing away redundant reads and writes, because the hardware may change the location or a write may have side effects.",
+     "weight": "core",
+     "evidence_hint": "Candidate ties volatile to hardware-owned state and side-effecting stores, not just ‘don’t optimize.’"
+    },
+    {
+     "id": "mech2",
+     "point": "A raw MMIO access casts a hardcoded address to a pointer to volatile uint32_t and dereferences it; exact-width uint32_t matters because the silicon/bus may expect a 32-bit write.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes (volatile uint32_t *)addr style access and why char-width writes can be wrong."
+    },
+    {
+     "id": "mech3",
+     "point": "Read-modify-write bit updates use REG |= (1u << n) to set, REG &= ~(1u << n) to clear, and REG ^= (1u << n) to toggle.",
+     "weight": "extended",
+     "evidence_hint": "Candidate writes the three bitwise RMW idioms without inventing other operators."
+    },
+    {
+     "id": "mech4",
+     "point": "CMSIS-style access models a peripheral as a struct of volatile uint32_t registers at sequential offsets, mapped to a base address; silicon gaps need reserved padding fields so offsets stay aligned.",
+     "weight": "extended",
+     "evidence_hint": "Candidate explains GPIO_TypeDef-style layout, base cast, member access, and _reserved padding for missing registers."
+    }
+   ],
+   "probes": [
+    "Why is volatile used when accessing hardware registers from C?",
+    "How would you set or clear a single bit in a peripheral register without disturbing other bits?",
+    "How does the CMSIS pattern map a block of registers to C?"
+   ],
+   "hints": {
+    "1": "Ask what the compiler is allowed to assume about ordinary memory.",
+    "2": "Cover the cast-to-volatile-uint32_t idiom, then bit RMW, then struct-at-base-address.",
+    "3": "volatile forces real bus accesses; use |= / &= ~ / ^= for bits; model peripherals as structs of volatile uint32_t with padding for gaps."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast unsafe C conveniences with portable, hardware-faithful register modeling.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "C bit-field layout within an integer is implementation-defined (packing direction can differ across compilers), so bit-fields are unsafe for hardware register layouts.",
+     "weight": "core",
+     "evidence_hint": "Candidate cites implementation-defined packing and risk when switching compilers or updating toolchains."
+    },
+    {
+     "id": "tr2",
+     "point": "For hardware registers, always use explicit bitwise masks and shifts rather than C bit-fields.",
+     "weight": "core",
+     "evidence_hint": "Candidate rejects bit-field structs for MMIO and insists on masks/shifts."
+    },
+    {
+     "id": "tr3",
+     "point": "Hundreds of individual register macros are tedious and error-prone compared with a CMSIS-style struct over sequential offsets at a base address.",
+     "weight": "extended",
+     "evidence_hint": "Candidate prefers struct-mapped peripherals over one #define per register for maintainability and offset correctness."
+    }
+   ],
+   "probes": [
+    "Would you model individual bits in a hardware register with C bit-fields? Why or why not?",
+    "Why prefer a peripheral struct over a pile of address macros?"
+   ],
+   "hints": {
+    "1": "Think about what the C standard guarantees about bit packing.",
+    "2": "Compare bit-fields vs masks, and macros vs a struct at a base address.",
+    "3": "Bit-field order is implementation-defined—use masks/shifts; CMSIS structs keep offsets correct with less boilerplate."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply volatile MMIO access to real peripheral patterns and special register behaviors.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A polling wait such as while a status flag bit is clear must use volatile so each iteration performs a fresh memory read; without it the compiler can optimize the loop into a hang.",
+     "weight": "core",
+     "evidence_hint": "Candidate walks through a status-flag spin loop and names the missing-volatile infinite-loop failure."
+    },
+    {
+     "id": "app2",
+     "point": "REG |= (1u << n) is not atomic: it becomes load, modify, store (three assembly instructions), so an interrupt that updates the same register between load and store can be overwritten on the delayed store.",
+     "weight": "core",
+     "evidence_hint": "Candidate explains the RMW interrupt hazard on a shared register."
+    },
+    {
+     "id": "app3",
+     "point": "Write-1-to-Clear (W1C) clears a flag by writing a 1 to that bit; writing 0 has no effect, which avoids RMW hazards on neighboring flags.",
+     "weight": "extended",
+     "evidence_hint": "Candidate describes writing 1 to clear and that zeros leave other bits alone."
+    },
+    {
+     "id": "app4",
+     "point": "Special kinds include read-only status as const volatile uint32_t, write-only registers that return garbage or bus-fault on read, and side-effects on read such as reading a UART data register removing a byte from the receive queue.",
+     "weight": "extended",
+     "evidence_hint": "Candidate lists at least two of: const volatile RO, write-only, W1C, or read side effects."
+    }
+   ],
+   "probes": [
+    "Why is volatile mandatory in a loop that waits for a hardware flag?",
+    "What goes wrong if an interrupt updates a register while your code does REG |= (1u << 5)?",
+    "How do write-1-to-clear flags differ from ordinary writable bits?"
+   ],
+   "hints": {
+    "1": "Connect compiler optimization to a busy-wait on a status bit.",
+    "2": "Separate polling/volatile, RMW vs interrupts, then unusual register semantics.",
+    "3": "Without volatile, polling becomes if-then-infinite-loop; RMW is three instructions and interrupt-unsafe; W1C clears by writing 1."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "C bit-fields vs explicit bitwise masks",
+   "strong_answer": "Bit-field layout is implementation-defined, so a compiler change can silently flip hardware configuration; for registers always use explicit masks and shifts."
+  },
+  {
+   "topic": "Per-register macros vs CMSIS-style structs",
+   "strong_answer": "Individual macros for every register are tedious and error-prone; a struct of volatile uint32_t members at a base address lets the compiler compute offsets, with reserved padding where silicon has gaps."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming writing a value to an MMIO address means reading it back returns the same value",
+   "correction": "A write may trigger hardware action and a read may return status or sensor data; MMIO is not symmetrical storage."
+  },
+  {
+   "trap": "Busy-waiting on a hardware flag without volatile",
+   "correction": "The compiler may turn while (*ptr == 0); into if (*ptr == 0) while (1); so the program never re-reads the hardware—especially under optimizations like -O2."
+  },
+  {
+   "trap": "Treating REG |= (1u << n) as a single atomic update",
+   "correction": "It compiles to load, modify, and store; an interrupt between load and store can change the register and be overwritten by the late store."
+  },
+  {
+   "trap": "Modeling register bits with C bit-fields",
+   "correction": "Packing order is implementation-defined; use explicit bitwise masks and shifts instead."
+  },
+  {
+   "trap": "Clearing a W1C error flag by writing 0",
+   "correction": "Write a 1 to that bit to clear it; writing 0 has no effect and is the wrong mental model for W1C."
+  }
+ ]
+}

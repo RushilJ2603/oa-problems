@@ -1,0 +1,185 @@
+{
+ "id": "cpp_s35_move_semantics_rvalue_refs",
+ "title": "Move Semantics and Rvalue References",
+ "type": "FUND",
+ "relevance": "Tests whether candidates can explain C++11 value categories, avoid wasteful copies of temporaries, and correctly transfer ownership of resources in production C++.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish lvalue vs rvalue categories and how T& versus T&& bind.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "An lvalue refers to a persistent memory location with a name or identifiable address; an rvalue is a temporary that does not persist beyond the expression that uses it.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts named objects like x with temporaries/literals, and notes you cannot assign to an rvalue."
+    },
+    {
+     "id": "fund2",
+     "point": "C++11 rvalue references (T&&) bind only to rvalues; ordinary lvalue references (T&) bind only to lvalues, while const T& can also bind to temporaries.",
+     "weight": "core",
+     "evidence_hint": "Candidate walks binding rules: T& to named lvalue OK, T& to temporary error; T&& to temporary OK, T&& to named lvalue error."
+    },
+    {
+     "id": "fund3",
+     "point": "Binding an rvalue reference to a temporary gives exclusive access, so you may safely modify it or strip its resources.",
+     "weight": "extended",
+     "evidence_hint": "Candidate says the temporary is about to be destroyed and no other code retains usable access to it."
+    }
+   ],
+   "probes": [
+    "What is the difference between an lvalue and an rvalue, and what can T&& bind to that T& cannot?"
+   ],
+   "hints": {
+    "1": "Think about whether the expression names a lasting object or is only a temporary.",
+    "2": "Compare binding of T&, const T&, and T&& to named variables versus literals/temporaries.",
+    "3": "Lvalues persist and bind to T&; rvalues are temporaries and T&& exists to bind only to them, giving exclusive access."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Establish how move construction/assignment steal resources and how std::move and special-member rules enable that.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A move constructor/assignment steals pointers and handles from the source, then immediately nulls the source so its destructor will not free the stolen resources; the source is left in a valid but unspecified state.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes pointer steal, nulling data/size, and that delete[] on nullptr in the destructor is safe."
+    },
+    {
+     "id": "mech2",
+     "point": "std::move does not move; it is an unconditional cast to an rvalue reference so a named lvalue becomes eligible to be moved from.",
+     "weight": "core",
+     "evidence_hint": "Candidate says std::move(s1) forces the move constructor path and that s1 should not be used afterward except to assign to or destroy."
+    },
+    {
+     "id": "mech3",
+     "point": "Declaring a custom destructor, copy constructor, or copy assignment suppresses implicit generation of move operations, so the class falls back to copying unless moves are explicitly defaulted or defined.",
+     "weight": "extended",
+     "evidence_hint": "Candidate recalls that a user-declared destructor alone can suppress moves, and that = default on moves restores them."
+    },
+    {
+     "id": "mech4",
+     "point": "The Rule of 3 says defining any of destructor/copy ctor/copy assignment usually requires all three; the Rule of 5 adds move constructor and move assignment for performance; the Rule of 0 prefers owning no raw resources so the compiler generates all five correctly.",
+     "weight": "extended",
+     "evidence_hint": "Candidate lists Rules of 0/3/5 and ties Rule of 0 to std::string, std::vector, or std::unique_ptr."
+    }
+   ],
+   "probes": [
+    "Walk through implementing a move constructor for a class that owns a heap buffer, and say what std::move actually does."
+   ],
+   "hints": {
+    "1": "Compare photocopying a temporary's buffer with taking its pointer.",
+    "2": "Cover steal-then-null, valid-but-unspecified state, and the cast nature of std::move.",
+    "3": "Move ctor takes T&& noexcept, copies size/data then zeros the source; std::move only casts to T&& so the move overload is selected."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast deep-copying temporaries with moving, and RVO with forcing a move.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Without move semantics, initializing from a returned temporary forces a deep copy of owned heap data and then destroys the temporary's copy, which is wasteful for large buffers.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes allocate-and-copy of the returned IntArray-style buffer followed by delete of the temporary's identical buffer."
+    },
+    {
+     "id": "tr2",
+     "point": "Copy elision / RVO can construct a returned local directly into the caller's object so neither copy nor move occurs; writing return std::move(local) prevents RVO and forces a move.",
+     "weight": "core",
+     "evidence_hint": "Candidate prefers bare return local; and warns that return std::move(local); blocks RVO."
+    },
+    {
+     "id": "tr3",
+     "point": "Prefer Rule of 0 resource wrappers over hand-written Rule of 5 special members when possible, because the compiler then generates correct copy and move operations.",
+     "weight": "extended",
+     "evidence_hint": "Candidate argues for std::string/vector/unique_ptr ownership instead of managing raw new/delete by hand."
+    }
+   ],
+   "probes": [
+    "When returning a large object by value, when is a move better than a copy, and when is even a move worse than doing nothing?"
+   ],
+   "hints": {
+    "1": "Think about what happens to a temporary's heap buffer after a deep copy.",
+    "2": "Separate pre-move deep copy cost from RVO, where the local is built in place.",
+    "3": "Move beats copying temporaries by stealing pointers; RVO is better still, and return std::move(local) can disable it."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply moves in templates and library contexts: perfect forwarding and noexcept moves.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "In a deduced template parameter, T&& is a forwarding/universal reference that can bind to both lvalues and rvalues via reference collapsing (& & / & && / && & -> &; && && -> &&).",
+     "weight": "core",
+     "evidence_hint": "Candidate explains that an lvalue of type int deduces T as int& so the parameter collapses to an lvalue reference."
+    },
+    {
+     "id": "app2",
+     "point": "std::forward<T> is a conditional cast that turns the argument into an rvalue only if the original argument was an rvalue, preserving value category through wrappers.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts unconditional std::move with std::forward that restores the caller's lvalue/rvalue category to the overload set."
+    },
+    {
+     "id": "app3",
+     "point": "Move constructors should be noexcept because containers such as std::vector only move on reallocation when the move cannot throw; otherwise they fall back to copying to keep the strong exception guarantee.",
+     "weight": "extended",
+     "evidence_hint": "Candidate ties noexcept on moves to vector buffer reallocation choosing move versus safe copy."
+    }
+   ],
+   "probes": [
+    "What does std::move actually do, why should a move constructor be noexcept, and how does std::forward differ from std::move in a forwarding reference wrapper?"
+   ],
+   "hints": {
+    "1": "Recall the interview points on std::move and noexcept moves with std::vector.",
+    "2": "Distinguish unconditional cast versus conditional cast, and mention reference collapsing for T&&.",
+    "3": "std::move always yields T&&; std::forward<T> preserves category; vector reallocates with move only if the move is noexcept."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Deep copy of a temporary vs move",
+   "strong_answer": "Copying a returned owning object allocates and duplicates the heap buffer then destroys the temporary's buffer; a move steals the pointer/handles and nulls the source, avoiding that work."
+  },
+  {
+   "topic": "Rule of 0 vs Rule of 5",
+   "strong_answer": "If you manage raw resources you need the Rule of 3 for safety and the Rule of 5 for efficient moves; prefer Rule of 0 with standard owning types so the compiler generates all five special members correctly."
+  },
+  {
+   "topic": "RVO vs return std::move(local)",
+   "strong_answer": "RVO can elide both copy and move by constructing directly in the caller; return std::move(local) prevents RVO and forces a move constructor call, so prefer return local;"
+  },
+  {
+   "topic": "std::move vs std::forward",
+   "strong_answer": "std::move unconditionally casts to an rvalue reference; std::forward<T> conditionally casts to an rvalue only when the original argument was an rvalue, which is required for perfect forwarding."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Believing std::move performs the move.",
+   "correction": "std::move only unconditionally casts to an rvalue reference; the selected move constructor or move assignment does the steal."
+  },
+  {
+   "trap": "Writing return std::move(local); to “help” the compiler.",
+   "correction": "That can prevent RVO/copy elision and force a move; return the local by name instead."
+  },
+  {
+   "trap": "Declaring a custom destructor (or copy operations) and assuming moves still happen automatically.",
+   "correction": "Those declarations suppress implicit move generation, so returns by value may copy unless moves are explicitly defaulted or defined."
+  },
+  {
+   "trap": "Continuing to read a moved-from object as if it still held its old value.",
+   "correction": "After a move the source is valid but unspecified (often empty for std::string); only assign to it or destroy it."
+  },
+  {
+   "trap": "Omitting noexcept on a move constructor used with standard containers.",
+   "correction": "std::vector keeps the strong exception guarantee and will copy instead of move on reallocation if the move might throw."
+  }
+ ]
+}

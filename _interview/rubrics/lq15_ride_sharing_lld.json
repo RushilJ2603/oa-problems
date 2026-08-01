@@ -1,0 +1,301 @@
+{
+ "id": "lq15_ride_sharing_lld",
+ "title": "Design a Ride-Sharing Service (Uber / Ola)",
+ "type": "LLD",
+ "relevance": "High — hard LLD / machine-coding staple (campus + experienced); Uber, Ola, Flipkart, Swiggy, Amazon, Microsoft, and Grab-style loops use it to probe trip state machines, Strategy for matching/pricing, Observer for status, and the driver double-assignment race.",
+ "difficulty": "mid",
+ "prereqs": [
+  "l01_oop_solid",
+  "l02_patterns_creational",
+  "l03_patterns_structural",
+  "l04_patterns_behavioral",
+  "l05_concurrency_lld"
+ ],
+ "company_notes": "Campus/machine-coding staple at Flipkart, Uber, Swiggy, Ola, Amazon new-grad, and Indian product cos (~90 min working lifecycle + one match + one pricing strategy). Experienced LLD at FAANG/Uber/Grab/Microsoft goes deeper on double-assignment CAS, Strategy vs switch, Observer, TripRequest vs Trip, and geo-index interfaces. Among the top hard LLD marketplace-matching templates alongside BookMyShow, Splitwise, and food delivery.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Clarify functional scope, NFR concurrency/extensibility, and LLD-vs-HLD assumptions before designing classes.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Mandatory FR: register riders/drivers; request ride with pickup, dropoff, and type; match available driver; accept; start; complete; cancel; compute fare.",
+     "weight": "core",
+     "evidence_hint": "Lists the full mandatory trip lifecycle FR set including register, request, match, accept, start, complete, cancel, and fare."
+    },
+    {
+     "id": "req2",
+     "point": "NFR: correct under concurrent requests with no double-assign; extensible matching/pricing; modular packages; demonstrable main/CLI.",
+     "weight": "core",
+     "evidence_hint": "Calls out concurrency correctness (no double-assign) plus extensible strategies and a runnable demo."
+    },
+    {
+     "id": "req3",
+     "point": "State assumptions: single city / in-memory for LLD; Euclidean or Haversine OK; no pool unless asked; one active trip per driver/rider.",
+     "weight": "extended",
+     "evidence_hint": "Explicitly scopes to in-memory single-city LLD and one active trip per driver/rider, deferring pool."
+    },
+    {
+     "id": "req4",
+     "point": "Keep HLD concerns (Redis GEO, Kafka, city sharding, DISCO) as stretch — do not open the whiteboard with Kafka.",
+     "weight": "extended",
+     "evidence_hint": "Separates LLD class/state/strategy/CAS focus from HLD infra and refuses to lead with Kafka."
+    }
+   ],
+   "probes": [
+    "What is in scope for this LLD: on-demand only or scheduled, auto-assign vs broadcast, surge, pool, and concurrency?"
+   ],
+   "hints": {
+    "1": "Start by listing mandatory FR for the trip lifecycle before naming classes.",
+    "2": "Separate mandatory FR from common extensions (surge, ratings, payment, ETA, decline/re-match) and state LLD assumptions.",
+    "3": "FR: register, request, match, accept, start, complete, cancel, fare; NFR: no double-assign + Strategy extensibility; assume in-memory single city; Kafka/Redis GEO only as stretch."
+   }
+  },
+  {
+   "phase": "entities",
+   "goal": "Name core domain objects, statuses, and Trip as the aggregate root with legal transitions.",
+   "must_hit": [
+    {
+     "id": "ent1",
+     "point": "Core entities: Rider, Driver (+ Vehicle, DriverStatus), Trip/Ride (+ TripStatus), Location (lat/lng); optional TripRequest vs Trip, Payment, Rating.",
+     "weight": "core",
+     "evidence_hint": "Names Rider, Driver/Vehicle/DriverStatus, Trip/TripStatus, Location, and optional TripRequest/Payment/Rating."
+    },
+    {
+     "id": "ent2",
+     "point": "Trip is the aggregate root: owns rider + driver refs and legal transitions; external code mutates ride state only through Trip / RideSharingService.",
+     "weight": "core",
+     "evidence_hint": "Treats Trip as aggregate root and forbids poking trip fields from outside the service/Trip API."
+    },
+    {
+     "id": "ent3",
+     "point": "TripStatus state machine: REQUESTED → DRIVER_ASSIGNED (or ACCEPTED) → IN_PROGRESS (ONGOING) → COMPLETED, with CANCELLED from pre-start states; reject illegal moves.",
+     "weight": "core",
+     "evidence_hint": "Recites the REQUESTED/ASSIGNED/IN_PROGRESS/COMPLETED path plus CANCELLED from pre-start and illegal-transition rejection."
+    },
+    {
+     "id": "ent4",
+     "point": "DriverStatus: OFFLINE | AVAILABLE/ONLINE | ON_TRIP/IN_TRIP.",
+     "weight": "extended",
+     "evidence_hint": "Lists the three driver status families used for availability and assignment."
+    }
+   ],
+   "probes": [
+    "What are the core entities and who owns trip lifecycle transitions?"
+   ],
+   "hints": {
+    "1": "List people, vehicles, trips, locations, and statuses before drawing relationships.",
+    "2": "Make Trip the aggregate that holds rider/driver refs and guarded status changes.",
+    "3": "Entities: Rider, Driver+Vehicle+DriverStatus, Trip+TripStatus, Location; Trip owns transitions REQUESTED→DRIVER_ASSIGNED→IN_PROGRESS→COMPLETED with CANCELLED pre-start."
+   }
+  },
+  {
+   "phase": "class_design",
+   "goal": "Sketch the facade, strategy interfaces, catalogs, and Observer/Builder pattern surface.",
+   "must_hit": [
+    {
+     "id": "cd1",
+     "point": "RideSharingService as Facade (+ optional Singleton) holding riders/drivers/trips catalogs, PricingStrategy, and DriverMatchingStrategy.",
+     "weight": "core",
+     "evidence_hint": "Shows a facade service with ConcurrentHashMap-style catalogs and injected pricing/matching strategies."
+    },
+    {
+     "id": "cd2",
+     "point": "PricingStrategy and DriverMatchingStrategy interfaces with concrete variants (e.g. Standard/Surge/RideType pricing; Nearest/HighestRated matching).",
+     "weight": "core",
+     "evidence_hint": "Draws strategy interfaces and at least one pricing and one matching implementation each."
+    },
+    {
+     "id": "cd3",
+     "point": "Patterns expected: Strategy (match+fare), State or guarded enum transitions, Observer (rider/driver status), Factory, Builder (Trip.TripBuilder), Facade; Singleton optional.",
+     "weight": "extended",
+     "evidence_hint": "Names Strategy, guarded State/enum, Observer, and Facade (plus Factory/Builder) mapped to matching, fare, lifecycle, and notify."
+    },
+    {
+     "id": "cd4",
+     "point": "OOD surface: MatchingStrategy.findDrivers; PricingStrategy.calculateFare; Trip.assignDriver/startTrip/endTrip/cancel; Driver.tryAssign → boolean.",
+     "weight": "extended",
+     "evidence_hint": "Names the key strategy and Trip/Driver methods including tryAssign returning boolean."
+    }
+   ],
+   "probes": [
+    "Walk me through the class diagram: who orchestrates, who owns algorithms, and who owns lifecycle?"
+   ],
+   "hints": {
+    "1": "Put a single RideSharingService API in front of strategies and Trip.",
+    "2": "Inject MatchingStrategy and PricingStrategy; keep Trip responsible for transitions and notifications.",
+    "3": "Facade RideSharingService + ConcurrentHashMap catalogs; PricingStrategy/DriverMatchingStrategy; Trip state machine + Observer; Driver.tryAssign CAS hook."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Ship the happy-path API: register → request → accept → start → end with matching and fare.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Key methods: registerRider/registerDriver, requestRide, acceptRide/declineRide, startTrip, endTrip/completeTrip, cancelTrip, updateDriverLocation, calculateFare via strategy.",
+     "weight": "core",
+     "evidence_hint": "Implements or sketches the full orchestration API through cancel and strategy-based fare."
+    },
+    {
+     "id": "impl2",
+     "point": "Matching flow: filter AVAILABLE + vehicle type (+ radius) → rank (nearest Haversine / highest rating / ETA) → atomically claim driver.",
+     "weight": "core",
+     "evidence_hint": "Describes filter-then-rank-then-claim rather than burying if-trees for assignment."
+    },
+    {
+     "id": "impl3",
+     "point": "Pricing: base + distance×rate + time×rate × surge (and ride-type multipliers); estimate at request, final fare at complete; surge injected, not hardcoded in Trip.",
+     "weight": "core",
+     "evidence_hint": "Separates estimate vs final fare and keeps surge as an injected multiplier via PricingStrategy."
+    },
+    {
+     "id": "impl4",
+     "point": "Timed path: code register → request → accept → start → end with NearestDriver + StandardFare first, then optionally add Surge.",
+     "weight": "extended",
+     "evidence_hint": "Prioritizes a working happy path with nearest matching and standard fare before surge UML."
+    }
+   ],
+   "probes": [
+    "Implement requestRide through completeTrip — how do matching and fare calculation plug in?"
+   ],
+   "hints": {
+    "1": "Wire the mandatory path before optional product features.",
+    "2": "requestRide uses MatchingStrategy then claim; endTrip finalizes fare via PricingStrategy.",
+    "3": "register → requestRide(filter AVAILABLE+type, rank nearest, claim) → accept → start → endTrip(final fare via strategy); estimate at request, actuals at complete."
+   }
+  },
+  {
+   "phase": "extensibility",
+   "goal": "Show OCP via pluggable strategies and filters so surge, ratings, and ride types do not edit the facade forever.",
+   "must_hit": [
+    {
+     "id": "ext1",
+     "point": "OCP: add new match/fare/ride type without editing the RideSharingService facade; strategies own algorithms, service orchestrates.",
+     "weight": "core",
+     "evidence_hint": "Explains adding Surge/HighestRated/XL via new strategy or filter classes, not switches in the facade."
+    },
+    {
+     "id": "ext2",
+     "point": "Add surge / premium / XL via new PricingStrategy and ride-type filter in matching — do not switch forever inside RideSharingService.",
+     "weight": "core",
+     "evidence_hint": "Maps surge/premium/XL to strategy/filter extension points."
+    },
+    {
+     "id": "ext3",
+     "point": "SRP/DIP: Trip owns lifecycle, strategies own algorithms, service orchestrates; depend on MatchingStrategy/PricingStrategy abstractions.",
+     "weight": "extended",
+     "evidence_hint": "Splits lifecycle vs algorithm vs orchestration and depends on strategy interfaces."
+    },
+    {
+     "id": "ext4",
+     "point": "Optional stretches (only if asked) stay as strategy/config hooks: pool waypoints, scheduled holds, surge by geohash zone, OTP start.",
+     "weight": "extended",
+     "evidence_hint": "Defers pool/schedule/OTP to hooks rather than reshaping the core model mid-round."
+    }
+   ],
+   "probes": [
+    "How would you add surge pricing and highest-rated matching without rewriting the service?"
+   ],
+   "hints": {
+    "1": "Avoid hardcoding nearest-driver and peak logic inside RideSharingService or Trip.",
+    "2": "New PricingStrategy / DriverMatchingStrategy implementations plus ride-type filters.",
+    "3": "setPricingStrategy/setDriverMatchingStrategy; SurgePricing and HighestRatedDriverStrategy plug in; facade stays orchestration-only."
+   }
+  },
+  {
+   "phase": "concurrency",
+   "goal": "Prevent double driver assignment and corrupt trip transitions under concurrent requests.",
+   "must_hit": [
+    {
+     "id": "conc1",
+     "point": "Two riders must not get the same driver: prefer Driver.tryAssign / CAS (AVAILABLE → ON_TRIP) or per-driver lock — not a global lock over all matching.",
+     "weight": "core",
+     "evidence_hint": "Shows CAS or per-driver lock on availability claim and rejects city-wide synchronized matching as the senior answer."
+    },
+    {
+     "id": "conc2",
+     "point": "ConcurrentHashMap catalogs for riders/drivers/trips are useful but map alone ≠ atomic driver claim — still need CAS/lock per driver.",
+     "weight": "core",
+     "evidence_hint": "Uses concurrent maps for catalogs while insisting claim is a separate atomic operation."
+    },
+    {
+     "id": "conc3",
+     "point": "Synchronize Trip transitions so cancel vs start cannot corrupt state — lock the Trip (or optimistic version), not the whole service.",
+     "weight": "extended",
+     "evidence_hint": "Scopes locking to the Trip for cancel-vs-start races rather than locking the facade."
+    },
+    {
+     "id": "conc4",
+     "point": "On CAS fail, retry next candidate; loser of the double-assign race re-matches.",
+     "weight": "extended",
+     "evidence_hint": "Describes failed claim → next candidate / re-match rather than leaving a stuck assignment."
+    }
+   ],
+   "probes": [
+    "Two riders request; both see the same nearest AVAILABLE driver — how do you prevent double assignment?"
+   ],
+   "hints": {
+    "1": "Read-then-write on driver status is the race — claim must be atomic.",
+    "2": "Use Driver.tryAssign / CAS AVAILABLE→ON_TRIP or a per-driver lock; ConcurrentHashMap alone is not enough.",
+    "3": "Filter candidates, then tryAssign; on false, pick next driver; Trip cancel/start synchronized on the Trip object, not a global service lock."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Auto-assign nearest vs broadcast / first-accept",
+   "strong_answer": "Auto-assign is simpler for a 90 min round; broadcast matches real Uber UX but needs offer TTL plus an accept race — state both and implement one."
+  },
+  {
+   "topic": "Strategy vs hardcoded matching/pricing",
+   "strong_answer": "Hardcoded matching/pricing can pass a demo, but Strategy is the expected answer when asked to add surge, highest-rated, or XL-only without editing the facade."
+  },
+  {
+   "topic": "Enum-guarded transitions vs full State pattern classes",
+   "strong_answer": "Enum + IllegalStateException is the interview default; full State classes win only if many behaviors diverge per status — avoid over-engineering mid-round."
+  },
+  {
+   "topic": "Global synchronized vs per-driver CAS",
+   "strong_answer": "A coarse global lock is correct but serializes the city; per-driver CAS or lock shows senior handling of the double-assignment race."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Two riders, one nearest driver — race on read-then-write availability.",
+   "correction": "Show tryAssign / CAS / UPDATE … WHERE status=AVAILABLE; the loser re-matches."
+  },
+  {
+   "trap": "Driver declines or no accept within TTL leaves Trip stuck in REQUESTED.",
+   "correction": "Offer the next candidate or fail with no drivers; do not leave the trip REQUESTED forever."
+  },
+  {
+   "trap": "Adding surge / premium / XL by growing switches inside RideSharingService.",
+   "correction": "Add a new PricingStrategy and ride-type filter in matching instead of endless switch in the facade."
+  },
+  {
+   "trap": "Cancel after driver arrived / mid-trip without a product rule.",
+   "correction": "Cancel from ASSIGNED is a legal transition (fee is product); cancel from IN_PROGRESS is illegal unless specified."
+  },
+  {
+   "trap": "Pool / shared rides assumed in scope without asking.",
+   "correction": "Say out of scope early unless insisted — multiple waypoints/riders reshape the model."
+  },
+  {
+   "trap": "Fare math living inside Driver or treating estimate as final charge.",
+   "correction": "Put fare in PricingStrategy/FareCalculator; estimate at request ≠ final charge at complete."
+  },
+  {
+   "trap": "Opening an LLD round with Redis/Kafka.",
+   "correction": "Interviewers want classes, Trip state machine, strategies, and CAS — not HLD."
+  },
+  {
+   "trap": "Singleton god-service that prices, matches, pays, and notifies inline.",
+   "correction": "Split MatchingStrategy/PricingStrategy plus Observer (or callbacks) or design score drops."
+  },
+  {
+   "trap": "Finishing surge UML without a working request → accept → complete path.",
+   "correction": "Ship the mandatory happy path first, then add Surge strategy."
+  }
+ ]
+}

@@ -1,0 +1,197 @@
+{
+ "id": "c_s19_undefined_behavior",
+ "title": "Undefined Behavior & C's Sharp Edges",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs probe whether candidates grasp that C UB is not just a crash—compilers assume it never happens and can delete safety checks, silently breaking overflow, aliasing, and memory logic under optimization.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the four ISO C behavior categories and that UB means the standard imposes no requirements—not merely an unpredictable crash.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "ISO C buckets program behavior into well-defined, implementation-defined, unspecified, and undefined.",
+     "weight": "core",
+     "evidence_hint": "Names all four categories and contrasts that well-defined cases (like int x = 5 + 3 yielding 8) have a mandated result."
+    },
+    {
+     "id": "fund2",
+     "point": "Implementation-defined behavior requires the compiler to pick a documented option (e.g. int size may be 16, 32, or 64 bits); unspecified behavior requires a valid choice that need not be documented and may change across compilations (e.g. evaluation order of f(g(), h())).",
+     "weight": "core",
+     "evidence_hint": "Gives the int-size and argument-evaluation examples and stresses documentation vs no documentation."
+    },
+    {
+     "id": "fund3",
+     "point": "Undefined Behavior is a state where the C standard imposes absolutely no requirements on the host or compiler; invoking it invalidates the entire program's execution.",
+     "weight": "core",
+     "evidence_hint": "Quotes or paraphrases “imposes no requirements” and notes the whole run is invalidated, not just one bad instruction."
+    },
+    {
+     "id": "fund4",
+     "point": "UB does not mean a predictable crash; the compiler may prove UB never happens and aggressively delete safety checks based on that assumption.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts beginner “it just crashes or reads junk” with optimizer freedom to rewrite or delete checks."
+    }
+   ],
+   "probes": [
+    "What are the four categories of behavior in the C standard, and what does Undefined Behavior actually allow the compiler to do?"
+   ],
+   "hints": {
+    "1": "Start from the ISO buckets—not just “crash vs no crash.”",
+    "2": "Separate well-defined / implementation-defined / unspecified from UB; then say what “no requirements” implies for optimizers.",
+    "3": "UB means the standard imposes no requirements; compilers may assume UB never occurs and delete checks that only matter if it did."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how common UB sources arise and how compilers turn “X is UB” into axioms that delete checks, prove ranges, and enable optimizations like vectorization.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "In code that dereferences a pointer before a NULL check, NULL dereference is UB, so the compiler may assume the pointer is non-NULL and delete the later safety check.",
+     "weight": "core",
+     "evidence_hint": "Walks the process(int *ptr) pattern: *ptr first, then if (ptr == NULL), and explains the check can be optimized away."
+    },
+    {
+     "id": "mech2",
+     "point": "Signed integer overflow is UB (unlike unsigned wrap), so checks like dist + 100 < dist can be proven false and the whole if deleted to an unconditional success return.",
+     "weight": "core",
+     "evidence_hint": "States signed overflow is UB, sketches the check_distance overflow-detection bug, and says the fix is to compare against INT_MAX - 100 before adding."
+    },
+    {
+     "id": "mech3",
+     "point": "Common UB includes out-of-bounds access, use-after-free/double-free/dangling pointers, reading uninitialized locals, strict-aliasing / bad type punning, data races, unsequenced modification (e.g. i = i++), invalid shifts, division by zero and INT_MIN / -1, out-of-bounds pointer arithmetic even without dereference, misaligned access, modifying string literals, and calling through incompatible function pointers.",
+     "weight": "extended",
+     "evidence_hint": "Lists several catalog items with a concrete snippet or avoidance rule for each mentioned."
+    },
+    {
+     "id": "mech4",
+     "point": "Compilers treat “X is UB” as an axiom that X is impossible, then use that for optimizations such as Value Range Propagation and Alias Analysis; restrict promises non-overlapping pointers (violating it is UB) and signed loop indices are assumed not to wrap, enabling SIMD vectorization.",
+     "weight": "core",
+     "evidence_hint": "Mentions VRP/alias analysis and the restrict dest/src loop example where non-overlap and no signed wrap justify vectorizing."
+    }
+   ],
+   "probes": [
+    "Why can a NULL check after a dereference, or an overflow check written as dist + 100 < dist, disappear under a modern optimizing compiler?"
+   ],
+   "hints": {
+    "1": "Ask what the compiler is allowed to assume once any earlier operation would be UB.",
+    "2": "Tie the assumption “UB never happens” to deleting branches that are only useful if overflow or NULL occurred.",
+    "3": "Dereference-before-check implies ptr cannot be NULL; signed overflow is UB so dist + 100 < dist is assumed false and the if can become unconditional return 1."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Explain why C leaves sharp edges as UB or implementation-defined rather than mandating traps or weaker optimization.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "C targets OS and embedded work where boundary checks cost CPU cycles and the programmer is assumed infallible; mandating predictable runtime trapping like Java or Python was rejected.",
+     "weight": "core",
+     "evidence_hint": "States the speed/hardware rationale and names trapping languages as the rejected alternative."
+    },
+    {
+     "id": "tr2",
+     "point": "Aggressive exploitation of UB buys extreme execution speed; the rejected alternative is disabling those optimizations so explicit bounds checks survive.",
+     "weight": "core",
+     "evidence_hint": "Frames speed vs preserving programmer checks, and notes the compiler is optimizing under algebraic rules—not being “malicious.”"
+    },
+    {
+     "id": "tr3",
+     "point": "Implementation-defined and unspecified behaviors hurt portability but do not invalidate the program the way UB does; portable discipline uses fixed-width <stdint.h> types, sizeof instead of hardcoded padding, and unsigned types for bitwise work.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts portability pain vs UB invalidation and lists stdint/sizeof/unsigned practices from the file."
+    }
+   ],
+   "probes": [
+    "Why does C leave signed overflow and similar cases undefined instead of requiring traps or fully specified wrap, and how does that differ from implementation-defined behavior?"
+   ],
+   "hints": {
+    "1": "Think about where C was meant to run and what checking would cost.",
+    "2": "Contrast “no requirements / program invalidated” with “documented or undocumented but still valid choices.”",
+    "3": "OS/embedded speed and infallible-programmer assumption vs Java/Python traps; implementation-defined (e.g. int size) only affects portability, while UB lets optimizers assume the bad case never happens."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply tooling and safe idioms: catch UB with sanitizers and analysis, and write checks and type punning that survive optimization.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Catch UB with UBSan and ASan (-fsanitize=undefined / address), Valgrind for use-after-free and leaks without rebuild, -Wall -Wextra -Wpedantic, and static analyzers like clang-tidy and cppcheck; use assert and safe limit computation defensively.",
+     "weight": "core",
+     "evidence_hint": "Names sanitizers as the strongest everyday tool and mentions Valgrind, warnings, and static analysis from the catching-UB list."
+    },
+    {
+     "id": "app2",
+     "point": "Prevent signed overflow by checking limits before arithmetic (e.g. dist > INT_MAX - 100), not by testing after an overflowing add.",
+     "weight": "core",
+     "evidence_hint": "Shows or describes the INT_MAX - 100 pre-check fix for check_distance."
+    },
+    {
+     "id": "app3",
+     "point": "Do not type-pun a float via pointer cast to an integer type (strict aliasing); copy bytes with memcpy or use a union (valid in C99 and later)—compilers optimize memcpy to a register move.",
+     "weight": "core",
+     "evidence_hint": "Rejects *(uint32_t *)&f style casts and states memcpy or union as the safe approach."
+    },
+    {
+     "id": "app4",
+     "point": "Code that appears fine for years at -O0 can break under a modern compiler at -O3 because UB can look like working output until optimization assumptions change.",
+     "weight": "extended",
+     "evidence_hint": "Connects the “works on my machine” / test-suite trust problem to changing optimization levels."
+    }
+   ],
+   "probes": [
+    "How do you safely check for signed overflow before it happens, and how do you safely read a float’s raw bits as an integer in C?"
+   ],
+   "hints": {
+    "1": "Avoid performing the risky operation first, then testing the result.",
+    "2": "For overflow, compare against a limit derived without overflowing; for bits, avoid pointer casts that break aliasing.",
+    "3": "Use dist > INT_MAX - 100 before adding; use memcpy (or a C99+ union) instead of casting float* to uint32_t*."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Runtime trapping (Java/Python-style) vs Undefined Behavior",
+   "strong_answer": "C chose no mandated traps so OS and embedded code avoid paying for boundary checks every time; the programmer is assumed correct, and in exchange the compiler may assume UB never occurs and optimize aggressively."
+  },
+  {
+   "topic": "Aggressive UB-based optimization vs preserving explicit bounds checks",
+   "strong_answer": "Exploiting UB (VRP, alias analysis, restrict, no signed wrap) enables extreme speed such as SIMD vectorization; turning those opts off would keep more of the programmer’s checks but forgoes that performance—the compiler is applying algebraic rules, not acting maliciously."
+  },
+  {
+   "topic": "Signed overflow (UB) vs unsigned wrap (well-defined)",
+   "strong_answer": "Unsigned overflow wraps predictably; signed overflow is UB because hardware representations differed historically, so portable code must check limits before signed arithmetic rather than detecting wrap after the fact."
+  },
+  {
+   "topic": "UB vs implementation-defined / unspecified behavior",
+   "strong_answer": "UB invalidates the whole program and licenses any transformation; implementation-defined and unspecified only threaten portability (int size, char signedness, padding, right-shift of negatives)—discipline is fixed-width types, sizeof, and unsigned for bitwise ops, not assuming those details."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating UB as “unpredictable memory” because out-of-bounds access happened to print a nearby variable on one machine.",
+   "correction": "UB means the compiler may unravel program logic under the assumption you never wrote UB—not merely that you read junk bytes."
+  },
+  {
+   "trap": "Believing the compiler is malicious when it deletes a safety check.",
+   "correction": "The compiler only knows the algebraic rules of the abstract machine; deleting a branch it proved impossible is an attempt to make valid programs faster."
+  },
+  {
+   "trap": "Writing safety checks after an operation that already could be UB (NULL deref, overflowing add).",
+   "correction": "Validate pointers before use and check limits before arithmetic; once UB is invoked, later checks may be assumed unreachable and removed."
+  },
+  {
+   "trap": "Trusting a test suite that only checks outputs, or code that “worked for years” at -O0.",
+   "correction": "UB can silently look correct until compiler version or -O3 changes assumptions; use sanitizers, warnings, and static analysis—not output-only tests."
+  },
+  {
+   "trap": "Detecting overflow with if (dist + 100 < dist) or type-punning with *(int*)&f / *(uint32_t *)&f.",
+   "correction": "Those patterns are themselves UB (signed overflow / strict aliasing); use pre-checks against INT_MAX - 100 and memcpy or a union for bit reinterpretation."
+  }
+ ]
+}

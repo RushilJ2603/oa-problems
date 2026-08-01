@@ -1,0 +1,268 @@
+{
+ "id": "08_bit_manipulation__deep",
+ "title": "Bit Manipulation & Bitmask Tricks — Depth Pass",
+ "type": "CP",
+ "relevance": "High (second ladder after XOR/popcount/`2^n` basics — the CF/AtCoder “bits are independent / rewrite with ⊕ and &” observations that dominate Div2 C–D and still appear as OA twists)",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Sum & XOR reconstruct (any array/pair with given sum and XOR) — Make Good / Vlad algebra; common phone-screen follow-up to Single Number. Pair counts with bit target (pairs XOR/sum to a power of two) — 702B / Arpa-style hash maps; Amazon OA staple. Maximize OR/AND under k moves — Orray / Boboniu / Iva & Pav (“flip ≤k bits” or OR a subset to maximize score). Online max XOR — maintain a set, answer max XOR with x — Vasiliy / trie; interview form of maximum XOR of two numbers in an array.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot depth-pass bit problems where hidden algebra, range AND/OR/XOR, progressive OR, or XOR trie/basis replaces basic Single-Number / popcount templates.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "After Single-Number / Fedor / Rock-and-Lever / Elevator-style templates, contest bit problems hide algebra: rewrite sum as (a⊕b)+2(a&b), force a nonzero total XOR by flipping one cell, maximize progressive OR by taking the element that sets the most new high bits, or build a binary trie / linear basis for max XOR under updates / among subsets.",
+     "weight": "core",
+     "evidence_hint": "Names at least one of those hidden asks (sum↔XOR identity, force nonzero XOR, progressive OR, trie/basis) instead of a plain Single-Number template."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognize them when constraints are bit-width (≤30/≤60), when AND/OR/XOR of a range or of all subarrays appears, or when you may only flip/OR/AND with a small menu of values.",
+     "weight": "core",
+     "evidence_hint": "Cites ≤30/≤60 bit-width, range/subarray AND/OR/XOR, or a small flip/OR/AND menu as the cue."
+    },
+    {
+     "id": "rec3",
+     "point": "OA/interview skins include sum & XOR reconstruct (Make Good / Vlad), pairs XOR/sum to a power of two (702B), maximize OR/AND under k moves (Orray / Boboniu / Iva & Pav), and online max XOR with a maintained set (Vasiliy / trie).",
+     "weight": "extended",
+     "evidence_hint": "Maps the prompt to one of those four skins from Where it appears."
+    }
+   ],
+   "probes": [
+    "What rewritten bit algebra or constraint cue says this is depth-pass bits rather than a plain XOR/popcount/`2^n` template?",
+    "If you see ≤30/≤60 bit-width, range AND/OR/XOR, or a small flip/OR/AND menu, what do you reach for?"
+   ],
+   "hints": {
+    "1": "Ask whether the statement hides sum↔XOR algebra, progressive OR, range AND/OR/XOR, or max-XOR under updates/subsets instead of naming a basic template.",
+    "2": "Cue triad: bit-width ≤30/≤60; AND/OR/XOR of a range or of all subarrays; flip/OR/AND from a small menu of values.",
+    "3": "Say: rewrite (a⊕b)+2(a&b); force nonzero total XOR by one flip; progressive OR / trie / linear basis; skins are sum-XOR reconstruct, power-of-two pairs, OR/AND under k moves, and online max XOR."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Choose the right rewrite—sum/XOR/AND identity, monotone range AND, progressive OR, range max-XOR closed form, trie, or linear basis—before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Sum↔XOR↔AND: a+b=(a⊕b)+2(a&b); Vlad given x=a⊕b=(a+b)/2 ⇒ a&b=x/2 (impossible if x odd or (x/2)&x≠0); Make Good appends using the same identity so new sum=2·xor.",
+     "weight": "core",
+     "evidence_hint": "States the identity and either Vlad’s a&b=x/2 with the odd/overlap fail, or Make Good’s sum=2·xor append."
+    },
+    {
+     "id": "appr2",
+     "point": "Range AND is monotone under extension: binary-search / sparse-table the farthest r with AND[l..r]≥k (Iva & Pav).",
+     "weight": "core",
+     "evidence_hint": "States monotonicity and farthest-r search (binary search or sparse table) for AND≥k."
+    },
+    {
+     "id": "appr3",
+     "point": "Progressive OR: at most B≈30 useful picks; always grab the unused a_i maximizing cur|a_i, then dump the rest (Orray).",
+     "weight": "core",
+     "evidence_hint": "States ≤B≈30 / ≤30 meaningful OR improvements and greedy max cur|a_i."
+    },
+    {
+     "id": "appr4",
+     "point": "Max XOR in [L,R]: take the highest bit where L and R differ, then set all lower bits to 1 (Little Girl)—answer (1<<(msb+1))−1; no need to try every pair.",
+     "weight": "extended",
+     "evidence_hint": "Names the MSB-where-L-R-differ rule and rejects pairwise enumeration."
+    },
+    {
+     "id": "appr5",
+     "point": "Prefix XOR + equal segment XOR (AGAGA): split into ≥2 contiguous parts with equal XOR ⇒ total XOR 0 or a three-way repeat of the same prefix value.",
+     "weight": "extended",
+     "evidence_hint": "States total XOR 0 or the same prefix value appearing in a three-way repeat."
+    }
+   ],
+   "probes": [
+    "How do you rewrite sum/XOR/AND, farthest range-AND, or progressive OR before coding?",
+    "When do you use a closed-form [L,R] max XOR, AGAGA prefix conditions, a binary trie, or a linear basis?"
+   ],
+   "hints": {
+    "1": "Look for a sum↔XOR identity, monotone AND, OR saturation, or max-XOR structure before brute force.",
+    "2": "Vlad/Make Good → (a⊕b)+2(a&b); Iva & Pav → farthest r with AND≥k; Orray → ≤B≈30 greedy OR; Little Girl → MSB differ then lower bits 1; AGAGA → total XOR 0 or triple prefix.",
+    "3": "Say: a&b=x/2 with odd/overlap fail; binsearch/sparse farthest AND; always take max cur|a_i then dump rest; (1<<(msb+1))−1; ≥2 equal-XOR parts via total 0 or three-way prefix repeat."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Show the cold identities, XOR-trie / linear-basis mechanics, and constructive bit walks interviewers ask to sketch.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Rewrite identities cold: a+b=(a⊕b)+2(a&b), a|b=(a⊕b)+(a&b), a&b=(a+b−(a⊕b))/2.",
+     "weight": "core",
+     "evidence_hint": "Recites at least the sum identity and one of the OR/AND companion forms."
+    },
+    {
+     "id": "impl2",
+     "point": "XOR binary trie (30–31 bits): child [0/1], subtree counts for delete; walk MSB→LSB preferring the opposite bit; insert/delete for online max XOR (Vasiliy).",
+     "weight": "core",
+     "evidence_hint": "Describes MSB→LSB opposite-bit walk and subtree counts enabling delete."
+    },
+    {
+     "id": "impl3",
+     "point": "Linear basis: bas[b]=vector with highest bit b; insert by reducing against existing basis MSB-greedy; max subset XOR by greedily OR-in; #distinct subset XORs=2^{rank} (CSES Maximum Xor Subset).",
+     "weight": "core",
+     "evidence_hint": "States MSB-greedy insert/reduce and greedy max query (and may cite 2^{rank})."
+    },
+    {
+     "id": "impl4",
+     "point": "Dima and a Bad XOR: pick first row arbitrarily; if total XOR 0, swap one cell in a row that has a differing entry to force nonzero matrix XOR.",
+     "weight": "extended",
+     "evidence_hint": "Describes arbitrary first row then one differing-cell swap when total XOR is 0."
+    },
+    {
+     "id": "impl5",
+     "point": "Bit flips on 1..n: bit k toggles every 2^k steps → closed form for Johnny-style rating-drop counts; xor-MST bit b contributes ⌊n/2^{b+1}⌋·2^b + max(n % 2^{b+1} − 2^b, 0) (959E).",
+     "weight": "extended",
+     "evidence_hint": "Gives the per-bit 2^k toggle closed form and/or the 959E per-bit contribution formula."
+    }
+   ],
+   "probes": [
+    "Write the sum/XOR/AND identities and sketch an XOR-trie query or linear-basis insert.",
+    "How do you force a nonzero matrix XOR, or count 1..n bit flips / xor-MST cost without building the graph?"
+   ],
+   "hints": {
+    "1": "Start from the three rewrite identities, then trie children or bas[b] reduction.",
+    "2": "Trie → 30–31 bits, prefer !bit, subtree counts for delete; basis → reduce MSB-first, greedy max; Dima → swap one differing cell if total XOR 0.",
+    "3": "Say: a+b=(a⊕b)+2(a&b) and companions; trie MSB→LSB opposite bit; bas[b] insert/reduce and 2^{rank}; Johnny 2^k toggles; 959E ⌊n/2^{b+1}⌋·2^b + max(n%2^{b+1}−2^b,0)."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Match feasible tools—O(1) AND sparse table, ≤30 OR saturation steps, O(B log n) floor counts—to the constraint instead of naive loops.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Range AND tools: sparse table (O(1)), or binsearch + rolling AND; never recompute naively per query.",
+     "weight": "core",
+     "evidence_hint": "States O(1) sparse table or binsearch+rolling AND and rejects naive per-query recomputation."
+    },
+    {
+     "id": "cx2",
+     "point": "Progressive OR / bit saturation: at most one useful improvement per bit position (≤B steps / ≤30 meaningful moves); then dump the rest.",
+     "weight": "core",
+     "evidence_hint": "Caps useful OR picks at ≤B / ≤30 and stops after saturation."
+    },
+    {
+     "id": "cx3",
+     "point": "When simulating 1..n bit flips or xor-MST on a path of integers, prefer O(B log n) floor-counting formulas over loops to n.",
+     "weight": "extended",
+     "evidence_hint": "Rejects looping to n and cites O(B log n) floor-counting."
+    }
+   ],
+   "probes": [
+    "For many range-AND queries, what complexity is acceptable and what recomputation is forbidden?",
+    "Why is progressive OR only ≤30 useful moves, and when do you prefer O(B log n) floor counts over looping to n?"
+   ],
+   "hints": {
+    "1": "Match the tool to query shape versus bit-width saturation versus closed-form counting.",
+    "2": "Many AND queries → sparse O(1) or binsearch+rolling; OR maximize → ≤B/≤30 greedy picks; 1..n flips / xor-MST → O(B log n) floors.",
+    "3": "Say: never recompute AND naively; ≤30 meaningful OR moves then dump rest; prefer O(B log n) floor-counting over loops to n."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch Vlad impossibility, fake full simulation, AGAGA/AND-Sequences conditions, and naive AND / pair-enumeration traps.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Vlad: given x=a⊕b=(a+b)/2, setting a&b=x/2 fails if x is odd or (x/2)&x≠0 (AND overlaps XOR bits).",
+     "weight": "core",
+     "evidence_hint": "States both failure conditions: odd x and (x/2)&x≠0."
+    },
+    {
+     "id": "pit2",
+     "point": "Fortune Telling: only the parity of the array XOR vs y matters—kills fake “simulate all ops” traps.",
+     "weight": "core",
+     "evidence_hint": "Rejects full simulation and cites XOR parity vs y."
+    },
+    {
+     "id": "pit3",
+     "point": "AND Sequences: AND of all must appear ≥2 times; then (cnt)·(cnt−1)·(n−2)! permutations—missing the ≥2 placement fails.",
+     "weight": "core",
+     "evidence_hint": "Requires global AND appearing ≥2 times before the factorial count."
+    },
+    {
+     "id": "pit4",
+     "point": "Little Girl max XOR in [L,R]: do not try every pair—MSB where L,R differ then lower bits 1 gives (1<<(msb+1))−1.",
+     "weight": "extended",
+     "evidence_hint": "Rejects pairwise search and states the closed form."
+    },
+    {
+     "id": "pit5",
+     "point": "Range AND: never recompute naively per query—use sparse table (O(1)) or binsearch + rolling AND.",
+     "weight": "extended",
+     "evidence_hint": "Names sparse/binsearch tools and forbids naive per-query AND."
+    }
+   ],
+   "probes": [
+    "When is Vlad’s a&b=x/2 construction impossible?",
+    "What goes wrong if you simulate all Fortune Telling ops, skip the ≥2 global-AND placement, or enumerate all [L,R] pairs for max XOR?"
+   ],
+   "hints": {
+    "1": "Check odd/overlap on Vlad, parity-only Fortune Telling, and ≥2 AND placement.",
+    "2": "Vlad → odd or (x/2)&x≠0; Fortune Telling → XOR parity vs y only; AND Sequences → AND appears ≥2 times; Little Girl → no every-pair try.",
+    "3": "Also: AGAGA needs total XOR 0 or a three-way prefix repeat; range AND needs sparse O(1) or binsearch+rolling, never naive recomputation."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Sum/XOR/AND identity rewrite vs simulating constructions",
+   "strong_answer": "a+b=(a⊕b)+2(a&b) (and a|b=(a⊕b)+(a&b), a&b=(a+b−(a⊕b))/2) lets Vlad recover a&b=x/2 and Make Good append so new sum=2·xor—prefer the identity over trial simulation."
+  },
+  {
+   "topic": "Sparse-table O(1) range AND vs binsearch + rolling AND vs naive per-query AND",
+   "strong_answer": "Range AND is monotone under extension; use sparse table (O(1)) or binsearch + rolling AND for farthest r with AND≥k (Iva & Pav)—never recompute naively per query."
+  },
+  {
+   "topic": "Progressive OR saturation (≤B/≤30 picks) vs sorting the whole array by OR contribution once",
+   "strong_answer": "At most B≈30 useful picks / ≤30 meaningful moves: always grab unused a_i maximizing cur|a_i, then dump the rest (Orray)—OR saturation, not a full static sort."
+  },
+  {
+   "topic": "Closed-form max XOR in [L,R] vs trying every pair",
+   "strong_answer": "Highest bit where L and R differ, then set all lower bits to 1 → (1<<(msb+1))−1 (Little Girl); no need to try every pair."
+  },
+  {
+   "topic": "O(B log n) floor-counting vs looping to n for bit flips / xor-MST",
+   "strong_answer": "Bit k toggles every 2^k on 1..n; xor-MST bit b contributes ⌊n/2^{b+1}⌋·2^b + max(n % 2^{b+1} − 2^b, 0)—prefer O(B log n) floor-counting formulas over loops to n."
+  },
+  {
+   "topic": "XOR binary trie vs linear basis for max XOR",
+   "strong_answer": "Trie (30–31 bits, insert/delete, prefer !bit) answers online max x⊕element (Vasiliy); linear basis (MSB-greedy insert, #distinct subset XORs=2^{rank}) answers max subset XOR (CSES Maximum Xor Subset)—pick by updates vs subsets."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using Vlad’s a&b=x/2 when x is odd or (x/2)&x≠0.",
+   "correction": "Impossible if x odd or AND overlaps XOR bits; only then set a&b=x/2 from x=a⊕b=(a+b)/2."
+  },
+  {
+   "trap": "Simulating all Fortune Telling operations.",
+   "correction": "Only the parity of the array XOR vs y matters."
+  },
+  {
+   "trap": "Building AND Sequences permutations without the global AND appearing ≥2 times.",
+   "correction": "AND of all must appear ≥2 times; then (cnt)·(cnt−1)·(n−2)! permutations."
+  },
+  {
+   "trap": "Enumerating every pair for max XOR in [L,R].",
+   "correction": "Take the highest bit where L and R differ, set all lower bits to 1 → (1<<(msb+1))−1 (Little Girl)."
+  },
+  {
+   "trap": "Recomputing range AND naively per query.",
+   "correction": "Use sparse table (O(1)) or binsearch + rolling AND; AND is monotone under extension."
+  },
+  {
+   "trap": "Checking only total XOR 0 for AGAGA equal-XOR partitions.",
+   "correction": "Split into ≥2 contiguous equal-XOR parts ⇒ total XOR 0 or a three-way repeat of the same prefix value."
+  },
+  {
+   "trap": "Looping to n for Johnny-style bit flips or xor-MST cost.",
+   "correction": "Prefer O(B log n) floor-counting: bit k toggles every 2^k; bit b costs ⌊n/2^{b+1}⌋·2^b + max(n % 2^{b+1} − 2^b, 0)."
+  }
+ ]
+}

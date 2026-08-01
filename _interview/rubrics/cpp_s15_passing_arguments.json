@@ -1,0 +1,167 @@
+{
+ "id": "cpp_s15_passing_arguments",
+ "title": "Passing Arguments by Value, Pointer, and Reference",
+ "type": "FUND",
+ "relevance": "Interviewers use swap-style examples to check whether a candidate understands when a function can modify the caller's variables versus working only on copies.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the three argument-passing mechanisms and what each parameter actually is.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "By default, arguments are passed by value: the function receives copies of the caller's data in its own parameters.",
+     "weight": "core",
+     "evidence_hint": "Says parameters are copies of the caller's values, not the originals themselves."
+    },
+    {
+     "id": "fund2",
+     "point": "Call by pointer passes addresses so the function can operate on the caller's variables through dereferencing.",
+     "weight": "core",
+     "evidence_hint": "Mentions passing &x/&y (or addresses) and using *a/*b to reach the originals."
+    },
+    {
+     "id": "fund3",
+     "point": "Call by reference makes parameters aliases for the caller's variables—same objects under new names, not copies and not addresses to dereference.",
+     "weight": "core",
+     "evidence_hint": "Describes reference parameters as aliases sharing the caller's storage."
+    }
+   ],
+   "probes": [
+    "What are the three ways a C++ function can receive arguments, and what does each parameter actually represent?"
+   ],
+   "hints": {
+    "1": "Think about whether the function gets a copy, an address, or another name for the same object.",
+    "2": "Map each mechanism to: by value → copies; by pointer → addresses you dereference; by reference → aliases.",
+    "3": "Default is by value (copies). Pointers hold addresses and use * to modify originals. References are aliases for the caller's variables."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how each mechanism behaves in a swap and what happens to the caller's x and y.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "In call-by-value swap, a and b are exchanged inside the function's activation record, but the caller's x and y stay unchanged (still 10 20).",
+     "weight": "core",
+     "evidence_hint": "Explains that only the copies swap and vanish on return, so cout prints 10 20."
+    },
+    {
+     "id": "mech2",
+     "point": "In call-by-pointer swap, a and b hold addresses of x and y; *a and *b write through to main's memory so the values become 20 10.",
+     "weight": "core",
+     "evidence_hint": "Describes swap(&x, &y), dereferencing pointers, and the swapped output 20 10."
+    },
+    {
+     "id": "mech3",
+     "point": "In call-by-reference swap, call syntax is swap(x, y) like by value, but because a and b are x and y, the exchange updates the originals to 20 10.",
+     "weight": "core",
+     "evidence_hint": "Notes ordinary call syntax with reference parameters that are the same objects as x and y."
+    },
+    {
+     "id": "mech4",
+     "point": "With references, no copies are made: reference parameters share main's storage (x/a and y/b name the same cells).",
+     "weight": "extended",
+     "evidence_hint": "Says x and a (and y and b) refer to the same storage rather than duplicated values."
+    }
+   ],
+   "probes": [
+    "Walk through swap by value, by pointer, and by reference: what happens to x and y in main after each call?"
+   ],
+   "hints": {
+    "1": "Start with by-value swap and ask whether main's variables can change.",
+    "2": "Contrast: by value swaps copies; by pointer swaps via *a/*b; by reference swaps because a/b are aliases.",
+    "3": "By value → still 10 20. By pointer with &x,&y and *a,*b → 20 10. By reference with swap(x,y) → 20 10 because a/b are x/y."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Separate argument-passing semantics from inlining, and state the space-versus-speed cost of inlining.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Inlining is a compiler optimisation about how a call is executed, independent of how arguments are passed.",
+     "weight": "core",
+     "evidence_hint": "Explicitly separates pass-by-reference/value/pointer from whether the call is inlined."
+    },
+    {
+     "id": "tr2",
+     "point": "Not inlined: the function body exists once (smaller executable) but each call pays for a jump and a return; inlined: code runs in place with no jump (faster) but the body is duplicated at every call site, enlarging the executable.",
+     "weight": "core",
+     "evidence_hint": "States the space-for-speed trade: one copy plus jump/return versus duplicated bodies and no jump."
+    },
+    {
+     "id": "tr3",
+     "point": "In modern C++ the inline keyword is only a suggestion; compilers such as GCC, Clang, and MSVC decide whether inlining is worthwhile by weighing speed gain against code-size cost.",
+     "weight": "extended",
+     "evidence_hint": "Says inline does not force inlining; the compiler chooses based on speed vs size."
+    }
+   ],
+   "probes": [
+    "If a call-by-reference function is also marked inline, what does inlining change—and what does it not change?"
+   ],
+   "hints": {
+    "1": "Inlining is about call execution, not about copies versus aliases.",
+    "2": "Compare one shared body with jump/return versus pasting the body at each call site.",
+    "3": "Inlining removes jump-and-return and may enlarge the binary; it does not change whether parameters are values, pointers, or references. inline is only a suggestion."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Identify why reference parameters are the idiomatic C++ choice when a function should modify the caller.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Reference parameters unite the clean call syntax of value passing with the power to modify the caller's data.",
+     "weight": "core",
+     "evidence_hint": "Says you call swap(x, y) like by value, yet the originals are modified."
+    },
+    {
+     "id": "app2",
+     "point": "Because of that combination of syntax and mutability, reference parameters are the idiomatic C++ choice for this role.",
+     "weight": "core",
+     "evidence_hint": "States references as the preferred/idiomatic mechanism when the callee should change caller state."
+    }
+   ],
+   "probes": [
+    "When you want a function to modify the caller's variables, why prefer pass-by-reference over pass-by-value or pass-by-pointer in idiomatic C++?"
+   ],
+   "hints": {
+    "1": "Compare call-site appearance and whether the originals can change.",
+    "2": "By value looks clean but cannot modify; by pointer can modify but needs & and *; references do both.",
+    "3": "Use int& aliases: same swap(x,y) syntax as by value, no copies, modifies caller—hence the idiomatic C++ choice."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Not inlined vs inlined",
+   "strong_answer": "Normal calls keep one copy of the machine code and pay jump-and-return at each site; inlining pastes the body into each call site for speed with no jump, but duplicates code and enlarges the executable. Argument-passing mode is independent of that choice."
+  },
+  {
+   "topic": "Pass by value vs pass by reference",
+   "strong_answer": "By value uses clean call syntax but only copies, so caller variables cannot change; by reference keeps that same call syntax while making parameters aliases that share the caller's storage and can modify originals."
+  },
+  {
+   "topic": "Pass by pointer vs pass by reference",
+   "strong_answer": "Both can modify the caller: pointers take addresses and require dereferencing; references are aliases with ordinary call syntax and are the idiomatic C++ choice for that power plus clean syntax."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming a by-value swap changes the caller's variables because the parameters were swapped inside the function.",
+   "correction": "Only the copies in the callee's activation record are exchanged; they vanish on return, so the caller's x and y remain 10 20."
+  },
+  {
+   "trap": "Treating identical call syntax swap(x, y) as proof that by-value and by-reference behave the same.",
+   "correction": "The call looks the same, but reference parameters are aliases for x and y, so the exchange updates the originals to 20 10."
+  },
+  {
+   "trap": "Thinking the inline keyword guarantees the function body is inlined.",
+   "correction": "In modern C++, inline is only a suggestion; compilers decide whether inlining is worthwhile by weighing speed against code size."
+  }
+ ]
+}

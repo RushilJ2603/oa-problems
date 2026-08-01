@@ -1,0 +1,223 @@
+{
+ "id": "cpp_s34_const_correctness_constexpr",
+ "title": "Const Correctness and constexpr",
+ "type": "FUND",
+ "relevance": "Interviewers use const/constexpr to test whether candidates can write immutable API contracts, read pointer declarations correctly, and distinguish runtime immutability from compile-time evaluation.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what const means, how to read const pointer declarations, and why const references are the default for large inputs.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A const variable must be initialised at declaration because it can never be assigned to later.",
+     "weight": "core",
+     "evidence_hint": "Says the compiler rejects later assignment; initialisation is mandatory."
+    },
+    {
+     "id": "fund2",
+     "point": "Right-to-left reading: start at the variable name and read backwards so each const and * binds to the token on its right.",
+     "weight": "core",
+     "evidence_hint": "Walks a declaration like const int* p or int* const p from the name outward."
+    },
+    {
+     "id": "fund3",
+     "point": "const int* (or int const*) is pointer-to-const: the pointer may reseat, but the pointee cannot be modified through it.",
+     "weight": "core",
+     "evidence_hint": "States reseating is OK and *p assignment is an error; notes the two spellings are equivalent."
+    },
+    {
+     "id": "fund4",
+     "point": "int* const is a const pointer: the address is fixed and must be initialised, but the pointee may be modified.",
+     "weight": "core",
+     "evidence_hint": "Says *p write is OK and reseating the pointer is an error."
+    },
+    {
+     "id": "fund5",
+     "point": "const T& aliases without copying and forbids modification—the efficient idiom for passing large objects.",
+     "weight": "extended",
+     "evidence_hint": "Mentions no copy plus cannot mutate; contrasts with pass-by-value safety and pass-by-reference cost."
+    }
+   ],
+   "probes": [
+    "How do you read const int* versus int* const, and what mutation does each forbid?",
+    "Why pass a large string as const std::string& instead of by value?"
+   ],
+   "hints": {
+    "1": "Think about which part is immutable: the pointer address or the data it points to.",
+    "2": "Read the declaration right-to-left from the name; then contrast pointer-to-const with const-pointer.",
+    "3": "const int* protects the int; int* const protects the pointer; const T& gives reference performance without allowing writes."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain const member functions, mutable, const parameters/returns, and how constexpr variables and functions evaluate.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "const after a member function means it does not modify the object's observable state; this becomes const ClassName* const.",
+     "weight": "core",
+     "evidence_hint": "Mentions trailing const, enforcement by the compiler, and the const this pointer."
+    },
+    {
+     "id": "mech2",
+     "point": "mutable lets a member change inside a const member function for bookkeeping that does not alter logical external state.",
+     "weight": "core",
+     "evidence_hint": "Gives caching, access counts, or mutexes as the usual reason for the escape hatch."
+    },
+    {
+     "id": "mech3",
+     "point": "const on a by-value parameter only freezes the callee's local copy and does not affect the caller.",
+     "weight": "extended",
+     "evidence_hint": "Says it is an implementation detail; caller-visible interface is unchanged."
+    },
+    {
+     "id": "mech4",
+     "point": "Returning const T& exposes internal data without a copy and without letting the caller modify it; returning a const value by value is generally obsolete and inhibits move semantics.",
+     "weight": "core",
+     "evidence_hint": "Prefers const reference getters; notes const-by-value return is outdated in modern C++."
+    },
+    {
+     "id": "mech5",
+     "point": "constexpr means the value is known at compile time; a constexpr variable must be initialised with a constant expression.",
+     "weight": "core",
+     "evidence_hint": "Contrasts with runtime input; rejects initialising constexpr from a non-constant like cin input."
+    },
+    {
+     "id": "mech6",
+     "point": "A constexpr function can run at compile time when arguments are constant expressions, and falls back to run time otherwise.",
+     "weight": "core",
+     "evidence_hint": "Gives compile-time call with a literal argument versus runtime call with a non-constant variable."
+    }
+   ],
+   "probes": [
+    "What does const after a member function mean, and how does mutable fit?",
+    "When does a constexpr function run at compile time versus run time?"
+   ],
+   "hints": {
+    "1": "Trailing const is a promise about the object; constexpr is about when the value is known.",
+    "2": "Describe this inside a const method, then the compile-time-if-possible rule for constexpr functions.",
+    "3": "this is const ClassName* const; mutable is for non-logical state; constexpr functions evaluate at compile time only with constant-expression arguments."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast const versus constexpr, consteval, constinit, and the API versus optimisation motives for const-correctness.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "const is runtime immutability after initialisation; constexpr requires full compile-time evaluability; all constexpr variables are implicitly const, but not all const variables are constexpr.",
+     "weight": "core",
+     "evidence_hint": "States both directions of the implication clearly: constexpr ⇒ const, not the reverse."
+    },
+    {
+     "id": "tr2",
+     "point": "Const-correctness serves API contracts (e.g. const Widget& means read-only) and enables more aggressive compiler optimisations when values cannot change.",
+     "weight": "core",
+     "evidence_hint": "Names both intent communication and optimisation of registers/memory accesses."
+    },
+    {
+     "id": "tr3",
+     "point": "Since C++17, constexpr variables are implicitly inline, so they can be defined in headers without multiple-definition errors (historically addressed with inline).",
+     "weight": "extended",
+     "evidence_hint": "Mentions C++17 implicit inline and safe header definitions across translation units."
+    },
+    {
+     "id": "tr4",
+     "point": "consteval (C++20) must evaluate at compile time; constexpr only can. constinit (C++20) forces compile-time initialisation with static/thread storage without making the variable immutable.",
+     "weight": "extended",
+     "evidence_hint": "Separates mandatory compile-time functions from constexpr's optional path, and constinit from const."
+    }
+   ],
+   "probes": [
+    "What is the difference between const and constexpr?",
+    "How do consteval and constinit differ from constexpr?"
+   ],
+   "hints": {
+    "1": "One is about not changing later; the other is about knowing the value during compilation.",
+    "2": "Map const → runtime immutability, constexpr → may be compile-time, consteval → must be, constinit → init-only constraint.",
+    "3": "constexpr variables are const; consteval is an immediate function; constinit avoids static-init-order issues without immutability."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply const-correctness propagation and choose the right const/constexpr tool in APIs and headers.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Const-correctness must propagate: a const object may only be passed to const parameters or have its const member functions called.",
+     "weight": "core",
+     "evidence_hint": "Describes the outward propagation rule and what you can legally do with a const object."
+    },
+    {
+     "id": "app2",
+     "point": "Prefer const T& for large read-only parameters and const T& getters for cheap read-only exposure of members.",
+     "weight": "core",
+     "evidence_hint": "Applies the printMessage(const std::string&) and Config::getName() patterns."
+    },
+    {
+     "id": "app3",
+     "point": "Use constexpr for true compile-time constants and header-safe shared constants; use consteval when evaluation must be compile-time; use constinit when only initialisation must be compile-time.",
+     "weight": "extended",
+     "evidence_hint": "Picks the tool by whether immutability, optional compile-time eval, mandatory eval, or init-only is required."
+    }
+   ],
+   "probes": [
+    "If you hold a const object, what are you allowed to call or pass it to?",
+    "When would you put constexpr in a header versus use consteval or constinit?"
+   ],
+   "hints": {
+    "1": "Const spreads through the API surface—what happens if one layer forgets const?",
+    "2": "Start from a const object and list legal calls; then match constexpr/consteval/constinit to the need.",
+    "3": "Only const methods/parameters; constexpr in headers is implicitly inline since C++17; consteval requires compile-time; constinit initialises without freezing later writes."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "const vs constexpr",
+   "strong_answer": "const promises the object will not be modified after initialisation (runtime immutability). constexpr requires the value to be fully evaluable at compile time. Every constexpr variable is implicitly const; a const variable need not be constexpr."
+  },
+  {
+   "topic": "pointer-to-const vs const-pointer",
+   "strong_answer": "const int* / int const* protects the pointee (pointer may reseat). int* const protects the pointer address (pointee may change). const int* const freezes both."
+  },
+  {
+   "topic": "const by-value return vs const T& return",
+   "strong_answer": "Returning const by value is generally obsolete in modern C++ and inhibits move semantics. Returning const T& is the common way to expose internal data without copying or allowing modification."
+  },
+  {
+   "topic": "constexpr vs consteval vs constinit",
+   "strong_answer": "constexpr functions can run at compile time or fall back to run time. consteval (C++20) must run at compile time. constinit (C++20) demands compile-time initialisation for static/thread storage without making the variable immutable."
+  },
+  {
+   "topic": "constexpr vs historical inline for header constants",
+   "strong_answer": "inline was historically used to avoid multiple-definition errors for header variables. Since C++17, constexpr variables are implicitly inline and can be defined directly in headers safely."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating const int* and int* const as the same.",
+   "correction": "They differ: const int* protects the data; int* const protects the pointer address."
+  },
+  {
+   "trap": "Assuming a constexpr function always runs at compile time.",
+   "correction": "It runs at compile time only with constant-expression arguments; otherwise it falls back to run time."
+  },
+  {
+   "trap": "Thinking const after a member function is only documentation.",
+   "correction": "The compiler enforces it: this becomes const ClassName* const, and non-mutable members cannot be modified."
+  },
+  {
+   "trap": "Returning const by value from accessors in modern C++.",
+   "correction": "That pattern is generally obsolete and inhibits move semantics; prefer returning const T& when exposing members read-only."
+  },
+  {
+   "trap": "Assuming every const variable is a compile-time constant.",
+   "correction": "const is runtime immutability; only constexpr (or consteval for functions) requires compile-time evaluability. All constexpr variables are const, not vice versa."
+  }
+ ]
+}

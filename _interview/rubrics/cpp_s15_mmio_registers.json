@@ -1,0 +1,198 @@
+{
+ "id": "cpp_s15_mmio_registers",
+ "title": "Memory-Mapped I/O & Registers",
+ "type": "FUND",
+ "relevance": "Tests whether candidates understand bare-metal hardware access: MMIO, volatile, and safe bit-level register updates without an OS.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that peripheral registers are mapped into the CPU address space and that reads/writes trigger hardware, not ordinary storage.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Memory-Mapped I/O maps peripheral control and data registers into the same address space as program memory and RAM.",
+     "weight": "core",
+     "evidence_hint": "Says specific addresses are wired to peripherals over the bus, so a read/write hits hardware control circuits rather than RAM."
+    },
+    {
+     "id": "fund2",
+     "point": "Reading or writing an MMIO address triggers a hardware action; the location may represent a physical wire or peripheral circuit, not data storage.",
+     "weight": "core",
+     "evidence_hint": "Uses the post-office-box analogy or states that some addresses drive actions (e.g. send a fax) or report live sensor state."
+    },
+    {
+     "id": "fund3",
+     "point": "MMIO reads and writes are not guaranteed to be symmetrical: a write may start an action while a read may return status, not the last written value.",
+     "weight": "extended",
+     "evidence_hint": "Names the storage trap and notes a ticking timer address can yield different values on consecutive reads."
+    }
+   ],
+   "probes": [
+    "If an address maps to a hardware timer that is constantly ticking upward, what happens if you read that same address twice in a row?",
+    "On a bare-metal MCU, how does software talk to GPIO or UART without an OS?"
+   ],
+   "hints": {
+    "1": "Think about whether every address is ordinary RAM.",
+    "2": "The bus routes by address: some ranges are RAM/Flash, others are fixed peripheral registers.",
+    "3": "MMIO puts peripheral registers in the same address space; read/write there triggers hardware, and read-back need not match what you wrote."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how C reaches a hardcoded MMIO address with the correct width, volatile, and bit-level RMW, including the CMSIS struct pattern.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Access a register by casting a hardcoded address to a pointer to volatile uint32_t and dereferencing it (or via a macro that does that).",
+     "weight": "core",
+     "evidence_hint": "Writes the idiom *(volatile uint32_t *)0x40020014 = ... or #define GPIOA_ODR (*(volatile uint32_t *)0x40020014)."
+    },
+    {
+     "id": "mech2",
+     "point": "volatile tells the compiler the value may change outside program control or that writes have side effects, so it must not cache the value or optimize away reads/writes.",
+     "weight": "core",
+     "evidence_hint": "Explains that without volatile a poll like while (*ptr == 0); can become if (*ptr == 0) while (1); under optimization."
+    },
+    {
+     "id": "mech3",
+     "point": "Exact-width types such as uint32_t matter because the silicon expects a full-width bus write; a narrower type may be ignored or fault.",
+     "weight": "extended",
+     "evidence_hint": "Mentions using <stdint.h> fixed-width types so the bus transaction width matches the register."
+    },
+    {
+     "id": "mech4",
+     "point": "Bit RMW uses REG |= (1u << n) to set, REG &= ~(1u << n) to clear, and REG ^= (1u << n) to toggle.",
+     "weight": "core",
+     "evidence_hint": "States each as a read-modify-write using those bitwise forms."
+    },
+    {
+     "id": "mech5",
+     "point": "CMSIS-style access models a peripheral as a struct of volatile uint32_t fields at sequential offsets, cast from a base address, with reserved padding for silicon gaps.",
+     "weight": "extended",
+     "evidence_hint": "Shows typedef struct { ... } GPIO_TypeDef; #define GPIOA ((GPIO_TypeDef *) 0x40020000); then GPIOA->ODR, and padding like uint32_t _reserved[...] for missing registers."
+    }
+   ],
+   "probes": [
+    "How do you write bit 5 of the register at 0x40020014 from C?",
+    "What happens if a peripheral pointer is not volatile and you compile with -O2?",
+    "How does a CMSIS-style struct get the compiler to compute register offsets for you?"
+   ],
+   "hints": {
+    "1": "Start from a raw integer address and make the compiler treat it as a typed memory location.",
+    "2": "Cast to volatile uint32_t *, dereference; use |= / &= ~ / ^= for single bits; group registers in a struct at a base.",
+    "3": "*(volatile uint32_t *)0x40020014 = (1u << 5); volatile blocks cache/elision; CMSIS maps GPIOA->ODR to base+0x14 with reserved fields for gaps."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast modeling choices and register semantics that change how safely you update hardware state.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "For hardware registers, prefer explicit bitwise masks and shifts over C bit-fields because bit-field layout within an integer is implementation-defined.",
+     "weight": "core",
+     "evidence_hint": "Says packing order can flip across compilers or versions (e.g. GCC vs Clang), so masks/shifts are required."
+    },
+    {
+     "id": "tr2",
+     "point": "Write-1-to-clear (W1C) clears a flag by writing 1 to that bit; writing 0 has no effect, which lets you clear one flag without an RMW hazard on neighbors.",
+     "weight": "core",
+     "evidence_hint": "Contrasts W1C with naively writing 0, and links it to avoiding clobbering neighboring flags."
+    },
+    {
+     "id": "tr3",
+     "point": "REG |= (1u << n) looks like one C action but compiles to load, modify, and store; an interrupt between load and store can be overwritten by the late store.",
+     "weight": "extended",
+     "evidence_hint": "Describes the three-instruction RMW race with an interrupt that updates the same register."
+    }
+   ],
+   "probes": [
+    "Why avoid C bit-fields when modeling register bits?",
+    "How does Write-1-to-Clear differ from clearing a flag by writing 0?",
+    "Is REG |= (1u << 5); atomic with respect to interrupts?"
+   ],
+   "hints": {
+    "1": "Ask what the C standard guarantees about bit packing, and what a single |= really becomes in assembly.",
+    "2": "Bit-field layout is implementation-defined; RMW is load/modify/store; W1C uses write-1 to clear without touching other bits via RMW.",
+    "3": "Always use masks/shifts; W1C write-1 clears one flag safely; |= is three instructions and can clobber an interrupt’s update."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply MMIO patterns to GPIO bring-up/toggle and to polling a volatile status flag.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A GPIO blink path enables the peripheral clock, sets pin mode with clear-then-set on MODER, then toggles ODR with ^= in a loop.",
+     "weight": "core",
+     "evidence_hint": "Mentions RCC clock enable (e.g. AHB1ENR bit 0), MODER bits for pin 5 cleared then set to output, then ODR ^= (1u << 5)."
+    },
+    {
+     "id": "app2",
+     "point": "Polling a status flag must re-read a volatile register each iteration so the wait exits when hardware sets the flag.",
+     "weight": "core",
+     "evidence_hint": "Shows while ((uart->STATUS & UART_TX_EMPTY_FLAG) == 0) and credits volatile on the member for a fresh read every loop."
+    },
+    {
+     "id": "app3",
+     "point": "When a reference manual has a reserved gap between registers, the CMSIS-style struct must insert reserved padding so later members land at the correct offsets.",
+     "weight": "extended",
+     "evidence_hint": "For CTRL at 0x00, RELOAD at 0x04, gap at 0x08, COUNT at 0x0C, inserts a reserved uint32_t (or equivalent) at the gap."
+    }
+   ],
+   "probes": [
+    "Walk through enabling a GPIO clock, configuring a pin as output, and toggling it via MMIO.",
+    "Why must the STATUS member be volatile in a UART TX-empty poll loop?",
+    "How do you model a timer with CTRL, RELOAD, a reserved gap, then COUNT?"
+   ],
+   "hints": {
+    "1": "Separate clock enable, mode config, and the toggle/poll loop.",
+    "2": "Clock bit in RCC, clear/set MODER then ^= ODR; poll STATUS & flag with volatile; pad structs for silicon gaps.",
+    "3": "RCC->AHB1ENR |= (1u << 0); MODER clear 3u<<10 then set 1u<<10; ODR ^= (1u << 5); while (!(STATUS & (1u<<7))); insert reserved field so COUNT is at 0x0C."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "C bit-fields vs explicit bitwise masks and shifts",
+   "strong_answer": "Bit-field layout in an integer is implementation-defined, so a compiler change can silently reorder hardware bits; for registers, always drive bits with explicit masks and shifts."
+  },
+  {
+   "topic": "Hundreds of per-register macros vs CMSIS-style peripheral structs",
+   "strong_answer": "A struct of volatile uint32_t members at sequential offsets, pointed at the peripheral base, lets the compiler compute offsets and stays aligned with silicon if reserved padding fills gaps—cleaner than defining each register macro by hand."
+  },
+  {
+   "topic": "Ordinary RMW clear vs Write-1-to-Clear",
+   "strong_answer": "Clearing via RMW can race with interrupts on neighboring bits; W1C clears by writing 1 to the flag bit while write-0 is a no-op, so one flag can be cleared without RMW on the others."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming a value written to an MMIO address can always be read back unchanged.",
+   "correction": "Writes may trigger actions and reads may return live status; consecutive reads of a ticking timer can differ."
+  },
+  {
+   "trap": "Polling with while (*ptr == 0); when ptr is not volatile.",
+   "correction": "The compiler may turn it into if (*ptr == 0) while (1); so the hardware flag is never re-read and the loop hangs, especially under -O2."
+  },
+  {
+   "trap": "Treating REG |= (1u << n); as one atomic hardware update.",
+   "correction": "It is load, modify, store; an interrupt that updates the same register between load and store can be overwritten by the delayed store."
+  },
+  {
+   "trap": "Modeling register bits with C bit-fields for portability.",
+   "correction": "Bit-field packing order is implementation-defined; use explicit masks and shifts instead."
+  },
+  {
+   "trap": "Clearing a W1C error flag by writing 0.",
+   "correction": "Write 1 to that bit to clear; writing 0 has no effect."
+  },
+  {
+   "trap": "Ignoring side effects of a register read.",
+   "correction": "A read can clear a buffer (e.g. UART data register), removing the byte from the incoming queue."
+  }
+ ]
+}

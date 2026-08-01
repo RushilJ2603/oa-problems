@@ -1,0 +1,257 @@
+{
+ "id": "c_s18_rtos",
+ "title": "RTOS & Real-Time Concepts",
+ "type": "FUND",
+ "relevance": "Tests whether a candidate understands deadline-driven correctness, preemptive scheduling, and concurrency hazards that show up in embedded and systems SDE interviews.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what makes a system real-time and when a bare-metal superloop is insufficient.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A real-time system requires both logical correctness and meeting a strict deadline; determinism matters more than raw throughput.",
+     "weight": "core",
+     "evidence_hint": "Contrasts a fast non-deadline computation with a controller that fails if it misses its timing budget."
+    },
+    {
+     "id": "fund2",
+     "point": "Hard real-time treats a missed deadline as total system failure; firm makes the late result useless without destroying the system; soft tolerates degraded performance.",
+     "weight": "core",
+     "evidence_hint": "Gives matching examples such as flight control/airbags, dropped late video frames, and UI updates."
+    },
+    {
+     "id": "fund3",
+     "point": "A bare-metal superloop runs handlers sequentially in an infinite main loop, so a slow call can starve later critical work.",
+     "weight": "extended",
+     "evidence_hint": "Describes cooperative while(1) sequencing and how one long handler delays the next."
+    },
+    {
+     "id": "fund4",
+     "point": "An RTOS adds preemptive multitasking so a high-priority task can interrupt a low-priority one and bound response time when independent timing events get too complex for a linear loop.",
+     "weight": "core",
+     "evidence_hint": "States you need an RTOS when timing dependencies between independent events outgrow a superloop."
+    }
+   ],
+   "probes": [
+    "What distinguishes a real-time system from a system that is merely fast?",
+    "When would you move from a superloop to an RTOS?"
+   ],
+   "hints": {
+    "1": "Think about deadlines, not just throughput.",
+    "2": "Compare hard, firm, and soft misses, then contrast sequential cooperative looping with preemption.",
+    "3": "Correctness requires finishing before a deadline; hard/firm/soft differ in consequence of a miss; a superloop starves critical work while an RTOS can preempt."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain tasks, scheduling, states, context switches, IPC primitives, and ISR deferral under an RTOS.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Each RTOS task is an infinite loop with its own private stack and saved CPU-register context so it appears to own the CPU.",
+     "weight": "core",
+     "evidence_hint": "Mentions per-task stack plus register context to create concurrent virtual threads on one core."
+    },
+    {
+     "id": "mech2",
+     "point": "A periodic system-tick interrupt (for example every 1ms), or a yield, triggers the scheduler to run the highest-priority ready task.",
+     "weight": "core",
+     "evidence_hint": "Names the tick and priority-based selection at tick or yield."
+    },
+    {
+     "id": "mech3",
+     "point": "Task states include Running (one per core), Ready, Blocked (waiting for an event), and Suspended (explicitly paused).",
+     "weight": "core",
+     "evidence_hint": "Lists all four states with the one-running-per-core rule."
+    },
+    {
+     "id": "mech4",
+     "point": "A context switch pushes the outgoing task's registers onto its stack, saves its stack pointer, loads the incoming stack pointer, and restores its registers—preemptive priority-based scheduling.",
+     "weight": "extended",
+     "evidence_hint": "Walks through save/restore of registers and stack pointers."
+    },
+    {
+     "id": "mech5",
+     "point": "A blocked delay does not busy-spin; the scheduler marks the task Blocked and gives the CPU to others until the wait ends.",
+     "weight": "extended",
+     "evidence_hint": "Corrects the while-loop-spin misconception for something like vTaskDelay."
+    },
+    {
+     "id": "mech6",
+     "point": "Mutexes protect shared resources with ownership; semaphores signal without ownership (binary flag or counting resources); queues pass copied data as a thread-safe FIFO; event flags are lightweight bitmasks.",
+     "weight": "core",
+     "evidence_hint": "Distinguishes ownership on mutexes, no owner on semaphores, copy-based queues, and bitmask events."
+    },
+    {
+     "id": "mech7",
+     "point": "ISRs preempt everything and must stay short: clear the hardware flag, wake a task via FromISR primitives (semaphore/queue), and never call standard blocking RTOS APIs from an interrupt.",
+     "weight": "core",
+     "evidence_hint": "Describes defer-to-task pattern and FromISR-only calls."
+    },
+    {
+     "id": "mech8",
+     "point": "Interrupt latency is time from hardware trigger to the first ISR instruction; scheduling latency is time from the ISR making a task Ready until that task is Running.",
+     "weight": "extended",
+     "evidence_hint": "Defines both latencies as the two responsiveness numbers."
+    }
+   ],
+   "probes": [
+    "Walk through what happens on a context switch when a higher-priority task becomes ready.",
+    "How should an ISR interact with RTOS tasks, and what must it never do?"
+   ],
+   "hints": {
+    "1": "Start from per-task stack/context and the scheduler tick.",
+    "2": "Cover states, then IPC primitives, then why ISR work is deferred via FromISR APIs.",
+    "3": "Tick/yield picks highest priority; switch saves/restores context; Blocked waits without spinning; ISR clears hardware, gives FromISR, exits; interrupt vs scheduling latency."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Surface priority inversion, deadlock conditions, schedulability limits, and memory allocation choices.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Priority inversion occurs when a high-priority task waits on a lock held by a low-priority task that is then preempted by a medium-priority task, so the high task effectively runs at the low priority.",
+     "weight": "core",
+     "evidence_hint": "Retells VIP/janitor/customer or the Mars Pathfinder 1997 bus mutex story."
+    },
+    {
+     "id": "tr2",
+     "point": "Priority inheritance temporarily elevates the lock-holding low-priority task to the blocked high priority so medium tasks cannot preempt it until the mutex is released.",
+     "weight": "core",
+     "evidence_hint": "States elevate-on-block, then drop priority on give."
+    },
+    {
+     "id": "tr3",
+     "point": "Use a mutex rather than a binary semaphore to protect shared resources because only ownership enables priority inheritance and prevents unbounded inversion.",
+     "weight": "core",
+     "evidence_hint": "Explicitly ties mutex ownership to inheritance support."
+    },
+    {
+     "id": "tr4",
+     "point": "Deadlock needs all four Coffman conditions: mutual exclusion, hold and wait, no preemption of locks, and circular wait; consistent lock ordering breaks circular wait.",
+     "weight": "extended",
+     "evidence_hint": "Lists the four conditions and the acquire-order fix."
+    },
+    {
+     "id": "tr5",
+     "point": "Under rate-monotonic scheduling, shorter-period tasks get higher priority; if utilization stays below roughly 69%, independent tasks are mathematically guaranteed to meet deadlines.",
+     "weight": "extended",
+     "evidence_hint": "States shortest-period-highest-priority and the roughly 69% bound."
+    },
+    {
+     "id": "tr6",
+     "point": "Dynamic malloc/free is discouraged because it is non-deterministic and risks heap fragmentation; high-reliability systems statically allocate stacks and queues at compile time.",
+     "weight": "extended",
+     "evidence_hint": "Rejects heap allocation for timing predictability and fragmentation risk."
+    }
+   ],
+   "probes": [
+    "Explain priority inversion and how priority inheritance fixes it.",
+    "Why is a mutex preferred over a binary semaphore for protecting a shared resource?"
+   ],
+   "hints": {
+    "1": "Picture high blocked on low while medium runs.",
+    "2": "Connect inversion to inheritance/ceiling and mutex ownership; mention Coffman or RMS if you go deeper.",
+    "3": "Medium preempts the lock holder → unbounded wait; inheritance boosts the holder; mutex ownership enables that; order locks to break circular wait; RMS uses short period → high priority with roughly 69% utilization bound."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply RTOS patterns to concrete task communication, inheritance timelines, and deferred interrupt handling.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Producer/consumer tasks should exchange data through a queue: sender may block briefly if full, receiver can block until data arrives, so the scheduler parks waiting tasks instead of sharing memory unsafely.",
+     "weight": "core",
+     "evidence_hint": "Describes xQueueSend/xQueueReceive-style blocking and copy-based handoff."
+    },
+    {
+     "id": "app2",
+     "point": "In an inheritance scenario, when High blocks on a mutex held by Low, Low is raised to High's priority so Medium cannot preempt Low until the mutex is given and priorities restore.",
+     "weight": "core",
+     "evidence_hint": "Steps through Low takes, High blocks and boosts Low, Medium cannot preempt, give, then High resumes."
+    },
+    {
+     "id": "app3",
+     "point": "Deferred interrupt processing uses an ISR-safe give (for example xSemaphoreGiveFromISR), optional yield-from-ISR if a higher-priority task woke, and a handler task that takes the semaphore then processes the buffer.",
+     "weight": "core",
+     "evidence_hint": "Fills in FromISR give plus portYIELD_FROM_ISR and a blocking handler task."
+    },
+    {
+     "id": "app4",
+     "point": "Equal highest-priority tasks that never block typically time-slice each tick, wasting CPU on constant context switches.",
+     "weight": "extended",
+     "evidence_hint": "Warns about round-robin thrashing among always-ready peers."
+    },
+    {
+     "id": "app5",
+     "point": "Underestimating a task stack risks silent overflow into adjacent task memory such as a Task Control Block; a watchdog timer resets the CPU if software fails to kick it because of deadlock or a hung loop.",
+     "weight": "extended",
+     "evidence_hint": "Links stack overflow to bizarre crashes and WDT kick/reset as freeze recovery."
+    }
+   ],
+   "probes": [
+    "Design a safe producer/consumer between two FreeRTOS-style tasks.",
+    "How would you structure an ISR and handler task for DMA completion?"
+   ],
+   "hints": {
+    "1": "Prefer queues or FromISR signaling over shared buffers in the ISR.",
+    "2": "Sketch block-on-queue/semaphore paths and what inheritance does while a mutex is held.",
+    "3": "Queue send/receive with blocking; inheritance boosts Low until give; ISR uses GiveFromISR and yield-from-ISR; handler takes then processes; watch equal-priority thrash, stack overflow, and watchdog kick."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Superloop vs RTOS",
+   "strong_answer": "A superloop is simple cooperative sequencing but one slow handler delays everything; an RTOS preempts by priority so independent deadline-driven events stay responsive when the linear loop becomes too complex."
+  },
+  {
+   "topic": "Mutex vs binary semaphore for shared resources",
+   "strong_answer": "A binary semaphore has no owner, so the RTOS cannot apply priority inheritance; a mutex has ownership and can elevate the holder, preventing unbounded priority inversion."
+  },
+  {
+   "topic": "Dynamic allocation vs static allocation",
+   "strong_answer": "malloc/free take variable time and can fragment the heap, breaking determinism; statically allocating stacks and queues at compile time keeps timing predictable in high-reliability systems."
+  },
+  {
+   "topic": "Process work in ISR vs defer to a task",
+   "strong_answer": "ISRs preempt everything and must stay short—clear the flag and wake a task via FromISR APIs; heavy processing belongs in a high-priority handler task so interrupt and scheduling latency stay bounded."
+  },
+  {
+   "topic": "Oversize vs undersize task stacks",
+   "strong_answer": "Overestimating wastes scarce SRAM; underestimating causes stack overflow that can silently corrupt an adjacent task's memory (often the TCB) and produce hard-to-debug crashes."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming vTaskDelay or other blocked waits spin in a while loop burning CPU.",
+   "correction": "The scheduler marks the task Blocked, swaps it out, and only reschedules it when the wait ends, giving the CPU to other tasks."
+  },
+  {
+   "trap": "Two always-ready tasks sharing the exact same highest priority.",
+   "correction": "They typically time-slice every tick and waste cycles on constant context switching."
+  },
+  {
+   "trap": "Protecting a shared resource with a binary semaphore and expecting priority inheritance.",
+   "correction": "Without ownership the RTOS cannot inherit priority; use a mutex so the holder can be elevated."
+  },
+  {
+   "trap": "Acquiring multiple locks in inconsistent orders across tasks.",
+   "correction": "That enables circular wait; always take locks in the same global order (for example Lock X before Lock Y) to make deadlock impossible."
+  },
+  {
+   "trap": "Calling standard blocking RTOS APIs from an ISR.",
+   "correction": "Use only FromISR variants, keep the ISR short, and defer work by giving a semaphore or sending to a queue to a handler task."
+  },
+  {
+   "trap": "Relying on malloc/free in hard real-time paths.",
+   "correction": "Allocation time is non-deterministic and fragmentation is a risk; allocate stacks and queues statically at compile time."
+  }
+ ]
+}

@@ -1,0 +1,177 @@
+{
+ "id": "cpp_s22_constructors",
+ "title": "Constructors",
+ "type": "FUND",
+ "relevance": "Constructors are a core C++ OOP check in SDE interviews and OAs—initialization rules, copy semantics, and resource ownership trip up candidates constantly.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a constructor is and the kinds a class can have.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A constructor is a special member function that runs automatically when an object is created to initialise the object's data; it has the same name as the class and no return type (not even void).",
+     "weight": "core",
+     "evidence_hint": "Names same-as-class, no return type, runs on object creation for initialization."
+    },
+    {
+     "id": "fund2",
+     "point": "The four kinds are default (compiler-supplied when none written), non-parameterised (user-written, no args), parameterised (takes args), and copy (builds from an existing object).",
+     "weight": "core",
+     "evidence_hint": "Lists default vs non-parameterised vs parameterised vs copy with the Rectangle examples."
+    },
+    {
+     "id": "fund3",
+     "point": "Constructors are overloaded by parameter lists; default arguments can collapse the non-parameterised and parameterised versions into one constructor.",
+     "weight": "extended",
+     "evidence_hint": "Mentions overload by parameter list and Rectangle(int l = 0, int b = 0) serving both call forms."
+    }
+   ],
+   "probes": [
+    "What is a constructor, and what kinds can a C++ class have?"
+   ],
+   "hints": {
+    "1": "Think about what runs when you write Rectangle r1; versus Rectangle r2(10, 5); versus Rectangle r3(r2).",
+    "2": "Cover same-name/no-return-type, then default, non-parameterised, parameterised, and copy.",
+    "3": "A constructor initialises on creation; compiler default leaves members uninitialised or value-initialised; you can overload or use defaults like Rectangle(int l = 0, int b = 0)."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how constructors initialise members and how C++11 controls generation and conversions.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "The member initialiser list (after the parameter list and a colon) does single-step direct initialisation; body assignment is two-step: default-construct then assign.",
+     "weight": "core",
+     "evidence_hint": "Contrasts : length(l), breadth(b) with assignment in the body and names the two-step vs one-step difference."
+    },
+    {
+     "id": "mech2",
+     "point": "const members, reference members, and base class subobjects without a default constructor must be initialised via the member initialiser list.",
+     "weight": "core",
+     "evidence_hint": "Lists exactly those three cases that cannot be assigned after creation."
+    },
+    {
+     "id": "mech3",
+     "point": "Members in the initialiser list are initialised in class declaration order, not the order written in the list.",
+     "weight": "extended",
+     "evidence_hint": "Says length is still initialised first even if the list writes breadth before length."
+    },
+    {
+     "id": "mech4",
+     "point": "C++11 NSDMI sets in-class defaults; an initialiser list overrides them; delegating constructors call another constructor of the same class via the initialiser list; = default requests the compiler version and = delete forbids a constructor; a single-argument constructor is an implicit conversion unless marked explicit.",
+     "weight": "extended",
+     "evidence_hint": "Covers NSDMI, delegation like Rectangle() : Rectangle(1, 1), = default/= delete, and explicit blocking printString(50)."
+    }
+   ],
+   "probes": [
+    "Why prefer the member initialiser list over assignment in the body, and what else can constructors do in modern C++?"
+   ],
+   "hints": {
+    "1": "Start with how members get their first value—list versus body.",
+    "2": "Then name what must use the list, declaration-order rule, NSDMI, delegation, explicit, and = default/= delete.",
+    "3": "List is more efficient for object members and mandatory for const, references, and non-default-constructible bases; declaration order wins; explicit stops silent conversions."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Weigh initialisation styles and copy strategies the file contrasts.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "For primitive types like int the performance difference between body assignment and the initialiser list is negligible; for complex object members the list avoids a wasted default construction.",
+     "weight": "core",
+     "evidence_hint": "States negligible cost for int and wasted default construction for complex members."
+    },
+    {
+     "id": "tr2",
+     "point": "Compiler default copy is member-as-is (shallow for pointers—both objects share one heap block); a deep copy allocates a fresh block and copies contents so each object owns an independent array.",
+     "weight": "core",
+     "evidence_hint": "Contrasts p = t.p with new int[a] plus element copy, and why pointer-owning classes need deep copy."
+    },
+    {
+     "id": "tr3",
+     "point": "NSDMI reduces boilerplate across constructors and prevents uninitialised members if a constructor forgets a member; the initialiser list still overrides those defaults when provided.",
+     "weight": "extended",
+     "evidence_hint": "Ties in-class defaults to less forgetting/boilerplate and list override."
+    }
+   ],
+   "probes": [
+    "When is the member initialiser list worth it versus body assignment, and when is shallow copy wrong?"
+   ],
+   "hints": {
+    "1": "Compare cheap ints to members that are objects or owning pointers.",
+    "2": "Separately contrast default memberwise copy with allocating your own array in the copy constructor.",
+    "3": "Prefer the list for complex members and required cases; deep-copy pointer-owned resources so destroy/modify of one does not corrupt the other."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply constructor rules to safe APIs and owning types.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Mark a single-argument constructor explicit when silent conversions are dangerous, so call sites must construct explicitly (e.g. String(50)) instead of passing a raw int.",
+     "weight": "core",
+     "evidence_hint": "Uses the String(int size) / printString(50) story and explicit making the implicit call a compiler error."
+    },
+    {
+     "id": "app2",
+     "point": "Whenever a class manages a resource through a pointer, its copy constructor must perform a deep copy so objects are not entangled and both do not try to manage one block.",
+     "weight": "core",
+     "evidence_hint": "States the owning-pointer rule and the Test deep-copy pattern with a separate array."
+    },
+    {
+     "id": "app3",
+     "point": "Use = default for the compiler-generated default constructor and = delete on the copy constructor to forbid copying (NonCopyable pattern).",
+     "weight": "extended",
+     "evidence_hint": "Cites NonCopyable() = default and NonCopyable(const NonCopyable&) = delete."
+    }
+   ],
+   "probes": [
+    "How would you stop implicit conversions from a single-arg constructor, and how should a class that owns a heap array copy?"
+   ],
+   "hints": {
+    "1": "Think about String taking an int size and a class with an int* to a new[] buffer.",
+    "2": "One knob is explicit; the other is deep copy or deleting copy.",
+    "3": "explicit String(int); deep copy with new int[a] and element copy, or = delete the copy constructor for non-copyable types."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Member initialiser list vs assignment in the constructor body",
+   "strong_answer": "The list is single-step direct initialisation; body assignment default-constructs then assigns. Prefer the list for complex object members (avoids wasted default construction) and whenever const, reference, or non-default-constructible base members require it; for int the cost difference is negligible."
+  },
+  {
+   "topic": "Shallow copy vs deep copy",
+   "strong_answer": "Default/memberwise copy of a pointer is shallow—both objects share one heap block and become entangled. Deep copy allocates a fresh block and copies elements so each object owns an independent array; required when the class manages a resource through a pointer."
+  },
+  {
+   "topic": "Separate no-arg constructor vs one constructor with default arguments",
+   "strong_answer": "Default arguments can collapse non-parameterised and parameterised into one, but providing both Rectangle(int l = 0, int b = 0) and Rectangle() makes Rectangle r; ambiguous."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Providing both a constructor with all-default arguments and a separate no-argument constructor.",
+   "correction": "The compiler reports ambiguity on Rectangle r; because both are valid matches—keep only one of those forms."
+  },
+  {
+   "trap": "Assuming initialiser-list order is the order written in the list.",
+   "correction": "Members initialise in declaration order in the class; match the list to declaration order so dependent initialisations are not wrong."
+  },
+  {
+   "trap": "Leaving a single-argument constructor non-explicit.",
+   "correction": "It acts as an implicit conversion (e.g. printString(50) becomes String(50)); mark it explicit so only explicit construction compiles."
+  },
+  {
+   "trap": "Relying on the compiler copy constructor when a member is an owning pointer.",
+   "correction": "That is a shallow copy (p = t.p); implement a deep copy that allocates and copies the array, or delete copying if the type should not be copied."
+  }
+ ]
+}

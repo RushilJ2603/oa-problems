@@ -1,0 +1,197 @@
+{
+ "id": "cpp_s09_preprocessor",
+ "title": "Preprocessor and Macros",
+ "type": "FUND",
+ "relevance": "Interviewers probe whether candidates understand that macros are blind text substitution—and the classic bugs that causes—because OAs and systems roles still depend on headers, guards, and preprocessor idioms.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that the preprocessor is a pure text engine that builds a translation unit before the compiler sees C semantics.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "The preprocessor rewrites source via # directives as text only; it knows nothing about C types, variables, loops, or scope, and hands a fully expanded translation unit to the compiler.",
+     "weight": "core",
+     "evidence_hint": "Candidate says macros/directives are text replacement, not typed C evaluation, and a macro error is a text error not a type error."
+    },
+    {
+     "id": "fund2",
+     "point": "#include <filename.h> searches system/standard directories; #include \"filename.h\" searches the current source directory first, then falls back to system directories.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts angle-bracket includes for std/third-party headers with quoted includes for project headers."
+    },
+    {
+     "id": "fund3",
+     "point": "A header guard (#ifndef/#define/#endif) or #pragma once ensures a header’s contents are pasted only once per translation unit, preventing duplicate struct/type definitions from diamond includes.",
+     "weight": "core",
+     "evidence_hint": "Candidate walks first include defining the guard macro and later includes skipping until #endif, or names #pragma once as the same purpose."
+    },
+    {
+     "id": "fund4",
+     "point": "Object-like #define macros map an identifier to fixed replacement tokens (e.g. manifest constants); function-like macros substitute argument text into the body, they do not pass evaluated values.",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts sealed-envelope value passing of functions with find-and-replace argument text for macros."
+    }
+   ],
+   "probes": [
+    "What does the preprocessor actually do before the C compiler runs, and how do the two forms of #include differ?",
+    "Why do we need header guards, and what goes wrong without them?"
+   ],
+   "hints": {
+    "1": "Think about what runs on the .c file before any type checking.",
+    "2": "Separate search paths for <> vs \"\", then how blind paste causes duplicate definitions.",
+    "3": "Preprocessor = text tokens → translation unit; <> system dirs, \"\" local then system; #ifndef MY_HEADER_H … #endif (or #pragma once) paste once."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how function-like macros expand, how parentheses and do-while(0) fix syntax traps, and how # / ## / __VA_ARGS__ / conditionals work.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Without parentheses, DOUBLE_BAD(3 + 4) expands to 3 + 4 * 2 and evaluates to 11, not 14; a robust macro wraps every parameter use and the whole body, e.g. DOUBLE_SAFE(x) as ((x) * 2).",
+     "weight": "core",
+     "evidence_hint": "Candidate expands the text, cites precedence of *, and states both inner and outer parentheses are required."
+    },
+    {
+     "id": "mech2",
+     "point": "If a parameter appears more than once in the replacement list, the argument text is evaluated that many times; side-effecting args (e.g. a++ or function calls) cause multiple side effects—undefined behavior or unintended logic.",
+     "weight": "core",
+     "evidence_hint": "Candidate names the double-eval / multiple-evaluation trap and that parentheses do not fix it."
+    },
+    {
+     "id": "mech3",
+     "point": "Multi-statement macros without do { … } while (0) break under brace-less if: only the first statement is guarded and later statements always run; do-while(0) runs once, needs a trailing semicolon, and acts as one statement.",
+     "weight": "core",
+     "evidence_hint": "Candidate expands LOG_ERROR under if (fatal) and explains why while (0) plus required semicolon makes a statement-like macro."
+    },
+    {
+     "id": "mech4",
+     "point": "Inside macros, # stringizes a parameter to a string literal, ## token-pastes two tokens into one, and __VA_ARGS__ expands variadic ... arguments; #if/#ifdef/#ifndef/#elif/#else/#endif plus -D and #undef drive conditional compilation.",
+     "weight": "extended",
+     "evidence_hint": "Candidate gives PRINT_INT / DECLARE_STRUCT / DEBUG_PRINT or platform-guard examples and mentions compile-time -D feature flags."
+    }
+   ],
+   "probes": [
+    "Walk through why DOUBLE_BAD(3 + 4) is wrong and how you would write DOUBLE_SAFE.",
+    "How do you safely write a multi-statement macro used in an if without braces?",
+    "What do # and ## do in a macro definition?"
+   ],
+   "hints": {
+    "1": "Expand the macro on paper before thinking about runtime values.",
+    "2": "Precedence needs parentheses; side effects need single evaluation; multi-statement needs a statement wrapper.",
+    "3": "((x)*2); double-eval if x appears twice; do { … } while (0); # → string, ## → glue tokens."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Decide when macros are justified versus const, enum, and inline, and when headers vs object files own definitions.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Modern C prefers const/enum for values and inline functions for callable logic over macros because they give type safety, scope, and debugger visibility.",
+     "weight": "core",
+     "evidence_hint": "Candidate says prefer language features first; macros are a last resort."
+    },
+    {
+     "id": "tr2",
+     "point": "Use macros only when you must manipulate text: stringizing, token-pasting, __FILE__/__LINE__, do-while(0) control-flow shaping, conditional compilation, or type-agnostic ops like container_of that cannot be ordinary functions.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists text-only capabilities as the legitimate macro niche."
+    },
+    {
+     "id": "tr3",
+     "point": "Headers must hold declarations (signatures, macros, structs, types); putting definitions in a header included by multiple .c files yields multiple-definition linker errors.",
+     "weight": "extended",
+     "evidence_hint": "Candidate separates declaration vs definition and names the link-time multiple definition failure."
+    }
+   ],
+   "probes": [
+    "When should you use a macro versus inline, const, or enum?",
+    "What belongs in a header file versus a .c file regarding definitions?"
+   ],
+   "hints": {
+    "1": "Ask what macros cannot express that the language can.",
+    "2": "Type safety and single evaluation favor inline/const/enum; text ops favor macros.",
+    "3": "const/enum/inline by default; macros for #, ##, __FILE__, conditional compilation, container_of; headers = declarations only."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply preprocessor idioms used in real systems code and debugging builds.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "ARRAY_SIZE(arr) is (sizeof(arr) / sizeof((arr)[0])) for element count of a statically allocated array.",
+     "weight": "core",
+     "evidence_hint": "Candidate writes or states total bytes divided by bytes of the first element."
+    },
+    {
+     "id": "app2",
+     "point": "container_of(ptr, type, member) recovers the containing struct pointer via (char*)ptr minus offsetof(type, member), enabling intrusive generic structures (Linux kernel staple).",
+     "weight": "core",
+     "evidence_hint": "Candidate explains member pointer → enclosing struct via offsetof subtraction."
+    },
+    {
+     "id": "app3",
+     "point": "assert from <assert.h> reports failure with __FILE__ and __LINE__; defining NDEBUG before including <assert.h> compiles asserts away. Predefined macros include __FILE__, __LINE__, __DATE__, __TIME__ (__func__ is a predefined identifier, not a macro).",
+     "weight": "extended",
+     "evidence_hint": "Candidate ties assert location printing to those macros and NDEBUG stripping asserts in release."
+    }
+   ],
+   "probes": [
+    "Write or explain the ARRAY_SIZE macro.",
+    "What is container_of used for, and how does it work at a high level?",
+    "How does assert know file and line, and what does NDEBUG change?"
+   ],
+   "hints": {
+    "1": "Think sizeof of the whole array versus one element.",
+    "2": "ARRAY_SIZE divides sizes; container_of subtracts member offset; assert uses predefined location macros.",
+    "3": "(sizeof(a)/sizeof((a)[0])); (type*)((char*)(ptr)-offsetof(...)); NDEBUG empties assert."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Macros vs inline / const / enum",
+   "strong_answer": "Prefer const or enum for constants and inline functions for callable logic for type safety, scope, and debugger visibility. Reserve macros for text-only needs: #, ##, __FILE__/__LINE__, do-while(0) statement shaping, conditional compilation, and type-agnostic idioms like container_of."
+  },
+  {
+   "topic": "#include <...> vs #include \"...\"",
+   "strong_answer": "Use <> for system/standard and third-party headers (system search paths). Use \"\" for project headers (current source directory first, then system fallback)."
+  },
+  {
+   "topic": "Header guards vs #pragma once",
+   "strong_answer": "Both prevent double inclusion per translation unit. Traditional #ifndef/#define/#endif is portable standard practice; #pragma once is a widely supported extension that avoids naming collisions and can compile slightly faster."
+  },
+  {
+   "topic": "Declarations in headers vs definitions in headers",
+   "strong_answer": "Headers should contain declarations only. Definitions of functions or variables in headers included by multiple .c files produce multiple-definition linker errors."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Function-like macro without parentheses around parameters and the whole body (e.g. DOUBLE_BAD / SQUARE).",
+   "correction": "Wrap every parameter use and the entire replacement list so expansion preserves intended precedence (e.g. ((x) * 2) or ((x) * (x)))."
+  },
+  {
+   "trap": "Passing side-effecting arguments to a macro that uses a parameter more than once (double-eval), even with safe parentheses—e.g. SQUARE_SAFE(i++) → ((i++) * (i++)).",
+   "correction": "There is no standard C macro fix; use an inline function so the argument is evaluated once. Multiple modification without a sequence point is undefined behavior."
+  },
+  {
+   "trap": "Multi-statement macro used in brace-less if/else so only the first statement is conditional and the rest always run.",
+   "correction": "Wrap the body in do { … } while (0) so it is one statement, executes once, and requires a trailing semicolon."
+  },
+  {
+   "trap": "Putting function or variable definitions in a header included by multiple translation units.",
+   "correction": "Keep only declarations in headers; put definitions in a single .c file to avoid link-time multiple definition errors."
+  },
+  {
+   "trap": "Assuming __func__ is a predefined macro like __FILE__ / __LINE__.",
+   "correction": "__func__ is a predefined identifier providing the function name, not a macro."
+  }
+ ]
+}

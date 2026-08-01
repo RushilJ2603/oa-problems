@@ -1,0 +1,169 @@
+{
+ "id": "cpp_s01_what_c_is",
+ "title": "What C Is and How It Runs",
+ "type": "FUND",
+ "relevance": "SDE interviews use this to check whether candidates understand how C becomes a binary, what linking and the ABI imply, and why undefined behavior is not just a crash.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what C is for, how its standards evolved, and the meaning of a minimal hosted program.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "C is a small, fast, close-to-the-hardware systems language designed in the early 1970s by Dennis Ritchie at Bell Labs to write Unix, with minimal abstraction and full trust in the programmer.",
+     "weight": "core",
+     "evidence_hint": "Mentions systems/Unix origins, closeness to hardware, and that C trusts the programmer rather than hiding the machine."
+    },
+    {
+     "id": "fund2",
+     "point": "C standards progressed from informal K&R C through ANSI C (C89/C90) to C99, C11, C17, and C23; the chosen -std= flag controls which language features and library functions are available.",
+     "weight": "core",
+     "evidence_hint": "Lists the major standard lineage and ties the compiler -std flag to feature/library availability."
+    },
+    {
+     "id": "fund3",
+     "point": "In a hosted program, int main(void) is the entry point; printf writes to stdout; return 0; ends the process with exit status 0 meaning success by convention; every C program has stdin, stdout, and stderr.",
+     "weight": "extended",
+     "evidence_hint": "Walks Hello World pieces: main signature, stdout printing, exit status 0, and the three standard streams."
+    }
+   ],
+   "probes": [
+    "What standard of C do you typically target, and why does it matter?",
+    "Walk through what each line of a Hello World C program does, including return 0."
+   ],
+   "hints": {
+    "1": "Think about where C still dominates and why a language that close to the machine would have evolving ISO standards.",
+    "2": "Separate philosophy (hardware/Unix), the K&R→C89/C90→C99→C11→C17→C23 line, and the roles of #include, main, printf, and exit status.",
+    "3": "Say C was built for Unix with minimal abstraction; standards from K&R through C23 matter because -std selects features; main returns int, 0 means success, and stdin/stdout/stderr are the three default streams."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Establish the translation pipeline, translation units/object files, and the abstract-machine behavior categories including ABI binding.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "gcc as a driver runs four stages in order: preprocessing (strip comments, expand macros, paste #include text), compilation to architecture-specific assembly, assembly into an object file of raw machine code, then linking that resolves external references (e.g. printf) into a final executable.",
+     "weight": "core",
+     "evidence_hint": "Names all four stages and distinguishes text expansion, assembly text, object binary, and linker resolution of externals."
+    },
+    {
+     "id": "mech2",
+     "point": "A translation unit is one .c file after the preprocessor has expanded macros and pasted includes; an object file (.o/.obj) holds that unit's machine code but is not yet executable until the linker connects unresolved references.",
+     "weight": "core",
+     "evidence_hint": "Defines translation unit vs object file and says linking is what makes an executable."
+    },
+    {
+     "id": "mech3",
+     "point": "The C standard describes an Abstract Machine and splits behavior into well-defined, implementation-defined (compiler chooses and documents), unspecified (compiler may choose without documenting), and undefined behavior (no requirements once rules are violated).",
+     "weight": "core",
+     "evidence_hint": "Names the abstract machine and all four behavior buckets with the documentation distinction for implementation-defined vs unspecified."
+    },
+    {
+     "id": "mech4",
+     "point": "Compiled C is native code bound to a CPU architecture and OS via an ABI that contracts memory layout and which registers pass function arguments; targeting another machine requires cross-compilation for that ABI.",
+     "weight": "extended",
+     "evidence_hint": "Ties native binary to architecture/OS, defines ABI (layout and argument registers), and mentions cross-compiling."
+    }
+   ],
+   "probes": [
+    "What happens between typing gcc main.c -o myprogram and getting a runnable binary?",
+    "What is a translation unit, and how is it different from an object file?",
+    "What are the four categories of behavior in the C standard?"
+   ],
+   "hints": {
+    "1": "Picture an assembly line from source text to a binary, then ask what rules the standard actually guarantees.",
+    "2": "Order preprocess → compile to assembly → assemble to .o → link; define TU and object file; list well-defined, implementation-defined, unspecified, and UB; mention ABI.",
+    "3": "Preprocessor pastes/expands into a translation unit; compiler emits assembly; assembler emits .o; linker resolves printf and builds the executable; behavior is one of four buckets on the abstract machine; the binary must match the target ABI."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Establish the performance/portability and standard-compatibility tradeoffs the material calls out.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Unlike Python or JavaScript, C compiles to native code the CPU runs directly: maximum performance and minimal overhead, at the cost of portability because the binary is tied to architecture and OS.",
+     "weight": "core",
+     "evidence_hint": "States the native-code performance win and the portability cost of architecture/OS binding."
+    },
+    {
+     "id": "tr2",
+     "point": "Teams often target C11 or C17 for broad compatibility while treating C99 as a baseline (e.g. stdint.h, inline declarations); newer features such as C99 variable-length arrays (optional in C11) may be missing on legacy or specialized embedded compilers.",
+     "weight": "core",
+     "evidence_hint": "Mentions C11/C17 vs C99 baseline and that VLAs or similar newer features may not exist on embedded/legacy toolchains."
+    }
+   ],
+   "probes": [
+    "Why does compiling to native code help and hurt compared with an interpreted language?",
+    "Why does the C standard you target matter on embedded or legacy compilers?"
+   ],
+   "hints": {
+    "1": "Compare who executes the program—the CPU directly vs a runtime—and who must support your chosen language dialect.",
+    "2": "Native binary: speed/overhead vs portability; standard choice: C11/C17 compatibility vs C99 features that optional/embedded compilers may omit.",
+    "3": "Say native code gives max performance/minimal overhead but binds you to ABI/architecture; say C11/C17 for compatibility, C99 baseline for stdint.h/inlines, and VLAs optional in C11 may fail on embedded compilers."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Establish practical compiler flags, stage-stopping switches, and what a running process's memory regions are.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A robust baseline compile is gcc -std=c17 -Wall -Wextra -O2 -g: select C17, enable broad warnings, moderate optimization, and embed debug info mapping machine code back to source lines.",
+     "weight": "core",
+     "evidence_hint": "Recalls the flag set and what -std, -Wall/-Wextra, -O2, and -g each do."
+    },
+    {
+     "id": "app2",
+     "point": "Stop the pipeline to inspect artifacts with -E (preprocessed text), -S (assembly, e.g. main.s), and -c (object file, e.g. main.o); linking object files with the C library produces the executable.",
+     "weight": "core",
+     "evidence_hint": "Maps -E/-S/-c to preprocessed source, .s assembly, and .o object, then linking to the final binary."
+    },
+    {
+     "id": "app3",
+     "point": "When the OS loader runs the binary it creates a process with Code (Text) for instructions, Data/BSS for globals/statics, Stack for locals and call bookkeeping, and Heap for dynamic runtime requests.",
+     "weight": "extended",
+     "evidence_hint": "Lists Text/Code, Data/BSS, Stack, and Heap with their roles."
+    }
+   ],
+   "probes": [
+    "Give a solid gcc command for a production-ish debug build and explain each flag.",
+    "How would you inspect preprocessed output, assembly, and an object file for hello.c before linking?",
+    "What memory regions exist in a process after the loader runs your binary?"
+   ],
+   "hints": {
+    "1": "Think flags you always want on, then flags that stop early so you can read intermediates.",
+    "2": "Bundle -std=c17 -Wall -Wextra -O2 -g; use -E/-S/-c for .i text, .s, and .o; name Text, Data/BSS, Stack, Heap after load.",
+    "3": "Quote the baseline gcc line; say -E shows expanded headers, -S yields assembly like call puts, -c yields binary .o, then link against libc; process layout is Code/Text, Data/BSS, Stack, Heap."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Native compiled C vs interpreted languages",
+   "strong_answer": "C compiles to native machine instructions the CPU executes directly, buying maximum performance and minimal overhead, but the binary is tightly bound to a target CPU architecture and OS, so portability requires recompilation or cross-compilation for the target ABI."
+  },
+  {
+   "topic": "Newer C standard features vs legacy/embedded compiler support",
+   "strong_answer": "Targeting C11 or C17 favors broad compatibility, with C99 as a practical baseline for facilities like stdint.h and inline declarations; features such as C99 variable-length arrays—made optional in C11—may be unavailable on legacy or specialized embedded compilers, so the chosen -std matters for what you can rely on."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating #include like a Python-style module import.",
+   "correction": "#include is literal text inclusion: the preprocessor pastes the header into the source, so a massive header is fully processed every time that file is compiled."
+  },
+  {
+   "trap": "Assuming a program that declares a function but never defines it will fail at compile time.",
+   "correction": "Syntax can still compile; the linker fails later with an undefined reference if the defining .c was never compiled/linked in."
+  },
+  {
+   "trap": "Believing undefined behavior just means the program crashes or returns garbage.",
+   "correction": "UB means the standard imposes no requirements: the compiler may assume the invalid path never happens and may delete checks, break earlier code, or do anything else—never rely on it."
+  }
+ ]
+}

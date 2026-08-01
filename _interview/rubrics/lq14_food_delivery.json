@@ -1,0 +1,312 @@
+{
+ "id": "lq14_food_delivery",
+ "title": "Design Food Delivery (Swiggy / Zomato)",
+ "type": "LLD",
+ "relevance": "High — hard multi-actor LLD / machine-coding staple (campus + SDE-2); Swiggy, Zomato, Flipkart, Uber, Amazon, Dunzo-style loops probe order FSM + delivery assignment + notifications; pairs with HLD ride-hailing / geo matching (hq06) and notification LLD (lq12).",
+ "difficulty": "mid",
+ "prereqs": [
+  "l01_oop_solid",
+  "l02_patterns_creational",
+  "l03_patterns_structural",
+  "l04_patterns_behavioral",
+  "l05_concurrency_lld",
+  "l06_lld_framework"
+ ],
+ "company_notes": "Campus/machine-coding staple at Swiggy, Zomato, Flipkart, Uber, Amazon new-grad and Indian product cos — working order FSM + nearest assign + clean classes beat a pattern zoo; concurrency/notifications are stretch after happy path. SDE-2 expects valid transitions, atomic agent assign, Observer decoupling, Strategy for search/assign, and may bridge to HLD (Redis GEO, dispatch queues, dinner-peak scaling). FAANG-adjacent OOD (DoorDash-like / Meta/Amazon tags) focuses on multi-actor flows + class model. Among the top hard LLD problems with Movie Booking, Ride Sharing, and Splitwise — canonical multi-party workflow + Strategy matching + Observer after Parking Lot / Elevator.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock marketplace scope, FRs, cancel/assign/payment rules, and NFRs before any class sketch.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Clarify marketplace vs single restaurant, auto-assign timing (on place vs on ready), cancel rules, payment in/out of scope, and one restaurant per order (cart across restaurants usually no).",
+     "weight": "core",
+     "evidence_hint": "Candidate asks clarifying questions and states assumptions like one city demo, in-memory OK, payment mocked, assign on READY_FOR_PICKUP, cancel only from PENDING."
+    },
+    {
+     "id": "req2",
+     "point": "Cover typical FRs: register customers/restaurants/agents; menu manage; search + view menu; place order; restaurant prep status; assign agent; track to delivered; cancel early; notify on status change.",
+     "weight": "core",
+     "evidence_hint": "Lists the FR checklist without diving into surge, ETA ML, or dark stores unless asked."
+    },
+    {
+     "id": "req3",
+     "point": "Call out use cases: happy path browse→deliver; two orders race one agent; cancel while PENDING; no agents → stay ready/retry; menu unavailable mid-browse fails at place.",
+     "weight": "extended",
+     "evidence_hint": "Walks through those scenarios as acceptance checks before design."
+    },
+    {
+     "id": "req4",
+     "point": "State NFRs: thread-safe concurrent orders; extensible assignment/search/payment; modular services; status updates reach observers (demo may be sync notify).",
+     "weight": "extended",
+     "evidence_hint": "Mentions concurrency and extensibility as first-class requirements, not afterthoughts."
+    }
+   ],
+   "probes": [
+    "What do you assume about payment, cancel window, and when the delivery agent gets assigned?",
+    "Is a single order allowed to span multiple restaurants?"
+   ],
+   "hints": {
+    "1": "Start by locking product rules before naming classes.",
+    "2": "Ask about assign timing, cancel states, payment scope, and one-restaurant-per-order.",
+    "3": "State: assign on READY_FOR_PICKUP, cancel only early states, payment often out of scope, one restaurant per order."
+   }
+  },
+  {
+   "phase": "entities",
+   "goal": "Name the multi-actor domain model with Order as the shared aggregate coordinating customer, restaurant, and agent.",
+   "must_hit": [
+    {
+     "id": "ent1",
+     "point": "Identify three actors — Customer (browse/place), Restaurant (menu + prep status), DeliveryAgent (fulfill) — with Order as the shared aggregate; do not put assign logic in Restaurant or notify logic in Customer.",
+     "weight": "core",
+     "evidence_hint": "Draws Customer, Restaurant, DeliveryAgent, and Order as the hub coordinating them."
+    },
+    {
+     "id": "ent2",
+     "point": "Model Restaurant 1—1 Menu 1—* MenuItem (id, name, price, available); Order holds items List of OrderItem (menuItem, qty), status, optional deliveryAgent, and observers.",
+     "weight": "core",
+     "evidence_hint": "Sketches Menu/MenuItem and Order/OrderItem fields matching the research data model."
+    },
+    {
+     "id": "ent3",
+     "point": "Define OrderStatus enum path: PENDING, CONFIRMED, PREPARING, READY_FOR_PICKUP, OUT_FOR_DELIVERY, DELIVERED, plus CANCELLED.",
+     "weight": "core",
+     "evidence_hint": "Writes the full status enum including CANCELLED before coding transitions."
+    },
+    {
+     "id": "ent4",
+     "point": "Include Address/GeoPoint (lat, lon, distanceTo) and optional PaymentStrategy types (Card/UPI/Wallet) as supporting entities.",
+     "weight": "extended",
+     "evidence_hint": "Shows geo helpers for Haversine assign/search and notes payment as optional extension."
+    }
+   ],
+   "probes": [
+    "Who owns assignment vs notification vs menu — which object?",
+    "What states does an order move through from place to deliver?"
+   ],
+   "hints": {
+    "1": "Think actors first, then the shared order object.",
+    "2": "Order coordinates actors; Restaurant owns menu; agents are assigned to orders.",
+    "3": "List Customer, Restaurant, DeliveryAgent, Order, OrderItem, MenuItem, OrderStatus, plus Address/GeoPoint."
+   }
+  },
+  {
+   "phase": "class_design",
+   "goal": "Sketch Facade+Singleton service, Strategy interfaces, Observer on status, and FSM ownership before coding.",
+   "must_hit": [
+    {
+     "id": "cd1",
+     "point": "FoodDeliveryService as Singleton/Facade holds ConcurrentHashMap catalogs and assignmentStrategy; exposes register*, searchRestaurants, placeOrder, updateOrderStatus, cancelOrder; private assignDelivery on READY_FOR_PICKUP.",
+     "weight": "core",
+     "evidence_hint": "Draws the facade with maps + strategy field and private assignDelivery triggered on ready."
+    },
+    {
+     "id": "cd2",
+     "point": "DeliveryAssignmentStrategy with NearestAvailableAgentStrategy (Haversine to restaurant); RestaurantSearchStrategy with SearchByCity / SearchByMenuKeyword / SearchByProximity.",
+     "weight": "core",
+     "evidence_hint": "Shows strategy interfaces and concrete nearest/search filter classes swappable without editing the facade."
+    },
+    {
+     "id": "cd3",
+     "point": "Order.setStatus validates transition then notifyObservers; OrderObserver implemented by Customer, Restaurant, DeliveryAgent — notifications not imported inside Order as SMSClient.",
+     "weight": "core",
+     "evidence_hint": "Separates status change + Observer fan-out from push/SMS clients."
+    },
+    {
+     "id": "cd4",
+     "point": "Architecture: Client → FoodDeliveryService → catalog maps, search strategies, Order FSM+Observer, DeliveryAssignmentStrategy; Order owns lifecycle+observers, service owns registries and when to assign.",
+     "weight": "extended",
+     "evidence_hint": "Whiteboard matches the component breakdown without Redis/Kafka unless asked."
+    }
+   ],
+   "probes": [
+    "Where do Strategy and Observer sit relative to FoodDeliveryService and Order?",
+    "What happens inside setStatus when status changes?"
+   ],
+   "hints": {
+    "1": "Facade entry point plus pluggable search/assign.",
+    "2": "Order owns FSM and observers; service owns registries and assign timing.",
+    "3": "Name FoodDeliveryService, DeliveryAssignmentStrategy, RestaurantSearchStrategy, OrderObserver, and VALID transitions on Order."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Implement place → status FSM with allowed transitions, cancel rules, nearest assign, and Observer notify on the happy path.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Enforce allowed Order FSM transitions (table/map); reject illegal jumps such as PREPARING → PENDING; typical path PENDING → CONFIRMED → PREPARING → READY_FOR_PICKUP → OUT_FOR_DELIVERY → DELIVERED (+ CANCELLED).",
+     "weight": "core",
+     "evidence_hint": "Shows a transition table/map and rejects illegal status updates."
+    },
+    {
+     "id": "impl2",
+     "point": "Cancel only while PENDING/CONFIRMED (before kitchen starts); after PREPARING, call out refund/policy rather than silent cancel.",
+     "weight": "core",
+     "evidence_hint": "cancelOrder checks early states and explains later cancel needs policy."
+    },
+    {
+     "id": "impl3",
+     "point": "On READY_FOR_PICKUP, findAgent via strategy (nearest available, Haversine), mark agent busy, then move to OUT_FOR_DELIVERY; release agent on deliver/cancel.",
+     "weight": "core",
+     "evidence_hint": "Implements assignDelivery private path tied to ready status with busy/release."
+    },
+    {
+     "id": "impl4",
+     "point": "Key APIs work end-to-end: placeOrder, updateOrderStatus, cancelOrder, searchRestaurants(strategies), getRestaurantMenu, register* — mandatory demo before pattern zoo.",
+     "weight": "extended",
+     "evidence_hint": "Can run register + place + status + assign + deliver (+ cancel note) as the working demo."
+    }
+   ],
+   "probes": [
+    "Walk me through placeOrder to DELIVERED including when assign runs.",
+    "Which cancel transitions do you allow?"
+   ],
+   "hints": {
+    "1": "Code the happy path FSM before extra strategies.",
+    "2": "Validate transitions; assign on ready; notify observers on setStatus.",
+    "3": "PENDING→…→READY_FOR_PICKUP triggers nearest available agent → OUT_FOR_DELIVERY → DELIVERED; cancel only early."
+   }
+  },
+  {
+   "phase": "extensibility",
+   "goal": "Keep search, assignment, and optional payment swappable via Strategy (and optional Factory/CoR) without editing the facade.",
+   "must_hit": [
+    {
+     "id": "ext1",
+     "point": "Swap DeliveryAssignmentStrategy for least-loaded / highest-rated / surge / VIP / batching without if-ladder inside FoodDeliveryService.",
+     "weight": "core",
+     "evidence_hint": "Says new strategy class for new policies; facade stays thin."
+    },
+    {
+     "id": "ext2",
+     "point": "Compose RestaurantSearchStrategy filters (city, menu keyword, proximity) — OCP for new filters; optional Chain of Responsibility framing for sequential filters.",
+     "weight": "core",
+     "evidence_hint": "Passes a list of filters / composed strategies to searchRestaurants."
+    },
+    {
+     "id": "ext3",
+     "point": "Optional PaymentStrategy.pay before confirming; failure must not advance FSM; idempotency on retries if payment in scope.",
+     "weight": "extended",
+     "evidence_hint": "Wires payment strategy before CONFIRMED and mentions idempotent retries."
+    },
+    {
+     "id": "ext4",
+     "point": "Avoid god-class FoodDeliveryService that prices, pays, routes, and SMS — split SRP; optional Factory for payment/order adapters from type.",
+     "weight": "extended",
+     "evidence_hint": "Keeps facade thin and delegates pricing/payment/notify/routing."
+    }
+   ],
+   "probes": [
+    "How would you add surge or VIP assignment without touching the facade?",
+    "How do you add a new restaurant search filter?"
+   ],
+   "hints": {
+    "1": "Anything policy-like should be a new Strategy.",
+    "2": "Assignment and search are injected; payment optional Strategy; avoid if-ladders.",
+    "3": "New DeliveryAssignmentStrategy / RestaurantSearchStrategy implementations; optional PaymentStrategy and Factory."
+   }
+  },
+  {
+   "phase": "concurrency",
+   "goal": "Make agent assign, status transitions, and catalog updates race-safe under concurrent orders.",
+   "must_hit": [
+    {
+     "id": "conc1",
+     "point": "Two orders must not get the same agent: filter available, assign + setAvailable(false) under one critical section / CAS; loser retries or waits.",
+     "weight": "core",
+     "evidence_hint": "Describes atomic check-then-act on agent availability, not just ConcurrentHashMap puts."
+    },
+    {
+     "id": "conc2",
+     "point": "ConcurrentHashMap is fine for id→entity catalogs, but agent.available check-then-act still needs a lock / CAS; status transitions must be race-free.",
+     "weight": "core",
+     "evidence_hint": "Explicitly separates map thread-safety from assign/status critical sections."
+    },
+    {
+     "id": "conc3",
+     "point": "Menu item availability / restaurant capacity under concurrent place: atomic decrement or reject when over capacity; no agents → leave READY_FOR_PICKUP and retry/queue, never OUT_FOR_DELIVERY without an agent.",
+     "weight": "extended",
+     "evidence_hint": "Handles stock/capacity races and empty-agent case without fake delivery status."
+    },
+    {
+     "id": "conc4",
+     "point": "Under dinner rush, avoid a global lock for all cities; lock per agent or CAS available; optionally shard agents by geo-cell.",
+     "weight": "extended",
+     "evidence_hint": "Scales assign hot path with fine-grained locking rather than one global mutex."
+    }
+   ],
+   "probes": [
+    "Two orders, one agent — what prevents double-assign?",
+    "Is ConcurrentHashMap enough for assignment?"
+   ],
+   "hints": {
+    "1": "Catalog maps ≠ atomic agent claim.",
+    "2": "Wrap available check + mark busy in one critical section / CAS.",
+    "3": "Filter available, assign+setAvailable(false) atomically; ConcurrentHashMap alone is not enough for check-then-act."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Assign on placeOrder vs on READY_FOR_PICKUP",
+   "strong_answer": "Assign on placeOrder means the agent waits at the restaurant; assign on READY_FOR_PICKUP reduces idle time. State the product rule explicitly — awesome-LLD assigns on ready."
+  },
+  {
+   "topic": "Linear Haversine scan vs geo index",
+   "strong_answer": "Haversine over all available agents is correct for LLD demos; production uses Redis GEO / quadtree for O(log n) radius queries (hq06 toolkit)."
+  },
+  {
+   "topic": "Enum FSM + transition map vs State pattern objects",
+   "strong_answer": "Enum + VALID_TRANSITIONS map ships fast and is interview-standard; full State classes only if behavior per state diverges heavily."
+  },
+  {
+   "topic": "Singleton getInstance vs dependency injection",
+   "strong_answer": "Tutorials use getInstance(); for tests you’d inject one FoodDeliveryService instance unless the interviewer wants classic Singleton."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Two orders race the same agent and both succeed.",
+   "correction": "Filter available, then assign + setAvailable(false) under one critical section / CAS; loser retries or waits."
+  },
+  {
+   "trap": "Restaurant rejects after place with no clean path.",
+   "correction": "Transition to CANCELLED from PENDING/CONFIRMED, notify customer, trigger refund if payment was captured."
+  },
+  {
+   "trap": "Customer cancels while PREPARING silently succeeds.",
+   "correction": "Usually deny or escalate to support/refund policy — do not allow silent cancel after kitchen starts."
+  },
+  {
+   "trap": "No agents online but order marked OUT_FOR_DELIVERY.",
+   "correction": "Leave order in READY_FOR_PICKUP, retry/queue; never mark OUT_FOR_DELIVERY without an agent."
+  },
+  {
+   "trap": "Assuming ConcurrentHashMap alone makes assign safe.",
+   "correction": "Fine for id→entity maps; agent availability check-then-act still needs explicit sync / CAS."
+  },
+  {
+   "trap": "Adding surge / VIP / batching via if-ladder in the facade.",
+   "correction": "Introduce a new DeliveryAssignmentStrategy; do not grow the facade with conditionals."
+  },
+  {
+   "trap": "Payment retries double-charge or advance FSM on failure.",
+   "correction": "PaymentStrategy.pay before confirming; use idempotency key on retries; on failure do not advance the FSM."
+  },
+  {
+   "trap": "Live map tracking bolted onto every Order/menu read.",
+   "correction": "Separate location stream; Observer/WebSocket on location updates, not on every menu read."
+  },
+  {
+   "trap": "God-class FoodDeliveryService that prices, pays, routes, and SMS.",
+   "correction": "Split by SRP — facade + strategies + observers — or design score is docked."
+  },
+  {
+   "trap": "Finishing a Strategy zoo but missing the mandatory demo.",
+   "correction": "Ship place → status → assign → deliver first; patterns are secondary to the working path."
+  }
+ ]
+}

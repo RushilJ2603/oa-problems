@@ -1,0 +1,190 @@
+{
+ "id": "cpp_s40_namespaces",
+ "title": "Namespaces",
+ "type": "FUND",
+ "relevance": "Interviewers probe whether candidates prevent name collisions, use using-declarations vs directives safely (especially in headers), and understand ADL and linkage rules in real C++ codebases.",
+ "difficulty": "senior",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish why namespaces exist and how they are defined and accessed.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Namespaces group related names into a distinct declarative scope to prevent name collisions across libraries and large projects.",
+     "weight": "core",
+     "evidence_hint": "Mentions two libraries both defining Socket and how namespaces avoid the compilation error."
+    },
+    {
+     "id": "fund2",
+     "point": "Namespaces are open: the same namespace can be reopened and extended across multiple files or blocks.",
+     "weight": "core",
+     "evidence_hint": "Describes Graphics in graphics_engine.h and reopening Graphics in graphics_renderer.h to add renderFrame."
+    },
+    {
+     "id": "fund3",
+     "point": "Names outside a namespace are accessed with the scope-resolution operator ::.",
+     "weight": "core",
+     "evidence_hint": "Gives an example like Graphics::Window myWindow."
+    }
+   ],
+   "probes": [
+    "Why do we need namespaces, and how do you access a name defined inside one?"
+   ],
+   "hints": {
+    "1": "Think about two third-party libraries defining the same class name.",
+    "2": "Cover the namespace keyword, that namespaces can be reopened, and how :: qualifies a name.",
+    "3": "Say namespaces are open declarative regions; access members with Namespace::Name, e.g. Graphics::Window."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Cover nested namespaces, aliases, using forms, anonymous namespaces, ADL, std rules, and inline namespaces.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Namespaces nest hierarchically; C++17 allows compact nested syntax like namespace Engine::Physics::Collision.",
+     "weight": "core",
+     "evidence_hint": "Contrasts pre-C++17 nested opens with the Engine::Physics::Collision compact form and fully qualified calls."
+    },
+    {
+     "id": "mech2",
+     "point": "A namespace alias shortens a long path, e.g. namespace EPC = Engine::Physics::Collision.",
+     "weight": "extended",
+     "evidence_hint": "Compares it to Python import ... as plt and shows EPC::checkIntersection()."
+    },
+    {
+     "id": "mech3",
+     "point": "A using-declaration imports exactly one name; a using-directive imports all names from a namespace.",
+     "weight": "core",
+     "evidence_hint": "Contrasts using std::cout with using namespace std and notes endl is not imported by the declaration alone."
+    },
+    {
+     "id": "mech4",
+     "point": "Names in an anonymous namespace have internal linkage and are visible only in that translation unit.",
+     "weight": "core",
+     "evidence_hint": "States they are the modern preferred replacement for file-scope static on variables or free functions."
+    },
+    {
+     "id": "mech5",
+     "point": "ADL (Koenig lookup) adds the namespaces of a call’s argument types to the scopes searched for an unqualified function.",
+     "weight": "core",
+     "evidence_hint": "Explains std::cout << name finding std::operator<< because ostream and string live in std."
+    },
+    {
+     "id": "mech6",
+     "point": "You must not add your own declarations to namespace std (undefined behaviour), except specializing standard templates for your types.",
+     "weight": "core",
+     "evidence_hint": "Cites specializing std::hash for a user-defined User type as the allowed exception."
+    },
+    {
+     "id": "mech7",
+     "point": "C++11 inline namespaces expose members as if they were in the parent namespace, commonly for library versioning.",
+     "weight": "extended",
+     "evidence_hint": "Shows MyLib::doWork() resolving to inline v2 while MyLib::v1::doWork() remains explicit."
+    }
+   ],
+   "probes": [
+    "What is the difference between using std::cout; and using namespace std;?",
+    "What is ADL, and why does std::cout << name work without qualifying operator<<?",
+    "What is an anonymous namespace, and how does it relate to internal linkage?"
+   ],
+   "hints": {
+    "1": "Separate importing one name from importing an entire namespace, then think about lookup and linkage.",
+    "2": "Walk through using-declaration vs directive, unnamed namespaces, ADL on argument namespaces, and inline versioning.",
+    "3": "using-declaration is surgical; using-directive dumps all names; anonymous namespaces give internal linkage; ADL searches argument namespaces; do not open std except for allowed specializations; inline namespaces surface as parent members."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Judge when to fully qualify, alias, surgically using-declare, or locally using-direct.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer using-declarations over using-directives because directives are blunt and invite naming ambiguities.",
+     "weight": "core",
+     "evidence_hint": "Notes std is massive and global using namespace std defeats namespaces and can clash with names like data or size."
+    },
+    {
+     "id": "tr2",
+     "point": "If a using-directive is needed, restrict it to a function or local block rather than file/global scope.",
+     "weight": "core",
+     "evidence_hint": "Says professional practice keeps using namespace std out of global/file scope and limits it locally when used."
+    },
+    {
+     "id": "tr3",
+     "point": "Anonymous namespaces are preferred over legacy file-scope static for hiding translation-unit-local names.",
+     "weight": "extended",
+     "evidence_hint": "Calls anonymous namespaces the modern preferred C++ replacement for static on file-scope variables or free functions."
+    }
+   ],
+   "probes": [
+    "When would you choose a using-declaration over a using-directive, and where is each acceptable?"
+   ],
+   "hints": {
+    "1": "Ask what gets imported and how wide the scope is.",
+    "2": "Compare surgical one-name import vs whole-namespace import, and global vs function-local placement.",
+    "3": "Prefer using std::cout; avoid global using namespace std; if needed, put the directive inside a function; prefer anonymous namespaces over file-scope static."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply namespace rules to headers, the standard library, and versioned library APIs.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Never put a using-directive such as using namespace std; in a header file.",
+     "weight": "core",
+     "evidence_hint": "Explains every includer silently imports the whole namespace and will hit collisions."
+    },
+    {
+     "id": "app2",
+     "point": "Library authors can use inline namespaces so clients call MyLib::doWork() while older versions remain reachable as MyLib::v1::doWork().",
+     "weight": "extended",
+     "evidence_hint": "Describes shipping updates without breaking clients that rely on unqualified parent-namespace names."
+    },
+    {
+     "id": "app3",
+     "point": "The only valid reason shown to open namespace std is template specialization for a user-defined type.",
+     "weight": "core",
+     "evidence_hint": "Walks through specializing std::hash<User> and states adding other declarations to std is undefined behaviour."
+    }
+   ],
+   "probes": [
+    "Why is using namespace std; especially bad in a header?",
+    "How would you version a library API with namespaces so old and new clients both work?"
+   ],
+   "hints": {
+    "1": "Think about what happens to every file that #includes you.",
+    "2": "Connect header pollution to collisions, and inline nested namespaces to default vs explicit versions.",
+    "3": "Header using-directives force the whole namespace on consumers; inline v2 makes MyLib::doWork map to the new API while MyLib::v1 stays available; only specialize std templates, do not add arbitrary names to std."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "using-declaration vs using-directive",
+   "strong_answer": "A using-declaration imports one name surgically (e.g. using std::cout;); a using-directive imports every name from the namespace. Directives at global scope, especially using namespace std;, defeat namespaces and invite ambiguities; if used at all, keep them inside a function or local block."
+  },
+  {
+   "topic": "anonymous namespace vs file-scope static",
+   "strong_answer": "Anonymous (unnamed) namespaces give internal linkage so names are local to the translation unit and will not collide with same names in other TUs; they are the modern preferred replacement for applying static to file-scope variables or free functions."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Placing using namespace std; (or any using-directive) in a header or at global/file scope.",
+   "correction": "Never put using-directives in headers; avoid them globally. Prefer fully qualified names or using-declarations; if a directive is needed, confine it to a function or local block."
+  },
+  {
+   "trap": "Adding your own declarations or definitions to namespace std.",
+   "correction": "That is undefined behaviour. The permitted exception is specializing standard templates (e.g. std::hash) for your own types."
+  },
+  {
+   "trap": "Assuming std::cout << name requires an explicit std::operator<< qualification.",
+   "correction": "ADL (Koenig lookup) searches the namespaces of the argument types (here std for ostream and string), so the matching operator<< is found without explicit qualification."
+  }
+ ]
+}

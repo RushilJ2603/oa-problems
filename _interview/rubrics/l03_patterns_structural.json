@@ -1,0 +1,194 @@
+{
+ "id": "l03_patterns_structural",
+ "title": "Design Patterns: Structural (Adapter, Decorator, Facade, Composite, Proxy)",
+ "type": "CONCEPT",
+ "relevance": "High — LLD / machine-coding rounds constantly probe “which wrapper?”, composition vs inheritance, and distinguishing Adapter vs Decorator vs Proxy vs Facade (campus + experienced; FAANG + Indian product cos).",
+ "difficulty": "campus",
+ "prereqs": [
+  "l01_oop_solid",
+  "l02_patterns_creational"
+ ],
+ "company_notes": "Campus / machine coding: Decorator (pizza/coffee/IO), Adapter (multi-provider payment), Composite (file system / org), Facade (library or checkout orchestration) are staples and appear inside parking-lot / bookstore / notification designs. Experienced LLD: Proxy (cache, lazy DAO, auth), Adapter (vendor integrations), and composition-over-inheritance deep dives; interviewers often ask you to contrast two wrappers on the whiteboard. Among the highest-yield LLD fundamentals after SOLID; expect at least one structural pattern by name or by “add feature without changing class X” wording in most product-company LLD rounds.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that structural patterns assemble objects via composition and that the four wrappers differ by interface change vs control vs simplification.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Structural patterns compose classes/objects into larger structures without inheritance trees that explode; the default tool is composition + delegation behind a shared interface.",
+     "weight": "core",
+     "evidence_hint": "Says composition/delegation over exploding inheritance and mentions a shared interface."
+    },
+    {
+     "id": "fund2",
+     "point": "Wrapper distinction: Adapter changes to a different interface; Decorator keeps the same/enhanced interface and adds behavior the client stacks; Proxy keeps the same interface and gates/controls access (often manages the real object); Facade invents a new coarse API over many objects, not a 1:1 stand-in.",
+     "weight": "core",
+     "evidence_hint": "Correctly assigns different vs same interface, add-behavior vs control-access, and Facade as subsystem API."
+    },
+    {
+     "id": "fund3",
+     "point": "Decorator vs Composite: both recurse, but Decorator has one child and adds responsibility while Composite has many children and sums/aggregates.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts one-child add-behavior with many-child aggregate without mixing the two."
+    }
+   ],
+   "probes": [
+    "What problem do structural patterns solve, and how do you tell Adapter, Decorator, Proxy, and Facade apart in an interview?"
+   ],
+   "hints": {
+    "1": "Start from composition behind a shared interface, then ask whether the interface changes.",
+    "2": "Map each wrapper: different interface; same interface + add behavior; same interface + control access; new coarse API over a subsystem.",
+    "3": "Adapter = different interface; Decorator = same + stack behavior; Proxy = same + gate/lifecycle; Facade = new simplified API over many objects."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how Adapter, Decorator, Facade, Composite, and Proxy are structured and what each owns.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Adapter converts an incompatible interface into the one the client already uses (legacy SDK, third-party payment); prefer an object adapter that wraps the adaptee in Java/C#.",
+     "weight": "core",
+     "evidence_hint": "States interface translation and prefers wrapping the adaptee over a class-adapter story."
+    },
+    {
+     "id": "mech2",
+     "point": "Decorator wraps an object that already has the same interface to add behavior (logging, compression, toppings) with recursive stacking and client-controlled wrap order; Proxy is a same-interface stand-in that controls access (lazy init, auth, cache, remote, logging) and often owns the real subject’s lifecycle, which Decorator usually does not.",
+     "weight": "core",
+     "evidence_hint": "Separates client-stacked add-behavior from access control and who owns the real object."
+    },
+    {
+     "id": "mech3",
+     "point": "Facade exposes one simplified entry point over a noisy subsystem whose classes usually don’t know the facade; Composite models a part–whole tree so clients call the same ops on leaves and containers, with composites recursing and aggregating.",
+     "weight": "extended",
+     "evidence_hint": "Describes one method over many collaborators for Facade and leaf/container shared interface for Composite."
+    }
+   ],
+   "probes": [
+    "Walk through Adapter, Decorator, Proxy, Facade, and Composite—what each wraps, whether the interface stays the same, and who owns the real object."
+   ],
+   "hints": {
+    "1": "For each pattern, say whether the client’s interface changes and whether there is one object or a subsystem.",
+    "2": "Adapter translates; Decorator stacks same-interface behavior; Proxy gates/lifecycle; Facade simplifies many; Composite shares ops across a tree.",
+    "3": "Object adapter wraps adaptee; Decorator stacks same interface; Proxy controls access and often owns the subject; Facade is a coarse API over a subsystem; Composite is leaf+container with recursive ops."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Judge when wrappers help versus when they become god classes, ISP tension, or unreadable stacks.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Don’t introduce Adapter if you can change the source; don’t grow Facade into a god class; don’t Proxy/Decorate everything—wrapper depth hurts debugability and creates order-sensitive bugs.",
+     "weight": "core",
+     "evidence_hint": "Refuses unnecessary wrappers and calls out god-facade and deep-stack costs."
+    },
+    {
+     "id": "tr2",
+     "point": "OCP/SRP angle: each adapter/decorator/proxy is a small class so you can add a new payment provider or topping without editing checkout / coffee / IO core.",
+     "weight": "core",
+     "evidence_hint": "Ties small wrapper classes to extending without modifying the core path."
+    },
+    {
+     "id": "tr3",
+     "point": "Composite ISP tension: putting add/remove on the Component interface gives a uniform client but empty ops on leaves; keeping them only on Composite is ISP-clean but forces clients to distinguish leaf vs container—pick one and stay consistent.",
+     "weight": "extended",
+     "evidence_hint": "States both options and a clear preference with the uniformity-vs-ISP tradeoff."
+    }
+   ],
+   "probes": [
+    "When would you refuse Adapter, Facade, or a Decorator/Proxy stack, and where do you put Composite add/remove?"
+   ],
+   "hints": {
+    "1": "Ask whether the source can change, whether the facade is still a happy-path entry, and how deep the wrappers are.",
+    "2": "Small wrappers buy OCP; god facades and deep stacks lose; Composite add/remove is uniformity versus ISP.",
+    "3": "Skip Adapter if source is editable; split unbounded facades; avoid wrapping everything; choose Component-wide or Composite-only child ops and be consistent."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Map structural patterns onto the naming drills, sketches, and code-review prompts interviewers use.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Name-the-pattern drill: wrap Stripe to fit PaymentProcessor → Adapter; checkout talking to inventory + payment + notify → Facade; milk/sugar on coffee at runtime → Decorator; Folder.getSize over nested files → Composite; load heavy image on first display → Proxy; deny delete unless ADMIN → Proxy.",
+     "weight": "core",
+     "evidence_hint": "Assigns each prompt to one pattern and briefly says why not a neighbor wrapper."
+    },
+    {
+     "id": "app2",
+     "point": "Sketch/IO drills: Adapter LegacyGateway → PaymentProcessor; Decorator stack FileDataSource + Compression + Encryption (order matters); VideoConverter Facade; File/Folder Composite; ImageProxy virtual proxy; explain BufferedInputStream wrapping FileInputStream as Decorator and contrast what Adapter vs Proxy would mean for the same stream.",
+     "weight": "core",
+     "evidence_hint": "Draws Client → Interface → Wrapper → Real and can explain Java IO as Decorator with Adapter/Proxy contrast."
+    },
+    {
+     "id": "app3",
+     "point": "Code-review drill: wrapping UserService for caching and auth may be Proxy, Decorator, or both stacked—argue intent and who creates/owns the real service; also explain why encrypt-then-compress vs compress-then-encrypt changes Decorator stack behavior and how you’d document/test order.",
+     "weight": "extended",
+     "evidence_hint": "Separates control/lifecycle from optional stacked behavior and calls out wrap-order testing."
+    }
+   ],
+   "probes": [
+    "For Stripe-to-PaymentProcessor, checkout orchestration, coffee toppings, Folder.getSize, lazy image load, and ADMIN-gated delete—which pattern fits each, and how would you sketch or review the wrappers?"
+   ],
+   "hints": {
+    "1": "Ask whether the interface changes, whether you’re simplifying many objects, adding behavior, or controlling access.",
+    "2": "Adapter for SDK fit; Facade for multi-collaborator checkout; Decorator for toppings/IO stacks; Composite for tree size; Proxy for lazy load and auth.",
+    "3": "Stripe→PaymentProcessor = Adapter; checkout orchestration = Facade; milk/sugar = Decorator; Folder.getSize = Composite; lazy image / ADMIN delete = Proxy; then argue ownership and wrap order on review."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Adapter vs Facade",
+   "strong_answer": "Adapter makes one existing incompatible interface usable by translating it to what the client already expects. Facade invents a new coarse API over a subsystem of many classes so clients call one entry point instead of orchestrating collaborators. Adapter is 1:1 interface translation; Facade is simplification over many objects."
+  },
+  {
+   "topic": "Decorator vs inheritance",
+   "strong_answer": "Inheritance is static and combinatorial (BoldItalicUnderline… class explosion). Decorator composes features at runtime behind the same interface so clients stack wrappers without modifying the core class (OCP)."
+  },
+  {
+   "topic": "Proxy vs Decorator",
+   "strong_answer": "They can look identical in UML (both wrap + delegate). Intent differs: Proxy controls access and often owns the real subject’s lifecycle; Decorator adds optional behavior stacked by the client and usually does not own that lifecycle. A UserService wrap for caching and auth may be Proxy, Decorator, or both stacked—say who creates the real service."
+  },
+  {
+   "topic": "Decorator vs Composite",
+   "strong_answer": "Both recurse. Decorator has one child and adds responsibility; Composite has many children and sums/aggregates (price, draw, size). Don’t treat a topping stack as a part–whole tree or a folder tree as a behavior stack."
+  },
+  {
+   "topic": "Facade vs god class",
+   "strong_answer": "Facade is fine as a short happy-path entry over a subsystem whose classes usually don’t know it. If it grows unbounded, split into focused facades (e.g. OrderFacade, PaymentFacade) and keep the common path short rather than absorbing every subsystem detail."
+  },
+  {
+   "topic": "Composite child ops on Component vs Composite-only",
+   "strong_answer": "add/remove on Component gives a uniform client API but leaves empty or throwing ops on leaves. Keeping child ops only on Composite is ISP-cleaner but forces clients to distinguish types. Pick throw, no-op, or Composite-only and stay consistent for leaf safety."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Calling Adapter and Facade the same because both ‘wrap’ things",
+   "correction": "Adapter translates one incompatible interface into the client’s expected one. Facade invents a new coarse API over a whole subsystem."
+  },
+  {
+   "trap": "Preferring inheritance for optional features like Bold/Italic/Underline",
+   "correction": "Inheritance is static and combinatorial; Decorator stacks those features at runtime without class explosion (OCP)."
+  },
+  {
+   "trap": "Assuming Proxy and Decorator are different because the UML looks different",
+   "correction": "UML can look identical (wrap + delegate). Distinguish by intent: control access/lifecycle vs optional client-stacked behavior."
+  },
+  {
+   "trap": "Treating any Facade as a god class (or letting it become one)",
+   "correction": "A focused happy-path entry is fine; if it grows unbounded, split into focused facades like OrderFacade and PaymentFacade."
+  },
+  {
+   "trap": "Calling add on a Composite leaf without a stated policy",
+   "correction": "Choose throw, no-op, or keep child ops only on Composite—and be consistent so leaf safety is clear."
+  },
+  {
+   "trap": "Thinking dynamic proxies are unrelated to the Proxy pattern",
+   "correction": "java.lang.reflect.Proxy and Spring AOP are Proxy-family: they intercept calls for transactions, logging, or security without hand-writing each wrapper class."
+  }
+ ]
+}

@@ -1,0 +1,246 @@
+{
+ "id": "cpp_s14_stdlib",
+ "title": "The C Standard Library",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs probe whether you can use libc safely—I/O streams, bounded string/memory APIs, robust parsing, and knowing what hosted vs freestanding environments actually provide.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that C is small and relies on libc, and that hosted vs freestanding environments change what the library guarantees.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "The C language itself provides almost no built-in I/O, memory allocation, or string primitives; those come from the C Standard Library (libc).",
+     "weight": "core",
+     "evidence_hint": "Says C is tiny and names libc/macros/types/functions as the source of printf, malloc, strings, etc."
+    },
+    {
+     "id": "fund2",
+     "point": "A hosted environment (e.g. Linux/Windows/macOS) supplies a full standard library and starts at main; freestanding (embedded firmware, kernels) only guarantees a few essential headers and no default file system or dynamic memory.",
+     "weight": "core",
+     "evidence_hint": "Contrasts fully furnished OS libc vs bare-metal/kernel with limited headers only."
+    },
+    {
+     "id": "fund3",
+     "point": "Freestanding headers include stdint.h, stddef.h, stdbool.h, limits.h, and float.h; OS-dependent headers like stdio.h and stdlib.h are absent.",
+     "weight": "extended",
+     "evidence_hint": "Lists those essential headers and notes stdio/stdlib are not guaranteed freestanding."
+    },
+    {
+     "id": "fund4",
+     "point": "In a hosted program, three text streams open automatically: stdin, stdout, and stderr; disk files are handled via an opaque FILE* holding stream state.",
+     "weight": "core",
+     "evidence_hint": "Names the three standard streams and describes FILE as opaque with position/error flags."
+    }
+   ],
+   "probes": [
+    "What is the difference between a hosted and a freestanding C execution environment, and which standard headers are you still guaranteed without an OS?"
+   ],
+   "hints": {
+    "1": "Think about where printf or malloc would send bytes if there is no OS and no screen.",
+    "2": "Hosted starts at main with full libc; freestanding keeps only a short list of limit/type headers.",
+    "3": "Name freestanding headers like stdint.h/stddef.h/stdbool.h/limits.h/float.h and say stdio.h/stdlib.h need an OS."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Check concrete libc mechanics: buffering, safe line I/O, snprintf bounds, strtol error reporting, memory copy rules, and related library behaviors.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Most I/O is buffered; stderr is unbuffered by default so error messages still appear if the program crashes; fflush forces a flush.",
+     "weight": "core",
+     "evidence_hint": "Mentions buffer → device on fill/close/fflush, and stderr unbuffered for instant errors."
+    },
+    {
+     "id": "mech2",
+     "point": "Prefer fgets over scanf for line input: fgets can include the newline if there was room; scanf can leave bad tokens in the stream and loop forever on repeated failure.",
+     "weight": "core",
+     "evidence_hint": "Describes read-whole-line-then-parse, and scanf leaving letters after a failed %d."
+    },
+    {
+     "id": "mech3",
+     "point": "snprintf writes at most size - 1 characters, always appends a null terminator, and returns how many characters would have been written if the buffer were large enough (truncation detectable).",
+     "weight": "core",
+     "evidence_hint": "States size-1 bound, guaranteed '\\0', and return value for would-have-written length."
+    },
+    {
+     "id": "mech4",
+     "point": "strtol reports partial parses via endptr and range errors via errno set to ERANGE returning LONG_MAX or LONG_MIN; atoi cannot distinguish valid \"0\" from garbage and can invoke undefined behavior on overflow.",
+     "weight": "core",
+     "evidence_hint": "Uses endptr/ERANGE/LONG_MAX/LONG_MIN and contrasts silent atoi failure."
+    },
+    {
+     "id": "mech5",
+     "point": "memcpy assumes non-overlapping regions (restrict enables optimization); overlapping copies need memmove, which is defined to be safe.",
+     "weight": "core",
+     "evidence_hint": "Says overlap → undefined for memcpy; memmove may copy backward when needed."
+    },
+    {
+     "id": "mech6",
+     "point": "strtok mutates the input (delimiters become '\\0'), keeps static internal position state, is not thread-safe, and cannot be used recursively.",
+     "weight": "extended",
+     "evidence_hint": "Mentions mutation, hidden static state, and thread-safety/recursion limits."
+    },
+    {
+     "id": "mech7",
+     "point": "ctype.h classifiers take int so they can accept EOF (usually -1); pass char values as unsigned char or you risk undefined behavior for other negative values.",
+     "weight": "extended",
+     "evidence_hint": "Links int parameter to EOF/-1 and the unsigned char cast rule."
+    },
+    {
+     "id": "mech8",
+     "point": "assert is for impossible programmer logic bugs, not expected runtime failures; compiling with NDEBUG removes asserts entirely from the binary.",
+     "weight": "extended",
+     "evidence_hint": "Separates logic bugs vs user/runtime errors and mentions -DNDEBUG stripping asserts."
+    }
+   ],
+   "probes": [
+    "How does snprintf tell you both that the write stayed in-bounds and whether the result was truncated?",
+    "How do you validate with strtol that a string was entirely a number, and how do you detect overflow?"
+   ],
+   "hints": {
+    "1": "Look at the size argument and what the return value means when it is larger than the buffer.",
+    "2": "Bound write is size-1 plus '\\0'; truncation shows up when the returned length needs more space than you gave.",
+    "3": "For full-number checks use *endptr == '\\0' after strtol; for overflow check errno == ERANGE (after setting errno to 0 first)."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Force explicit choices among libc APIs that look similar but differ in safety, determinism, or overlap handling.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Even with a vendor libc, embedded firmware often avoids malloc (non-deterministic time, heap fragmentation on long-running systems) and printf (ROM bloat), favoring static allocation and lightweight formatters.",
+     "weight": "core",
+     "evidence_hint": "Names non-determinism/fragmentation for malloc and program-memory cost for printf."
+    },
+    {
+     "id": "tr2",
+     "point": "sprintf can overflow the destination; snprintf stops at capacity—like pouring until the bucket’s max mark—so buffer formatting should use snprintf with the real buffer size.",
+     "weight": "core",
+     "evidence_hint": "Contrasts blind sprintf overflow with sized snprintf truncation."
+    },
+    {
+     "id": "tr3",
+     "point": "strncpy is not a general safer strcpy: if src is longer than n it does not append a null terminator; safer patterns are snprintf(dest, n, \"%s\", src) or POSIX strlcpy.",
+     "weight": "core",
+     "evidence_hint": "States missing '\\0' when src exceeds n and names the safer alternatives."
+    },
+    {
+     "id": "tr4",
+     "point": "Choose memcpy for disjoint blocks for speed/optimizations; choose memmove when source and destination may overlap.",
+     "weight": "extended",
+     "evidence_hint": "Pairs disjoint→memcpy and overlap→memmove without inventing timings."
+    }
+   ],
+   "probes": [
+    "When would you pick memmove over memcpy, and when is strncpy the wrong ‘safe’ copy API?",
+    "Why might you ban malloc and printf in microcontroller firmware even if they link?"
+   ],
+   "hints": {
+    "1": "Ask whether the two memory regions can share addresses, and whether the copy API promises a terminator.",
+    "2": "Overlap breaks memcpy’s restrict contract; strncpy’s n is for fixed-width packing, not C-string safety.",
+    "3": "Say memmove for overlap; snprintf/strlcpy instead of strncpy; avoid malloc/printf for timing/ROM reasons on embedded."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply libc patterns to safe file reading, robust integer parsing, and bounded formatting under interview pressure.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Always pair fopen with fclose; missing fclose leaks OS file-table slots and can permanently lose buffered output.",
+     "weight": "core",
+     "evidence_hint": "Mentions resource limits and lost buffered writes if never closed/flushed."
+    },
+    {
+     "id": "app2",
+     "point": "Safe line-oriented file reading: fopen, check NULL and perror, loop fgets into a fixed buffer (e.g. size 256), optionally strip a trailing newline via strlen, then fclose.",
+     "weight": "core",
+     "evidence_hint": "Walks the worked example pattern without inventing extra APIs."
+    },
+    {
+     "id": "app3",
+     "point": "Robust strtol usage: set errno to 0 first, parse with base 10 and endptr, then branch on ERANGE, endptr == input (no digits), else success and optionally report trailing characters when *endptr != '\\0'.",
+     "weight": "core",
+     "evidence_hint": "Lists the three checks in that order from the worked example."
+    },
+    {
+     "id": "app4",
+     "point": "Never pass raw user input as a printf format string; use printf(\"%s\", user_input) so %s/%n in the input cannot read or write arbitrary stack memory.",
+     "weight": "extended",
+     "evidence_hint": "States the format-string vulnerability and the \"%s\" wrapper fix."
+    }
+   ],
+   "probes": [
+    "Walk through reading a text file line by line without gets or scanf, including error and cleanup handling.",
+    "Given a string that may have spaces, overflow, or trailing junk, how do you parse it with strtol and classify each failure mode?"
+   ],
+   "hints": {
+    "1": "Start from fopen failure paths and what fgets returns at EOF.",
+    "2": "Fixed buffer + fgets; strip '\\n' with strlen; always fclose; for numbers reset errno and inspect endptr/ERANGE.",
+    "3": "Mirror the worked examples: perror on open failure, fgets loop, and strtol checks for ERANGE, endptr==input, then trailing *endptr."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "hosted libc vs freestanding",
+   "strong_answer": "Hosted environments give full libc and main; freestanding only guarantees essential headers (stdint/stddef/stdbool/limits/float)—no default filesystem or heap—so PC programs with stdio/stdlib do not port to bare metal unchanged."
+  },
+  {
+   "topic": "fgets vs scanf for text input",
+   "strong_answer": "fgets reads a bounded line (newline kept if it fits) into memory you then parse; scanf is fragile—failed conversions leave bad characters in the stream and can infinite-loop if retried blindly."
+  },
+  {
+   "topic": "sprintf vs snprintf",
+   "strong_answer": "sprintf can write past the destination; snprintf takes the buffer size, writes at most size-1 chars plus '\\0', and returns the length that would have been written so truncation is detectable—never pass sizeof on a char* to a heap buffer (that yields pointer width, e.g. 8, not the allocation)."
+  },
+  {
+   "topic": "atoi vs strtol",
+   "strong_answer": "atoi silently returns 0 for garbage and has undefined behavior on overflow; strtol exposes endptr for leftover text and sets errno to ERANGE with LONG_MAX/LONG_MIN on range errors—full-number check is *endptr == '\\0'."
+  },
+  {
+   "topic": "memcpy vs memmove",
+   "strong_answer": "memcpy is for non-overlapping regions and uses restrict for aggressive optimization; overlapping regions are undefined for memcpy and require memmove."
+  },
+  {
+   "topic": "malloc/printf vs static/custom I/O on embedded",
+   "strong_answer": "malloc brings non-deterministic latency and fragmentation risk on systems that cannot reboot; printf bloats scarce ROM—prefer static allocation and lightweight custom formatting even if a minimal libc exists."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using gets(buffer) from older books for input.",
+   "correction": "gets was removed in C11 because it has no size parameter and will overflow the buffer on a long line—never use it; use fgets with an explicit size."
+  },
+  {
+   "trap": "Calling printf(user_input) with untrusted input as the format string.",
+   "correction": "If the input contains %s or %n, printf interprets them and can read/write arbitrary stack memory—always print with printf(\"%s\", user_input)."
+  },
+  {
+   "trap": "Treating strncpy(dest, src, n) as a safe strcpy.",
+   "correction": "If src is longer than n, strncpy does not append '\\0'; it was for fixed-width field packing—use snprintf(dest, n, \"%s\", src) or strlcpy instead."
+  },
+  {
+   "trap": "Passing a plain signed char into isdigit/isalpha/etc.",
+   "correction": "ctype functions take int to allow EOF (usually -1); other negative char values are undefined—cast to unsigned char first."
+  },
+  {
+   "trap": "Forgetting fclose after fopen, or assuming buffered fprintf already hit disk.",
+   "correction": "Unclosed files leak OS descriptors and may lose buffered output; flush happens on full buffer, fclose, or explicit fflush—stderr is the one that is unbuffered by default."
+  },
+  {
+   "trap": "Seeding assumptions that rand() is fine for security.",
+   "correction": "rand() is deterministic after srand and cryptographically weak—never use it for security or cryptography."
+  },
+  {
+   "trap": "Linking math.h code on UNIX without -lm.",
+   "correction": "Floating math often lives in libm, separate from default libc—add -lm (e.g. gcc program.c -lm); also avoid exact == on floats, prefer fabs(a-b) < epsilon."
+  }
+ ]
+}

@@ -1,0 +1,212 @@
+{
+ "id": "07_number_theory_math",
+ "title": "Number Theory & Math",
+ "type": "CP",
+ "relevance": "Medium (Highly frequent in top-tier OAs (e.g., Google, Citadel, Akuna) and CP rating climbs, though less common in standard web-dev interviews)",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Group the Coprime Elements: graph/array problems with edges for coprime or shared factors (sieve prime factors; primes as bridge nodes). Ways to Choose with Constraints: combinatorics disguised as modulo math—formulate, precompute factorials and inverse factorials, answer in O(N). Find the Cycle / Trailing Zeros: trailing zeros of N! (Legendre) or last digit of huge exponentiation (cycle finding / fast power). Divisibility Count in Array: pairs where A_i divides A_j; if A_i ≤ 10^5 use frequency array + harmonic iteration, not O(N^2).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Establish when the candidate reaches for sieves, O(√N) factorization, binary exponentiation, GCD/LCM, or modular inverses instead of brute force.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Problems about divisors, primes, GCD, or large exponents modulo M signal number-theory templates rather than brute force that TLEs.",
+     "weight": "core",
+     "evidence_hint": "Names sieve, factorization, fast exponentiation, or Fermat inverses as the go-to tools for those themes."
+    },
+    {
+     "id": "rec2",
+     "point": "Constraints with numbers up to 10^9 point to O(√N) factor/divisor work; arrays of size 10^5 with co-primality or divisor-pair checks need precompute/hash or harmonic loops, not O(N^2).",
+     "weight": "core",
+     "evidence_hint": "Cites 10^9 → √N factorization, or 10^5 / bounded A_i (e.g. A_i ≤ 1000 or ≤ 10^5) → frequency/harmonic instead of pairwise loops."
+    },
+    {
+     "id": "rec3",
+     "point": "Trailing zeros of a factorial (Legendre) or last digit of a huge power (cycle / fast power), and combinatorics under modulo with factorials, are standard NT interview disguises.",
+     "weight": "extended",
+     "evidence_hint": "Mentions Legendre trailing zeros, cycle-finding or binpow for last digit, or factorial + inverse factorial for nCr mod M."
+    }
+   ],
+   "probes": [
+    "What constraint or wording makes you reach for a sieve, √N factorization, or binary exponentiation instead of nested loops?",
+    "How do you recognize a coprimality/divisor-pair array problem that should not be O(N^2)?"
+   ],
+   "hints": {
+    "1": "Look at what the problem asks about numbers—primes, divisors, GCD, or huge powers mod M.",
+    "2": "Match constraints: single large N → √N factors; many values ≤ bound → sieve/frequency/harmonic.",
+    "3": "Say: 10^9 → O(√N) factors; A_i ≤ 1000 or ≤ 10^5 → precompute/hash or harmonic, not O(N^2); trailing zeros / last digit / nCr mod M → Legendre, cycle/binpow, or factorial inverses."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Get the candidate to name the right NT template—sieve, binpow, GCD/LCM, √N divisors/factors, harmonic sieve, Fermat inverse, factorial nCr—before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Primes up to a bound → Sieve of Eratosthenes; A^B mod M → iterative binary exponentiation; GCD via Euclidean algorithm and LCM(a,b)=(a/gcd(a,b))·b.",
+     "weight": "core",
+     "evidence_hint": "States sieve for primes, binpow for modular powers, and the LCM identity that divides by gcd first."
+    },
+    {
+     "id": "appr2",
+     "point": "All divisors or prime factors of one N → iterate i from 1 to √N; for factors, peel small primes and handle any remaining prime > √N.",
+     "weight": "core",
+     "evidence_hint": "Describes the √N divisor/factor loop and the leftover large-prime case."
+    },
+    {
+     "id": "appr3",
+     "point": "Many divisor-count/sum queries or properties for all i ≤ N → harmonic sieve looping multiples j=i; j≤N; j+=i; if P is prime, modular inverse is A^{P-2} mod P (Fermat); nCr mod M via factorial and inverse-factorial precompute.",
+     "weight": "extended",
+     "evidence_hint": "Names the multiples loop, Fermat A^{P-2} when P prime, and O(N) factorial precompute for O(1) nCr."
+    }
+   ],
+   "probes": [
+    "For primes, modular powers, and LCM, which templates do you write first?",
+    "When do you use a √N loop versus a harmonic multiples sieve, and how do you get a modular inverse under a prime modulus?"
+   ],
+   "hints": {
+    "1": "Separate one-number work from all-values-up-to-N precompute.",
+    "2": "One N → √N divisors/factors; all i ≤ N → harmonic multiples; powers → binpow; inverse under prime P → Fermat.",
+    "3": "Say: sieve primes; binpow A^B mod M; LCM=(a/gcd)·b; √N peel factors + leftover prime; for j=i; j≤N; j+=i; inverse A^{P-2}; factorials for nCr."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Confirm the candidate can sketch sieve, iterative binpow, Euclidean GCD, √N divisor/factor loops, harmonic multiples, and Fermat inverse from memory.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Sieve: boolean array marked by multiples; binary power: iterative multiply/square while exponent halves; Euclidean GCD from memory.",
+     "weight": "core",
+     "evidence_hint": "Sketches is_prime marking, while-exponent binpow, and the recursive or loop gcd(a,b)=gcd(b,a%b) form."
+    },
+    {
+     "id": "impl2",
+     "point": "Divisors: for i from 1 to √N, if N%i==0 take both i and N/i; factorization: extract factors up to √N then if remainder > 1 it is a prime > √N.",
+     "weight": "core",
+     "evidence_hint": "Writes the paired-divisor collection and the leftover-prime handling after the √N loop."
+    },
+    {
+     "id": "impl3",
+     "point": "Harmonic sieve: for (int j=i; j<=N; j+=i) to count/sum divisors; Fermat inverse A^{P-2} mod P when P is prime; factorial and inverse factorial arrays for nCr.",
+     "weight": "extended",
+     "evidence_hint": "Shows the multiples loop, pow(A,P-2) under prime P, and fact/invfact for combinations."
+    }
+   ],
+   "probes": [
+    "Walk through iterative binary exponentiation and the √N divisor enumeration.",
+    "How do you finish prime factorization after the √N loop, and how do you get a modular inverse when the modulus is prime?"
+   ],
+   "hints": {
+    "1": "Think boolean sieve marks, exponent bit/halfing, and paired divisors.",
+    "2": "Binpow squares base and multiplies when the bit is set; after √N factors, check remaining > 1.",
+    "3": "Spell: sieve marks; res=1, while B: if B odd res*=A, A*=A, B/=2 (mod M); divisors i and N/i; leftover prime; j+=i harmonic; inv=A^{P-2}."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Lock in the standard complexities for sieve, binpow, GCD, √N factor work, harmonic precompute, and factorial nCr.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Sieve of Eratosthenes is O(N log log N); binary exponentiation is O(log B) for A^B mod M; Euclidean GCD is O(log(min(a,b))).",
+     "weight": "core",
+     "evidence_hint": "Quotes O(N log log N), O(log B), and O(log(min(a,b))) for those three."
+    },
+    {
+     "id": "cx2",
+     "point": "Single-number divisor finding and prime factorization are O(√N); harmonic sieve over multiples is O(N log N); divisor-count precompute across queries is O(X log X).",
+     "weight": "core",
+     "evidence_hint": "States O(√N) for one N and O(N log N) / O(X log X) for harmonic-style precomputes."
+    },
+    {
+     "id": "cx3",
+     "point": "Factorials and inverse factorials precompute in O(N) so each nCr query is O(1).",
+     "weight": "extended",
+     "evidence_hint": "Says O(N) build then O(1) per combination query."
+    }
+   ],
+   "probes": [
+    "What are the complexities of sieve, binpow, and Euclidean GCD?",
+    "How does cost differ between factoring one N and precomputing divisor data for all values up to N or X?"
+   ],
+   "hints": {
+    "1": "Recall the named big-O next to each checklist template.",
+    "2": "Sieve N log log N; binpow log B; one N is √N; all multiples is N log N.",
+    "3": "Say: sieve O(N log log N); binpow O(log B); GCD O(log(min(a,b))); factors O(√N); harmonic O(N log N); divisor prep O(X log X); fact O(N), nCr O(1)."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Surface LCM overflow, leftover-prime misses, misuse of Fermat, and pairwise O(N^2) when values are bounded.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "LCM must use (a/gcd(a,b))·b, not a raw a·b/gcd, to avoid overflow.",
+     "weight": "core",
+     "evidence_hint": "Insists on dividing by gcd before multiplying."
+    },
+    {
+     "id": "pit2",
+     "point": "After the √N factorization loop, a remaining value > √N is still a prime factor and must be counted.",
+     "weight": "core",
+     "evidence_hint": "Mentions checking the leftover residue after peeling small factors."
+    },
+    {
+     "id": "pit3",
+     "point": "Fermat inverse A^{P-2} requires P prime; a number has exactly 3 divisors iff it is the square of a prime (T-primes); bounded A_i (≤1000 or ≤10^5) means hash/frequency/harmonic, not O(N^2) pair checks.",
+     "weight": "extended",
+     "evidence_hint": "Calls out prime modulus for Fermat, square-of-prime for 3 divisors, and bounded values blocking naive pairwise loops."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you compute LCM as a·b/gcd without dividing first?",
+    "What factorization and coprimality mistakes still WA after a √N loop?"
+   ],
+   "hints": {
+    "1": "Think overflow, leftover factors, and when Fermat applies.",
+    "2": "Divide before multiply for LCM; check remainder after √N; Fermat needs prime modulus.",
+    "3": "List: LCM=(a/gcd)·b; leftover >√N prime; inverse only if P prime; 3 divisors ⇒ square of a prime; A_i ≤1000/10^5 → not O(N^2)."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "O(N^2) pair checks vs precompute/hash or harmonic iteration",
+   "strong_answer": "When A_i are bounded (e.g. A_i ≤ 1000 for coprimality, or A_i ≤ 10^5 for divisor pairs), precompute/hash or frequency + harmonic multiples beats pairwise O(N^2)."
+  },
+  {
+   "topic": "Cycle finding vs fast exponentiation for huge exponents",
+   "strong_answer": "Last digit / small-modulus periods can use cycle finding; general (A^B) mod M uses iterative binary exponentiation."
+  },
+  {
+   "topic": "√N work on one value vs sieve/harmonic precompute for many",
+   "strong_answer": "One N up to 10^9 → O(√N) divisors/factors; many queries or all i ≤ N → sieve or O(N log N)/O(X log X) harmonic precompute."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Computing LCM as (a·b)/gcd and overflowing.",
+   "correction": "Use LCM(a,b)=(a/gcd(a,b))·b so the division happens before the multiply."
+  },
+  {
+   "trap": "Stopping factorization at √N and dropping a leftover prime factor.",
+   "correction": "After extracting factors up to √N, if the remaining value is >1 it is a prime > √N and must be included."
+  },
+  {
+   "trap": "Using A^{P-2} as inverse when the modulus is not prime.",
+   "correction": "Fermat’s Little Theorem needs prime P: A^{P-1}≡1 (mod P) so inverse is A^{P-2} mod P only then."
+  },
+  {
+   "trap": "Brute-force O(N^2) coprimality or divisor-pair checks on bounded values.",
+   "correction": "If A_i ≤ 1000 or ≤ 10^5, use precompute/hash or frequency array with harmonic iteration."
+  },
+  {
+   "trap": "Misidentifying numbers with exactly 3 divisors.",
+   "correction": "A number has exactly 3 divisors iff it is the square of a prime (T-primes)."
+  }
+ ]
+}

@@ -1,0 +1,151 @@
+{
+ "id": "cpp_s11_pointer_problems",
+ "title": "Common Pointer Problems",
+ "type": "FUND",
+ "relevance": "Interviewers use classic pointer bugs to check whether candidates handle C++ memory safely under direct address manipulation.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the three classic pointer problems and what each means.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "An uninitialised (wild) pointer holds garbage already in its memory; dereferencing it reads or writes an unpredictable location.",
+     "weight": "core",
+     "evidence_hint": "Candidate defines a wild pointer as declared but never given a valid address, and says dereference is unsafe."
+    },
+    {
+     "id": "fund2",
+     "point": "A memory leak occurs when the last pointer to a heap block is lost without a matching delete, so the block can never be reclaimed.",
+     "weight": "core",
+     "evidence_hint": "Candidate ties leaks to losing the last pointer after new without delete."
+    },
+    {
+     "id": "fund3",
+     "point": "A dangling pointer still holds the address of memory that has already been freed; dereferencing it is undefined behaviour.",
+     "weight": "core",
+     "evidence_hint": "Candidate states dangling means a freed address is retained, and names undefined behaviour on use."
+    }
+   ],
+   "probes": [
+    "What are the three classic pointer problems, and how do you define each?"
+   ],
+   "hints": {
+    "1": "Think about what goes wrong before a pointer is set, when heap memory is forgotten, and after free.",
+    "2": "Name uninitialised/wild, memory leak, and dangling — each needs a short definition.",
+    "3": "Wild: garbage address; leak: last pointer lost without delete; dangling: still holds freed address (UB on use)."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to initialise pointers safely and how new/delete pairing plus nulling prevents leaks and dangling use.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Before use, give every pointer a definite value: the address of a real object, an explicit null, or a freshly allocated heap object.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists pointing at a real object, null, or new, and warns against use before any assignment."
+    },
+    {
+     "id": "mech2",
+     "point": "Pair every new with a matching delete, then reset the pointer to nullptr, NULL, or 0 so it no longer names freed memory.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes delete then nulling the pointer as the post-release discipline."
+    },
+    {
+     "id": "mech3",
+     "point": "new int(5) allocates a single int initialised to 5, whereas new int[5] allocates an array of five and is released with delete[].",
+     "weight": "extended",
+     "evidence_hint": "Candidate distinguishes scalar new from array new and mentions delete[] for the array form."
+    }
+   ],
+   "probes": [
+    "How do you safely initialise a pointer, and what do you do after delete to avoid follow-on bugs?"
+   ],
+   "hints": {
+    "1": "Start from an uninitialised declaration and what assignments give it meaning.",
+    "2": "Cover real-object address / null / new, then new-delete pairing and null-after-delete.",
+    "3": "Assign &x, nullptr, or new; after delete[] set the pointer to nullptr; note new int(5) versus new int[5]."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast target choices and ownership choices that keep heap lifetime coherent.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Hard-coding a pointer to a specific address is rarely appropriate compared with pointing at a real object or a new heap allocation.",
+     "weight": "core",
+     "evidence_hint": "Candidate dismisses hard-coded addresses as rarely appropriate and prefers object or heap targets."
+    },
+    {
+     "id": "tr2",
+     "point": "When multiple pointers share one heap block, null-after-delete alone is incomplete without clear ownership of who may release it.",
+     "weight": "core",
+     "evidence_hint": "Candidate says decide which code owns delete when pointers are shared across functions."
+    }
+   ],
+   "probes": [
+    "When two pointers refer to the same heap block, how do null-after-delete and ownership rules work together?"
+   ],
+   "hints": {
+    "1": "Compare fixing the pointer value versus deciding who is allowed to free.",
+    "2": "Hard-coded addresses versus real/heap targets; shared pointers need an owner for delete.",
+    "3": "Prefer a real object or new over a fixed address; with shared pointers, one owner deletes and others must not use the old address."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the dangling-pointer pattern when one function deletes a block another still names.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "If fun deletes through q the same block that main's p still points to, then using *p afterwards is dangling and undefined behaviour.",
+     "weight": "core",
+     "evidence_hint": "Candidate walks main allocating, fun deleting via q, and *p in main as undefined behaviour."
+    },
+    {
+     "id": "app2",
+     "point": "The remedy combines the null-after-delete habit with clear ownership so callers do not keep using freed addresses.",
+     "weight": "core",
+     "evidence_hint": "Candidate assigns ownership of release and stops using aliases after free, including nulling."
+    }
+   ],
+   "probes": [
+    "Walk through a case where a callee deletes a heap block the caller still holds — what goes wrong and how do you fix it?"
+   ],
+   "hints": {
+    "1": "Picture two pointers to one new[] block, with only one delete[].",
+    "2": "Callee delete[] through its parameter leaves the caller's pointer dangling.",
+    "3": "After fun(p) deletes, *p in main is undefined behaviour; fix with ownership plus nulling so aliases are not used."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Hard-coded address vs real object or heap allocation",
+   "strong_answer": "Assigning a specific hard-coded address is rarely appropriate; prefer the address of a real object or a freshly allocated heap object so the pointer has a defined, valid target."
+  },
+  {
+   "topic": "Null-after-delete vs clear ownership when pointers are shared",
+   "strong_answer": "Nulling after delete stops that pointer naming freed memory, but when multiple pointers share one block you also need clear ownership of who may release it so other aliases are not used after free."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using a pointer after declaration but before any assignment.",
+   "correction": "An uninitialised pointer holds garbage; give it a real address, null, or new before any dereference."
+  },
+  {
+   "trap": "Reassigning or letting the last pointer go out of scope without delete after new.",
+   "correction": "Pair every new with delete (delete[] for arrays), or the block can never be reclaimed."
+  },
+  {
+   "trap": "A callee deletes a shared heap block while the caller still dereferences its copy of the address.",
+   "correction": "The caller's pointer is dangling — undefined behaviour; combine ownership of who deletes with null-after-delete so aliases are not used."
+  }
+ ]
+}
