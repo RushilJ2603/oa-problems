@@ -1,0 +1,227 @@
+{
+ "id": "c_s03_control_flow_functions",
+ "title": "Control Flow & Functions",
+ "type": "FUND",
+ "relevance": "Core C mechanics—branching, loops, pass-by-value, and the call stack—underpin almost every SDE interview coding and systems question.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish how C branches, loops, and declares callable units of logic.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "An if evaluates an expression and runs its block when the result is non-zero (true); else is the fallback path.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes if/else as the basic decision primitive driven by a truthy/non-zero condition."
+    },
+    {
+     "id": "fund2",
+     "point": "A while checks before each iteration and may never run; a do-while checks after and always runs at least once.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts pre-check vs post-check and names a use case for each."
+    },
+    {
+     "id": "fund3",
+     "point": "A for packs initialization, condition, and advancement on one line, suited to counting and array traversal.",
+     "weight": "extended",
+     "evidence_hint": "Candidate explains the three for-header parts and why that grouping helps iteration."
+    },
+    {
+     "id": "fund4",
+     "point": "A prototype announces name, return type, and parameters; the definition supplies the body; void return means nothing returned and (void) means no parameters.",
+     "weight": "core",
+     "evidence_hint": "Candidate separates declaration from definition and correctly explains void vs (void)."
+    }
+   ],
+   "probes": [
+    "Walk through how if/else, while vs do-while, and a for loop each control execution.",
+    "What is the difference between a function prototype and a function definition in C?"
+   ],
+   "hints": {
+    "1": "Start with branching, then how loops decide whether to run again.",
+    "2": "Compare when the condition is tested in while versus do-while, then what a for header consolidates.",
+    "3": "if runs on non-zero; while may never enter; do-while always enters once; prototype declares, definition implements; void return vs (void) params."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain switch dispatch, pass-by-value, and what a stack frame holds across calls.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "switch evaluates an integer expression and jumps to a matching case; dense case labels can become a compiler jump table for O(1) dispatch instead of an O(N) if-chain.",
+     "weight": "core",
+     "evidence_hint": "Candidate says switch needs integer constants and may compile to a jump-table index rather than sequential tests."
+    },
+    {
+     "id": "mech2",
+     "point": "C is strictly pass-by-value: each parameter is a new local initialized with a copy of the argument; mutating the caller's object requires passing a pointer (address copied by value).",
+     "weight": "core",
+     "evidence_hint": "Candidate rejects true pass-by-reference and describes pointer-by-value to reach the caller's data."
+    },
+    {
+     "id": "mech3",
+     "point": "A call allocates a stack frame with parameters, locals, and a return address; returning pops the frame and ends automatic lifetime of those locals.",
+     "weight": "core",
+     "evidence_hint": "Candidate names those three frame contents and that locals die when the frame is destroyed."
+    },
+    {
+     "id": "mech4",
+     "point": "C switch does not auto-exit a case; omitting break causes fallthrough into the next case.",
+     "weight": "extended",
+     "evidence_hint": "Candidate warns that without break, execution continues into the following case."
+    }
+   ],
+   "probes": [
+    "Does C support pass-by-reference? How would you make a callee modify the caller's variable?",
+    "What lives in a stack frame, and why must you not return a pointer to a local?"
+   ],
+   "hints": {
+    "1": "Think about what is copied into the callee versus what a pointer lets you reach.",
+    "2": "Contrast long if-chains with switch jump tables, then list stack-frame fields.",
+    "3": "No pass-by-reference—only value copies; pointers simulate mutation; frames hold params, locals, return address; no break means fallthrough."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare control-flow and function styles the file contrasts for clarity, speed, and safety.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Long if-chains over many discrete constants are unreadable and O(N); switch with dense cases can use a jump table for O(1) jumps.",
+     "weight": "core",
+     "evidence_hint": "Candidate picks switch/jump table for dense integer constants and if-chains when switch cannot apply."
+    },
+    {
+     "id": "tr2",
+     "point": "Recursion can be cleaner for tree-like structure, but each call pushes a frame so deep recursion burns stack; iteration uses less memory; tail-recursion-to-loop is not guaranteed in C.",
+     "weight": "core",
+     "evidence_hint": "Candidate weighs elegance vs stack cost and notes C does not promise tail-call optimization."
+    },
+    {
+     "id": "tr3",
+     "point": "goto is discouraged for general logic but is a legitimate C idiom for centralized error cleanup because C has no exceptions; backward/cross jumps risk spaghetti.",
+     "weight": "extended",
+     "evidence_hint": "Candidate defends goto for unwind/cleanup and rejects it for ad-hoc jumping around."
+    },
+    {
+     "id": "tr4",
+     "point": "inline requests inlining to avoid call overhead with real type-checking; compilers may silently ignore it for large, loop-heavy, or recursive bodies.",
+     "weight": "extended",
+     "evidence_hint": "Candidate treats inline as a hint, useful for tiny hot functions, not a guarantee."
+    }
+   ],
+   "probes": [
+    "When would you prefer switch over a long if-else chain, and when does switch fail you?",
+    "Recursion versus a loop—what are you trading, and does C guarantee tail-call optimization?"
+   ],
+   "hints": {
+    "1": "Compare dispatch cost and readability first, then stack cost of recursion.",
+    "2": "Dense integer cases vs strings/floats/ranges; recursive frames vs iterative memory; goto for cleanup only.",
+    "3": "Jump table O(1) vs if-chain O(N); recursion cleaner but stack-heavy, no guaranteed TCO; goto OK for error unwind; inline is a request."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply pass-by-value, recursion/stack tracing, and related APIs to concrete interview scenarios.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "broken_swap only swaps its local copies; a correct swap takes int * parameters, uses *a/*b (and *b = temp), and callers pass &x and &y.",
+     "weight": "core",
+     "evidence_hint": "Candidate rewrites swap with pointers and address-of at the call site."
+    },
+    {
+     "id": "app2",
+     "point": "Tracing factorial(3): frames for 3 then 2 then 1; base returns 1; then 2*1=2 and 3*2=6 as frames pop.",
+     "weight": "core",
+     "evidence_hint": "Candidate walks push/pop order and ends with result 6."
+    },
+    {
+     "id": "app3",
+     "point": "scanf can modify callers' variables because it receives pointers (addresses), not plain values.",
+     "weight": "extended",
+     "evidence_hint": "Candidate ties scanf's &arguments to pass-pointer-by-value."
+    },
+    {
+     "id": "app4",
+     "point": "Standard main forms are int main(void) or int main(int argc, char **argv); argv[0] is the program name; main should return int as exit status (0 success, non-zero failure), not void.",
+     "weight": "extended",
+     "evidence_hint": "Candidate states both signatures, argv[0], and int exit status to the OS."
+    }
+   ],
+   "probes": [
+    "Why does broken_swap fail, and how do you fix it? Trace factorial(3) on the call stack.",
+    "How does scanf modify variables you pass, and what are the valid main signatures?"
+   ],
+   "hints": {
+    "1": "Recall that parameters are copies unless you pass addresses.",
+    "2": "Fix swap with pointers; for factorial, push frames down to the base case then multiply on the way back.",
+    "3": "swap uses *a/*b and & at call; factorial(3) yields 6 via stacked returns; scanf gets pointers; main returns int, not void."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "switch vs long if-chains",
+   "strong_answer": "For many discrete compile-time integer constants, especially dense labels, switch can compile to a jump table and jump in O(1); a massive if-chain is harder to read and remains O(N). Switch cannot match strings, floats, or dynamic ranges."
+  },
+  {
+   "topic": "recursion vs iteration",
+   "strong_answer": "Recursion often reads cleaner for tree-like structures but each call pushes a stack frame, so deep recursion risks overflow; loops use less memory. Some compilers may turn tail recursion into a loop, but C does not guarantee that."
+  },
+  {
+   "topic": "goto for cleanup vs general control flow",
+   "strong_answer": "goto is a standard idiom for centralized error cleanup/unwinding in C (no exceptions), but jumping backward or across complex structures quickly becomes spaghetti and should be avoided for ordinary logic."
+  },
+  {
+   "topic": "inline vs ordinary calls",
+   "strong_answer": "inline asks the compiler to paste the body at the call site for tiny, hot functions with real type-checking, but for large, loop-heavy, or recursive functions the compiler may ignore it and emit a normal call."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Writing if (x = 5) instead of if (x == 5)",
+   "correction": "Assignment stores 5 in x and the condition is 5 (true), so the block always runs; enable -Wall so compilers warn."
+  },
+  {
+   "trap": "Omitting break in a switch case",
+   "correction": "C falls through into the next case; add break (or intentional fallthrough) explicitly."
+  },
+  {
+   "trap": "Off-by-one in a for over an array of size 10",
+   "correction": "Use i < 10 (indices 0 through 9); i <= 10 reads out of bounds and is undefined behavior."
+  },
+  {
+   "trap": "Assuming break exits all nested loops",
+   "correction": "break only terminates the innermost enclosing loop or switch."
+  },
+  {
+   "trap": "Returning a pointer to a local variable",
+   "correction": "The stack frame is destroyed on return, so the pointer dangles; dereferencing is undefined behavior."
+  },
+  {
+   "trap": "Believing same-named parameter x is linked to caller x",
+   "correction": "They are separate locals that only share an initial copied value; mutation needs a pointer to the caller's object."
+  },
+  {
+   "trap": "Looping on a hardware register without volatile",
+   "correction": "The compiler may optimize the check away and create an infinite loop; mark such registers volatile."
+  },
+  {
+   "trap": "Declaring main with a void return type",
+   "correction": "main should return int as the process exit status (0 success, non-zero failure) to the OS."
+  },
+  {
+   "trap": "Mismatched count or types in variadic calls",
+   "correction": "Variadic functions are type-unsafe; va_arg reinterprets memory as the requested type, which is undefined behavior if wrong."
+  },
+  {
+   "trap": "Assigning a function pointer with a mismatched signature",
+   "correction": "Signature must match exactly; otherwise calling through the pointer is undefined behavior."
+  }
+ ]
+}

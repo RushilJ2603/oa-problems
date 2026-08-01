@@ -1,0 +1,225 @@
+{
+ "id": "c_s02_data_types_operators",
+ "title": "Data Types, Variables & Operators",
+ "type": "FUND",
+ "relevance": "Campus and SDE interviews probe C's type system, signed/unsigned conversions, operator precedence, and undefined behavior around side effects because these bugs dominate real C code.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish C's static scalar type system, size guarantees, fixed-width/alias types, and how literals and variables are typed.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "C is statically typed: every variable and expression has a type known at compile time, which dictates byte count and interpretation.",
+     "weight": "core",
+     "evidence_hint": "Candidate states compile-time types decide size and how bits are read, not runtime discovery."
+    },
+    {
+     "id": "fund2",
+     "point": "The C standard guarantees minimum ranges for integer types, not exact byte sizes; the compiler picks sizes for the target hardware.",
+     "weight": "core",
+     "evidence_hint": "Mentions minimum ranges vs exact sizes; may note int is at least 16 bits but typically 32 bits on modern systems."
+    },
+    {
+     "id": "fund3",
+     "point": "Integer types except char are signed by default; plain char signedness is implementation-defined, so use signed char or unsigned char for math.",
+     "weight": "core",
+     "evidence_hint": "Calls out char as the odd case and recommends explicit signed/unsigned char when behavior matters."
+    },
+    {
+     "id": "fund4",
+     "point": "sizeof reports size in bytes; <limits.h>/<float.h> expose actual min/max; <stdint.h> exact-width types (e.g. uint32_t) fix layout portability.",
+     "weight": "extended",
+     "evidence_hint": "Distinguishes sizeof/limits from stdint exact-width and mentions int_fast*/int_least*/intptr_t family."
+    },
+    {
+     "id": "fund5",
+     "point": "size_t is the unsigned sizeof result type for sizes/indices; ptrdiff_t is the signed type from pointer subtraction.",
+     "weight": "core",
+     "evidence_hint": "Uses size_t for array indices/memory sizes and ptrdiff_t for pointer differences."
+    },
+    {
+     "id": "fund6",
+     "point": "Literals get types from syntax: integer default signed int (with U/L/LL suffixes), float literals are double by default (f/F for float), and in C a character literal has type int not char.",
+     "weight": "extended",
+     "evidence_hint": "Gives examples like 42UL, 3.14f, and the C-vs-C++ char-literal type trap."
+    }
+   ],
+   "probes": [
+    "What does C actually guarantee about the size of int versus types like int32_t?",
+    "Why is plain char special compared to other integer types?"
+   ],
+   "hints": {
+    "1": "Think about what the compiler must know before runtime, and what the standard promises versus what hardware chooses.",
+    "2": "Separate minimum ranges, typical sizes, exact-width <stdint.h> types, and size_t/ptrdiff_t roles.",
+    "3": "Say: static types; min ranges not fixed sizes; char signedness is implementation-defined; use int32_t for exact layouts and size_t for sizes/indices; char literals are int in C."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain operators, short-circuiting, precedence, usual arithmetic conversions, and sequence-point rules for side effects.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Logical && and || short-circuit: && evaluates the right side only if the left is true; || only if the left is false—used for NULL guards like ptr != NULL && ptr->value > 0.",
+     "weight": "core",
+     "evidence_hint": "Explains conditional right-hand evaluation and gives a safe pointer-guard pattern."
+    },
+    {
+     "id": "mech2",
+     "point": "Bitwise &, ^, and | bind looser than ==, so flags & MASK == 0 parses as flags & (MASK == 0); parenthesize as (flags & MASK) == 0.",
+     "weight": "core",
+     "evidence_hint": "Restates the precedence trap and the required parentheses."
+    },
+    {
+     "id": "mech3",
+     "point": "For binary operators, the compiler applies integer promotions then usual arithmetic conversions; same-rank signed+unsigned converts the signed operand to unsigned.",
+     "weight": "core",
+     "evidence_hint": "Walks promotions of char/short to int, then rank/signedness rules ending in signed-to-unsigned when ranks match."
+    },
+    {
+     "id": "mech4",
+     "point": "Example: int a = -1 compared with unsigned int b = 0 makes a > b true because -1 becomes UINT_MAX (typically 4,294,967,295) as unsigned.",
+     "weight": "core",
+     "evidence_hint": "Traces two's-complement all-ones reinterpretation and the true comparison result."
+    },
+    {
+     "id": "mech5",
+     "point": "A sequence point is where prior side effects are complete; modifying the same scalar twice without one (e.g. i = i++) is undefined behavior.",
+     "weight": "extended",
+     "evidence_hint": "Defines sequence points and names i = i++ / a[i] = i++ style UB."
+    },
+    {
+     "id": "mech6",
+     "point": "Pre-increment (++x) yields the new value; post-increment (x++) yields the old value then increments; sizeof is compile-time except for VLAs.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts pre/post and notes sizeof's usual compile-time evaluation."
+    }
+   ],
+   "probes": [
+    "Why can if (a > b) be true for int a = -1 and unsigned int b = 0?",
+    "What goes wrong with if (flags & MASK == 0), and how do you fix it?"
+   ],
+   "hints": {
+    "1": "Mixed signedness and operator binding order are the two places C rewrites what you wrote.",
+    "2": "Name integer promotions, then usual arithmetic conversions; separately recall that == outranks bitwise &.",
+    "3": "Trace -1 to unsigned max before comparing; rewrite the bitwise test as ((flags & MASK) == 0); mention i = i++ as UB across sequence points."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose among int, fixed-width types, and size_t, and between #define and const, based on safety and intent.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Use int when exact size does not matter (native efficient size); int32_t (etc.) for hardware/network/file layouts; size_t for memory sizes, byte counts, and array indexing.",
+     "weight": "core",
+     "evidence_hint": "Maps the three choices to generic counters, exact layouts, and size/index domains."
+    },
+    {
+     "id": "tr2",
+     "point": "#define is untyped textual replacement with no scope; const int gives a typed, scoped object the compiler prevents modifying after init.",
+     "weight": "core",
+     "evidence_hint": "Contrasts preprocessor text paste versus typed scoped const qualification."
+    },
+    {
+     "id": "tr3",
+     "point": "Widening casts (e.g. int to long long) are generally safe; narrowing (long to short, or float to int) truncates and can permanently change the value.",
+     "weight": "extended",
+     "evidence_hint": "States widening vs narrowing risk and float-to-int fractional truncation."
+    }
+   ],
+   "probes": [
+    "When should you pick int versus int32_t versus size_t?",
+    "What are the practical differences between #define MAX_USERS 100 and const int max_users = 100?"
+   ],
+   "hints": {
+    "1": "Ask what property you need: native speed, exact width, or a size/index type.",
+    "2": "Separate value-domain choice (int/stdint/size_t) from constant definition (#define vs const).",
+    "3": "Answer with the interview triad: int for generic counters, int32_t for exact layouts, size_t for sizes/indices; prefer const for typed scoped constants over macros."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply type and operator rules to avoid UB and silent logic bugs in real code patterns.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Uninitialized local automatic variables hold garbage; reading before writing is undefined behavior—locals are not zeroed by default.",
+     "weight": "core",
+     "evidence_hint": "States garbage contents and UB on read-before-write for block-scope autos."
+    },
+    {
+     "id": "app2",
+     "point": "Loops comparing a signed int index to a size_t size can go wrong if i becomes negative: the comparison converts i to unsigned and may yield a huge value so the loop continues incorrectly.",
+     "weight": "core",
+     "evidence_hint": "Connects size_t return values to signed/unsigned conversion in i < size() style loops."
+    },
+    {
+     "id": "app3",
+     "point": "In (int32_t)-5 + (uint32_t)10 then compare to uint64_t 2: -5 becomes 4,294,967,291 unsigned, plus 10 wraps to 5, then 5 < 2 is false (0).",
+     "weight": "extended",
+     "evidence_hint": "Reproduces the worked trace: equal-rank signed→unsigned, wrap on add, then promote to uint64_t for the compare."
+    },
+    {
+     "id": "app4",
+     "point": "Adding unsigned char 200 and 100 promotes both to int first, so the sum is int 300 and does not overflow an 8-bit unsigned char during the add.",
+     "weight": "extended",
+     "evidence_hint": "Says integer promotions widen before the add; result type int, value 300."
+    }
+   ],
+   "probes": [
+    "What happens if you read a local int before assigning to it?",
+    "Walk through the type and value of (a + b) < c for int32_t a = -5, uint32_t b = 10, uint64_t c = 2."
+   ],
+   "hints": {
+    "1": "Look for uninitialized autos, mixed signed/unsigned compares, and small-type arithmetic that promotes.",
+    "2": "For the worked sum, apply promotions, then same-rank signed→unsigned, then rank-up to uint64_t.",
+    "3": "Locals start as garbage (UB if read); negative int vs size_t underflows in the compare; the -5/10/2 trace ends false; 200+100 as unsigned char becomes int 300."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "int vs int32_t vs size_t",
+   "strong_answer": "int for generic counters where exact width does not matter (compiler picks an efficient native size); <stdint.h> exact-width types like int32_t when modeling hardware, network packets, or file formats; size_t for memory sizes, byte counts, and array indices."
+  },
+  {
+   "topic": "#define vs const",
+   "strong_answer": "#define does untyped textual replacement before compile and ignores block scope; a const-qualified variable has a real type, respects scope, and cannot be modified after initialization."
+  },
+  {
+   "topic": "widening cast vs narrowing cast",
+   "strong_answer": "Widening (e.g. int to long long) is generally safe; narrowing (long to short) drops high-order bytes and can change the value; casting float to int truncates the fractional part."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming local variables start at zero",
+   "correction": "Automatic locals are not zero-initialized; they contain leftover garbage, and reading before writing is undefined behavior."
+  },
+  {
+   "trap": "Writing if (flags & MASK == 0) for a bitwise test",
+   "correction": "== binds tighter than &, so it becomes flags & (MASK == 0); write if ((flags & MASK) == 0)."
+  },
+  {
+   "trap": "Expecting int a = -1; unsigned int b = 0; a > b to be false",
+   "correction": "Same-rank mixed signedness converts -1 to unsigned (UINT_MAX, typically 4,294,967,295), so the comparison is true."
+  },
+  {
+   "trap": "Treating a C character literal like 'A' as type char",
+   "correction": "In C (unlike C++), character literals have type int."
+  },
+  {
+   "trap": "Writing i = i++ or a[i] = i++",
+   "correction": "Modifying the same scalar twice with no intervening sequence point is undefined behavior; the compiler may do anything."
+  },
+  {
+   "trap": "Relying on plain char for arithmetic signedness",
+   "correction": "Whether plain char is signed or unsigned is implementation-defined; use signed char or unsigned char explicitly when math behavior matters."
+  }
+ ]
+}

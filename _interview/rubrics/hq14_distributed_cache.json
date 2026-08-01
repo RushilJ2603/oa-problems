@@ -1,0 +1,322 @@
+{
+ "id": "hq14_distributed_cache",
+ "title": "Design a distributed cache (Redis / Memcached)",
+ "type": "HLD",
+ "relevance": "High — classic infra HLD prompt (\"design Redis/Memcached\") and the deep-dive that follows almost every read-heavy product design; campus + experienced; FAANG and Indian product cos.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h03_caching",
+  "h15_building_blocks",
+  "h02_load_balancing",
+  "h14_estimation"
+ ],
+ "company_notes": "Campus/intern/new-grad: frequent as \"add Redis\" inside URL shortener, feed, e-commerce; standalone distributed-cache design at stronger campuses and infra-leaning loops. Experienced (1–4+ YOE): consistent hashing/slots, replication failover, hot keys, stampede, client vs proxy, Facebook memcache paper depth — Meta, Amazon, Google, Uber, LinkedIn, Atlassian, Flipkart, etc. Very high as a building block; high as standalone where large cache fleets run. Pair with h03_caching + h15 before mocks.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Clarify cache-product vs app+cache, lock GET/SET/DELETE+TTL+LRU, NFRs, and out-of-scope durability/consistency.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Functional core: GET(key)→value or miss; SET(key,value,ttl?) with optional expiry; DELETE(key); evict by LRU when memory is full",
+     "weight": "core",
+     "evidence_hint": "Names GET/SET/DELETE, optional TTL on SET, and LRU as the default full-memory eviction policy"
+    },
+    {
+     "id": "req2",
+     "point": "NFRs: low-latency hits (< ~1–10 ms in-region; often < 10 ms), high availability, eventual consistency OK across replicas, horizontal scale for memory + QPS",
+     "weight": "core",
+     "evidence_hint": "States sub-~10 ms hit latency, HA, eventual consistency across replicas, and scale-out for RAM and ops/s"
+    },
+    {
+     "id": "req3",
+     "point": "Clarify first: KV only? TTL? eviction? durability? strong vs eventual consistency? read/write ratio? smart client hashing? and whether they want the cache cluster or app+cache-aside",
+     "weight": "extended",
+     "evidence_hint": "Asks the clarify list and defaults to designing the cache cluster while naming cache-aside as the client pattern"
+    },
+    {
+     "id": "req4",
+     "point": "Out of scope unless asked: disk durability as primary store, SQL, cross-DC strong consistency, multi-key ACID, rich query",
+     "weight": "extended",
+     "evidence_hint": "Explicitly draws the line excluding durable primary store, SQL, cross-DC strong consistency, and multi-key ACID"
+    }
+   ],
+   "probes": [
+    "What are the functional and non-functional requirements for this distributed cache, and what are you deliberately leaving out of scope?"
+   ],
+   "hints": {
+    "1": "Start by asking whether they want a Redis-like cache product or app-side caching in front of a DB.",
+    "2": "Lock GET/SET/DELETE + optional TTL + LRU, then latency/HA/eventual consistency and scale assumptions.",
+    "3": "Say: GET/SET/DELETE with optional TTL and LRU; hits < ~1–10 ms; HA with eventual consistency; scale ~1 TB / ~100k–1M ops/s; out of scope: durable primary, SQL, cross-DC strong consistency, multi-key ACID."
+   }
+  },
+  {
+   "phase": "estimation",
+   "goal": "Size the working set and shards so hit rate and miss tax to the DB are explicit.",
+   "must_hit": [
+    {
+     "id": "est1",
+     "point": "Working-set math: e.g. 1B keys × ~1 KB ≈ 1 TB on disk DB, but ~10% of keys serve ~90% traffic → ~100 GB in RAM for high hit rate",
+     "weight": "core",
+     "evidence_hint": "Separates full DB size (~1 TB) from hot working set (~100 GB from ~10% of keys)"
+    },
+    {
+     "id": "est2",
+     "point": "Capacity: peak QPS ~100k–1M ops/s; per-node RAM e.g. 16–64 GB usable → ~2–10+ shards for 100 GB plus headroom for overhead/replicas",
+     "weight": "core",
+     "evidence_hint": "Picks a QPS band in 100k–1M and derives multi-shard count from 16–64 GB nodes for ~100 GB working set"
+    },
+    {
+     "id": "est3",
+     "point": "Per-node QPS: one Redis primary often 50k–100k+ simple ops/s → shard for QPS and memory",
+     "weight": "extended",
+     "evidence_hint": "Cites ~50k–100k+ ops/s per primary as order-of-magnitude and says sharding covers both RAM and QPS"
+    },
+    {
+     "id": "est4",
+     "point": "Miss tax: at 99% hit + 1M QPS → 10k DB reads/s steady; one dead shard doubles miss load for its keys — size the DB for the cold case; hit rate is an economics problem",
+     "weight": "extended",
+     "evidence_hint": "Walks 99% hit at 1M QPS → 10k DB reads/s and notes a dead shard spikes misses so the DB must absorb the cold case"
+    }
+   ],
+   "probes": [
+    "How large is the working set versus the full dataset, and how many shards do you need for memory and QPS?"
+   ],
+   "hints": {
+    "1": "Estimate hot keys in RAM, not the entire database size.",
+    "2": "Use ~10% hot keys → ~100 GB, then divide by per-node usable RAM and check per-primary QPS.",
+    "3": "Say: 1B×~1 KB≈1 TB DB but ~100 GB hot; 16–64 GB nodes → ~2–10+ shards; 100k–1M QPS with ~50k–100k+/primary; 99% hit at 1M QPS → 10k DB reads/s."
+   }
+  },
+  {
+   "phase": "api",
+   "goal": "Sketch the cache protocol (and optionally cache-aside around domain reads/writes).",
+   "must_hit": [
+    {
+     "id": "api1",
+     "point": "Cache protocol: GET key → HIT value | MISS; SET key value [EX seconds]; DELETE key",
+     "weight": "core",
+     "evidence_hint": "Writes the three ops with HIT/MISS on GET and optional EX seconds on SET"
+    },
+    {
+     "id": "api2",
+     "point": "Optional admin/cluster ops: add/remove node, rebalance slots, stats (INFO, hit ratio, memory)",
+     "weight": "extended",
+     "evidence_hint": "Mentions membership/rebalance and observability stats beyond the data plane API"
+    },
+    {
+     "id": "api3",
+     "point": "If app API: cache-aside getUser loads cache then DB then SET with TTL; updateUser saves DB then DELETE key to invalidate",
+     "weight": "extended",
+     "evidence_hint": "Shows miss-path SET after DB load and write-path DB-first then DELETE for invalidation"
+    }
+   ],
+   "probes": [
+    "What does the cache interface look like, and how would an application use it on read and write?"
+   ],
+   "hints": {
+    "1": "This is a cache protocol, not a public REST product—keep it to key-value ops.",
+    "2": "Sketch GET/SET/DELETE first; if they want the app, show cache-aside + delete-on-write.",
+    "3": "Say: GET→HIT|MISS, SET with optional EX, DELETE; app pattern is GET miss→DB→SET(ttl), and update is DB save then DELETE key."
+   }
+  },
+  {
+   "phase": "data_model",
+   "goal": "Define per-entry fields and node-local plus cluster metadata structures.",
+   "must_hit": [
+    {
+     "id": "dm1",
+     "point": "Per entry in memory: key (string/bytes, namespace prefixes like user:123), value (opaque bytes or Redis type), expire_at (absolute time; lazy + active expiry), lru_node (pointer into LRU list / approximated LRU sample)",
+     "weight": "core",
+     "evidence_hint": "Lists key, value, expire_at, and lru_node with namespace and lazy/active expiry notes"
+    },
+    {
+     "id": "dm2",
+     "point": "Node-local structures: hash map key→entry; doubly linked list (or Redis approximated LRU) for eviction order; optional TTL min-heap / timing wheel",
+     "weight": "core",
+     "evidence_hint": "Draws map + LRU list and mentions optional TTL heap/timing wheel"
+    },
+    {
+     "id": "dm3",
+     "point": "Cluster metadata: node list / slot map (or consistent-hash ring + vnodes); primary–replica membership",
+     "weight": "extended",
+     "evidence_hint": "Names routing metadata (slots or ring+vnodes) and primary–replica membership"
+    }
+   ],
+   "probes": [
+    "What do you store per cache entry, and what data structures live on each node versus in cluster metadata?"
+   ],
+   "hints": {
+    "1": "Separate the in-memory entry fields from the cluster membership/routing map.",
+    "2": "Entry = key/value/expire_at/lru_node; node = hash map + LRU (+ TTL structure); cluster = slots/ring + primary/replica.",
+    "3": "Say: entry has key, value, expire_at, lru_node; node has map + doubly linked LRU and optional TTL heap; cluster holds slot/ring map and primary–replica membership."
+   }
+  },
+  {
+   "phase": "architecture",
+   "goal": "Assemble sharded cache primaries, async replicas, client routing, config service, and DB as source of truth.",
+   "must_hit": [
+    {
+     "id": "arch1",
+     "point": "Default shape: app servers with client lib (hash(key)/slot map) → cache shard primaries; each primary owns a key range/slots; in-memory KV + LRU + TTL",
+     "weight": "core",
+     "evidence_hint": "Draws client-side routing to sharded primaries that hold in-memory KV with LRU+TTL"
+    },
+    {
+     "id": "arch2",
+     "point": "HA: async replicate to replicas; promote on failure via Sentinel / Cluster / config service; unreplicated writes can become misses and refill from DB",
+     "weight": "core",
+     "evidence_hint": "Shows primary→async replicas, failover via Sentinel/Cluster/config, and miss-refill after lost writes"
+    },
+    {
+     "id": "arch3",
+     "point": "Routing choices: client-side hashing (Memcached/Facebook — lowest latency); proxy (mcrouter/Twemproxy — dumb clients, extra hop); server redirects (Redis Cluster MOVED/ASK) — pick one and name the tradeoff",
+     "weight": "extended",
+     "evidence_hint": "Compares client-side vs proxy vs MOVED/ASK and states which they pick with a latency/ops tradeoff"
+    },
+    {
+     "id": "arch4",
+     "point": "Config/membership (ZK, Consul, Redis Cluster bus, Sentinel) publishes membership so clients avoid dead nodes; DB is source of truth on miss/after invalidate; alternative: co-located cache on app hosts vs dedicated fleet",
+     "weight": "extended",
+     "evidence_hint": "Names a config/membership plane, DB as SoT on miss, and co-located vs dedicated cache fleet"
+    }
+   ],
+   "probes": [
+    "Walk through the high-level components: how do clients reach the right shard, and how do you handle failover?"
+   ],
+   "hints": {
+    "1": "Think app → routing → shard primary → replica, plus a membership service and the DB behind misses.",
+    "2": "Prefer client-side consistent hashing or slot map; add async replicas and a config plane for membership.",
+    "3": "Say: smart clients hash to primaries; async replicas + Sentinel/Cluster/config for promote; unreplicated loss → miss→DB; optional proxy when many languages need central policy."
+   }
+  },
+  {
+   "phase": "deep_dives",
+   "goal": "Probe sharding remapping, invalidation consistency, routing, and hot-key/stampede mitigations.",
+   "must_hit": [
+    {
+     "id": "dd1",
+     "point": "Sharding: hash % N remaps almost everything on scale-out (miss storm); consistent hashing + vnodes remaps ~1/N keys; Redis Cluster uses fixed 16384 hash slots (CRC16(key) mod 16384), not a classic ring — same goal, different mechanism",
+     "weight": "core",
+     "evidence_hint": "Contrasts mod-N remapping with ~1/N consistent-hash moves and correctly names Redis 16384 slots"
+    },
+    {
+     "id": "dd2",
+     "point": "Consistency/invalidation: cache may be stale within TTL/invalidate contract; prefer DB write then DELETE key (idempotent) over updating cache in place; async replication → brief stale reads after failover OK for most caches",
+     "weight": "core",
+     "evidence_hint": "States TTL/invalidate staleness, DB-first then DELETE, and accepts brief post-failover stale reads"
+    },
+    {
+     "id": "dd3",
+     "point": "Client routing vs proxy: client hash saves +1 RTT but harder client upgrades; proxy (mcrouter) centralizes routing/pooling/shadow-warmup at +latency and ops complexity",
+     "weight": "extended",
+     "evidence_hint": "Names RTT vs upgrade cost for clients and central policy vs extra hop for proxy"
+    },
+    {
+     "id": "dd4",
+     "point": "Hot keys & stampedes: hot reads → L1, replicate hot key to N nodes, split subkeys, or mcrouter-style pools; stampede → lease/single-flight, probabilistic early refresh, jittered TTLs, serve-stale-while-revalidate; hot writes often need key redesign",
+     "weight": "extended",
+     "evidence_hint": "Gives at least one hot-read mitigation and one stampede mitigation, and notes hot writes need redesign"
+    }
+   ],
+   "probes": [
+    "What happens when you add a cache node, and how do you handle hot keys and expiry stampedes?"
+   ],
+   "hints": {
+    "1": "Interviewers usually dig into remapping, invalidation order, and hot keys next.",
+    "2": "Compare mod hash vs consistent hashing/vnodes vs 16384 slots, then DB-first DELETE, then lease/L1 for herds.",
+    "3": "Say: avoid hash%N miss storms—use consistent hashing (~1/N move) or Redis 16384 slots; DB write then DELETE; hot key via L1/replicate/split; stampede via lease/single-flight or jittered TTL."
+   }
+  },
+  {
+   "phase": "bottlenecks",
+   "goal": "Show how memory, QPS, fan-out, failure, and cold start scale—and what sharding cannot fix.",
+   "must_hit": [
+    {
+     "id": "bn1",
+     "point": "Memory: add shards and rebalance slots/ring; size for working set + replica copies; QPS/CPU on one primary: more shards, but for hot keys use replication or L1 — sharding alone will not help one viral key",
+     "weight": "core",
+     "evidence_hint": "Separates scale-out for capacity from hot-key mitigations that sharding cannot fix"
+    },
+    {
+     "id": "bn2",
+     "point": "Node failure: promote replica; clients refresh map; temporary miss spike — DB must absorb ~traffic/N extra; cold cluster/deploy: warmup, shadow traffic (mcrouter), or accept miss storm with shedding",
+     "weight": "core",
+     "evidence_hint": "Describes promote + map refresh, DB absorbing ~traffic/N, and warmup/shadow/shedding for cold start"
+    },
+    {
+     "id": "bn3",
+     "point": "Network fan-out: one page may touch hundreds of keys → batch/multiget, connection pooling, avoid thundering incast",
+     "weight": "extended",
+     "evidence_hint": "Cites multi-key page fan-out and answers with multiget/batching and pooling"
+    },
+    {
+     "id": "bn4",
+     "point": "Multi-region: usually per-region cache + invalidate or TTL; global exact cache coherence is rarely worth it",
+     "weight": "extended",
+     "evidence_hint": "Chooses per-region caches with invalidate/TTL over global exact coherence"
+    }
+   ],
+   "probes": [
+    "Where does this system bottleneck under load or failure, and what does not get fixed by adding more shards?"
+   ],
+   "hints": {
+    "1": "Separate capacity bottlenecks from single-key and failure-induced miss storms.",
+    "2": "Cover memory/QPS scale-out, hot-key limits, DB absorbing ~traffic/N on shard death, and multiget for fan-out.",
+    "3": "Say: add shards for RAM/QPS; L1/replicate for hot keys; on failure DB takes ~traffic/N extra; batch/multiget for hundreds of keys; per-region cache + TTL/invalidate."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "hash % N vs consistent hashing (+ vnodes) vs Redis 16384 slots",
+   "strong_answer": "hash % N is simple until scale-out remaps almost all keys and causes a miss storm; consistent hashing with vnodes keeps remapping to ~1/N and evens load; Redis Cluster instead moves fixed 16384 slots between nodes (CRC16(key) mod 16384)—same minimal-remap goal, not a classic ring."
+  },
+  {
+   "topic": "client-side hashing vs proxy (mcrouter/Twemproxy) vs server redirects",
+   "strong_answer": "Client-side hashing/slot map saves a hop and is lowest latency (Memcached/Facebook style) but upgrades are harder; a proxy gives dumb clients central routing, pooling, and shadow/warmup at extra latency and ops cost; Redis Cluster MOVED/ASK redirects push topology awareness to servers—pick one and name the latency vs ops tradeoff."
+  },
+  {
+   "topic": "cache-aside delete-on-write vs updating the cache in place",
+   "strong_answer": "Prefer DB write then DELETE key (idempotent invalidate) plus TTL; updating the cache before/instead of a committed DB write risks fill/invalidate races and phantoms after crashes; async replica lag means brief stale reads after failover, which is acceptable for most caches."
+  },
+  {
+   "topic": "Redis vs Memcached",
+   "strong_answer": "Memcached is simple GET/SET, multi-threaded, no rich types—good for dumb high-QPS cache; Redis adds structures, scripting, optional persistence, Sentinel/Cluster and is the default interview pick unless they explicitly want a multi-threaded simple cache."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Just use hash % N for sharding",
+   "correction": "Adding a node remaps almost everything → mass miss storm; use consistent hashing (+ vnodes) or Redis 16384 slots so only a fraction of keys move."
+  },
+  {
+   "trap": "Consistent hashing without vnodes",
+   "correction": "Uneven arcs create hot nodes; add virtual nodes for even load."
+  },
+  {
+   "trap": "Saying Redis uses a consistent-hash ring",
+   "correction": "Redis Cluster uses fixed 16384 hash slots (CRC16(key) mod 16384), not a classic ring—same interview story, different mechanism."
+  },
+  {
+   "trap": "Updating the cache before the DB commit",
+   "correction": "A crash can leave phantom values; fix is DB-first then invalidate (DELETE) the key."
+  },
+  {
+   "trap": "Ignoring thundering herd on popular key TTL expiry",
+   "correction": "Use lease/single-flight, probabilistic early refresh, jittered TTLs, or serve-stale-while-revalidate."
+  },
+  {
+   "trap": "Treating the cache as a durable store (write-back without acknowledging loss)",
+   "correction": "Cache is a lossy accelerator; unreplicated or write-back data can disappear—source of truth is usually the DB; prefer availability + eventual consistency unless durability is required."
+  },
+  {
+   "trap": "More shards will fix a hot key",
+   "correction": "One key still maps to one shard; need L1, replicate the hot key, or split keys—sharding alone will not help."
+  },
+  {
+   "trap": "Redis down: silently fall through to Postgres with no protection",
+   "correction": "Fail-open with load shedding, a small local fallback, or a circuit breaker so a cache outage does not melt the DB."
+  }
+ ]
+}

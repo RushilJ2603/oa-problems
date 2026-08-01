@@ -1,0 +1,342 @@
+{
+ "id": "hq10_file_storage",
+ "title": "Design File Storage & Sync (Google Drive / Dropbox)",
+ "type": "HLD",
+ "relevance": "High — canonical 45-min HLD at FAANG + Indian product cos (Google, Meta, Amazon, Microsoft/OneDrive, Dropbox, Uber, Flipkart); tests metadata vs blob split, chunking/delta sync, conflict copies, and notification fan-out.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h11_storage",
+  "h01_networking",
+  "h02_load_balancing",
+  "h03_caching",
+  "h04_databases_indexing",
+  "h05_db_scaling",
+  "h08_message_queues",
+  "h14_estimation"
+ ],
+ "company_notes": "Campus/intern/new-grad: common full-round or large-blob deep dive (metadata vs S3 + presigned upload, sync may be light). Experienced (1–4 YOE): full Dropbox/Drive with CDC vs fixed chunks, shared-folder sharding, dedup/encryption, notification fan-out, version GC — frequent at Google, Meta, Amazon, Microsoft, Dropbox, and storage-heavy loops. Top-tier HLD (with URL shortener, chat, feed, video); mandatory after h11_storage.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock file-sync scope (in vs out), core FRs/NFRs, and scale clarifying questions.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Core FRs: upload/download files, sync across a user’s devices near-real-time, and list the folder tree.",
+     "weight": "core",
+     "evidence_hint": "States upload, download, multi-device sync, and folder listing as must-haves before drawing boxes."
+    },
+    {
+     "id": "req2",
+     "point": "Optional FRs if interviewer wants them: share file/folder with ACLs, version history/restore, and resumable large files (≤50 GB typical interview cap).",
+     "weight": "extended",
+     "evidence_hint": "Asks whether sharing, versions, and large-file resume are in scope; may cite ≤50 GB as the usual cap."
+    },
+    {
+     "id": "req3",
+     "point": "Explicitly out of scope unless asked: real-time co-editing (Docs), full-text search, malware scanning, and per-user quota UI.",
+     "weight": "core",
+     "evidence_hint": "Scopes early: file sync in; Google Docs collab / search / virus scan out."
+    },
+    {
+     "id": "req4",
+     "point": "NFRs: high durability (don’t lose bytes), low-latency upload/download, multi-GB files, availability over strict cross-device immediate consistency, and authz before every URL grant.",
+     "weight": "core",
+     "evidence_hint": "Names durability, latency, large files, AP-friendly sync lag, and secure URL grants."
+    }
+   ],
+   "probes": [
+    "What is in scope for this Dropbox/Drive design, and what are you leaving out?",
+    "What non-functional properties matter most for sync vs for blob durability?"
+   ],
+   "hints": {
+    "1": "Separate must-have sync behaviors from nice-to-haves like sharing and versions.",
+    "2": "List FRs (upload/download/sync/list), optional ACLs/versions/resume, and out-of-scope Docs/search/scan.",
+    "3": "Core: upload/download, near-real-time multi-device sync, folder tree; optional share/versions/≤50 GB resume; out: OT/CRDT collab, search, malware UI; NFRs: durability, latency, multi-GB, availability over strict cross-device consistency, authz before URL grant."
+   }
+  },
+  {
+   "phase": "estimation",
+   "goal": "Show storage cost dominates and metadata QPS vs blob bandwidth scale independently.",
+   "must_hit": [
+    {
+     "id": "est1",
+     "point": "Storage sketch: 100M users × 10 GB avg stored → 1 EB logical; after ~30% dedup still ~700 PB physical — storage cost dominates.",
+     "weight": "core",
+     "evidence_hint": "States 100M users, 10 GB/user, 1 EB logical, ~30% dedup → ~700 PB physical, cost-driven."
+    },
+    {
+     "id": "est2",
+     "point": "Metadata write load: 10M DAU × 10 file events/day → ~1k metadata writes/s average; peaks 5–10×; block traffic >> metadata QPS.",
+     "weight": "core",
+     "evidence_hint": "Gives 10M DAU, 10 events/day, ~1k writes/s, peaks 5–10×, and notes blobs dwarf metadata QPS."
+    },
+    {
+     "id": "est3",
+     "point": "With 4 MB blocks, a 1 GB file is ≈256 chunks; a 1% edit re-uploads only a few chunks (delta).",
+     "weight": "extended",
+     "evidence_hint": "Uses 4 MB → 1 GB ≈ 256 chunks and argues small edits touch few chunks."
+    },
+    {
+     "id": "est4",
+     "point": "Implication: metadata DB is QPS/consistency-sensitive; blob store is capacity/bandwidth/durability-sensitive — scale them independently.",
+     "weight": "core",
+     "evidence_hint": "Splits planes: hot consistent metadata vs capacity/bandwidth blob store."
+    }
+   ],
+   "probes": [
+    "Walk through a back-of-envelope for storage size and metadata write rate.",
+    "Why shouldn’t metadata and blob storage scale the same way?"
+   ],
+   "hints": {
+    "1": "Pick user count, average storage, and daily sync events out loud.",
+    "2": "Compute logical→physical storage with dedup, then metadata writes from DAU × events/day.",
+    "3": "100M×10 GB→1 EB logical, ~30% dedup→~700 PB; 10M DAU×10 events→~1k metadata writes/s (peaks 5–10×); 4 MB chunks make a 1 GB file ≈256 chunks; scale metadata and blobs independently."
+   }
+  },
+  {
+   "phase": "api",
+   "goal": "Define a control-plane API: auth’d sessions, missing-hash presigned uploads, commit, list, share, and cursor sync.",
+   "must_hit": [
+    {
+     "id": "api1",
+     "point": "Upload session: POST /files/upload-session with name, parent_id, size, chunk_hashes[] returns file_id and presigned URLs only for missing hashes.",
+     "weight": "core",
+     "evidence_hint": "Describes upload-session that returns URLs solely for hashes the store does not already have."
+    },
+    {
+     "id": "api2",
+     "point": "Commit path: POST /files/{fileId}/complete creates the new version only after all chunks are ACK’d in blob store.",
+     "weight": "core",
+     "evidence_hint": "Separates durable chunk PUTs from metadata complete/commit."
+    },
+    {
+     "id": "api3",
+     "point": "Sync API: GET /sync/changes?cursor= returns events[] and next_cursor, woken by long-poll/WebSocket notify — not polling alone.",
+     "weight": "core",
+     "evidence_hint": "Mentions cursor-based change pull plus notify wake; says pure polling is too expensive."
+    },
+    {
+     "id": "api4",
+     "point": "Auth on control plane via token header — never trust userId in the body; share via POST /files/{fileId}/share with user_ids/role or link/role.",
+     "weight": "extended",
+     "evidence_hint": "Rejects body userId trust; describes share endpoint with roles or links."
+    }
+   ],
+   "probes": [
+    "What does the upload session request/response look like, and when do you commit metadata?",
+    "How do clients discover remote changes without polling everything?"
+   ],
+   "hints": {
+    "1": "Think control plane for metadata vs direct client PUTs for bytes.",
+    "2": "Sketch upload-session → missing-hash URLs → complete, plus cursor sync and share.",
+    "3": "POST upload-session returns presigned URLs only for missing hashes; complete after blob ACKs; GET /sync/changes?cursor= with long-poll/WS; auth via token header, never body userId."
+   }
+  },
+  {
+   "phase": "data_model",
+   "goal": "Model file tree, versions, ordered block-hash manifests, optional global block index, shares, and device cursors.",
+   "must_hit": [
+    {
+     "id": "dm1",
+     "point": "files row holds parent_id tree, owner_id, name, is_folder, and current_version_id — not the blob bytes.",
+     "weight": "core",
+     "evidence_hint": "Draws files as metadata tree nodes pointing at current_version_id."
+    },
+    {
+     "id": "dm2",
+     "point": "file_versions plus version_blocks (version_id, block_seq, block_hash) store each commit as an ordered SHA-256 hash list; parent_version_id supports conflict detection.",
+     "weight": "core",
+     "evidence_hint": "Shows version row + ordered block_seq/hash manifest and parent_version_id for CAS/conflict."
+    },
+    {
+     "id": "dm3",
+     "point": "Optional blocks index keyed by block_hash with size, ref_count, storage_key; blob objects themselves keyed by block_hash (immutable).",
+     "weight": "extended",
+     "evidence_hint": "Mentions content-addressed blocks with refcounts and object-store keys."
+    },
+    {
+     "id": "dm4",
+     "point": "Shard metadata by owner_id/namespace_id; shared folders need a dedicated namespace strategy; devices store sync_cursor per device.",
+     "weight": "core",
+     "evidence_hint": "Shards by owner/namespace, calls out shared-folder strategy, and ties devices to cursors."
+    }
+   ],
+   "probes": [
+    "What tables do you need so a file version is a list of chunk hashes, not a DB BLOB?",
+    "How do you shard metadata when folders can be shared across users?"
+   ],
+   "hints": {
+    "1": "Metadata holds pointers and manifests; object storage holds immutable chunks.",
+    "2": "Walk files → file_versions → version_blocks → optional blocks, plus shares and devices.",
+    "3": "files(parent_id, current_version_id); file_versions with parent_version_id; version_blocks(version_id, block_seq, block_hash); optional blocks(ref_count, storage_key); shard by owner/namespace; devices.sync_cursor."
+   }
+  },
+  {
+   "phase": "architecture",
+   "goal": "Draw two planes: client watcher/chunker, metadata service, block/upload with CAS object store, sync/notify via queue, optional CDN.",
+   "must_hit": [
+    {
+     "id": "arch1",
+     "point": "Two planes: hot strongly consistent metadata (tree, versions, ACLs, manifests) vs immutable content-addressed blocks in S3/GCS/Magic Pocket — never push GB through API servers on the hot path.",
+     "weight": "core",
+     "evidence_hint": "Splits metadata vs blob planes and refuses to proxy multi-GB through API servers."
+    },
+    {
+     "id": "arch2",
+     "point": "Upload flow: hash locally → ask which hashes are new → PUT only new chunks via short-lived URLs → complete creates file_versions + version_blocks → publish change for other devices.",
+     "weight": "core",
+     "evidence_hint": "Narrates hash → missing URLs → durable PUT → metadata commit → notify."
+    },
+    {
+     "id": "arch3",
+     "point": "Download/sync: notify → GET /sync/changes → diff hash lists → GET missing chunks → reassemble; client engine is watcher → chunker → local hash index → cloud sync.",
+     "weight": "core",
+     "evidence_hint": "Describes notify/cursor pull, hash-list diff, and client watcher/chunker/indexer."
+    },
+    {
+     "id": "arch4",
+     "point": "Stateless app tier behind gateway/LB; Sync/Notification uses long-poll/WebSocket/APNs/FCM plus queue/pubsub; optional CDN for hot shared downloads.",
+     "weight": "extended",
+     "evidence_hint": "Names notify channels, pub/sub, and optional CDN; sticky sessions not required if state is in DB + pub/sub."
+    }
+   ],
+   "probes": [
+    "Draw the high-level architecture and walk an upload from desktop client to durable commit.",
+    "What happens on another device after a file changes?"
+   ],
+   "hints": {
+    "1": "Keep bytes off the API hot path; metadata and blobs are different services.",
+    "2": "Client → gateway → metadata + block/upload → object store; sync service + queue for wakes.",
+    "3": "Hash chunks, presigned PUT only missing hashes, complete writes version+manifest, publish; other devices wake, pull cursor delta, fetch missing chunks; watcher/chunker/local index on client."
+   }
+  },
+  {
+   "phase": "deep_dives",
+   "goal": "Defend presigned uploads, chunking choice, dedup/encryption, conflict copies, and strong-ish version commits vs eventual notify.",
+   "must_hit": [
+    {
+     "id": "dd1",
+     "point": "Prefer presigned (or equivalent) direct-to-blob over proxying bytes through API — proxy melts on 50 GB files; auth on the grant; multipart for resume.",
+     "weight": "core",
+     "evidence_hint": "Rejects API proxy for large files; grants short-lived URLs and mentions multipart resume."
+    },
+    {
+     "id": "dd2",
+     "point": "Interview default: fixed ~4 MB chunks; offer CDC (Rabin) when probed on middle-of-file edits — fixed shifts all boundaries on insert-1-byte; CDC keeps most boundaries stable.",
+     "weight": "core",
+     "evidence_hint": "Starts fixed 4 MB, upgrades to CDC/Rabin for insert-shift; may note real Dropbox often cites fixed ≤4 MB."
+    },
+    {
+     "id": "dd3",
+     "point": "Global CAS dedup saves most storage but has cross-user side-channel/compliance risk; per-user safer; client-side encryption breaks server-side dedup.",
+     "weight": "extended",
+     "evidence_hint": "States global vs per-tenant dedup tradeoff and that E2EE undermines server dedup."
+    },
+    {
+     "id": "dd4",
+     "point": "Offline concurrent binary edits → conflict copy (not silent LWW); OT/CRDT only if Docs scope is added; version commit uses compare-and-swap on parent_version_id while device notify may lag seconds (AP-friendly).",
+     "weight": "core",
+     "evidence_hint": "Chooses conflict copies for binaries, defers OT/CRDT, CAS on parent_version_id, accepts brief sync lag."
+    }
+   ],
+   "probes": [
+    "Why not stream the whole file through your API servers?",
+    "Two devices edit the same file offline — how do you resolve it?",
+    "Fixed 4 MB chunks vs content-defined chunking — when does each win?"
+   ],
+   "hints": {
+    "1": "Each deep dive is a product/security tradeoff, not just another box.",
+    "2": "Cover proxy vs presigned, fixed vs CDC, global vs per-user dedup, conflict copy vs LWW/OT, strong commit vs eventual notify.",
+    "3": "Presigned + multipart; start fixed 4 MB then CDC for mid-file edits; per-user dedup if cross-tenant risk; conflict copies for binaries; CAS on parent_version_id; notify lag OK."
+   }
+  },
+  {
+   "phase": "bottlenecks",
+   "goal": "Scale metadata shards, block bandwidth, notification fan-out, storage cost/GC, shared folders, and failure/integrity modes.",
+   "must_hit": [
+    {
+     "id": "bn1",
+     "point": "Metadata hot path: shard by user/namespace, cache folder listings, paginate huge folders; shared-folder fan-out is the hard shard problem (shared namespace ID + ACL table).",
+     "weight": "core",
+     "evidence_hint": "Shards metadata, caches lists, paginates, and plans shared namespaces instead of nesting all members on one owner shard."
+    },
+    {
+     "id": "bn2",
+     "point": "Block path: parallel chunk PUTs, only missing hashes, client-side compression; CDN/edge for popular shared downloads.",
+     "weight": "core",
+     "evidence_hint": "Parallel missing-hash uploads and CDN for hot shared downloads."
+    },
+    {
+     "id": "bn3",
+     "point": "Notification fan-out: one change → many devices and shared-folder members; pub/sub per user/device, batch events; mobile uses APNs/FCM instead of always-on WebSocket.",
+     "weight": "core",
+     "evidence_hint": "Uses per-user/device pub/sub, batching, and mobile push rather than permanent WS for all."
+    },
+    {
+     "id": "bn4",
+     "point": "Cost/integrity/failures: dedup + cold tier + version TTL (e.g. 30/180 days) + GC unreferenced blocks; incomplete upload → abort/TTL orphan parts; blob up/metadata down → no commit (safe); verify hash on upload.",
+     "weight": "extended",
+     "evidence_hint": "Mentions TTL/GC, safe no-commit if metadata down, resume/abort incomplete multipart, hash verify."
+    }
+   ],
+   "probes": [
+    "Where does this design break first under load, and how do you scale that piece?",
+    "What happens if the blob store accepts chunks but metadata is down?"
+   ],
+   "hints": {
+    "1": "Separate metadata QPS, blob bandwidth, and notify fan-out as different bottlenecks.",
+    "2": "Talk sharding/shared namespaces, parallel missing-hash PUTs, pub/sub+push, and GC/TTL.",
+    "3": "Shard by namespace; parallel only-missing PUTs + CDN; per-device pub/sub and APNs/FCM; version TTL 30/180 days + refcount GC; no metadata commit if metadata is down; hash-verify uploads."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Proxy bytes through API vs presigned direct-to-blob",
+   "strong_answer": "Proxy looks simple/secure but melts servers on 50 GB files. Prefer short-lived presigned URLs (or session tokens) with auth on the grant, client PUT straight to object storage, and multipart for resumable uploads; metadata commit only after blocks are durable."
+  },
+  {
+   "topic": "Fixed ~4 MB chunks vs content-defined chunking (CDC / Rabin)",
+   "strong_answer": "Fixed is simpler metadata but insert-1-byte at the start shifts all boundaries. CDC keeps most boundaries stable for better delta/dedup after edits, at the cost of variable sizes and more CPU. Interview default: start fixed 4 MB; offer CDC when probed on editing the middle of a 1 GB file. Real Dropbox often cites fixed ≤4 MB blocks."
+  },
+  {
+   "topic": "Global vs per-tenant dedup",
+   "strong_answer": "CAS with chunk key = hash(content) enables global dedup and saves the most storage, but risks cross-user side channels and compliance issues; per-user dedup is safer. Client-side encryption breaks server-side dedup (convergent encryption is an advanced caveat)."
+  },
+  {
+   "topic": "Conflict copies vs LWW vs OT/CRDT",
+   "strong_answer": "For opaque binaries, use conflict copies (e.g. conflicted copy — Device — Date) so neither edit is silently lost. LWW only if the product accepts loss. OT/CRDT is Docs-style collab — explicitly out of file-sync scope unless expanded."
+  },
+  {
+   "topic": "Strong metadata commit vs eventual device notify",
+   "strong_answer": "Commit a version with compare-and-swap on parent_version_id so concurrent commits are detected and versions are not lost or double-applied. Devices may lag seconds via async notify — defend AP for cross-device sync lag while keeping strong-ish lineage for a single user’s file tree."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating the question as Google Docs / character-level collab",
+   "correction": "File sync ≠ real-time co-editing. Use conflict copies for binaries; only bring OT/CRDT if the interviewer expands scope to Docs."
+  },
+  {
+   "trap": "Storing file bytes in MySQL/DB BLOBs",
+   "correction": "Backups, replication, and queries die on large blobs. Put bytes in object storage; DB holds pointers, ACLs, and ordered chunk-hash manifests."
+  },
+  {
+   "trap": "Upload failed at 99% means restart the whole file",
+   "correction": "Use chunk/multipart resume: retry only missing parts; do not rewrite hashes that already succeeded."
+  },
+  {
+   "trap": "Two offline editors → silent last-writer-wins",
+   "correction": "Neither wins silently; keep both as conflicted copies (or a version fork) and surface the conflict to the user."
+  },
+  {
+   "trap": "Assuming server-side dedup still works with client-side E2EE",
+   "correction": "Server-side dedup needs server-visible plaintext (or convergent encryption). Client-side E2EE implies little/no cross-user dedup."
+  },
+  {
+   "trap": "Drawing S3 boxes but skipping chunk manifest, sync cursor, and conflict policy",
+   "correction": "Interviewers treat the ordered hash manifest, cursor-based sync, and conflict-copy policy as the actual Dropbox question — not just object storage."
+  }
+ ]
+}

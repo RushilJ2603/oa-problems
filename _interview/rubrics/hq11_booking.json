@@ -1,0 +1,277 @@
+{
+ "id": "hq11_booking",
+ "title": "Design a Booking System (Ticketmaster / BookMyShow, seat locking)",
+ "type": "HLD",
+ "relevance": "High — canonical HLD for contention + inventory; campus + FAANG / Indian product cos (Amazon, Flipkart, Uber, Atlassian, BookMyShow-style rounds); also maps to hotels/airlines.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h06_consistency_cap",
+  "h03_caching",
+  "h04_databases_indexing",
+  "h05_db_scaling",
+  "h08_message_queues",
+  "h10_api_design",
+  "h14_estimation"
+ ],
+ "company_notes": "Very common campus/intern/new-grad HLD as BookMyShow/Ticketmaster/movie booking (seat lock, payment window, basic scale); at 1–4 YOE depth shifts to waiting rooms, Redis vs DB correctness, payment sagas/idempotency, hot-event isolation, bot/fairness; among the top contention/inventory HLD prompts alongside URL shortener and rate limiter.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock FRs/NFRs: two-phase hold+confirm, no double-booking, AP browse vs CP booking, hold TTL, and onsale-scale assumptions.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Core FRs: browse/search events, view seat map + availability, select and hold seats, pay and confirm booking, view confirmation/ticket.",
+     "weight": "core",
+     "evidence_hint": "Lists browse → seat map → hold → pay/confirm → ticket without collapsing hold and confirm into one step."
+    },
+    {
+     "id": "req2",
+     "point": "NFRs: never double-book; hold+confirm strongly consistent (CP); browse/search AP with stale seat map OK for seconds; hold window ~10 min; survive onsale spikes with millions concurrent; search latency ≪ 500 ms; read-heavy outside onsale.",
+     "weight": "core",
+     "evidence_hint": "States CAP split by path and names no-double-booking plus time-bound hold before diving into boxes."
+    },
+    {
+     "id": "req3",
+     "point": "Clarify scope: movie shows vs concerts, assigned seats vs GA, peak QPS, hold TTL, whether payment is in-scope; optional FRs include cancel/refund, waitlist, dynamic pricing, admin events, multi-city aggregator, Verified Fan/bot gates.",
+     "weight": "extended",
+     "evidence_hint": "Asks clarifying questions and marks optional features instead of silently designing everything."
+    }
+   ],
+   "probes": [
+    "What must never happen on the booking path, and how does browse consistency differ from hold/confirm?"
+   ],
+   "hints": {
+    "1": "Start with the user journey from finding an event to holding a seat and paying.",
+    "2": "Separate browse/search availability from the atomic hold+confirm path in your NFRs.",
+    "3": "Say AP for browse (stale map OK briefly), CP/strong consistency for hold+confirm, hold ~10 min, no double-booking, search ≪ 500 ms."
+   }
+  },
+  {
+   "phase": "estimation",
+   "goal": "Show browse-heavy steady state vs onsale spike, finite inventory, and why cache/waiting room/Redis holds beat a bigger SQL box.",
+   "must_hit": [
+    {
+     "id": "est1",
+     "point": "Steady state: e.g. 100M DAU × 100 req/user/day drives huge browse QPS; booking writes ≪ reads (~100:1 outside onsale).",
+     "weight": "core",
+     "evidence_hint": "States assumptions out loud and contrasts read-heavy browse with far fewer booking writes."
+    },
+    {
+     "id": "est2",
+     "point": "Onsale spike: one popular event with 50k–100k seats can draw millions concurrent at T0 (Taylor Swift-class ~14M users / ~3.5B requests); confirm rate may only be thousands/min so a queue must absorb the rest.",
+     "weight": "core",
+     "evidence_hint": "Separates concurrent arrival from seats sold and concludes admission control is required."
+    },
+    {
+     "id": "est3",
+     "point": "Storage: venues/events small; per-seat ticket rows dominate — e.g. 1k cities × 5 venues × 1k seats × 2 shows/day is tens of millions of seat-rows/year; booking rows ~100 B each.",
+     "weight": "extended",
+     "evidence_hint": "Roughs seat-row scale and implies inventory/locking design matters more than raw DB size."
+    }
+   ],
+   "probes": [
+    "Walk through back-of-envelope for steady browse vs a blockbuster onsale — where do the writes actually go?"
+   ],
+   "hints": {
+    "1": "State DAU/read assumptions, then contrast with one hot event at T0.",
+    "2": "Compare seat inventory size to concurrent users trying to book.",
+    "3": "Use ~100:1 reads:writes outside onsale; onsale ~14M users / multi-billion requests; queue absorbs excess beyond confirm capacity."
+   }
+  },
+  {
+   "phase": "api",
+   "goal": "Define hold then confirm APIs with conflict semantics, auth ownership, and idempotent booking.",
+   "must_hit": [
+    {
+     "id": "api1",
+     "point": "POST /events/{eventId}/holds with seatIds returns holdId + expiresAt; 409 if any seat taken; POST /bookings with holdId + paymentMethodId returns bookingId + tickets and is idempotent.",
+     "weight": "core",
+     "evidence_hint": "Two-phase endpoints: reserve/hold first, confirm after payment, with 409 on conflict."
+    },
+    {
+     "id": "api2",
+     "point": "Also expose GET /events/{eventId}, GET /events/search, and optionally DELETE /holds/{holdId}, GET /bookings/{bookingId}, GET /queue/{eventId}; auth user from token — never trust userId in body for hold ownership.",
+     "weight": "core",
+     "evidence_hint": "Covers browse/search plus auth binding holds to the authenticated user."
+    }
+   ],
+   "probes": [
+    "What does the hold API return on success vs when another user already took a seat?"
+   ],
+   "hints": {
+    "1": "Think reserve-then-confirm rather than a single book-and-pay call.",
+    "2": "Hold creates a timed reservation; booking confirms after payment with conflict status codes.",
+    "3": "POST holds → holdId/expiresAt or 409; POST bookings idempotent with holdId; ownership from auth token."
+   }
+  },
+  {
+   "phase": "data_model",
+   "goal": "Model event/venue/ticket/booking with AVAILABLE→HELD→BOOKED, uniqueness fences, and Redis TTL holds.",
+   "must_hit": [
+    {
+     "id": "dm1",
+     "point": "ticket has status ENUM available/held/booked, hold_id, hold_expires_at, version; UNIQUE(event_id, section, row, seat); booking_seat UNIQUE(ticket_id) as final no-double-sell; Redis key seat:{eventId}:{ticketId} = owner with TTL 600s.",
+     "weight": "core",
+     "evidence_hint": "Shows state machine fields plus DB unique constraint and Redis ephemeral hold key with TTL 600s."
+    },
+    {
+     "id": "dm2",
+     "point": "event and venue tables hold metadata/seat_map; index (event_id, status) for seat-map queries; search often offloaded to Elasticsearch via CDC; payment intents/idempotency keys stay off the seat-map hot path.",
+     "weight": "extended",
+     "evidence_hint": "Separates catalog/search from hot inventory and names indexing/CDC for search."
+    }
+   ],
+   "probes": [
+    "How do you represent seat state and guarantee the same seat cannot be sold twice at the DB layer?"
+   ],
+   "hints": {
+    "1": "Start from event/venue/ticket/booking entities and seat status.",
+    "2": "AVAILABLE → HELD → BOOKED with time-bound hold fields and a uniqueness constraint on sold seats.",
+    "3": "ticket status + hold_expires_at + UNIQUE seat + booking_seat UNIQUE(ticket_id); Redis seat:{event}:{ticket} TTL 600s."
+   }
+  },
+  {
+   "phase": "architecture",
+   "goal": "Sketch client→edge→services with waiting room, Redis holds, Postgres as truth, and async notifications.",
+   "must_hit": [
+    {
+     "id": "arch1",
+     "point": "Client → CDN/Edge → LB/API Gateway → Search (Elasticsearch), Event Service (cache + Events DB, AP-friendly reads), optional Waiting Room (Redis ZSET) with admit token, Booking Service → Redis seat locks → Tickets/Bookings DB (Postgres) → Payment Gateway; async queue to notification/PDF workers.",
+     "weight": "core",
+     "evidence_hint": "Draws browse vs booking paths, waiting room before hold, and async off confirm."
+    },
+    {
+     "id": "arch2",
+     "point": "Stateless app tier; Booking fleet sized for admitted users only; Postgres (ACID) is source of truth for sold seats; Redis is ephemeral holds + queue — efficiency layer, not sole correctness.",
+     "weight": "core",
+     "evidence_hint": "Explicitly says DB is truth for sold seats and Redis holds/queue are ephemeral."
+    }
+   ],
+   "probes": [
+    "Where does the waiting room sit relative to the hold API, and what is the source of truth for a sold seat?"
+   ],
+   "hints": {
+    "1": "Split read-heavy event browse from write-heavy booking.",
+    "2": "Put admission control in front of booking; keep notifications off the confirm path.",
+    "3": "Waiting room admits tokens into Booking → Redis locks → Postgres truth; queue workers for tickets/notifications."
+   }
+  },
+  {
+   "phase": "deep_dives",
+   "goal": "Defend double-booking prevention, Redis vs DB holds, waiting room vs blind scale, and locking strategy on confirm.",
+   "must_hit": [
+    {
+     "id": "dd1",
+     "point": "Prevent double-booking with Redis SET NX EX hold plus short DB txn on confirm (UNIQUE(ticket_id) or UPDATE … WHERE status='held' AND hold_id=?); multi-minute SELECT FOR UPDATE while user pays is wrong; refund if TTL races payment.",
+     "weight": "core",
+     "evidence_hint": "Names SET NX EX + DB fence and rejects holding row locks across payment."
+    },
+    {
+     "id": "dd2",
+     "point": "Hold in Redis vs DB status+expires_at: Redis gives auto TTL + speed; DB-only is simpler but needs sweeper/lazy reclaim; hybrid Redis TTL + write-through held flag is a common senior answer; Redis alone is not truth (Kleppmann/Redlock caveats).",
+     "weight": "core",
+     "evidence_hint": "Compares Redis TTL, DB status, and hybrid; cites Redis as efficiency with DB correctness."
+    },
+    {
+     "id": "dd3",
+     "point": "Waiting room vs horizontal scale: finite contended inventory — more servers do not create more seats; admission + fairness beat blind autoscale; mega onsales need the queue before the seat map. Multi-seat holds must be all-or-none.",
+     "weight": "extended",
+     "evidence_hint": "Argues admission control for finite seats and atomic multi-seat acquisition."
+    }
+   ],
+   "probes": [
+    "How do you prevent two users from booking the same seat, and why not hold SELECT FOR UPDATE until payment finishes?"
+   ],
+   "hints": {
+    "1": "Focus on the atomic hold and what happens at confirm.",
+    "2": "Contrast long DB row locks with short txn + TTL hold + uniqueness fence.",
+    "3": "SET NX EX hold, confirm with conditional UPDATE/UNIQUE; Redis not sole truth; waiting room before map for mega onsales."
+   }
+  },
+  {
+   "phase": "bottlenecks",
+   "goal": "Scale onsale herd, hot event shards, seat-map reads, and payment/notification failure modes without blocking confirm.",
+   "must_hit": [
+    {
+     "id": "bn1",
+     "point": "Onsale thundering herd: waiting room + edge rate limits + bot mitigation so millions do not hit the hold API; partition inventory by event_id/show_id and protect the inherently hot shard with queue + Redis, not infinite SQL connections.",
+     "weight": "core",
+     "evidence_hint": "Names waiting room/rate limits and event-scoped partitioning for hot onsales."
+    },
+    {
+     "id": "bn2",
+     "point": "Seat-map read QPS via CDN/cache of event+venue with careful availability overlay (short TTL / Redis / SSE); never block confirm on email/SMS — queue workers; extend hold TTL when payment starts.",
+     "weight": "core",
+     "evidence_hint": "Caches catalog aggressively, keeps availability advisory, and moves notifications async."
+    },
+    {
+     "id": "bn3",
+     "point": "Failure modes: Redis down → degrade or fail-closed on hold but keep DB uniqueness; payment success + booking fail → reconcile + refund; expired hold after charge → refund; search via Elasticsearch+CDC not LIKE on primary.",
+     "weight": "extended",
+     "evidence_hint": "Walks Redis outage, payment/booking mismatch, and search offload without inventing extra figures."
+    }
+   ],
+   "probes": [
+    "What breaks first in a Taylor Swift-class onsale, and how do you keep the confirm path short?"
+   ],
+   "hints": {
+    "1": "Think about millions arriving for one event's finite seats.",
+    "2": "Protect the hot event path before the DB and keep side effects async.",
+    "3": "Waiting room + event_id partition + Redis holds; async notifications; DB uniqueness survives Redis loss; refund/reconcile on payment races."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Long SELECT FOR UPDATE while user pays vs short DB txn + TTL hold",
+   "strong_answer": "Holding row locks across minutes of user payment is bad (ties up DB connections); prefer status+expires_at with short transactions/lazy reclaim, or Redis SET NX EX for speed + auto-expiry, with DB unique/OCC as final safety net."
+  },
+  {
+   "topic": "Redis seat lock vs DB status columns (vs hybrid)",
+   "strong_answer": "Redis: auto TTL and speed for holds; DB status: simpler single store but needs sweeper or lazy expiry; hybrid Redis TTL + write-through held flag is a common senior answer — Redis remains an efficiency layer, Postgres/conditional write rejects double-sell."
+  },
+  {
+   "topic": "Waiting room vs just scaling horizontally",
+   "strong_answer": "Inventory is finite and contended — more servers do not create more seats; controlled admission (Redis ZSET FIFO or Queue-it-style) plus fairness beats blind autoscale for bots/cost; mega onsales need the queue before the seat map."
+  },
+  {
+   "topic": "Optimistic vs pessimistic locking on confirm",
+   "strong_answer": "OCC/version under moderate contention; under blockbuster contention, fail fast on hold acquisition (SET NX) and keep the confirm transaction tiny."
+  },
+  {
+   "topic": "CP booking path vs AP browse/search",
+   "strong_answer": "Browse/search/event page can be AP with briefly stale seat maps; hold+confirm must be CP/strong consistency so the same seat is never sold twice."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Two users click the same seat at once — unclear winner or last-write-wins.",
+   "correction": "Atomic hold (SET NX / conditional DB update); loser gets 409; seat map should refresh."
+  },
+  {
+   "trap": "User closes the tab mid-checkout and seat stays locked forever.",
+   "correction": "TTL expiry releases the seat; no dependency on client unload."
+  },
+  {
+   "trap": "Payment succeeds after hold expired and someone else booked.",
+   "correction": "Confirm txn fails; automatic refund; ideally extend the lock when payment begins."
+  },
+  {
+   "trap": "Assuming Redlock is required for correctness.",
+   "correction": "Usually no for interviews; single Redis + DB fence is the expected answer; know Kleppmann’s critique if pushed — Redis/Redlock alone is not a correctness fence."
+  },
+  {
+   "trap": "Treating GA/quantity inventory like assigned seats without atomicity.",
+   "correction": "Use counter/DECR with floor at 0 (still atomic) vs per-seat keys; same two-phase hold idea."
+  },
+  {
+   "trap": "BookMyShow-style aggregator ignoring theatre channel inventory.",
+   "correction": "Aggregator uses reserved allotment or live theatre API; still need local hold TTL so the seat is blocked across channels for ~10 min."
+  },
+  {
+   "trap": "Drawing a cache of available seats as source of truth.",
+   "correction": "Cache is advisory; interviewer will force a double-book scenario — only atomic hold + DB uniqueness prevent double-sell."
+  }
+ ]
+}

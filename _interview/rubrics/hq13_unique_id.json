@@ -1,0 +1,291 @@
+{
+ "id": "hq13_unique_id",
+ "title": "Design a Distributed Unique ID Generator (Snowflake)",
+ "type": "HLD",
+ "relevance": "High — Alex Xu Vol.1 Ch.7 staple; shows up standalone and as a building block inside URL shortener, chat, news feed, booking; FAANG + Indian product cos probe Snowflake vs UUID vs ticket server.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h01_networking",
+  "h04_databases_indexing",
+  "h05_db_scaling",
+  "h06_consistency_cap",
+  "h07_consensus",
+  "h10_api_design",
+  "h14_estimation"
+ ],
+ "company_notes": "Campus/new-grad often as a short deep-dive inside URL shortener, feed, or chat, or a full 45-min for distributed-systems fundamentals; experienced (1–4 YOE) as standalone Snowflake or multi-DC ID service with probes on clock skew, ZK assignment, bit tuning, and UUID v7. Twitter/X origin; asked widely at Meta, Amazon, Microsoft, Uber, Atlassian, Flipkart, etc. High-frequency building-block alongside URL shortener—know the 64-bit diagram cold.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock the ID contract: uniqueness, size/shape, ordering, QPS/latency, and what is out of scope.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "FR/NFR triad: globally unique, 64-bit numeric, roughly time-sortable IDs at ≥ 10k IDs/s, low latency, high availability, no single-writer SPOF",
+     "weight": "core",
+     "evidence_hint": "States nextId() must be unique + 64-bit + roughly time-ordered, cites ≥ 10k IDs/s and availability without a central writer"
+    },
+    {
+     "id": "req2",
+     "point": "Defend why UUID v4 fails (128-bit, not ordered) and ticket server fails (SPOF / bottleneck) against that triad",
+     "weight": "core",
+     "evidence_hint": "Explicitly rejects UUID v4 on size/ordering and ticket server on SPOF/throughput before proposing Snowflake"
+    },
+    {
+     "id": "req3",
+     "point": "Clarify roughly time-ordered vs strict global monotonicity, multi-region needs, whether IDs must hide business volume, and out-of-scope items like cryptographic unguessability",
+     "weight": "extended",
+     "evidence_hint": "Asks interviewer whether k-ordering is enough, multi-DC, sequential-leak concerns, and parks crypto/secondary indexes unless asked"
+    }
+   ],
+   "probes": [
+    "What properties must the IDs satisfy, and why isn't UUID v4 or a ticket server enough?"
+   ],
+   "hints": {
+    "1": "Start from functional nextId() plus the usual non-functional constraints interviewers expect for an ID generator.",
+    "2": "Name the Alex Xu triad—unique, 64-bit numeric, roughly time-sortable—and the QPS bar, then knock out UUID v4 and ticket server.",
+    "3": "Say: unique + 64-bit + roughly time-sortable + ≥ 10k IDs/s + no SPOF; UUID v4 is 128-bit/unordered; ticket server is a central bottleneck."
+   }
+  },
+  {
+   "phase": "estimation",
+   "goal": "Show capacity math: cluster target vs per-worker ceiling and timestamp lifetime.",
+   "must_hit": [
+    {
+     "id": "est1",
+     "point": "Alex Xu baseline ~10k IDs/s cluster-wide is far below one worker's theoretical ~4M IDs/s/worker; social/chat peaks of 100k–1M IDs/s still need only tens of workers",
+     "weight": "core",
+     "evidence_hint": "States 10k IDs/s baseline, notes one worker's ~4M IDs/s headroom, and maps 100k–1M peaks to tens of workers"
+    },
+    {
+     "id": "est2",
+     "point": "41-bit millisecond timestamp from a custom epoch lasts ~69 years; per-worker ceiling is 2^12 × 1000 = 4,096,000 IDs/s",
+     "weight": "core",
+     "evidence_hint": "Cites 41-bit ms → ~69 years and 12-bit sequence × 1000 ms → 4,096,000 IDs/s per worker"
+    },
+    {
+     "id": "est3",
+     "point": "If generation is local, CPU/clock—not a DB—is the bottleneck; network matters only for a remote ID service",
+     "weight": "extended",
+     "evidence_hint": "Concludes local Snowflake is clock/CPU bound; networking appears only if IDs are fetched over RPC"
+    }
+   ],
+   "probes": [
+    "Walk through QPS and how long the timestamp field lasts—where does the system actually bottleneck?"
+   ],
+   "hints": {
+    "1": "Pick a cluster QPS target out loud and compare it to one worker's capacity.",
+    "2": "Use the 41-bit ms lifetime (~69 years) and 12-bit sequence × 1000 for per-worker ceiling.",
+    "3": "Say ~10k IDs/s baseline vs ~4M IDs/s/worker (4,096,000); 41 bits ≈ 69 years; bottleneck is CPU/clock if local."
+   }
+  },
+  {
+   "phase": "api",
+   "goal": "Define how callers get IDs—prefer library/sidecar, optional batched RPC and decode.",
+   "must_hit": [
+    {
+     "id": "api1",
+     "point": "Prefer library/sidecar APIs: long nextId() and List<Long> nextIds(int n) in-process to avoid per-ID network hops",
+     "weight": "core",
+     "evidence_hint": "Proposes nextId()/nextIds(n) embedded or on localhost rather than a remote hop per insert"
+    },
+    {
+     "id": "api2",
+     "point": "Optional RPC POST /v1/ids with count returning ids, plus GET /v1/ids/{id}/meta for timestamp/datacenter/worker/sequence; auth and rate-limit the network service",
+     "weight": "core",
+     "evidence_hint": "Shows batched POST /v1/ids, optional meta decode, and notes auth/rate-limits on the networked path only"
+    }
+   ],
+   "probes": [
+    "How do clients call the generator—library vs service—and what does the interface look like?"
+   ],
+   "hints": {
+    "1": "Decide first whether IDs are minted in-process or over the network.",
+    "2": "Sketch nextId/nextIds for the library path and a batched POST plus optional meta GET for RPC.",
+    "3": "Prefer long nextId() / nextIds(n); optional POST /v1/ids {count} → {ids}, GET .../meta with timestamp_ms, datacenter_id, worker_id, sequence; lock down the network path."
+   }
+  },
+  {
+   "phase": "data_model",
+   "goal": "Model tiny local worker state and the classic 64-bit pack; persist only ID leases.",
+   "must_hit": [
+    {
+     "id": "dm1",
+     "point": "IdWorker state: workerId 0..31, datacenterId 0..31, sequence 0..4095, lastTimestamp, with nextId, tilNextMillis, and timeGen",
+     "weight": "core",
+     "evidence_hint": "Lists those fields/ranges and the three methods as the in-memory worker model"
+    },
+    {
+     "id": "dm2",
+     "point": "Classic pack: id = ((now - epoch) << 22) | (datacenterId << 17) | (workerId << 12) | sequence — i.e. 1 unused + 41 ts + 10 machine (often 5+5) + 12 sequence → 4096 IDs/ms/worker",
+     "weight": "core",
+     "evidence_hint": "Writes the shift formula or equivalent 1+41+10+12 layout and 4096 IDs/ms/worker"
+    },
+    {
+     "id": "dm3",
+     "point": "Persist only machine-ID assignment leases (ZooKeeper/etcd/config), not every generated ID",
+     "weight": "extended",
+     "evidence_hint": "Says durable state is worker/datacenter assignment only; generated IDs stay ephemeral bit-packs"
+    }
+   ],
+   "probes": [
+    "What state does a worker keep, and how do you lay out the 64 bits?"
+   ],
+   "hints": {
+    "1": "This is barely a DB design—focus on per-worker fields and the bit layout.",
+    "2": "Name worker/datacenter/sequence/lastTimestamp, then the << 22 / << 17 / << 12 pack.",
+    "3": "IdWorker: ids 0..31 / 0..31, seq 0..4095, lastTimestamp; id = ((now-epoch)<<22)|(dc<<17)|(worker<<12)|seq; only leases are persisted."
+   }
+  },
+  {
+   "phase": "architecture",
+   "goal": "Embed Snowflake locally with one-time worker-ID assignment; discard SPOF and unordered alternatives.",
+   "must_hit": [
+    {
+     "id": "arch1",
+     "point": "App servers call a local Snowflake library/sidecar using NTP-synced clock, in-memory sequence, and a workerId assigned once",
+     "weight": "core",
+     "evidence_hint": "Draws App → local library with clock + sequence + workerId; prefers embed/sidecar over multi-hop microservice"
+    },
+    {
+     "id": "arch2",
+     "point": "Uniqueness without per-ID coordination: unique machine ID at startup (ZooKeeper/etcd/config/IP/ordinal); generation is then local bit-pack",
+     "weight": "core",
+     "evidence_hint": "States coordination only at startup for workerId; each nextId is local clock+counter+pack"
+    },
+    {
+     "id": "arch3",
+     "point": "Compare-and-discard: ticket server / Redis INCR path is SPOF/latency; UUID v4 local fails 64-bit + sort requirements; multi-DC encodes datacenterId with healthy NTP",
+     "weight": "extended",
+     "evidence_hint": "Verbalizes discarded ticket/UUID paths and multi-DC via datacenterId + NTP"
+    }
+   ],
+   "probes": [
+    "Sketch the high-level design and what you deliberately are not building."
+   ],
+   "hints": {
+    "1": "Keep ID minting next to the app unless polyglot clients force a service.",
+    "2": "Show local generate path plus optional ZK/etcd startup lease; contrast ticket server and UUID v4.",
+    "3": "App → Snowflake library (clock, mutex sequence, workerId); startup lease for unique workerId; reject ticket SPOF and UUID v4; encode datacenterId for multi-DC."
+   }
+  },
+  {
+   "phase": "deep_dives",
+   "goal": "Probe Snowflake vs alternatives, clock skew, worker-ID lifecycle, and bit-budget tuning.",
+   "must_hit": [
+    {
+     "id": "dd1",
+     "point": "Snowflake vs ticket server vs UUID: Snowflake when you need 64-bit + time order + no per-ID coord; ticket server for strict global sequence/simplicity at low QPS; UUID v7/ULID when 128-bit is OK and you want zero machine-ID ops",
+     "weight": "core",
+     "evidence_hint": "Maps each alternative to the requirement it wins on without claiming Snowflake always wins"
+    },
+    {
+     "id": "dd2",
+     "point": "Clock skew is the hard problem: NTP step backward risks duplicates—refuse or wait until now > lastTimestamp; prefer forward-only slew; on sequence 4095 in the same ms, tilNextMillis",
+     "weight": "core",
+     "evidence_hint": "Describes backward-clock wait/refuse, slew vs step, and spinning to next ms after sequence 4095"
+    },
+    {
+     "id": "dd3",
+     "point": "Worker ID lifecycle: static config vs ZK/etcd ephemeral (auto reclaim, fence long GC/network blips) vs Instagram in-Postgres (41 ts + 13 shard + 10 seq); Discord uses 42-bit ts / 5 worker / 5 process / 12 incr and string JSON IDs",
+     "weight": "extended",
+     "evidence_hint": "Compares assignment strategies and cites Instagram/Discord layout differences without conflating them"
+    },
+    {
+     "id": "dd4",
+     "point": "Bit-budget tuning: reallocate the 10 machine + 12 sequence bits (e.g. shrink DC bits, grow workers/sequence) for known topology",
+     "weight": "extended",
+     "evidence_hint": "Shows willingness to trade timestamp years vs workers vs per-ms burst for the stated topology"
+    }
+   ],
+   "probes": [
+    "When would you pick a ticket server or UUID v7 instead, and how do you handle clocks moving backwards?"
+   ],
+   "hints": {
+    "1": "Interviewers usually push alternatives and failure modes next—clocks and worker IDs.",
+    "2": "Structure: requirement fit of Snowflake/ticket/UUID, then backward NTP handling, then how workerIds are assigned.",
+    "3": "Snowflake for 64-bit+order+local mint; ticket for strict sequence; UUID v7 if 128-bit OK; on skew wait/refuse until now > lastTimestamp; tune 10+12 bits; mention Instagram/Discord variants if asked."
+   }
+  },
+  {
+   "phase": "bottlenecks",
+   "goal": "Scale workers, handle hot shards and remote fetch, and protect uniqueness across failures/regions.",
+   "must_hit": [
+    {
+     "id": "bn1",
+     "point": "Horizontal scale: add workers with new IDs—QPS scales linearly until the 10-bit (or tuned) machine space is exhausted",
+     "weight": "core",
+     "evidence_hint": "Says add workers for linear QPS until machine-ID bits run out"
+    },
+    {
+     "id": "bn2",
+     "point": "Hot worker: >4k IDs/ms → wait for next ms, split processes (Discord-style process bits), or widen sequence; remote ID service should batch and prefetch ranges",
+     "weight": "core",
+     "evidence_hint": "Names the >4k IDs/ms wait/split/widen path and batching/prefetch for RPC"
+    },
+    {
+     "id": "bn3",
+     "point": "Failure/multi-region: worker death is fine; do not reassign workerId while its clock window could collide—wait out lease/max skew; regions stay independent with k-ordering only within NTP/network skew; time-leading IDs help B-tree locality vs UUID v4",
+     "weight": "extended",
+     "evidence_hint": "Avoids eager workerId reuse, accepts cross-region ordering limits, and notes append-friendly inserts vs random UUIDs"
+    }
+   ],
+   "probes": [
+    "How does this scale under a hot worker or multi-region load, and what breaks uniqueness on failure?"
+   ],
+   "hints": {
+    "1": "Think worker count, per-ms burst, and what happens when a worker dies.",
+    "2": "Cover linear add-workers, the >4k IDs/ms case, and lease/skew before workerId reuse.",
+    "3": "Add workers until 10-bit space ends; on >4k IDs/ms wait/split/widen; batch remote fetches; hold workerId past max skew; time-ordered inserts beat UUID v4 page splits."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Snowflake vs ticket server vs UUID",
+   "strong_answer": "Snowflake wins for 64-bit numeric, roughly time-ordered IDs with no per-ID coordination once workerIds exist. Ticket server (Flickr-style) wins for strict global sequence and simplicity at low QPS but is a SPOF/bottleneck unless carefully paired. UUID v4 needs no coordination but is 128-bit and unordered (hurts indexes); UUID v7/ULID keep sortability at 128-bit with zero machine-ID ops when 64-bit is not required."
+  },
+  {
+   "topic": "Clock skew handling: wait/refuse vs logical offset",
+   "strong_answer": "On backward NTP steps, refuse or sleep until now > lastTimestamp so you never reuse a (timestamp, worker, seq) tuple; prefer NTP that slews forward-only. Same-ms IDs may interleave across machines by worker then sequence—usually acceptable k-ordering, not a Lamport clock. Sequence overflow at 4095 in one ms uses tilNextMillis."
+  },
+  {
+   "topic": "Worker ID assignment: static vs ZK ephemeral vs in-DB shard",
+   "strong_answer": "Static config is simple but ops-heavy. ZK/etcd ephemeral leases auto-reclaim but must fence long GC and network blips so two live nodes never share an ID. Instagram bakes shard bits into Postgres (41+13+10) and skips a separate Snowflake fleet; Discord adds process bits and returns string IDs for JSON."
+  },
+  {
+   "topic": "Bit-budget: timestamp years vs workers vs per-ms burst",
+   "strong_answer": "Classic 1+41+10+12 (~69 years, 4096 IDs/ms/worker). Tuning reallocates the 10 machine and 12 sequence bits for known topology (e.g. fewer DC bits, more workers or sequence) when years of timestamp headroom can be traded for capacity."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Clock moved backwards—keep minting with the old or new wall clock naively",
+   "correction": "Refuse or sleep until catch-up; never emit a duplicate (timestamp, worker, seq). Prefer NTP slew over step; optionally track last ID time."
+  },
+  {
+   "trap": "Claiming IDs are strictly monotonic across the whole fleet",
+   "correction": "Only roughly time-ordered (Twitter aimed ~1s); same-ms order is by machine then sequence. Call them k-sorted, not a global Lamport clock."
+  },
+  {
+   "trap": "Defaulting to UUID without checking requirements",
+   "correction": "UUID is 128-bit; v4 is random and hurts indexes. If 128-bit is allowed, prefer UUID v7 (RFC 9562) / ULID over v4."
+  },
+  {
+   "trap": "Assuming Discord/Instagram are identical to classic Twitter Snowflake",
+   "correction": "Discord: custom epoch 2015, 42-bit ts / 5 worker / 5 process / 12 incr, JSON strings. Instagram: in-DB shard bits (41+13+10), no separate Snowflake service."
+  },
+  {
+   "trap": "Reassigning workerId immediately after crash/restart",
+   "correction": "Ephemeral ZK without fencing or recycling IDs too fast after crash can duplicate. Hold leases past max clock skew so two nodes never share an ID in an overlapping window."
+  },
+  {
+   "trap": "Treating IDs as privacy-preserving or volume-hiding perfectly",
+   "correction": "Timestamp leaks rough create time; per-ms sequence is not a global counter—better than auto-incr for hiding totals, not privacy-preserving."
+  },
+  {
+   "trap": "Returning raw 64-bit IDs through JS/JSON numbers",
+   "correction": "IDs above 2^53-1 lose precision in JS Number; use string transport (Discord pattern)."
+  }
+ ]
+}

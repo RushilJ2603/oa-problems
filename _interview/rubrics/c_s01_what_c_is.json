@@ -1,0 +1,183 @@
+{
+ "id": "c_s01_what_c_is",
+ "title": "What C Is and How It Runs",
+ "type": "FUND",
+ "relevance": "SDE interviews probe whether you understand C as a close-to-hardware systems language, the compile/link pipeline, and what undefined behavior actually means.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what C is for, how standards matter, and the shape of a hosted first program.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "C is a small, fast, close-to-the-hardware systems language that provides minimal abstraction and trusts the programmer completely.",
+     "weight": "core",
+     "evidence_hint": "Mentions systems use cases (kernels, firmware, drivers) and that C sits close to the machine with little abstraction."
+    },
+    {
+     "id": "fund2",
+     "point": "C evolved from informal K&R C through ANSI C (C89/C90), then C99, C11, C17, and recently C23; the chosen -std flag dictates available language features and library functions.",
+     "weight": "core",
+     "evidence_hint": "Names the standards sequence and says -std=c17 or similar controls which features you get."
+    },
+    {
+     "id": "fund3",
+     "point": "In a hosted C program, int main(void) is the entry point; return 0; passes process exit status to the OS, and by convention 0 means success.",
+     "weight": "extended",
+     "evidence_hint": "Explains main as entry, return value as exit status, and 0 as success."
+    },
+    {
+     "id": "fund4",
+     "point": "By default every C program has three standard streams: stdin, stdout, and stderr.",
+     "weight": "extended",
+     "evidence_hint": "Names the three streams and their roles (input, normal output, errors)."
+    }
+   ],
+   "probes": [
+    "What is C designed for, and why do people still use it instead of higher-level languages?",
+    "What standard of C do you typically target, and why does it matter?"
+   ],
+   "hints": {
+    "1": "Think about where performance, determinism, and direct memory access matter.",
+    "2": "Separate philosophy (minimal abstraction) from standards (what -std unlocks) and from the hello-world entry/exit contract.",
+    "3": "C is close-to-hardware systems C from Bell Labs Unix era; standards run K&R → C89/C90 → C99 → C11 → C17 → C23; main returns an int exit status where 0 means success."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how source becomes an executable and how the abstract machine categorizes behavior.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "gcc as a driver orchestrates four stages: preprocessing (comments stripped, macros expanded, #include pasted), compilation to assembly, assembly to an object file, then linking into an executable.",
+     "weight": "core",
+     "evidence_hint": "Lists the four stages in order and distinguishes object files from the final linked binary."
+    },
+    {
+     "id": "mech2",
+     "point": "A translation unit is one .c file after the preprocessor expands macros and pastes includes; an object file holds machine code for one translation unit but may still have unresolved external references.",
+     "weight": "core",
+     "evidence_hint": "Defines translation unit vs object file and notes linking resolves externals like printf."
+    },
+    {
+     "id": "mech3",
+     "point": "The C standard describes an Abstract Machine; observable program behavior is categorized as well-defined, implementation-defined, unspecified, or undefined.",
+     "weight": "core",
+     "evidence_hint": "Names the abstract machine and all four behavior buckets with a short example for each."
+    },
+    {
+     "id": "mech4",
+     "point": "An ABI is the low-level contract between a binary and the OS/hardware (e.g., data layout and which registers pass arguments); a native binary is bound to a CPU architecture and OS, so other targets need cross-compilation.",
+     "weight": "extended",
+     "evidence_hint": "Defines ABI and connects it to why binaries are not portable across architecture/OS without a matching toolchain."
+    }
+   ],
+   "probes": [
+    "Walk me through what happens when you run gcc main.c -o myprogram.",
+    "What is undefined behavior, and how is it different from implementation-defined behavior?"
+   ],
+   "hints": {
+    "1": "Treat the build like an assembly line with intermediate products between stages.",
+    "2": "Cover preprocess → compile → assemble → link, then the four behavior categories under the abstract machine.",
+    "3": "Preprocess pastes/expands text; compile emits assembly; assemble makes .o; link resolves externals. UB means the standard imposes no requirements; implementation-defined means the compiler must choose and document one option."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Surface the costs of native compilation and why the standard leaves some choices open.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "C compiles to native machine code with no software intermediary, buying maximum performance and minimal overhead but costing portability versus interpreted languages.",
+     "weight": "core",
+     "evidence_hint": "Contrasts native execution/performance with being tied to architecture and OS."
+    },
+    {
+     "id": "tr2",
+     "point": "Implementation-defined behavior lets compilers choose among allowed options and document them (e.g., size of int), rather than forcing every compiler to do exactly the same thing.",
+     "weight": "core",
+     "evidence_hint": "Says the standard deliberately leaves some choices to the implementation for platform fit, with documentation required."
+    },
+    {
+     "id": "tr3",
+     "point": "Compilation and linking are separate so each translation unit can become an object file whose external references are resolved later when multiple objects and libraries are stitched together.",
+     "weight": "extended",
+     "evidence_hint": "Explains separate compilation: compile units independently, then link to resolve symbols across files and libraries."
+    }
+   ],
+   "probes": [
+    "Why split compilation and linking instead of compiling straight to an executable?",
+    "Why does the C standard allow implementation-defined behavior instead of mandating identical behavior everywhere?"
+   ],
+   "hints": {
+    "1": "Compare what you gain from native code with what you give up.",
+    "2": "Tie performance/portability to ABI binding, and tie implementation-defined choices to hardware differences.",
+    "3": "Native code is fast but architecture/OS-specific; separate link step resolves externals across .o files; implementation-defined (documented choice) exists so compilers can match real machines."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Show practical compiler flags, stage-stop switches, and how pipeline failures surface.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A robust baseline build uses flags like -std=c17, -Wall -Wextra, -O2, and -g; -E/-S/-c stop after preprocess, assembly text, or object-file stages respectively.",
+     "weight": "core",
+     "evidence_hint": "Names several of those flags and what artifact each stop flag produces."
+    },
+    {
+     "id": "app2",
+     "point": "Syntax errors fail compilation; a declared but undefined function can compile yet fail at link time with an undefined reference.",
+     "weight": "core",
+     "evidence_hint": "Distinguishes compile-time syntax failure from linker undefined-reference when a definition is missing."
+    },
+    {
+     "id": "app3",
+     "point": "Inspecting the pipeline: gcc -E expands headers/macros into huge text; gcc -S yields .s assembly; gcc -c yields a binary .o; linking the .o with the C library produces the executable.",
+     "weight": "extended",
+     "evidence_hint": "Describes what you see in .i/.s/.o and that linking connects calls like puts to the system C library."
+    }
+   ],
+   "probes": [
+    "How would you inspect what the preprocessor or assembler produced for a simple hello.c?",
+    "If the compiler succeeds but the linker reports undefined reference, what went wrong?"
+   ],
+   "hints": {
+    "1": "Think about flags that stop the driver early versus a full link.",
+    "2": "Map -E, -S, -c, and full link to text, assembly, object, and executable artifacts.",
+    "3": "Use -E for expanded source, -S for .s, -c for .o; missing function definitions break the linker with undefined reference even when compilation of the caller succeeded."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Native compiled C vs interpreted languages",
+   "strong_answer": "C produces raw machine instructions the CPU runs directly—maximum performance and minimal overhead—but the binary is bound to a target CPU architecture and OS, unlike more portable interpreted runtimes."
+  },
+  {
+   "topic": "Separate compilation and linking vs compile-straight-to-executable",
+   "strong_answer": "Compiling to object files per translation unit, then linking, lets the toolchain resolve external references across multiple .o files and libraries (e.g., printf/puts in the C library) instead of requiring one monolithic compile-to-executable step."
+  },
+  {
+   "topic": "Implementation-defined behavior vs mandating identical compiler behavior",
+   "strong_answer": "The standard allows a documented choice among options (such as the size of int) so implementations can fit real hardware, rather than forcing every compiler to behave identically in every low-level detail."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating #include like a Python-style module import.",
+   "correction": "#include is literal text inclusion; a large header is fully processed by the compiler every time that translation unit is compiled."
+  },
+  {
+   "trap": "Assuming undefined behavior means the program will crash or return garbage.",
+   "correction": "UB means the standard imposes no requirements; the compiler may assume the invalid code never happens and can delete checks, break earlier code, or do anything else."
+  },
+  {
+   "trap": "Expecting a missing function definition to fail at compile time.",
+   "correction": "Declaring a function without defining it can compile; the linker fails later with an undefined reference if no object provides the definition."
+  }
+ ]
+}

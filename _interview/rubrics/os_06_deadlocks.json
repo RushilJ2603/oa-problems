@@ -1,0 +1,192 @@
+{
+ "id": "os_06_deadlocks",
+ "title": "Deadlocks",
+ "type": "FUND",
+ "relevance": "Tests whether candidates can reason about concurrent resource waits, the Coffman conditions, and Banker's-style safety analysis common in SDE interviews and OAs.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Cisco-style Banker's questions often grant a process request before testing whether an ordering is a safe sequence; Linux and Windows typically use deadlock ignorance (the Ostrich algorithm).",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what deadlock is, the four Coffman conditions, and how it differs from starvation and livelock.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Deadlock is a permanent circular block: a set of processes each waits for a resource another in the set holds, so the awaited release never happens.",
+     "weight": "core",
+     "evidence_hint": "States permanent blocking with mutual wait for held resources, not just temporary delay."
+    },
+    {
+     "id": "fund2",
+     "point": "All four Coffman conditions must hold at once: mutual exclusion, hold and wait, no preemption, and circular wait; breaking any one makes deadlock impossible.",
+     "weight": "core",
+     "evidence_hint": "Lists all four by name and says they are necessary and jointly sufficient for deadlock to be possible."
+    },
+    {
+     "id": "fund3",
+     "point": "Deadlock, starvation, and livelock are distinct: starvation is indefinite denial of a runnable process; livelock is active state change with no progress.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts permanent circular block vs indefinitely denied progress vs busy no-progress interaction."
+    }
+   ],
+   "probes": [
+    "What is a deadlock, and what four conditions are required for one to occur?",
+    "How is deadlock different from starvation and livelock?"
+   ],
+   "hints": {
+    "1": "Think about processes stuck waiting on each other for resources.",
+    "2": "Name the four Coffman conditions and say why each is needed.",
+    "3": "Deadlock = permanent circular wait; starvation = indefinitely denied; livelock = changing state but never finishing."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how resource-allocation graphs and the Banker's safety algorithm decide whether a state is deadlocked or safe.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "With single-instance resources, a cycle in the RAG is necessary and sufficient for deadlock.",
+     "weight": "core",
+     "evidence_hint": "Says cycle means deadlock and no cycle means no deadlock when each type has one instance."
+    },
+    {
+     "id": "mech2",
+     "point": "With multiple-instance resources, a cycle is necessary but not sufficient; the graph alone is inconclusive and the detection/safety algorithm on allocation and request matrices is required.",
+     "weight": "core",
+     "evidence_hint": "Explains another holder may release an instance and break the wait, so you must run the matrix algorithm."
+    },
+    {
+     "id": "mech3",
+     "point": "Avoidance keeps a safe state: there exists a safe sequence where each process can obtain its maximum needs using Available plus resources freed earlier; Need = Max − Allocation; grant a request only if the resulting state stays safe.",
+     "weight": "core",
+     "evidence_hint": "Defines safe sequence, Need as Max minus Allocation, and refusal to enter an unsafe state."
+    },
+    {
+     "id": "mech4",
+     "point": "The safety algorithm repeatedly finds a process with Need ≤ Available, pretends it finishes, and returns its allocation to Available; if all finish, the state is safe.",
+     "weight": "extended",
+     "evidence_hint": "Describes the iterative Need ≤ Available check and releasing allocation back into Available."
+    }
+   ],
+   "probes": [
+    "When does a cycle in a resource-allocation graph imply deadlock?",
+    "Walk through how the Banker's safety algorithm decides whether a state is safe."
+   ],
+   "hints": {
+    "1": "Separate the single-instance RAG rule from the multiple-instance case.",
+    "2": "For Banker's, start from Available and look for Need ≤ Available processes in order.",
+    "3": "Single-instance: cycle iff deadlock; multi-instance: cycle only a warning; safety = finish everyone by Need ≤ Available then reclaim."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast the four deadlock-handling strategies and the costs of breaking each Coffman condition.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Four strategies exist: ignorance (Ostrich—reboot if hung; used by most general-purpose OSes because prevention cost is not worth paying continuously), prevention, avoidance with advance maximum claims (Banker's), and detection plus recovery.",
+     "weight": "core",
+     "evidence_hint": "Names all four strategies and notes ignorance as the common OS choice for rarity vs continuous cost."
+    },
+    {
+     "id": "tr2",
+     "point": "Prevention costs: shareable resources are not always possible; request-all-up-front lowers utilization and risks starvation; preemption works only for saveable state (CPU, memory), not printers; global resource ordering is the most practical rule.",
+     "weight": "core",
+     "evidence_hint": "Maps each Coffman break to its downside and calls global ordering the most practical."
+    },
+    {
+     "id": "tr3",
+     "point": "Detection recovers by process termination (all at once or one-by-one by priority/progress/resources held) or resource preemption with rollback, which can starve a repeatedly chosen victim.",
+     "weight": "extended",
+     "evidence_hint": "Mentions aborting deadlocked processes and preempting resources with checkpoint rollback and starvation risk."
+    }
+   ],
+   "probes": [
+    "Compare deadlock ignorance, prevention, avoidance, and detection/recovery—when would you choose each?",
+    "What are the practical costs of breaking each of the four Coffman conditions?"
+   ],
+   "hints": {
+    "1": "List the four handling strategies from doing nothing to detect-and-recover.",
+    "2": "For each Coffman condition, say how prevention breaks it and what you give up.",
+    "3": "Ostrich for rare deadlocks; prevention via ordering is most practical in code; Banker's needs max claims; detection then abort or preempt."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply lock ordering, safe-sequence simulation, and the deadlock-free resource-count bound to concrete cases.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Breaking circular wait with a global resource ordering carries into code: always acquire locks in the same fixed order so cyclic wait—and deadlock—becomes impossible.",
+     "weight": "core",
+     "evidence_hint": "States fixed lock-acquire order as the coding discipline that prevents circular wait."
+    },
+    {
+     "id": "app2",
+     "point": "Checking whether an ordering is a safe sequence is a simulation: walk left to right, require Need ≤ current Available at each step, then add that process's allocation back; it is unsafe the moment some Need exceeds Available.",
+     "weight": "core",
+     "evidence_hint": "Describes walking Available through the given order, not using a closed formula."
+    },
+    {
+     "id": "app3",
+     "point": "For n processes with maxima d_i on one resource type, deadlock-free requires R ≥ sum(d_i − 1) + 1 = sum d_i − n + 1; when every maximum is k, R ≥ n(k − 1) + 1.",
+     "weight": "core",
+     "evidence_hint": "Gives the worst-case hold d_i−1 each, then +1 frees progress, and the equal-k reduction."
+    },
+    {
+     "id": "app4",
+     "point": "In the worked Banker's example with totals A=10, B=5, C=7 and Available ⟨3,3,2⟩, one safe sequence is ⟨P2, P4, P5, P1, P3⟩; any sequence that starts with P1 is not safe because Need ⟨7,4,3⟩ exceeds initial Available ⟨3,3,2⟩.",
+     "weight": "extended",
+     "evidence_hint": "Cites Available ⟨3,3,2⟩, the safe sequence starting P2, and why starting with P1 fails."
+    }
+   ],
+   "probes": [
+    "Why does acquiring locks in a fixed global order prevent deadlock?",
+    "Given Available and Need vectors, how do you tell whether a candidate ordering is a safe sequence?",
+    "Three processes each need at most 2 units of one resource; what is the minimum R that guarantees no deadlock?"
+   ],
+   "hints": {
+    "1": "Connect circular-wait prevention to how you order lock acquires in code.",
+    "2": "For safety checks, simulate Available forward; for resource counts, use each process holding d_i−1.",
+    "3": "Fixed lock order kills cycles; walk Need ≤ Available; for n=3 and d_i=2, R ≥ 3(2−1)+1 = 4."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Deadlock ignorance vs prevention/avoidance/detection",
+   "strong_answer": "Ignorance (Ostrich) pretends deadlocks never happen and reboots if the system hangs; most general-purpose OSes choose this because deadlocks are rare and continuous prevention cost is not worth paying. Prevention designs out a Coffman condition; avoidance allows the conditions but refuses unsafe grants using maximum claims (Banker's); detection lets deadlocks occur then recovers by abort or preemption."
+  },
+  {
+   "topic": "Breaking hold-and-wait vs breaking circular wait",
+   "strong_answer": "Requesting all resources up front eliminates hold-and-wait but yields low utilization and starvation risk. Imposing a global ordering on resource types so processes only request in increasing order breaks circular wait and is the most practical prevention rule, matching real lock-ordering disciplines."
+  },
+  {
+   "topic": "Process termination vs resource preemption for recovery",
+   "strong_answer": "Termination aborts all deadlocked processes or aborts one at a time until the cycle breaks, choosing victims by priority, progress, or resources held. Preemption takes a resource, rolls the victim back to a checkpoint, and risks starvation if the same process is always chosen."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating deadlock, starvation, and livelock as the same failure mode.",
+   "correction": "Deadlock is a permanent circular block; starvation is a process that could run being indefinitely denied a resource; livelock is processes actively changing state in response to each other yet making no progress."
+  },
+  {
+   "trap": "Assuming any cycle in a resource-allocation graph means deadlock.",
+   "correction": "That holds only for single-instance resources. With multiple instances, a cycle is necessary but not sufficient—another process may release an instance in the cycle—so you must run the detection/safety algorithm."
+  },
+  {
+   "trap": "Treating an unsafe state as already deadlocked.",
+   "correction": "An unsafe state is not necessarily deadlocked; it may lead to deadlock, so avoidance refuses to enter it."
+  },
+  {
+   "trap": "Answering 'is X a safe sequence?' with a formula instead of simulation.",
+   "correction": "Run the Available vector forward through the ordering, checking Need ≤ Available at each process. If a fresh request is granted first, subtract it from Available and add it to that process's allocation before walking."
+  },
+  {
+   "trap": "Confusing the deadlock-possible bound with the deadlock-free bound on resource count.",
+   "correction": "Deadlock is possible when R ≤ sum d_i − n; deadlock-free when R ≥ sum(d_i − 1) + 1 = sum d_i − n + 1 (or R ≥ n(k−1)+1 when every maximum is k)."
+  }
+ ]
+}

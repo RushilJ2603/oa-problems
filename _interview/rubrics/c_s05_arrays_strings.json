@@ -1,0 +1,222 @@
+{
+ "id": "c_s05_arrays_strings",
+ "title": "Arrays, Strings & the Array–Pointer Relationship",
+ "type": "FUND",
+ "relevance": "C array/pointer decay, null-terminated strings, and buffer safety are staple SDE/OA topics because they expose how candidates reason about memory, types, and undefined behavior.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what C arrays and strings are as raw contiguous memory with no runtime length or bounds checking.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "An array is a fixed-size, contiguous sequence of elements of the same type.",
+     "weight": "core",
+     "evidence_hint": "Candidate says identical elements laid out sequentially so any index address is base plus index times element size."
+    },
+    {
+     "id": "fund2",
+     "point": "C does not store an array's length at runtime and does not perform bounds checking; out-of-range access is undefined behavior.",
+     "weight": "core",
+     "evidence_hint": "Mentions scores[10] simply reads whatever is at that address—no length metadata, no automatic check."
+    },
+    {
+     "id": "fund3",
+     "point": "A C string is a char array that ends at the first null character '\\0' (byte value 0); memory must be at least one byte larger than the visible text for the terminator.",
+     "weight": "core",
+     "evidence_hint": "Describes null termination and that \"Hello\" needs room for the trailing '\\0'."
+    },
+    {
+     "id": "fund4",
+     "point": "Historically an array's size must be known at compile time; indexing is zero-based; uninitialized arrays hold garbage, and partial init like int zeroes[100] = {0} zeroes the rest.",
+     "weight": "extended",
+     "evidence_hint": "Covers compile-time size, zero-based indexing, garbage vs zero-fill on partial initialization."
+    }
+   ],
+   "probes": [
+    "What is an array in C, and what does the language store (or not store) about its length at runtime?",
+    "How is a string represented in C, and why must its buffer be larger than the visible text?"
+   ],
+   "hints": {
+    "1": "Think about raw contiguous memory, not a list or string object.",
+    "2": "Contrast fixed contiguous storage and zero-based indexing with the '\\0' convention for strings.",
+    "3": "Say: fixed-size contiguous same-type block; no runtime length/bounds checks; a string is chars ending at '\\0' with one extra byte for the terminator."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain array-to-pointer decay, the sizeof/& exceptions, function argument decay, string declaration forms, and 2D layout/types.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Except as operand of sizeof, unary &, or a string literal used to initialize an array, an array expression decays to a pointer to its first element.",
+     "weight": "core",
+     "evidence_hint": "States decay to &a[0] in most expressions, with those three exceptions named."
+    },
+    {
+     "id": "mech2",
+     "point": "a[i] is defined as *(a + i); because addition is commutative, i[a] is also valid C.",
+     "weight": "core",
+     "evidence_hint": "Equates subscripting with pointer arithmetic and notes the commutative quirk."
+    },
+    {
+     "id": "mech3",
+     "point": "Passing an array to a function decays it; int arr[] is rewritten to int *arr, so the callee gets a copy of the address and loses the array length.",
+     "weight": "core",
+     "evidence_hint": "Says the parameter is really a pointer and length must be passed separately."
+    },
+    {
+     "id": "mech4",
+     "point": "char s[] = \"hello\" allocates a stack array and copies the literal (modifiable); char *p = \"hello\" points at a read-only data-segment literal.",
+     "weight": "core",
+     "evidence_hint": "Contrasts copied writable array vs pointer into read-only storage."
+    },
+    {
+     "id": "mech5",
+     "point": "A 2D array like int grid[2][3] is stored contiguously in row-major order; grid decays to a pointer to an array (int (*)[3]), which differs from int *p[3] and int **p.",
+     "weight": "extended",
+     "evidence_hint": "Describes one strip of six ints and distinguishes pointer-to-array, array-of-pointers, and pointer-to-pointer."
+    },
+    {
+     "id": "mech6",
+     "point": "sizeof(a) on int a[5] yields the full array size (e.g. 20 for 5×4-byte ints), proving an array is not a pointer; sizeof of a decayed pointer is pointer-sized (e.g. 8 on 64-bit).",
+     "weight": "extended",
+     "evidence_hint": "Uses the sizeof exception with the file's 20 vs 8 contrast to refute \"array is a pointer.\""
+    }
+   ],
+   "probes": [
+    "Is an array a pointer? How would you prove your answer with sizeof?",
+    "What actually gets passed when you call a function with an array argument?",
+    "How does char s[] = \"hello\" differ from char *p = \"hello\" in memory?"
+   ],
+   "hints": {
+    "1": "Start from what happens when you write the array's name in an expression.",
+    "2": "Name the decay exceptions, then what a function parameter int arr[] really is, then string array vs pointer.",
+    "3": "Decay to &first unless sizeof/&/string-array init; a[i]==*(a+i); callee gets int*; s[] copies writable, *p points read-only; 2D is row-major and decays to int (*)[width]."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare APIs and representations where the wrong choice causes overflow, UB, or stack failure.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "memcpy assumes non-overlapping regions (overlap is undefined); memmove safely copies even when dest and src overlap.",
+     "weight": "core",
+     "evidence_hint": "Chooses memmove whenever overlap is possible; reserves memcpy for proven-disjoint blocks."
+    },
+    {
+     "id": "tr2",
+     "point": "strcpy copies including '\\0' but does not know dest size, so an oversized src can overflow; length must be managed by the caller.",
+     "weight": "core",
+     "evidence_hint": "Warns that strcpy blindly writes and needs a large enough destination."
+    },
+    {
+     "id": "tr3",
+     "point": "VLAs size the array at runtime on the call stack; a large n (e.g. user input) can blow the stack; C11 made VLAs optional, and in C23 VLA types are mandatory while stack VLA objects remain optional.",
+     "weight": "extended",
+     "evidence_hint": "Links VLA convenience to stack limits and the C11/C23 optional-object status."
+    },
+    {
+     "id": "tr4",
+     "point": "A true 2D contiguous array suits fixed rectangular grids; an array of pointers (int *p[3]) suits distinct rows/strings of different lengths.",
+     "weight": "extended",
+     "evidence_hint": "Picks contiguous 2D for uniform grid layout vs pointer array when row lengths differ."
+    }
+   ],
+   "probes": [
+    "When would you use memmove instead of memcpy?",
+    "What is the risk of a variable-length array sized from user input?",
+    "When is an array of pointers preferable to a true 2D array?"
+   ],
+   "hints": {
+    "1": "Think about overlap, destination capacity, and where the memory lives.",
+    "2": "Compare memcpy vs memmove, strcpy's ignorance of dest size, VLA-on-stack vs optional status, and contiguous 2D vs pointer rows.",
+    "3": "memmove if overlap possible; never trust strcpy on unknown dest size; VLAs are stack-limited and optional as objects; use pointer arrays for uneven row lengths."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply decay, string conventions, and 2D indexing to concrete interview checks and small algorithms.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Inside a function, sizeof(arr)/sizeof(arr[0]) fails after decay: sizeof(arr) is pointer size (e.g. 8), so 8/4 yields 2; always pass length separately.",
+     "weight": "core",
+     "evidence_hint": "Shows the broken length formula and the fix void f(int *arr, size_t length)."
+    },
+    {
+     "id": "app2",
+     "point": "char *s = \"x\"; s[0] = 'Y'; crashes because the literal is in read-only data; use char s[] = \"x\" to copy onto the stack for modification.",
+     "weight": "core",
+     "evidence_hint": "Names read-only segment / segfault and the array declaration fix."
+    },
+    {
+     "id": "app3",
+     "point": "Map 2D (r, c) into a 1D array of WIDTH columns as index r × WIDTH + c.",
+     "weight": "extended",
+     "evidence_hint": "States skip r full rows of WIDTH, then add c."
+    },
+    {
+     "id": "app4",
+     "point": "In-place string reverse: walk left and right indices toward the center swapping until they meet, with right starting at len-1 (before '\\0'); strlen does not count the terminator.",
+     "weight": "extended",
+     "evidence_hint": "Describes two-pointer/index swap loop that leaves '\\0' in place."
+    }
+   ],
+   "probes": [
+    "Why does sizeof-based length calculation fail inside a function that takes int arr[5]?",
+    "Why does char *s = \"x\"; s[0] = 'Y'; crash, and how do you make the string modifiable?",
+    "How do you map a 2D coordinate (r, c) into a 1D array of WIDTH columns?"
+   ],
+   "hints": {
+    "1": "Ask what type the parameter really has after the call.",
+    "2": "Tie decay to the failed sizeof ratio, literals to read-only storage, and 2D to row-major indexing.",
+    "3": "arr is int* so sizeof gives pointer bytes (e.g. 8/4=2); write via char s[] copy; 1D index is r*WIDTH+c; reverse swaps toward the center before '\\0'."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "memcpy vs memmove",
+   "strong_answer": "Use memcpy only when source and destination do not overlap; if they might overlap, use memmove, which is defined to copy safely in that case."
+  },
+  {
+   "topic": "char s[] = \"hello\" vs char *p = \"hello\"",
+   "strong_answer": "The array form allocates and copies a writable buffer (e.g. on the stack); the pointer form points at a read-only string literal in the binary's data segment, so writes through it are invalid."
+  },
+  {
+   "topic": "True 2D array vs array of pointers",
+   "strong_answer": "int grid[2][3] is one contiguous row-major block and decays to int (*)[3]; int *p[3] is an array of pointers useful when rows or strings have different lengths."
+  },
+  {
+   "topic": "VLA stack objects vs avoiding them",
+   "strong_answer": "VLAs are sized at runtime on the call stack and can overflow it for large n; C11 made VLAs optional, and C23 requires VLA types but leaves creating VLA objects on the stack optional."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Believing \"an array is just a pointer.\"",
+   "correction": "Arrays and pointers are different types. Decay makes an array evaluate to a pointer in most expressions, but sizeof(a) on int a[5] yields the full array size (e.g. 20), not a pointer size (e.g. 8)."
+  },
+  {
+   "trap": "Using sizeof(arr)/sizeof(arr[0]) inside a function to get the array length.",
+   "correction": "The parameter decayed to a pointer, so sizeof(arr) is the pointer size; e.g. 8/4 = 2. Always pass the length as a separate argument."
+  },
+  {
+   "trap": "Assuming strcpy is safe, or using memcpy when regions may overlap.",
+   "correction": "strcpy does not know dest capacity and can buffer-overflow. memcpy with overlap is undefined; use memmove when overlap is possible."
+  },
+  {
+   "trap": "Modifying a string through char *s = \"literal\".",
+   "correction": "The literal lives in read-only storage; writes can segfault. Declare char s[] = \"literal\" so a modifiable copy is made."
+  },
+  {
+   "trap": "Using a large runtime VLA from untrusted input.",
+   "correction": "VLAs allocate on the limited call stack and can instantly stack-overflow; treat them as dangerous, and note stack VLA objects are optional in modern C."
+  }
+ ]
+}

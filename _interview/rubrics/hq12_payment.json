@@ -1,0 +1,305 @@
+{
+ "id": "hq12_payment",
+ "title": "Design a Payment System (idempotency, ledger, reconciliation)",
+ "type": "HLD",
+ "relevance": "High — correctness-heavy HLD at Stripe / OpenAI / fintech + FAANG / Indian product cos (PhonePe, Razorpay, Flipkart Pay, Uber); probes idempotency, double-entry ledger, and reconciliation more than raw QPS.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h06_consistency_cap",
+  "h08_message_queues",
+  "h04_databases_indexing",
+  "h10_api_design",
+  "h14_estimation"
+ ],
+ "company_notes": "Very common full round for experienced/fintech/Stripe-adjacent tracks with depth on idempotency, ledger, recon, and PCI; less common than URL shortener/chat for campus/new-grad but rising at product cos with payments (PhonePe, Razorpay, Amazon, Uber, Flipkart), often as checkout or UPI; high frequency on backend/fintech tracks — treat the three pillars (idempotency, ledger, reconciliation) as mandatory if targeting payments companies.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock e-commerce pay-in scope via a third-party PSP, core charge/status/idempotency FRs, and correctness-first NFRs (integrity, durability, PCI).",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Clarify product as Amazon-style e-commerce pay-in charging a card via a third-party PSP (Stripe/Braintree); not building VisaNet or a consumer wallet app — say scope out loud.",
+     "weight": "core",
+     "evidence_hint": "Picks one product (usually e-commerce + PSP) and explicitly rules out card-network or full wallet-app scope."
+    },
+    {
+     "id": "req2",
+     "point": "Core FRs: create/charge a payment; track status (pending / succeeded / failed); survive retries without double charge.",
+     "weight": "core",
+     "evidence_hint": "Names charge + status tracking + no-double-charge under retry before drawing boxes."
+    },
+    {
+     "id": "req3",
+     "point": "NFRs: financial integrity (no double charge / lost settle); durability + auditability; PCI so raw cards never hit your servers; CP for money mutations; interview scale often ~1k–10k TPS peak (Hello Interview ~10k).",
+     "weight": "core",
+     "evidence_hint": "Leads with correctness/audit/PCI and strong consistency on money writes rather than flashy QPS math."
+    },
+    {
+     "id": "req4",
+     "point": "Optional FRs if asked: partial/full refunds, merchant payouts, saved payment methods, multi-seller cart; out of scope unless probed: building card networks, full fraud ML, multi-currency FX engine, chargeback workflows.",
+     "weight": "extended",
+     "evidence_hint": "Separates must-haves from optional and names what stays below the line."
+    }
+   ],
+   "probes": [
+    "What product are we building, and what must never go wrong on the payment path?"
+   ],
+   "hints": {
+    "1": "Start by naming the product and the money-safety properties before components.",
+    "2": "Separate create/charge + status tracking from optional refunds/payouts, and call out PCI/no raw PAN.",
+    "3": "Say e-commerce pay-in via PSP; FRs charge + pending/succeeded/failed + no double charge on retry; NFRs integrity, durability/audit, PCI, CP on money writes, ~1k–10k TPS peak."
+   }
+  },
+  {
+   "phase": "estimation",
+   "goal": "Show you can size QPS/storage while treating correctness as primary; latency dominated by PSP, not your DB.",
+   "must_hit": [
+    {
+     "id": "est1",
+     "point": "Example: 10M payments / day ≈ 115 TPS avg; peak 5–10× → design for ~1k TPS (or use interviewer’s 10k).",
+     "weight": "core",
+     "evidence_hint": "States assumptions aloud and converts daily volume to avg/peak TPS without pretending throughput is the main risk."
+    },
+    {
+     "id": "est2",
+     "point": "Payload ~1 KB/payment plus 2–4 ledger lines → tens of GB/day raw; retain years → partition/archive ledger by time.",
+     "weight": "core",
+     "evidence_hint": "Sizes payment + ledger write volume and concludes time-based partition/archive."
+    },
+    {
+     "id": "est3",
+     "point": "Sync path latency budget dominated by PSP RTT (100s of ms), not your DB; one SQL primary can start; shard by merchant_id / payment_id when hot merchants or write volume demand it — don’t invent Kafka for the charge itself.",
+     "weight": "extended",
+     "evidence_hint": "Blames PSP RTT for latency and keeps the charge path on SQL until sharding is justified."
+    }
+   ],
+   "probes": [
+    "Walk through back-of-envelope for payments/day → TPS and why storage/latency matter differently than a chat system."
+   ],
+   "hints": {
+    "1": "Pick a daily payment count and convert to average and peak TPS.",
+    "2": "Add per-payment bytes and ledger lines, then say what dominates sync latency.",
+    "3": "Use 10M/day ≈ 115 TPS avg, peak 5–10× → ~1k TPS (or 10k); ~1 KB + 2–4 ledger lines; PSP RTT in the 100s of ms; SQL first, shard by merchant_id/payment_id later."
+   }
+  },
+  {
+   "phase": "api",
+   "goal": "Define idempotent payment/refund APIs, PSP webhook intake, and token-only card handling.",
+   "must_hit": [
+    {
+     "id": "api1",
+     "point": "POST /v1/payments with header Idempotency-Key: <uuid> and body { amount, currency, merchant_id, customer_id, payment_method_token, capture_method? } → { payment_id, status, client_secret? }.",
+     "weight": "core",
+     "evidence_hint": "Shows create-payment with Idempotency-Key and tokenized payment method, not raw card fields."
+    },
+    {
+     "id": "api2",
+     "point": "GET /v1/payments/{payment_id} for status + amounts; POST /v1/payments/{payment_id}/refunds with its own idempotency key; POST /v1/webhooks/psp for inbound PSP events with signature verification.",
+     "weight": "core",
+     "evidence_hint": "Covers read, refunds (idempotent), and verified inbound PSP webhooks."
+    },
+    {
+     "id": "api3",
+     "point": "Never accept raw card PAN on your API when designing a merchant platform — accept tokens from Elements / PSP.js.",
+     "weight": "extended",
+     "evidence_hint": "Rejects PAN in the request body and points to hosted fields/tokenization."
+    }
+   ],
+   "probes": [
+    "What does create-payment look like, and how do retries and PSP callbacks show up in the API?"
+   ],
+   "hints": {
+    "1": "Start from the client call that creates a charge.",
+    "2": "Add Idempotency-Key, refunds, and a verified PSP webhook endpoint.",
+    "3": "POST /v1/payments with Idempotency-Key + token body; GET status; POST refunds with its own key; POST /v1/webhooks/psp with signature verify; no raw PAN."
+   }
+  },
+  {
+   "phase": "data_model",
+   "goal": "Model payment state machine, durable idempotency, append-only double-entry ledger, wallet, outbox, and reconciliation runs.",
+   "must_hit": [
+    {
+     "id": "dm1",
+     "point": "payments(payment_id PK, merchant_id, customer_id, amount, currency, status state machine, psp_reference, idempotency_key UNIQUE per merchant scope, created_at, updated_at).",
+     "weight": "core",
+     "evidence_hint": "Has a payments row with status + PSP reference + scoped unique idempotency key."
+    },
+    {
+     "id": "dm2",
+     "point": "idempotency_records(scope, key UNIQUE, request_hash, response_body, status_code, created_at with TTL ~24h Stripe-style or longer); ledger_accounts + append-only ledger_entries grouped by journal_id that must sum to zero.",
+     "weight": "core",
+     "evidence_hint": "Separates key→cached response store from double-entry journal lines that balance."
+    },
+    {
+     "id": "dm3",
+     "point": "wallets(merchant_id, currency, available_balance, held_balance, version); outbox(...); reconciliation_runs(...); enforce UNIQUE(idempotency_key) and balanced journal in the same DB transaction as status transitions.",
+     "weight": "extended",
+     "evidence_hint": "Ties wallet/outbox/recon tables to transactional invariants on status changes."
+    }
+   ],
+   "probes": [
+    "What tables do you need so retries cannot double-charge and every money move leaves an audit trail?"
+   ],
+   "hints": {
+    "1": "Think payment row, idempotency cache, and ledger — not just a balance column.",
+    "2": "Add journal lines that balance, wallet version, outbox, and recon runs.",
+    "3": "payments with scoped unique idempotency_key + status; idempotency_records (~24h TTL); ledger_entries under journal_id summing to 0; wallets + outbox + reconciliation_runs enforced in the same TX."
+   }
+  },
+  {
+   "phase": "architecture",
+   "goal": "Wire checkout → payment service/executor → PSP → wallet/ledger, with outbox webhooks and nightly settlement reconciliation.",
+   "must_hit": [
+    {
+     "id": "arch1",
+     "point": "Alex Xu shape: Payment service (orchestrate) → Payment executor (call PSP) → PSP/card schemes → Wallet (merchant balance) → Ledger (immutable journal); checkout uses Stripe.js/Elements so PAN never hits your servers.",
+     "weight": "core",
+     "evidence_hint": "Draws the five-stage money path and tokens card data at the edge."
+    },
+    {
+     "id": "arch2",
+     "point": "Flow: check idempotency key → return cached if hit; else insert payment (pending) + outbox in same TX; executor HTTPS to PSP; on success (sync or webhook) Wallet update + Ledger journal in an ACID TX; outbox relay → queue → merchant webhooks.",
+     "weight": "core",
+     "evidence_hint": "Sequences idempotency → pending+outbox TX → PSP → wallet/ledger TX → async merchant notify."
+    },
+    {
+     "id": "arch3",
+     "point": "Nightly: PSP settlement file → Reconciliation job ↔ Ledger → alert/repair queue; SQL (Postgres) is source of truth for payments+ledger; Redis optional only as cache in front of durable idempotency store; transactional outbox (or CDC) avoids dual-write loss.",
+     "weight": "extended",
+     "evidence_hint": "Adds settlement reconciliation and names DB as SoT with outbox for publish atomicity."
+    }
+   ],
+   "probes": [
+    "Walk the path from Buy click to ledger write and merchant webhook — where is the source of truth?"
+   ],
+   "hints": {
+    "1": "Sketch merchant → API → PSP → wallet/ledger.",
+    "2": "Put idempotency and outbox on the write path, webhooks/settlement on the async path.",
+    "3": "Payment service → executor → PSP; pending+outbox same TX; wallet+ledger ACID; outbox→queue→webhooks; nightly settlement file reconciled to ledger; Postgres SoT."
+   }
+  },
+  {
+   "phase": "deep_dives",
+   "goal": "Defend idempotency, double-entry ledger, sync+webhook confirmation, reconciliation adjustments, and saga/outbox for multi-step money flows.",
+   "must_hit": [
+    {
+     "id": "dd1",
+     "point": "Idempotency: persist in-progress under the client key before calling PSP, also send a PSP-side idempotency key, then finalize; same client key must never create two PSP charges; compare params on replay (Stripe rejects mismatched body).",
+     "weight": "core",
+     "evidence_hint": "Stores key state before the PSP call and explains replay returns the first result without a second charge."
+    },
+    {
+     "id": "dd2",
+     "point": "Ledger vs mutable balance only: double-entry append-only journal (≥2 lines summing to zero) is the interview answer for audit/recon; cached wallets.balance updated in the same TX as ledger lines (or derived asynchronously with care).",
+     "weight": "core",
+     "evidence_hint": "Rejects balance-only as primary books and describes balancing debit/credit lines plus optional cached balance."
+    },
+    {
+     "id": "dd3",
+     "point": "Sync PSP call vs async webhook: design for both — optimistic pending + durable webhook handler idempotent on psp_event_id; webhooks/polling are source of truth for delayed/3DS, not only the sync HTTP response.",
+     "weight": "core",
+     "evidence_hint": "Does not trust sync alone; webhook handler dedupes on event id."
+    },
+    {
+     "id": "dd4",
+     "point": "Reconciliation posts adjustment journals for mismatches (never edit ledger history); cross-service payment+ledger+wallet uses saga/outbox with compensating refunds rather than pretending one distributed TX.",
+     "weight": "extended",
+     "evidence_hint": "Classifies settlement mismatches into adjustment journals and names saga/outbox when services split."
+    }
+   ],
+   "probes": [
+    "How do you get exactly-once business effect, and why isn’t a mutable wallet balance enough?"
+   ],
+   "hints": {
+    "1": "Focus on retries, the ledger, and delayed PSP confirmation.",
+    "2": "Contrast key-before-PSP + double-entry with balance-only and sync-only designs.",
+    "3": "In-progress idempotency + PSP key; append-only balancing journal with same-TX wallet cache; pending + idempotent webhook on psp_event_id; recon via adjustment journals; saga/outbox across services."
+   }
+  },
+  {
+   "phase": "bottlenecks",
+   "goal": "Scale hot wallets, PSP outages, idempotency store, ledger growth, webhook storms, recon, and multi-region money writes safely.",
+   "must_hit": [
+    {
+     "id": "bn1",
+     "point": "Hot merchant wallet row: optimistic versioning / row lock; for extreme credit fan-in, batch ledger flush or shard sub-accounts — trade fresher balance vs write amplification.",
+     "weight": "core",
+     "evidence_hint": "Names wallet hotspot and versioning/batching/sharding options with the freshness tradeoff."
+    },
+    {
+     "id": "bn2",
+     "point": "PSP latency/outages: timeouts, circuit breaker per PSP, queue retries with backoff + jitter; never unbounded auto-retry without the same idempotency key; webhook storms → durable queue, concurrency limits, dedupe on event id.",
+     "weight": "core",
+     "evidence_hint": "Protects against PSP failure and webhook floods without dropping idempotency."
+    },
+    {
+     "id": "bn3",
+     "point": "Ledger growth: partition by month, recent partitions for online queries, cold archive to object storage; recon streams settlement files keyed on psp_reference; multi-region usually single primary region for ledger + regional read replicas.",
+     "weight": "extended",
+     "evidence_hint": "Partitions/archives ledger, keys recon joins, and avoids active-active money writes."
+    }
+   ],
+   "probes": [
+    "What breaks first under a hot merchant or a PSP outage, and how do you keep money mutations safe?"
+   ],
+   "hints": {
+    "1": "Think wallet row contention and dependency on the PSP.",
+    "2": "Add idempotent retries, webhook intake limits, and ledger partitioning.",
+    "3": "Version/lock or shard hot wallets; circuit breaker + backoff with same idempotency key; monthly ledger partitions; webhook dedupe; single primary region for ledger."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Persist idempotency (key → response) before calling PSP vs after",
+   "strong_answer": "Best practice: persist in-progress under the key, call PSP with a PSP-side idempotency key too, then finalize — same client key must never create two PSP charges; on replay compare params (Stripe rejects mismatched body)."
+  },
+  {
+   "topic": "Double-entry append-only ledger vs mutable balance only",
+   "strong_answer": "Balance-only is fast but loses audit trail and makes recon painful; double-entry append-only (≥2 journal lines summing to zero) is the interview answer, with cached wallets.balance updated in the same TX as ledger lines (or derived asynchronously with care)."
+  },
+  {
+   "topic": "Sync PSP call vs async webhook as source of truth",
+   "strong_answer": "Sync is simpler UX; webhooks are source of truth for delayed/3DS methods — design for both: optimistic pending plus a durable webhook handler idempotent on psp_event_id; merchant webhooks need signature verify + idempotent delivery."
+  },
+  {
+   "topic": "Single DB TX (payment + ledger + wallet) vs saga/outbox across services",
+   "strong_answer": "One DB is simple when colocated; cross-service needs saga/outbox with compensating refunds (Hello Interview multi-step / authorize→capture→ledger→webhook), plus transactional outbox so payment row and event publish are atomic."
+  },
+  {
+   "topic": "Fresher merchant balance vs write amplification on hot wallet",
+   "strong_answer": "Optimistic versioning/row lock on the hot wallet row; for extreme credit fan-in, batch ledger flush or shard sub-accounts — call out fresher balance vs write amplification."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Timeout after charge — unclear whether money was taken; candidate creates a new Idempotency-Key on retry.",
+   "correction": "Ambiguous until you know; retry with the same idempotency key; reconcile with PSP list/get by key; never mint a new key on retry."
+  },
+  {
+   "trap": "Claiming the network/PSP call is exactly-once.",
+   "correction": "You don’t get exactly-once on the wire; you guarantee exactly-once business effect via at-least-once delivery/retry plus an idempotent handler / idempotency key."
+  },
+  {
+   "trap": "Wallet says one amount but bank/PSP says another — treated as a bug to silently overwrite.",
+   "correction": "Expected until settlement; reconciliation closes the gap; post adjustment journals and alert — never edit ledger history."
+  },
+  {
+   "trap": "Storing raw card numbers in your DB/API.",
+   "correction": "Card data lives at the PSP via token / Elements hosted fields; keep PCI scope reduced (SAQ A-style if hosted fields only) — no PAN on your servers."
+  },
+  {
+   "trap": "Refund after partial capture or double refund without a state machine.",
+   "correction": "Refund state machine + its own idempotency key; ledger posts reversing entries."
+  },
+  {
+   "trap": "Outbox published but wallet/payment TX rolled back (or dual-write between payments row and queue).",
+   "correction": "Outbox row must be written in the same TX as the payment/ledger update; consumers stay idempotent because relay is still at-least-once."
+  },
+  {
+   "trap": "Drawing microservices everywhere but no ledger.",
+   "correction": "Interviewers treat missing ledger/audit trail as a fail for payments — include immutable double-entry journal and reconciliation."
+  }
+ ]
+}

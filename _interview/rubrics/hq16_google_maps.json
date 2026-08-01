@@ -1,0 +1,316 @@
+{
+ "id": "hq16_google_maps",
+ "title": "Design Google Maps / nearby-places (geospatial, quadtree)",
+ "type": "HLD",
+ "relevance": "High — canonical geo HLD (campus + experienced) at Google, Meta, Amazon, Uber, Flipkart/Swiggy-style product cos; probes spatial indexes (geohash / quadtree / S2) + read-heavy LBS. Twin of HQ06 (static POIs vs moving drivers).",
+ "difficulty": "mid",
+ "prereqs": [
+  "h14_estimation",
+  "h15_building_blocks",
+  "h03_caching",
+  "h04_databases_indexing",
+  "h05_db_scaling",
+  "h10_api_design",
+  "h02_load_balancing",
+  "h08_message_queues"
+ ],
+ "company_notes": "Campus/new-grad: Yelp/nearby restaurants/Google Maps nearby with geohash + 9 neighbors + Redis cache and light estimation. Experienced (1–4+ YOE): geohash vs quadtree vs S2/H3, hot-cell sharding, cache invalidation, PostGIS vs Redis GEO; full Design Google Maps adds tiles + routing/ETA (Google, Meta, Amazon geo loops; Maps/Flipkart logistics). Highest-signal classic HLD; static twin of ride-hailing proximity with the same geo toolkit.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock nearby-places scope (static POIs) vs full Maps extras, plus read-heavy NFRs and scale assumptions.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Functional core: search places near (lat, lng) within radius R or return top-K nearest; filter by category/type; view place details; admin add/update/soft-delete with eventual visibility.",
+     "weight": "core",
+     "evidence_hint": "Lists nearby search, category filters, place details, and admin writes as the top functional set."
+    },
+    {
+     "id": "req2",
+     "point": "Default out of scope unless probed: full turn-by-turn navigation, map tile pipeline, reviews/UGC, payments, ads; if interviewer says Design Google Maps, also add location pings, tile serving, A→B routes + ETA.",
+     "weight": "core",
+     "evidence_hint": "Scopes aloud to proximity service first, then only expands to tiles/routing when the prompt demands it."
+    },
+    {
+     "id": "req3",
+     "point": "NFRs: search latency <100–200 ms p99; extremely read-heavy (often cited ~100:1+); global scale but queries are local; slight staleness on place metadata OK.",
+     "weight": "core",
+     "evidence_hint": "States the p99 latency band, read-heavy ratio, locality of queries, and soft consistency on metadata."
+    },
+    {
+     "id": "req4",
+     "point": "State assumptions aloud: ~100–200M places globally; discrete radii (500m / 1km / 5km / 20km); return top 20; one region first, then geo-shard.",
+     "weight": "extended",
+     "evidence_hint": "Verbalizes place count band, discrete radius buckets, top-20 return, and region-then-shard rollout."
+    }
+   ],
+   "probes": [
+    "What are the top functional requirements for nearby places, and what do you leave out unless I ask for full Google Maps?",
+    "What latency and read/write profile are you designing for?"
+   ],
+   "hints": {
+    "1": "Separate the proximity/Yelp-style prompt from the full Maps prompt before listing features.",
+    "2": "Cover search + filters + details + admin writes, then NFRs: p99 latency, read-heavy ratio, local queries, metadata staleness.",
+    "3": "Say: nearby within R or top-K, category/open-now filters, place details, eventual admin updates; <100–200 ms p99; ~100:1+ reads; ~100–200M places; radii 500m/1km/5km/20km; top 20; tiles/routing only if full Maps."
+   }
+  },
+  {
+   "phase": "estimation",
+   "goal": "Size storage and QPS to justify cache-first reads and a geo index that shrinks candidates before Haversine.",
+   "must_hit": [
+    {
+     "id": "est1",
+     "point": "200M places × ~500 B metadata ≈ ~100 GB raw (fits sharded SQL/doc; index + replicas larger).",
+     "weight": "core",
+     "evidence_hint": "Walks place × metadata bytes to ~100 GB and notes indexes/replicas grow beyond raw."
+    },
+    {
+     "id": "est2",
+     "point": "100M DAU × 10 nearby searches/day ≈ ~10k QPS average; peak 5–10× → design for ~50–100k QPS reads; writes hundreds–low thousands QPS.",
+     "weight": "core",
+     "evidence_hint": "Derives avg and peak read QPS from DAU × searches/day and contrasts much lower write QPS."
+    },
+    {
+     "id": "est3",
+     "point": "Hot path working set is popular cells’ place-ID lists + place cards in Redis (GBs–tens of GBs per region), not full photo blobs; Vol 2–style claim that a quadtree for 200M points often fits in memory on a handful of region servers once built.",
+     "weight": "extended",
+     "evidence_hint": "Puts Redis working set and in-memory regional quadtree in the estimate story, excluding photo blobs from the hot path."
+    }
+   ],
+   "probes": [
+    "Walk me through storage and QPS for ~200M places and a read-heavy nearby workload.",
+    "What does that imply for the read path versus the geo index?"
+   ],
+   "hints": {
+    "1": "Estimate place metadata size and nearby search QPS separately from writes.",
+    "2": "Use 200M × ~500 B, then 100M DAU × 10 searches/day with a 5–10× peak, and note Redis holds cell lists + cards.",
+    "3": "~100 GB raw; ~10k QPS avg → ~50–100k peak reads; writes hundreds–low thousands; Redis GBs–tens of GBs per region; optimize read path + cache so the geo index shrinks candidates before Haversine."
+   }
+  },
+  {
+   "phase": "api",
+   "goal": "Define nearby search, place detail, and admin write APIs; keep auth on writes and never trust client ranking scores.",
+   "must_hit": [
+    {
+     "id": "api1",
+     "point": "GET /v1/places/nearby with lat, lng, radius_m, category, min_rating, limit, cursor returning places with placeId, name, lat, lng, distance_m, rating, categories[], and optional nextCursor.",
+     "weight": "core",
+     "evidence_hint": "Sketches the nearby query params and response fields including distance_m and pagination cursor."
+    },
+    {
+     "id": "api2",
+     "point": "GET /v1/places/:placeId for details; POST /v1/places and PATCH /v1/places/:placeId for admin create/update with auth on admin writes.",
+     "weight": "core",
+     "evidence_hint": "Shows detail read plus authenticated create/patch, and says never trust client-sent ranking scores."
+    },
+    {
+     "id": "api3",
+     "point": "Optional full-Maps extras: GET /v1/maps/tiles/:z/:x/:y.png (CDN-facing) and POST /v1/directions returning routes with polyline, eta_s, distance_m.",
+     "weight": "extended",
+     "evidence_hint": "Only adds tile and directions endpoints when the prompt expands beyond nearby places."
+    }
+   ],
+   "probes": [
+    "Sketch the nearby search and place detail APIs.",
+    "What would you add if this were full Google Maps rather than just nearby places?"
+   ],
+   "hints": {
+    "1": "Start with a nearby GET and a place-by-id GET before admin writes.",
+    "2": "Include radius/category/limit/cursor on nearby; auth only on POST/PATCH; optional tiles and directions for full Maps.",
+    "3": "Give GET /v1/places/nearby?... → places[] + nextCursor; GET /v1/places/:id; POST/PATCH places; optional /maps/tiles/:z/:x/:y.png and POST /v1/directions → polyline, eta_s, distance_m."
+   }
+  },
+  {
+   "phase": "data_model",
+   "goal": "Model Place as source of truth plus a cell→placeIds geo index and Redis result/card caches.",
+   "must_hit": [
+    {
+     "id": "dm1",
+     "point": "Place holds placeId, name, address, lat, lng, geohash/s2CellId, categories[], rating, hours, status, updatedAt; PlaceMedia optional and off the search hot path.",
+     "weight": "core",
+     "evidence_hint": "Draws Place with a geohash or S2 cell id and keeps media out of the search path."
+    },
+    {
+     "id": "dm2",
+     "point": "Geo index side: cellId → [placeId…] as Redis SET or SQL secondary index; primary DB (Postgres + optional PostGIS, or MySQL + geohash column + B-tree) is source of truth.",
+     "weight": "core",
+     "evidence_hint": "Separates source-of-truth Place storage from the cell-to-placeIds index structure."
+    },
+    {
+     "id": "dm3",
+     "point": "Redis: nearby:{precision}:{geohash}:{category}:{radius} → ranked place IDs (TTL minutes) and place:{id} → JSON card; optionally Redis GEO for live demos; object store + CDN for tiles/photos on the Maps prompt.",
+     "weight": "extended",
+     "evidence_hint": "Shows discrete nearby cache keys, place cards, and separates tiles/photos to object store + CDN."
+    }
+   ],
+   "probes": [
+    "What entities and stores do you need for nearby search?",
+    "How do you index places for a radius query?"
+   ],
+   "hints": {
+    "1": "Think Place document plus a spatial cell membership structure.",
+    "2": "Primary DB for Place; cellId→placeIds index; Redis for nearby results and place cards.",
+    "3": "Place with geohash/s2CellId; GeoCell lists; Postgres/MySQL source of truth; Redis nearby:{precision}:{geohash}:{category}:{radius} and place:{id}; tiles/photos in object store + CDN if Maps."
+   }
+  },
+  {
+   "phase": "architecture",
+   "goal": "Wire API gateway → LBS search with Redis cache, geo index, and Place Service/DB; narrate nearby read and write flows.",
+   "must_hit": [
+    {
+     "id": "arch1",
+     "point": "Nearby read: compute cell(s) for (lat,lng,R) → cache lookup → on miss query geo index (9 geohashes or S2 covering or quadtree leaves) → fetch place cards → Haversine filter → rank → cache → return.",
+     "weight": "core",
+     "evidence_hint": "Narrates two-phase retrieval: cheap cell/GEO candidates then exact distance filter and rank before caching."
+    },
+    {
+     "id": "arch2",
+     "point": "Write: Place Service upserts DB → update geo membership (old cell → new cell) → invalidate nearby:* keys for affected cells (or short TTL); async cache invalidation / index updater.",
+     "weight": "core",
+     "evidence_hint": "Updates DB and cell membership, then invalidates or TTLs nearby cache keys for touched cells."
+    },
+    {
+     "id": "arch3",
+     "point": "Shard by geography (geohash/S2 prefix or city/region) so a NYC nearby query hits 1–2 shards; full Maps adds CDN◄──Tile Store, Navigation (geocoder + route planner + traffic/ETA), and Location Service for high-write pings.",
+     "weight": "extended",
+     "evidence_hint": "Geo-shards the LBS path and only layers tiles, routing, and location firehose when designing full Maps."
+    }
+   ],
+   "probes": [
+    "Draw the components for nearby place search and walk a read miss.",
+    "What happens on a place update that moves cells?"
+   ],
+   "hints": {
+    "1": "API gateway in front of Place Search, Redis, geo index, and Place Service/DB.",
+    "2": "Miss path: cells → geo index → cards → Haversine → rank → cache; write path updates membership and invalidates nearby keys.",
+    "3": "9 geohashes / S2 covering / quadtree leaves for candidates; never return raw cell contents as within radius; geo-shard so local queries hit 1–2 shards; tiles/routing only for full Maps."
+   }
+  },
+  {
+   "phase": "deep_dives",
+   "goal": "Defend the spatial index choice, Redis/PostGIS read path, and cache-key design for static POIs.",
+   "must_hit": [
+    {
+     "id": "dd1",
+     "point": "Geohash: encode (lat,lng) → base32; pick precision from radius (~6 ≈ 0.6 km, ~5 ≈ 2.4 km); query center cell + 8 neighbors; then Haversine (or Redis distance) to refine — never return raw cell contents as within radius.",
+     "weight": "core",
+     "evidence_hint": "States precision-from-radius, 9-cell neighbor ring, and exact-distance refine."
+    },
+    {
+     "id": "dd2",
+     "point": "Boundary/edge problem: points meters apart can sit in different cells (or across equator/antimeridian) with short shared prefixes — neighbor ring or S2 coverings is mandatory.",
+     "weight": "core",
+     "evidence_hint": "Calls out the classic edge miss without prompting and names the neighbor-ring/S2 covering fix."
+    },
+    {
+     "id": "dd3",
+     "point": "Geohash vs quadtree vs S2/H3: geohash simple/DB-friendly/Redis-native but fixed grid and uneven load; quadtree density-adaptive and good in-memory for static/near-static data but painful under heavy moves; S2 = sphere + Hilbert, region coverings (Google story); H3 = hex k-rings (Uber dispatch/surge).",
+     "weight": "core",
+     "evidence_hint": "Picks one index and accurately contrasts the others on grid vs density vs sphere/hex neighbors."
+    },
+    {
+     "id": "dd4",
+     "point": "Interview default: geohash (or Redis GEO) + Haversine refine + Redis result cache; PostGIS ST_DWithin for correct GIS semantics but still needs replicas/cache at Maps-scale QPS; bucket radius to discrete values in cache keys (continuous free-form radius → ~0 hit rate); for static POIs TTL of 1–5 min is often enough.",
+     "weight": "extended",
+     "evidence_hint": "Defaults to geohash/Redis GEO + cache, names PostGIS as upgrade, and buckets radius with short TTL for static POIs."
+    }
+   ],
+   "probes": [
+    "Why can’t you just ORDER BY haversine(lat,lng) with B-tree indexes?",
+    "Geohash vs quadtree vs S2 — which do you ship and why?",
+    "How do you design the nearby cache key?"
+   ],
+   "hints": {
+    "1": "B-trees on lat/lng or sorting by Haversine alone still scan huge candidate sets.",
+    "2": "Explain 1D locality encoding or a 2D spatial tree, then the neighbor-ring + refine step.",
+    "3": "Ship geohash/Redis GEO + Haversine + Redis cache for simplicity; quadtree if density skew and mostly static in-memory; S2 if Google-shaped; discrete radius in keys; 1–5 min TTL for static POIs."
+   }
+  },
+  {
+   "phase": "bottlenecks",
+   "goal": "Scale hot cells, sparse rings, index lag, and geo shard fan-out without amplifying the read path.",
+   "must_hit": [
+    {
+     "id": "bn1",
+     "point": "Hot downtown cells: finer precision, split GEO keys/shards by child cells, more LBS replicas on that region — don’t one-size precision globally.",
+     "weight": "core",
+     "evidence_hint": "Tunes precision and sharding per hot region instead of a global fixed cell size."
+    },
+    {
+     "id": "bn2",
+     "point": "Sparse areas: expanding-ring search (widen precision / k-ring) until limit met or max radius; cache place cards, paginate, avoid joining photos on the search path.",
+     "weight": "core",
+     "evidence_hint": "Widens the ring for sparse results and keeps photos off the search join path."
+    },
+    {
+     "id": "bn3",
+     "point": "Write → index lag: async updater; accept brief stale nearby lists; push invalidation for closures; shard routing via first 2–3 geohash/S2 parent chars with cross-boundary queries fanning out to ≤2 shards.",
+     "weight": "extended",
+     "evidence_hint": "Accepts short index lag with invalidation for closures and bounds cross-boundary fan-out to ≤2 shards."
+    }
+   ],
+   "probes": [
+    "How do you handle a very hot downtown geohash cell?",
+    "What if a rural query returns too few results inside the first cell ring?"
+   ],
+   "hints": {
+    "1": "Hot spots and empty rural cells need different precision/ring strategies.",
+    "2": "Split hot child cells and add regional replicas; expand k-ring until limit or max radius.",
+    "3": "Finer precision + child-cell shards for downtown; expanding-ring for sparse; async index with invalidation on closures; first 2–3 prefix chars → region, ≤2 shards on boundaries; CDN separate from LBS autoscaling."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Geohash vs quadtree vs S2",
+   "strong_answer": "Geohash is simplest and DB/Redis-native with prefix scans but needs a boundary neighbor ring and has uneven fixed-grid load. Quadtree adapts to density and fits in-memory static/near-static regional indexes, but updates/rebalance are harder and string-key sharding is awkward. S2 indexes on a sphere with Hilbert locality and region coverings—Google’s geography answer—but has more API surface than geohash; H3’s hex k-rings are the contrast when asked why not Uber’s index."
+  },
+  {
+   "topic": "Redis GEO / cell cache vs PostGIS alone",
+   "strong_answer": "Redis GEO or cell cache wins sub-ms candidate fetch for high-QPS nearby reads. PostGIS ST_DWithin gives correct GIS semantics and complex filters but still needs read replicas and a cache at Maps-scale QPS. Interview default is geohash or Redis GEO + Haversine refine + Redis result cache, with PostGIS/S2 named as upgrades."
+  },
+  {
+   "topic": "Cache invalidation vs short TTL",
+   "strong_answer": "Bucket radius to discrete values and key by precision + cell + category so hit rate stays high. Invalidate on write via pub/sub/Kafka, or rely on short TTL; for static POIs a TTL of 1–5 min is often enough. Continuous free-form radius params destroy cache usefulness."
+  },
+  {
+   "topic": "Full Maps preprocessing vs query latency",
+   "strong_answer": "Tile pyramid plus contraction hierarchies / preprocessed routing buy ms-level queries at the cost of offline builds; traffic should be overlay multipliers, not a full graph rebuild every minute. Crow-flies Haversine is not drive-time ETA."
+  },
+  {
+   "topic": "Static POIs vs ride-hailing dynamic geo",
+   "strong_answer": "POIs update rarely → DB + Redis result cache keyed by geohash:category:radius. Drivers/users move every few seconds → in-memory GEO/cell sets, short TTL, no multi-minute nearby cache; assignment consistency is hq06, not this problem."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "SELECT * WHERE distance < R or ORDER BY haversine(lat,lng) as the whole plan",
+   "correction": "You cannot efficiently index that expression alone; filter candidates with a 2D spatial index or locality-preserving encoding first, then refine with Haversine."
+  },
+  {
+   "trap": "User on a cell edge misses a restaurant 10 m away",
+   "correction": "Always query the center cell plus the 8 neighbors (9-cell ring) or an S2 covering; boundary/edge misses are the classic trap."
+  },
+  {
+   "trap": "Treating this as the same design as Uber nearby drivers",
+   "correction": "POIs are static/read-heavy and cacheable; drivers are write-heavy with consistency on assignment—same geo toolkit, different write/cache story (hq06)."
+  },
+  {
+   "trap": "ETA equals Haversine distance",
+   "correction": "Haversine is only for candidate sort/refine; navigation uses a road graph (A*/contraction hierarchies) plus traffic overlay."
+  },
+  {
+   "trap": "Map tiles as one giant Earth image",
+   "correction": "Serve a zoom pyramid of z/x/y tiles from object store + CDN; pan/zoom loads precomputed neighbor tiles."
+  },
+  {
+   "trap": "Forgetting to remove deleted/moved places from old cells",
+   "correction": "On write, move geo membership from old cell to new cell and invalidate affected nearby keys, or ghosts appear in nearby results."
+  },
+  {
+   "trap": "Caching with unbounded continuous radius query params",
+   "correction": "Bucket radius to discrete values in the cache key; continuous free-form radius yields ~0 hit rate."
+  }
+ ]
+}

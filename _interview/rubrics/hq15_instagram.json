@@ -1,0 +1,332 @@
+{
+ "id": "hq15_instagram",
+ "title": "Design Instagram (photo-sharing)",
+ "type": "HLD",
+ "relevance": "High — canonical 45-min \"Design Instagram / photo-sharing\" HLD at Meta PA, FAANG, Snap/Pinterest cousins, and Indian product cos; probes media pipeline (presign → object store → CDN) plus hybrid feed fan-out (same celebrity cliff as Twitter/News Feed).",
+ "difficulty": "mid",
+ "prereqs": [
+  "h03_caching",
+  "h05_db_scaling",
+  "h08_message_queues",
+  "h11_storage",
+  "h14_estimation"
+ ],
+ "company_notes": "Campus/new-grad: extremely common; expected signal is presigned media + CDN and hybrid fan-out + Redis ID timelines + async workers, not Meta’s full ranking stack. Experienced/Meta PA/mid: deeper probes on celebrity threshold, media variants, reconstruction, delete/privacy, multi-DC, graph hotspots, light ranking. Top-tier product HLD; sister prompts are News Feed/Twitter timeline (hq04), Dropbox-style large blobs, and YouTube.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Scope upload + follow + home/profile feed; state NFRs and cut Stories/Reels/Explore unless asked.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "In-scope FRs: upload photo (optional short video) + caption to followers; uni-directional follow/unfollow; reverse-chronological paginated home feed; profile posts grid.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists upload, follow, home feed, and profile grid and explicitly excludes Stories/Reels/DMs/Explore unless asked."
+    },
+    {
+     "id": "req2",
+     "point": "NFR: feed p99 after hydrate ~200–500 ms (Hello Interview <500 ms); photos up to ~8 MB; CDN for global image delivery; availability over strong feed consistency with few-seconds lag OK.",
+     "weight": "core",
+     "evidence_hint": "States a sub-500 ms feed target, multi-MB photo size, CDN delivery, and eventual feed freshness."
+    },
+    {
+     "id": "req3",
+     "point": "Scale framing example: 500M DAU and ~100M posts/day (Hello Interview), or own numbers used consistently.",
+     "weight": "extended",
+     "evidence_hint": "Anchors design to 500M DAU / 100M posts/day or states and sticks to alternative assumptions."
+    },
+    {
+     "id": "req4",
+     "point": "Out of scope unless asked: likes/comments (counters only if asked), hashtag search, Stories TTL, Reels ABR, ads, full ranking.",
+     "weight": "extended",
+     "evidence_hint": "Cuts ranking/Stories/Reels/ads explicitly and offers to return if interviewer wants them."
+    }
+   ],
+   "probes": [
+    "What is in scope for a 45-minute Instagram design, and what do you cut?",
+    "What latency and consistency targets are you designing the home feed for?"
+   ],
+   "hints": {
+    "1": "Treat this as two products: media plane plus social/feed plane.",
+    "2": "Say upload + follow + home/profile feed in; Stories, Reels, Explore, DMs, and full ranking out unless asked.",
+    "3": "NFRs: feed p99 ~200–500 ms after hydrate, photos up to ~8 MB via CDN, availability over strong consistency with few-seconds lag; scale example 500M DAU / ~100M posts/day."
+   }
+  },
+  {
+   "phase": "estimation",
+   "goal": "Use round numbers from the prompt to justify async writes, CDN for media, hybrid fan-out, and ID-only feed cache.",
+   "must_hit": [
+    {
+     "id": "est1",
+     "point": "100M posts/day ≈ ~1.2K writes/s average with 5–10× peak; avg photo ~200–500 KB raw → tens of TB/day before variants, and 3–5 resized variants multiply storage.",
+     "weight": "core",
+     "evidence_hint": "Derives ~1.2K write/s from 100M posts/day and notes multi-TB media growth with 3–5 variants."
+    },
+    {
+     "id": "est2",
+     "point": "Each DAU opens home ~10×/day → billions of reads/day in the 100K+ QPS class; image GETs are higher still → CDN, not API.",
+     "weight": "core",
+     "evidence_hint": "Separates feed QPS (100K+) from even higher image GETs and concludes CDN owns media delivery."
+    },
+    {
+     "id": "est3",
+     "point": "Avg ~200–500 followers vs celebrities at 10M–100M makes pure push write amplification the cliff.",
+     "weight": "core",
+     "evidence_hint": "Contrasts hundreds of followers with 10M–100M celebrity followership to motivate hybrid fan-out."
+    },
+    {
+     "id": "est4",
+     "point": "Home cache: 800 × ~16–24 B IDs ≈ ~15–20 KB/user; active users in Redis imply multi-TB RAM, so store IDs only.",
+     "weight": "extended",
+     "evidence_hint": "Computes ~15–20 KB per user from ~800 ID slots and argues against storing full post objects in the timeline."
+    }
+   ],
+   "probes": [
+    "Walk the write QPS and media storage from ~100M posts/day.",
+    "Why can’t every follower’s home timeline store full post objects in Redis?"
+   ],
+   "hints": {
+    "1": "Pick the Hello Interview 100M posts/day framing and stick to it.",
+    "2": "Estimate write QPS, raw+variant storage, feed open rate → 100K+ QPS, and celebrity follower amplification.",
+    "3": "100M posts/day ≈ ~1.2K writes/s (5–10× peak); ~200–500 KB photos → tens of TB/day with 3–5 variants; ~10 home opens/DAU → 100K+ QPS; celebrities 10M–100M break pure push; 800 IDs × ~16–24 B ≈ ~15–20 KB/user."
+   }
+  },
+  {
+   "phase": "api",
+   "goal": "Define REST upload-session/complete, follow, profile, and cursor-paginated feed APIs without proxying image bytes.",
+   "must_hit": [
+    {
+     "id": "api1",
+     "point": "Upload flow: POST /v1/posts/upload-session → {post_id, presigned_urls[], expires_at}; POST /v1/posts/{post_id}/complete with caption marks uploaded and enqueues processing; GET/DELETE /v1/posts/{post_id}.",
+     "weight": "core",
+     "evidence_hint": "Describes upload-session returning presigned URLs, then complete to enqueue processing, not PUT body through API."
+    },
+    {
+     "id": "api2",
+     "point": "Social/read APIs: POST/DELETE /v1/follows; GET /v1/users/{user_id}/posts?cursor=&limit= for profile; GET /v1/feed?cursor=&limit= for home feed returning Post[].",
+     "weight": "core",
+     "evidence_hint": "Lists follow endpoints plus cursor/limit profile and home feed GETs."
+    },
+    {
+     "id": "api3",
+     "point": "Cursor is last time-sortable post_id, not OFFSET; client fetches image bytes directly from CDN, not through the API; auth from token, never trust user_id in body for “me”.",
+     "weight": "extended",
+     "evidence_hint": "Rejects OFFSET, uses post_id cursors, and keeps media GETs on CDN with token-based auth."
+    }
+   ],
+   "probes": [
+    "How does the client upload a multi-MB photo without melting the API tier?",
+    "How do you paginate the home feed safely under concurrent inserts?"
+   ],
+   "hints": {
+    "1": "API should talk metadata and URLs, not photo bytes.",
+    "2": "Split upload-session (presign) from complete (caption + enqueue); feed/profile use cursor + limit.",
+    "3": "POST upload-session → presigned_urls; POST complete; GET feed/profile with cursor=last post_id; client loads images from CDN."
+   }
+  },
+  {
+   "phase": "data_model",
+   "goal": "Separate post metadata, follow graph, ID-only home timelines, and object-storage/CDN media keys.",
+   "must_hit": [
+    {
+     "id": "dm1",
+     "point": "Post metadata DB: post_id PK, author_id, caption, status uploading/processing/ready, media CDN URLs, created_at; shard by post_id or author_id for profile locality.",
+     "weight": "core",
+     "evidence_hint": "Models posts with status machine and CDN URLs in DB, bytes elsewhere."
+    },
+    {
+     "id": "dm2",
+     "point": "Follow graph stores follower→followee plus reverse index; home timeline cache is Redis list/ZSET home:{user_id} of post IDs capped ~800 with LTRIM/ZREMRANGEBYRANK.",
+     "weight": "core",
+     "evidence_hint": "Shows dual follow indexes and Redis home timelines of IDs capped around 800."
+    },
+    {
+     "id": "dm3",
+     "point": "User/profile timeline is posts by author_id + time/post_id (celebrity pull source); post/user object caches hydrate after ID fetch; object storage keys raw/{post_id} and var/{post_id}/{size}.webp with CDN origin on processed bucket.",
+     "weight": "extended",
+     "evidence_hint": "Separates profile timeline, hydration caches, and immutable variant keys in object storage + CDN."
+    }
+   ],
+   "probes": [
+    "What lives in Redis home timelines versus the metadata DB versus object storage?",
+    "Why do you need both a followers and a following index?"
+   ],
+   "hints": {
+    "1": "Metadata and blobs are different stores; feeds hold IDs only.",
+    "2": "Entities: User, Post/Media, Follow, HomeTimeline cached IDs; status uploading→processing→ready.",
+    "3": "Postgres-style post metadata + Redis home:{user_id} of ~800 post IDs + follow graph both ways + S3/CDN immutable variant keys; hydrate post:{id}/user:{id}."
+   }
+  },
+  {
+   "phase": "architecture",
+   "goal": "Draw upload/publish with presign + media workers + async fan-out, and read path with Redis IDs, celebrity merge, hydrate, CDN URLs.",
+   "must_hit": [
+    {
+     "id": "arch1",
+     "point": "Upload/publish: Client→LB→API creates post metadata uploading + presign → client uploads to object storage → complete → MQ → media workers resize/encode variants → status ready → post.published → fan-out workers → Graph Service; if not celebrity, LPUSH/ZADD into active followers’ Redis homes.",
+     "weight": "core",
+     "evidence_hint": "Walks presign→direct upload→async media processing→ready→async fan-out, skipping celebrity push."
+    },
+    {
+     "id": "arch2",
+     "point": "Read/feed: Client→LB→Feed Service reads Redis home IDs, pulls recent posts from celebrity followees’ user timelines, merge/sort by id/time, hydrate post+user from cache/DB, return page with CDN URLs; client renders from CDN.",
+     "weight": "core",
+     "evidence_hint": "Describes ID fetch + celebrity pull merge + batch hydrate + CDN URLs on the response."
+    },
+    {
+     "id": "arch3",
+     "point": "Boxes: stateless API, media workers, Post/User service, Graph service, fan-out workers, Feed/Timeline service, Redis timeline cluster, metadata DB + caches, object storage, CDN, MQ (Kafka-class).",
+     "weight": "extended",
+     "evidence_hint": "Names the service boxes including Redis timelines, graph, fan-out workers, object store, and CDN."
+    }
+   ],
+   "probes": [
+    "Walk me through publish from camera roll to a follower’s home feed.",
+    "What happens on a home feed refresh for a user who follows both normal accounts and celebrities?"
+   ],
+   "hints": {
+    "1": "Never put photo bytes on the API hot path; fan-out after ready is async.",
+    "2": "Two paths: upload/presign/media workers/fan-out write path, and Redis+celebrity-merge+hydrate read path.",
+    "3": "API presigns → client PUT to object store → media workers → ready → fan-out workers push post_id to non-celebrity followers’ Redis; feed service merges Redis IDs with celebrity pulls, hydrates, returns CDN URLs."
+   }
+  },
+  {
+   "phase": "deep_dives",
+   "goal": "Defend hybrid fan-out, presigned upload, eager variants, async idempotent fan-out, and eventual feed consistency with read-your-writes for authors.",
+   "must_hit": [
+    {
+     "id": "dd1",
+     "point": "Hybrid fan-out: push for normal accounts; skip push for celebrities above a follower threshold (~10K–1M, ops-tuned); at read merge precomputed timeline + recent celebrity posts.",
+     "weight": "core",
+     "evidence_hint": "Names push for normals, pull for whales above an ops-tuned ~10K–1M threshold, and read-time merge."
+    },
+    {
+     "id": "dd2",
+     "point": "Presigned direct upload beats proxying multi-MB photos through API (auth simpler on proxy but melts app servers/bandwidth); short-lived URLs are the expected pattern.",
+     "weight": "core",
+     "evidence_hint": "Rejects API proxy upload and argues short-lived presigned client→blob PUT."
+    },
+    {
+     "id": "dd3",
+     "point": "Eager common image variants on upload (interviews usually eager 2–4 sizes) vs lazy rare sizes; sync fan-out never blocks publish HTTP—use at-least-once MQ workers with idempotent timeline inserts deduped by post_id.",
+     "weight": "extended",
+     "evidence_hint": "Chooses eager 2–4 sizes and async idempotent fan-out workers instead of sync Redis storms."
+    },
+    {
+     "id": "dd4",
+     "point": "Feed is eventually consistent; read-your-writes for author via profile timeline/optimistic UI; media not visible in feed until status ready.",
+     "weight": "extended",
+     "evidence_hint": "Accepts seconds of feed lag, author sees own post on profile, and feed only after ready."
+    }
+   ],
+   "probes": [
+    "Push, pull, or hybrid—what do you choose for Instagram and why?",
+    "Should the publish HTTP request wait until every follower’s Redis list is updated?"
+   ],
+   "hints": {
+    "1": "Celebrity write amplification is the reason pure push fails.",
+    "2": "Compare push vs pull costs, then land on hybrid with a named threshold and merge.",
+    "3": "Push normals; skip celebrities above ~10K–1M; merge at read; presign uploads; eager 2–4 variants; MQ fan-out with idempotent post_id inserts; feed eventually consistent until ready."
+   }
+  },
+  {
+   "phase": "bottlenecks",
+   "goal": "Scale CDN/origin, fan-out lag, celebrity partitions, Redis homes, graph, hydration, and media workers.",
+   "must_hit": [
+    {
+     "id": "bn1",
+     "point": "Viral media: edge TTL + origin shield + immutable content-hash URLs; don’t invalidate whole trees on caption edits; aim for 95%+ media hits at edge.",
+     "weight": "core",
+     "evidence_hint": "Protects origin with CDN TTL/shield/immutable URLs and cites 95%+ edge hit goal."
+    },
+    {
+     "id": "bn2",
+     "point": "Fan-out workers/MQ lag: scale consumer groups, skip inactive users, prioritize active followers, alert on lag, DLQ poison posts; celebrities skip push and paginate huge follower lists.",
+     "weight": "core",
+     "evidence_hint": "Tunes fan-out consumers, skips cold users, and pulls celebrities instead of pushing."
+    },
+    {
+     "id": "bn3",
+     "point": "Redis timeline cluster sharded by user_id; reconstruct on miss from graph + post store; cap length; don’t keep cold homes forever; graph caches hot follower lists with dual indexes.",
+     "weight": "extended",
+     "evidence_hint": "Shards Redis by user_id, reconstructs misses, caps/evicts cold homes, caches hot follower lists."
+    },
+    {
+     "id": "bn4",
+     "point": "Hydration via batch multi-get + post cache; shard metadata by author for profile; avoid giant SQL JOINs per refresh; media workers autoscale on queue depth with idempotent processing and quarantine of failed encodes.",
+     "weight": "extended",
+     "evidence_hint": "Batch-hydrates, avoids follower×posts SQL JOINs, and autoscales idempotent media workers."
+    }
+   ],
+   "probes": [
+    "A post goes viral—what protects object-storage origin?",
+    "An inactive user comes back after months with an empty Redis home—what do you do?"
+   ],
+   "hints": {
+    "1": "CDN and hybrid fan-out exist because read QPS and celebrity writes dominate.",
+    "2": "Separate bottlenecks: CDN/origin, fan-out lag, Redis shard, graph hotspot, hydration, media queue.",
+    "3": "Immutable CDN URLs + origin shield (95%+ edge); skip cold/celebrity push; shard Redis by user_id and reconstruct misses; batch hydrate; autoscale media workers on queue depth."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Push vs pull vs hybrid fan-out",
+   "strong_answer": "Push gives fast scroll but celebrity write storms and inactive waste; pull is cheap to write but slow at high follow counts; hybrid pushes normal accounts, skips celebrities above an ops-tuned ~10K–1M threshold, and merges precomputed timeline with recent celebrity posts at read—the expected production answer."
+  },
+  {
+   "topic": "Presigned direct upload vs proxy through API",
+   "strong_answer": "Proxying simplifies auth but melts app-server CPU/bandwidth on multi-MB photos; API issues short-lived presigned (or session) URLs and the client PUTs directly to object storage—the expected pattern."
+  },
+  {
+   "topic": "Eager vs lazy image variants",
+   "strong_answer": "Eager generation of common sizes on upload gives fast first paint everywhere at CPU/storage cost; lazy/on-demand rare sizes save work but hurt cold latency; interviews usually eager 2–4 sizes."
+  },
+  {
+   "topic": "Sync fan-out vs MQ workers",
+   "strong_answer": "Never block publish HTTP on millions of Redis writes; use at-least-once MQ/workers with idempotent timeline inserts deduped by post_id rather than inventing exactly-once delivery."
+  },
+  {
+   "topic": "Feed consistency vs author read-your-writes",
+   "strong_answer": "Home feed is eventually consistent with few-seconds lag OK; authors get read-your-writes via profile timeline or optimistic UI; media stays out of feed until status is ready."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Designing pure push for a celebrity with 100M followers",
+   "correction": "Skip push for those accounts; pull recent posts from the celebrity’s user timeline and merge at read time."
+  },
+  {
+   "trap": "Uploading photo bytes through the app/API server",
+   "correction": "Issue presigned/direct-to-blob upload URLs; keep the API on metadata and orchestration only."
+  },
+  {
+   "trap": "Storing full images or captions in every home timeline entry",
+   "correction": "Store post/media IDs only (~hundreds / ~800), hydrate post+user objects in batch, serve bytes from CDN URLs."
+  },
+  {
+   "trap": "Ignoring delete, unfollow, mute, or private-account semantics after push",
+   "correction": "Push copies go stale—filter at hydrate or async-remove, and run privacy checks before serving."
+  },
+  {
+   "trap": "Fan-out forever to inactive users / empty Redis on return",
+   "correction": "Skip cold users; on miss run a reconstruction job from graph + post store instead of retaining cold homes forever."
+  },
+  {
+   "trap": "Paginating with SQL OFFSET",
+   "correction": "OFFSET breaks under inserts; cursor on time-sortable post_id (Instagram-style 64-bit or Snowflake)."
+  },
+  {
+   "trap": "SQL JOIN followers × posts on every home refresh",
+   "correction": "Dies at read QPS; use only to motivate precomputed ID timelines + hydration."
+  },
+  {
+   "trap": "Conflating Stories/Reels/Explore with home feed",
+   "correction": "Different TTLs, ABR, or ML retrieval—mention only if asked; keep scope on upload + follow + home/profile."
+  },
+  {
+   "trap": "Claiming exactly-once fan-out from the MQ",
+   "correction": "Say at-least-once delivery plus idempotent ZADD/dedupe by post_id; don’t invent exactly-once MQ magic."
+  }
+ ]
+}

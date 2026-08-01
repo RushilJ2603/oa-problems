@@ -1,0 +1,223 @@
+{
+ "id": "c_s04_pointers",
+ "title": "Pointers",
+ "type": "FUND",
+ "relevance": "Pointers underpin C/C++ memory models, array/string handling, and systems interview questions about indirection, UB, and callbacks.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that a pointer is a typed variable holding an address, distinct from the pointee, with &/* and NULL as core primitives.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A pointer is a distinct variable whose value is a memory address bound to a pointee type (e.g. int * means an address where an int can be found), not merely a raw integer address.",
+     "weight": "core",
+     "evidence_hint": "Separates container, location, and data; says the compiler uses the type to know how many bytes to read and how to interpret them."
+    },
+    {
+     "id": "fund2",
+     "point": "Address-of (&) yields a variable's memory address; dereference (*) follows a pointer to read or write the pointee.",
+     "weight": "core",
+     "evidence_hint": "Walks through int x = 42; int *p = &x; and explains &x vs *p."
+    },
+    {
+     "id": "fund3",
+     "point": "NULL (typically 0 or (void*)0) is the sentinel for 'no valid object'; dereferencing a null pointer is undefined behavior and typically causes a segmentation fault.",
+     "weight": "core",
+     "evidence_hint": "Mentions checking NULL before deref when origin is uncertain (e.g. allocation returns)."
+    },
+    {
+     "id": "fund4",
+     "point": "Complex declarations are read with the Right-Left (spiral) rule: start at the name, look right, then left, expanding outward.",
+     "weight": "extended",
+     "evidence_hint": "Parses int *p as 'pointer to int' and int *(*f)(int) as 'pointer to function taking int returning pointer to int'."
+    }
+   ],
+   "probes": [
+    "What is a pointer, and how is int * different from treating an address as a plain integer?",
+    "How do you read a declaration like int *(*f)(int) using the right-left rule?"
+   ],
+   "hints": {
+    "1": "Think house number on paper versus the family inside the house.",
+    "2": "Separate: variable value, variable address, and a pointer that stores that address plus pointee type.",
+    "3": "int *p = &x means p holds x's address; * tells the compiler p points to an int, so deref reads/writes an int-sized object."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how pointer arithmetic, const placement, void *, double pointers, and function pointers actually behave.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Adding an integer to a pointer advances by n elements scaled by sizeof(pointee)—e.g. if int is 4 bytes and p is 0x1000, p + 1 is 0x1004—not raw +1 to the address.",
+     "weight": "core",
+     "evidence_hint": "Uses the tiled-floor / arr[4] example and states arithmetic is tied to pointee size."
+    },
+    {
+     "id": "mech2",
+     "point": "Pointer difference yields element count as ptrdiff_t; arithmetic and relational comparison are well-defined only for pointers into the same array (or one past the end).",
+     "weight": "core",
+     "evidence_hint": "Lists p+n / p-n, p2-p1, p1<p2 and flags unrelated-variable compare/subtract as UB."
+    },
+    {
+     "id": "mech3",
+     "point": "const int *p allows reseating p but not writing through *p; int *const p locks the address but allows *p writes; const int *const p locks both.",
+     "weight": "core",
+     "evidence_hint": "Applies right-left rule to each of the three forms and states what can/cannot change."
+    },
+    {
+     "id": "mech4",
+     "point": "void * is a typeless address: you cannot dereference or do pointer arithmetic on it; any object pointer converts to/from void * implicitly (e.g. malloc returns void *).",
+     "weight": "extended",
+     "evidence_hint": "Says the compiler lacks size/scale, so typed assignment contextualizes the raw block."
+    },
+    {
+     "id": "mech5",
+     "point": "To let a function reassign a caller's pointer (e.g. char *), pass a pointer-to-pointer (char **); *buf = malloc(...) updates the original.",
+     "weight": "extended",
+     "evidence_hint": "Explains allocate_buffer(char **buf) with &my_buf, or arrays of strings decaying to char **."
+    },
+    {
+     "id": "mech6",
+     "point": "A function pointer holds the address of executable code for callbacks; parentheses in int (*cmp)(int, int) are mandatory, else it parses as a function returning int *.",
+     "weight": "extended",
+     "evidence_hint": "Mentions typedef Comparator and passing ascending into sort_array / qsort-style use."
+    }
+   ],
+   "probes": [
+    "If p points to an int at 0x1000, what is p + 1 and why?",
+    "Explain const int * versus int *const.",
+    "Why does a function that reallocates a caller's char * need char **?"
+   ],
+   "hints": {
+    "1": "Arithmetic steps by objects, not by single bytes, unless the pointee is a byte type.",
+    "2": "Scale factor is sizeof(pointee); const binds to what is immediately to its left under the right-left reading.",
+    "3": "p + 1 adds 1 * sizeof(int); for double pointers, pass &my_buf so *buf can overwrite my_buf itself."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast when pointers are used for mutation versus for sharing without copy, and how arrays relate to but differ from pointers.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Accepting a pointer does not imply mutation: e.g. size_t strlen(const char *str) uses a pointer to avoid copying a large string while const promises no write to the data.",
+     "weight": "core",
+     "evidence_hint": "Rejects 'passing a pointer guarantees modification' and cites const on the pointee."
+    },
+    {
+     "id": "tr2",
+     "point": "Arrays and pointers are distinct: an array is contiguous storage, but in most expressions the array name decays to a pointer to the first element; a[i] is identical to *(a + i).",
+     "weight": "core",
+     "evidence_hint": "States int a[5]; a yields &a[0] as int *, while noting they are fundamentally not the same thing."
+    },
+    {
+     "id": "tr3",
+     "point": "sizeof on an array name does not decay and yields the full array byte size (e.g. int arr[10] → 40 bytes), whereas sizeof on a pointer yields the pointer's size (typically 8 bytes on a 64-bit system).",
+     "weight": "extended",
+     "evidence_hint": "Contrasts sizeof(arr) vs sizeof(p) when p = arr."
+    }
+   ],
+   "probes": [
+    "Does passing a pointer always mean the callee will modify the caller's data?",
+    "How do sizeof(array) and sizeof(pointer) differ, and why doesn't the array decay under sizeof?"
+   ],
+   "hints": {
+    "1": "Look at whether the parameter is pointer-to-const or pointer-to-mutable.",
+    "2": "Decay happens in most expressions, but sizeof applied directly to an array name is a special case.",
+    "3": "strlen(const char *) shares without copy and without mutation; sizeof(int arr[10]) is 40 bytes, sizeof(int *) is typically 8 on 64-bit."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply pointers safely in mutation, allocation via double pointers, callbacks, and classic operator/hazard pitfalls.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "*p++ dereferences the current address then advances the pointer (post-increment binds tighter but yields the old pointer); (*p)++ increments the pointee value; *(p++) is identical to *p++.",
+     "weight": "core",
+     "evidence_hint": "Orders the three expressions and states which object moves vs which value increments."
+    },
+    {
+     "id": "app2",
+     "point": "Common hazards: uninitialized (wild) pointers hold garbage; dangling pointers refer to memory after free or after a local's lifetime ends; strict-aliasing violations (incompatible-type access) can silently corrupt under optimization.",
+     "weight": "core",
+     "evidence_hint": "Defines dangling as pointee lifetime ended while the address value remains, and lists the three hazard classes."
+    },
+    {
+     "id": "app3",
+     "point": "A function can swap two ints via int * parameters by reading/writing through *a and *b; to allocate into a caller's int *, use int ** and assign with *ptr = malloc(...).",
+     "weight": "extended",
+     "evidence_hint": "Describes completing swap's *b = temp pattern and alloc_and_set writing **ptr = val after NULL check."
+    },
+    {
+     "id": "app4",
+     "point": "Callbacks pass a function pointer (e.g. qsort comparator) whose signature must match; casting a mismatched function pointer risks severe undefined behavior.",
+     "weight": "extended",
+     "evidence_hint": "Mentions compare_desc(const void *, const void *) casting to const int * then returning descending order."
+    }
+   ],
+   "probes": [
+    "What is the difference between *p++, (*p)++, and *(p++)?",
+    "What is a dangling pointer, and how does it differ from an uninitialized pointer?",
+    "How would you write a function that mallocs an int and makes the caller's pointer point to it?"
+   ],
+   "hints": {
+    "1": "Check operator precedence and what post-increment returns.",
+    "2": "Wild = never initialized; dangling = was valid, lifetime ended; for allocation out-params, you need the address of the pointer.",
+    "3": "*p++ reads then p advances; (*p)++ changes *p only; void f(int **p){ *p = malloc(sizeof(int)); }."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Pointer parameter for mutation vs const pointer for shared read-only access",
+   "strong_answer": "A non-const pointer lets the callee write the caller's object; a const pointee pointer (as in strlen(const char *)) shares large data without copying while promising no mutation—so accepting a pointer alone does not mean modification."
+  },
+  {
+   "topic": "Array vs pointer",
+   "strong_answer": "An array is a contiguous object; a pointer is a separate address variable. In most expressions the array name decays to &a[0], and a[i] means *(a + i), but sizeof(array) does not decay and reports full array size, unlike sizeof(pointer)."
+  },
+  {
+   "topic": "Typed pointer vs void *",
+   "strong_answer": "Typed pointers support dereference and scaled arithmetic; void * is a raw address with no size/scale so you cannot deref or do arithmetic until you convert to a concrete type—useful for APIs like malloc that return untyped storage."
+  },
+  {
+   "topic": "const int * vs int *const vs const int *const",
+   "strong_answer": "Pointer-to-const: reseatable, pointee immutable through that pointer. Const pointer: fixed address, mutable pointee. Const pointer to const: neither address nor pointee writable through that pointer."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Saying 'a pointer is a memory address'",
+   "correction": "A pointer holds an address and carries pointee type; the compiler uses that type for how many bytes to read (char * → 1 byte, double * → 8 bytes) and how to interpret them."
+  },
+  {
+   "trap": "Assuming passing a pointer guarantees the callee will modify the caller's data",
+   "correction": "Pointers are also used to avoid copying; const on the pointee (e.g. strlen(const char *)) documents and enforces non-mutation."
+  },
+  {
+   "trap": "Treating pointer arithmetic like integer +1 on the raw address, or comparing/subtracting pointers from unrelated objects",
+   "correction": "p + n advances by n * sizeof(pointee); difference is in elements (ptrdiff_t). Arithmetic/comparison are only well-defined within the same array (or one past the end); otherwise UB."
+  },
+  {
+   "trap": "Confusing *p++, (*p)++, and *(p++)",
+   "correction": "*p++ and *(p++) dereference the current pointer then advance it; (*p)++ increments the pointee value and leaves the pointer address unchanged."
+  },
+  {
+   "trap": "Expecting sizeof(pointer) to equal sizeof(array) after p = arr",
+   "correction": "sizeof(arr) on int arr[10] yields the full array size (40 bytes) without decay; sizeof(p) yields the pointer size (typically 8 bytes on 64-bit)."
+  },
+  {
+   "trap": "Omitting parentheses in a function-pointer declaration: int *cmp(int, int)",
+   "correction": "Without parens around *cmp, it declares a function returning int *. Correct form is int (*cmp)(int, int); mismatched signatures cast to fit invite severe UB."
+  },
+  {
+   "trap": "Dereferencing uninitialized or dangling pointers",
+   "correction": "Wild pointers hold garbage until initialized; dangling pointers retain an address after free or after a local dies—both are invalid to touch. Always ensure a live object (and often NULL-check) before deref."
+  }
+ ]
+}
