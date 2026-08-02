@@ -1,0 +1,200 @@
+{
+ "id": "py_16_dictionaries",
+ "title": "Dictionaries",
+ "type": "FUND",
+ "relevance": "Dictionaries (maps) are the default tool for keyed lookup, counting, grouping, and nested JSON-like data in Python OAs and SDE interviews.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a dict is, how it differs from single-value collections, and the rules on mutability and keys.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A dictionary stores key-value pairs (a map / associative array), not a single element value per entry.",
+     "weight": "core",
+     "evidence_hint": "Says paired keys and values; may mention map or associative array in other languages."
+    },
+    {
+     "id": "fund2",
+     "point": "Dictionaries are mutable: items can be added, removed, or changed after creation.",
+     "weight": "core",
+     "evidence_hint": "States the dict can be modified in place after it is created."
+    },
+    {
+     "id": "fund3",
+     "point": "Numerical indexing has no meaning; values are accessed by key, not by position.",
+     "weight": "core",
+     "evidence_hint": "Contrasts key-based access with list-style positional indexing."
+    },
+    {
+     "id": "fund4",
+     "point": "Keys must be immutable/hashable; using a list as a key raises TypeError (unhashable type: 'list').",
+     "weight": "extended",
+     "evidence_hint": "Names immutability/hashability and the TypeError for a list key."
+    },
+    {
+     "id": "fund5",
+     "point": "Duplicate keys are not kept separately: the later assignment overwrites the earlier value for that key.",
+     "weight": "extended",
+     "evidence_hint": "Example like {'name': 'nitish', 'name': 'rahul'} ending as {'name': 'rahul'}."
+    }
+   ],
+   "probes": [
+    "What is a Python dictionary, and how does access differ from a list?",
+    "What kinds of objects are valid dictionary keys, and what happens if you use a list?"
+   ],
+   "hints": {
+    "1": "Think about storing a name paired with an age versus putting both in a list.",
+    "2": "Cover mutability, key-based access, and what happens with duplicate or unhashable keys.",
+    "3": "Dict = mutable key-value map; no positional index; later duplicate key wins; list key → TypeError unhashable."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to create, read, update, delete, test membership, iterate, and use built-in dict helpers.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "You can build dicts with {}, dict(), mixed immutable keys, nested dicts, or dict() from a sequence of pairs.",
+     "weight": "core",
+     "evidence_hint": "Mentions empty {}, dict(), literal pairs, nested subjects-style dict, and/or dict([...])."
+    },
+    {
+     "id": "mech2",
+     "point": "Bracket access d[key] raises KeyError if missing; d.get(key) returns None and does not raise.",
+     "weight": "core",
+     "evidence_hint": "Contrasts KeyError from [] with get returning None for a missing key like 'address'."
+    },
+    {
+     "id": "mech3",
+     "point": "Assigning to a new key adds a pair; assigning to an existing key updates its value.",
+     "weight": "core",
+     "evidence_hint": "Shows d['gender'] = ... to add and d['sem'] = ... to overwrite."
+    },
+    {
+     "id": "mech4",
+     "point": "Removal: pop(key) removes and returns the value; popitem() removes the last inserted pair (Python 3.7+) as a tuple; del removes a key or the whole dict; clear() empties to {}.",
+     "weight": "core",
+     "evidence_hint": "Names pop / popitem / del / clear with the behaviors above."
+    },
+    {
+     "id": "mech5",
+     "point": "Membership with in / not in tests keys only, not values.",
+     "weight": "core",
+     "evidence_hint": "'name' in s is True while 'nitish' in s is False because nitish is a value."
+    },
+    {
+     "id": "mech6",
+     "point": "A for-loop over a dict iterates keys by default; keys()/values()/items() return dynamic view objects; len counts pairs; sorted returns sorted keys.",
+     "weight": "extended",
+     "evidence_hint": "Mentions default key iteration and at least keys/values/items views, and optionally len or sorted on keys."
+    }
+   ],
+   "probes": [
+    "How do you safely read a key that might be missing?",
+    "What do pop, popitem, del, and clear each do?",
+    "Does 'nitish' in {'name': 'nitish'} succeed? Why or why not?"
+   ],
+   "hints": {
+    "1": "Start from creating a small dict, then read, update, and delete one key.",
+    "2": "Separate access ([] vs get), mutation (assign), removal methods, and in on keys vs values.",
+    "3": "[] → KeyError, get → None; assign adds/updates; pop/popitem/del/clear for removal; in checks keys only; loop defaults to keys."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast the main access and removal APIs so the candidate picks the right tool for missing keys and ordered removal.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Use [] when a missing key should be a hard failure (KeyError); use get when absence should yield None without raising.",
+     "weight": "core",
+     "evidence_hint": "Explicitly chooses [] for required keys and get for optional/missing keys returning None."
+    },
+    {
+     "id": "tr2",
+     "point": "Use pop(key) when you know which key to remove and need its value; use popitem() when you want the last-inserted pair as a (key, value) tuple (Python 3.7+).",
+     "weight": "core",
+     "evidence_hint": "Contrasts keyed pop returning a value with popitem returning the last-inserted tuple."
+    }
+   ],
+   "probes": [
+    "When would you prefer my_dict.get('address') over my_dict['address']?",
+    "When is popitem more appropriate than pop?"
+   ],
+   "hints": {
+    "1": "Compare what each call returns or raises on a missing key.",
+    "2": "Frame it as fail-fast required lookup versus soft optional lookup, then keyed remove versus last-inserted remove.",
+    "3": "Missing key: [] → KeyError, get → None; pop(key) needs the key and returns the value; popitem drops last inserted pair as a tuple (3.7+)."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Build new dicts with comprehensions: mapping, transforming, filtering, zip, and nested forms.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Dict comprehension form is {key: value for vars in iterable}, e.g. squares {i: i**2 for i in range(1, 11)}.",
+     "weight": "core",
+     "evidence_hint": "States the {k: v for ...} pattern and can sketch the squares example."
+    },
+    {
+     "id": "app2",
+     "point": "You can transform or filter an existing dict in a comprehension, e.g. scale values via items() or keep only pairs where value > 0.",
+     "weight": "core",
+     "evidence_hint": "Mentions iterating .items() to map values (like miles) and/or if value > 0 to drop zero stock."
+    },
+    {
+     "id": "app3",
+     "point": "Comprehensions can combine zip of parallel sequences and nest dicts inside dicts (e.g. multiplication tables).",
+     "weight": "extended",
+     "evidence_hint": "Mentions zip(days, temps) into a dict and/or nested {i: {j: i*j ...} ...} table-style comprehension."
+    }
+   ],
+   "probes": [
+    "Write a dict comprehension that maps each number in range(1, 11) to its square.",
+    "How would you build a new dict of only in-stock products from a price/count dict using a comprehension?"
+   ],
+   "hints": {
+    "1": "Same idea as a list comprehension, but the expression is key: value inside {}.",
+    "2": "Use for over range, or for (k, v) in d.items(), and optionally add if.",
+    "3": "{i: i**2 for i in range(1, 11)}; {k: v for k, v in products.items() if v > 0}; zip or nested dicts as needed."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "`[]` vs `get()` for reading a key",
+   "strong_answer": "Bracket access fails fast with KeyError when the key is absent; get returns None and does not raise, which fits optional keys."
+  },
+  {
+   "topic": "`pop(key)` vs `popitem()` for removal",
+   "strong_answer": "pop removes a specific key and returns its value; popitem removes the last inserted pair (Python 3.7+) and returns that pair as a tuple."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming `in` checks values as well as keys.",
+   "correction": "Membership tests keys only: 'name' in s can be True while the value 'nitish' in s is False."
+  },
+  {
+   "trap": "Using a mutable object like a list as a dictionary key.",
+   "correction": "Keys must be immutable/hashable; a list key raises TypeError: unhashable type: 'list'."
+  },
+  {
+   "trap": "Writing the same key twice in a literal and expecting both entries.",
+   "correction": "The later value overwrites the earlier one for that key."
+  },
+  {
+   "trap": "Using [] for a key that might not exist.",
+   "correction": "[] raises KeyError; use get if you want None without an exception."
+  },
+  {
+   "trap": "Treating a dict like a list with positional indexes.",
+   "correction": "Indexing by position has no meaning; access is by key."
+  }
+ ]
+}

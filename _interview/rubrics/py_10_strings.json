@@ -1,0 +1,227 @@
+{
+ "id": "py_10_strings",
+ "title": "Python Strings",
+ "type": "FUND",
+ "relevance": "String creation, indexing, slicing, immutability, and common methods are staple Python OA and campus SDE fundamentals checks.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a Python string is and how to create one correctly.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A Python string is a sequence of Unicode characters used to represent text.",
+     "weight": "core",
+     "evidence_hint": "Says string = sequence of characters, and in Python specifically Unicode characters."
+    },
+    {
+     "id": "fund2",
+     "point": "The same string can be built with single quotes, double quotes, triple single quotes, triple double quotes, or the str() constructor.",
+     "weight": "core",
+     "evidence_hint": "Lists those five interchangeable creation forms."
+    },
+    {
+     "id": "fund3",
+     "point": "Choosing the other quote style lets a quote character appear literally inside the text without escaping.",
+     "weight": "extended",
+     "evidence_hint": "Gives an example like double quotes around text containing an apostrophe."
+    }
+   ],
+   "probes": [
+    "What is a string in Python, and what are the ways you can create one?"
+   ],
+   "hints": {
+    "1": "Think about characters and how quotes relate to text.",
+    "2": "Python strings are Unicode sequences; creation covers quote styles and str().",
+    "3": "A string is a sequence of Unicode characters; build it with ', \", ''', \"\"\", or str(), and pick the other quote style to embed a quote literally."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Check indexing, slicing rules, immutability, deletion, and core string operations.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Positive indexing counts from the left starting at 0; negative indexing counts from the right starting at -1.",
+     "weight": "core",
+     "evidence_hint": "States both directions and their start values; may mention s[-1] is the last character."
+    },
+    {
+     "id": "mech2",
+     "point": "A slice uses s[start:stop:step]: start is included, stop is excluded, step defaults to 1, and any of the three may be omitted.",
+     "weight": "core",
+     "evidence_hint": "Recites the form and included/excluded/default rules."
+    },
+    {
+     "id": "mech3",
+     "point": "With a positive step you need start < stop; with a negative step you need start > stop; mismatched direction yields an empty string rather than an error.",
+     "weight": "core",
+     "evidence_hint": "Explains direction constraints and empty-string outcome on mismatch."
+    },
+    {
+     "id": "mech4",
+     "point": "Omitting both endpoints with step -1 reverses the whole string — the idiomatic Python reversal.",
+     "weight": "extended",
+     "evidence_hint": "Names s[::-1] as reverse."
+    },
+    {
+     "id": "mech5",
+     "point": "Strings are immutable: assigning to an index raises TypeError: 'str' object does not support item assignment; change by building a new string and rebinding.",
+     "weight": "core",
+     "evidence_hint": "Names immutability, the TypeError, and rebuild-via-slice/concat approach."
+    },
+    {
+     "id": "mech6",
+     "point": "del deletes a name binding entirely; deleting a slice fails with TypeError: 'str' object does not support item deletion.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts del s vs del of a slice and the TypeError."
+    },
+    {
+     "id": "mech7",
+     "point": "+ concatenates strings and * repeats a string; relational operators compare strings lexicographically by Unicode values.",
+     "weight": "core",
+     "evidence_hint": "Mentions +/* and lexicographic/Unicode comparison."
+    },
+    {
+     "id": "mech8",
+     "point": "An empty string is falsy and a non-empty string is truthy; and returns the second operand if the first is truthy, or returns the first if it is truthy.",
+     "weight": "extended",
+     "evidence_hint": "States emptiness truthiness and and/or return-operand behavior."
+    }
+   ],
+   "probes": [
+    "How do indexing and slicing work on strings, and what happens if you try to change a character in place?"
+   ],
+   "hints": {
+    "1": "Recall left/right indices and that strings cannot be edited by index.",
+    "2": "Cover start:stop:step, direction rules, immutability TypeError, and +/* / comparisons.",
+    "3": "0/-1 indexing; inclusive start exclusive stop; mismatched step direction → empty; s[::-1] reverses; s[0]='H' → TypeError; del name ok, del slice → TypeError; + concat, * repeat, lex compare."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast lookup methods and casing/search helpers candidates must choose correctly.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "find returns the lowest index of a substring or -1 if not found; index is like find but raises ValueError when the substring is not found.",
+     "weight": "core",
+     "evidence_hint": "States both return behaviors, including -1 vs ValueError."
+    },
+    {
+     "id": "tr2",
+     "point": "count returns the number of non-overlapping occurrences; startswith/endswith return booleans for prefix/suffix checks.",
+     "weight": "extended",
+     "evidence_hint": "Separates count from boolean start/end checks."
+    },
+    {
+     "id": "tr3",
+     "point": "Membership with in / not in is case-sensitive.",
+     "weight": "core",
+     "evidence_hint": "Explicitly says case-sensitive membership."
+    }
+   ],
+   "probes": [
+    "When would you use find versus index to look up a substring?"
+   ],
+   "hints": {
+    "1": "Both locate a substring, but they differ when it is missing.",
+    "2": "One returns a sentinel index; the other raises.",
+    "3": "find → lowest index or -1; index → same but ValueError if missing; also note case-sensitive in/not in."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply common built-ins and methods to real string tasks.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "len returns character count; max/min return characters with highest/lowest Unicode value; sorted returns a list of characters sorted by Unicode values.",
+     "weight": "core",
+     "evidence_hint": "Names len, max, min, sorted and what each returns."
+    },
+    {
+     "id": "app2",
+     "point": "Casing methods capitalize, title, upper, lower, and swapcase return a new string with modified casing.",
+     "weight": "extended",
+     "evidence_hint": "Lists those methods and that they return new strings."
+    },
+    {
+     "id": "app3",
+     "point": "format inserts values into placeholders, and index numbers like {0} control argument placement.",
+     "weight": "extended",
+     "evidence_hint": "Describes format() and numbered placeholders."
+    },
+    {
+     "id": "app4",
+     "point": "split splits into a list (default separator whitespace); join concatenates an iterable using the string as separator; replace substitutes a phrase; strip removes leading and trailing whitespace.",
+     "weight": "core",
+     "evidence_hint": "Covers split, join, replace, and strip roles."
+    },
+    {
+     "id": "app5",
+     "point": "Validation methods include isalnum, isalpha, isdigit, and isidentifier.",
+     "weight": "extended",
+     "evidence_hint": "Names those four checks."
+    },
+    {
+     "id": "app6",
+     "point": "Strings are iterable, so you can loop character by character.",
+     "weight": "core",
+     "evidence_hint": "Says for-loop over a string walks characters."
+    }
+   ],
+   "probes": [
+    "Which built-ins and methods would you use to measure, case-change, split/join, and validate a string?"
+   ],
+   "hints": {
+    "1": "Think length, casing, splitting, and checks like isdigit.",
+    "2": "Group len/max/min/sorted, casing methods, split/join/replace/strip, and is* validators.",
+    "3": "len/max/min/sorted; capitalize/title/upper/lower/swapcase; format; split/join/replace/strip; isalnum/isalpha/isdigit/isidentifier; for char in s."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "find vs index",
+   "strong_answer": "Both locate the lowest index of a substring; find returns -1 when missing, while index raises ValueError: substring not found — choose find when absence is normal, index when missing should be exceptional."
+  },
+  {
+   "topic": "Editing by index vs rebuild and rebind",
+   "strong_answer": "In-place index assignment is impossible because strings are immutable (TypeError: 'str' object does not support item assignment); to change text, build a new string via slicing/concatenation and rebind the name."
+  },
+  {
+   "topic": "Quote style for embedded quotes",
+   "strong_answer": "Use the other outer quote style so an apostrophe or quote can appear literally without escaping, e.g. double quotes around text containing it's."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Indexing past the end of a string",
+   "correction": "Raises IndexError: string index out of range; there is no off-the-end sentinel — the position must exist."
+  },
+  {
+   "trap": "Trusting a Jupyter/Colab cell's displayed output after editing code",
+   "correction": "Editing does not refresh shown output until re-execution; a stale prior result (e.g. from s[2:]) can disagree with current code like s[:3], which is hel — never trust a result you have not just run."
+  },
+  {
+   "trap": "Assigning to a character by index, e.g. s[0] = 'H'",
+   "correction": "Strings are immutable; that raises TypeError: 'str' object does not support item assignment — rebuild and rebind instead."
+  },
+  {
+   "trap": "Deleting a slice of a string with del",
+   "correction": "Fails with TypeError: 'str' object does not support item deletion; del only removes the whole name binding."
+  },
+  {
+   "trap": "Mismatched slice direction (positive step with start > stop, or negative step with start < stop)",
+   "correction": "Yields an empty string rather than an error; read the slice as from start up to but not including stop stepping by step."
+  },
+  {
+   "trap": "Assuming membership checks ignore case",
+   "correction": "in and not in are case-sensitive."
+  }
+ ]
+}

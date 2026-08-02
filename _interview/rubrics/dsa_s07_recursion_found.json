@@ -1,0 +1,207 @@
+{
+ "id": "dsa_s07_recursion_found",
+ "title": "Recursion Foundations",
+ "type": "FUND",
+ "relevance": "Interviewers use recursion to check base cases, call-stack reasoning, recurrence/complexity analysis, and whether you can trade recursion for iteration when stack depth and overhead matter.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what recursion is, how the call stack works, and what makes a recursive function valid.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Recursion defines a function in terms of itself using a base case that returns a direct answer and a recursive case that shrinks the problem toward that base case.",
+     "weight": "core",
+     "evidence_hint": "Names both parts and says the recursive step must reduce size until the base case fires."
+    },
+    {
+     "id": "fund2",
+     "point": "Each self-call pushes a call frame with locals and parameters; a return pops the frame and resumes the caller, so space is O(depth) of the call tree.",
+     "weight": "core",
+     "evidence_hint": "Mentions push/pop of frames and space proportional to maximum recursion depth."
+    },
+    {
+     "id": "fund3",
+     "point": "No valid base case, or a recursive case that does not shrink toward it, causes infinite recursion and a stack overflow when the call stack runs out of memory.",
+     "weight": "core",
+     "evidence_hint": "Links missing/broken termination to endless calls and stack overflow."
+    },
+    {
+     "id": "fund4",
+     "point": "Reason with a recursion tree and 'trust the recursion': assume the subcall solves the subproblem, then combine that result for the current problem; time is often a recurrence such as T(n) = T(n-1) + O(1).",
+     "weight": "extended",
+     "evidence_hint": "Says assume the subproblem is correct and can write a simple linear recurrence for time."
+    }
+   ],
+   "probes": [
+    "What two parts must every valid recursive function have, and what goes wrong if either is missing or wrong?",
+    "How does the call stack behave on a recursive call and a return, and what does that imply for space?"
+   ],
+   "hints": {
+    "1": "Think about stopping versus continuing the self-calls.",
+    "2": "Base case returns immediately; recursive case shrinks; each call gets its own stack frame.",
+    "3": "Base case + shrinking recursive case; frames push/pop; bad termination → infinite recursion → stack overflow; space O(depth)."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Distinguish how recursive calls are arranged: tail vs head, linear vs tree, indirect, nested, and parameterised vs functional state.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Tail recursion makes the recursive call the last action with no work after return; head/non-tail recursion still has work after the call returns (e.g. printing before vs after the call).",
+     "weight": "core",
+     "evidence_hint": "Defines last-action vs post-return work and can contrast the two print orders."
+    },
+    {
+     "id": "mech2",
+     "point": "Linear recursion makes one recursive call (a line of calls); tree recursion makes multiple recursive calls so the call stack branches.",
+     "weight": "core",
+     "evidence_hint": "Contrasts single-call chain with multi-call branching like Fibonacci-style trees."
+    },
+    {
+     "id": "mech3",
+     "point": "Indirect/mutual recursion is when A calls B and B calls A; nested recursion passes a recursive call as the argument to another recursive call.",
+     "weight": "extended",
+     "evidence_hint": "Separates mutual A↔B from nestedRec(nestedRec(...))-style argument nesting."
+    },
+    {
+     "id": "mech4",
+     "point": "Parameterised recursion builds the answer downward via an accumulator parameter; functional recursion builds the answer upward by combining returned sub-results.",
+     "weight": "core",
+     "evidence_hint": "Says accumulator goes down the chain versus combining return values on the way up."
+    }
+   ],
+   "probes": [
+    "How do you tell tail recursion from head recursion, and what changes about when side effects run?",
+    "What is the difference between parameterised recursion and functional recursion when carrying state?"
+   ],
+   "hints": {
+    "1": "Ask whether anything runs after the recursive call returns.",
+    "2": "Tail = last action; head = work after return; param passes accumulator down; functional combines on the way up.",
+    "3": "Tail: call is final; head: e.g. print after return; linear vs tree by call count; param accumulator down vs functional combine up."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Surface recursion-versus-iteration costs and when naive tree recursion is too expensive.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Interviews often expect discussion of recursion versus iteration, especially stack-depth limits and call overhead, and rewriting iteratively to remove O(N) auxiliary stack space.",
+     "weight": "core",
+     "evidence_hint": "Mentions stack limits/overhead and dropping O(N) recursion stack by iterating."
+    },
+    {
+     "id": "tr2",
+     "point": "Naive tree-recursive Fibonacci recalculates the same subproblems across the tree, giving O(2^n) time and motivating memoization/DP; space is O(n) for tree height.",
+     "weight": "core",
+     "evidence_hint": "Calls out redundant subproblems, exponential time, and DP/memo as the fix; space from max height."
+    },
+    {
+     "id": "tr3",
+     "point": "Choose parameterised recursion when accumulating downward is clearer, or functional recursion when combining returned sub-results upward fits the problem.",
+     "weight": "extended",
+     "evidence_hint": "Picks the pattern based on whether the answer is built going down or combined coming up."
+    }
+   ],
+   "probes": [
+    "When would you rewrite a recursive solution iteratively, and what complexity term are you usually trying to remove?",
+    "Why is the plain recursive Fibonacci a poor final interview answer?"
+   ],
+   "hints": {
+    "1": "Compare stack usage and repeated work.",
+    "2": "Iteration avoids deep stacks; Fibonacci tree recomputes overlapping subproblems.",
+    "3": "Recursion vs iteration: depth limits/overhead and O(N) stack; naive Fibonacci is O(2^n) time from redundant calls → memo/DP."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply base/recursive cases and parameterised or functional patterns to standard linear and tree-recursive problems.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Print 1 to N with a parameterised counter i growing to N, or with head recursion that prints N only after printing 1 to N-1; both are O(N) time and O(N) stack.",
+     "weight": "core",
+     "evidence_hint": "Describes either style and states O(N) time and stack space."
+    },
+    {
+     "id": "app2",
+     "point": "Sum of first N: parameterised path adds into a downward sum; functional path returns n + sum(n-1) with base 0 → 0; both O(N) time and O(N) space.",
+     "weight": "core",
+     "evidence_hint": "Shows both styles and O(N) time/space."
+    },
+    {
+     "id": "app3",
+     "point": "Factorial is functional n * (n-1)! with base 0! = 1; use a wider integer type because factorials grow very fast.",
+     "weight": "extended",
+     "evidence_hint": "States the recurrence, base 0! = 1, and overflow risk for small N."
+    },
+    {
+     "id": "app4",
+     "point": "In-place reverse swaps left/right then recurses inward until left meets or crosses right; palindrome compares ends (or s[i] vs s[n-i-1]) and recurses inward.",
+     "weight": "core",
+     "evidence_hint": "Two-pointer shrink for reverse; outer-to-inner or index-pair check for palindrome."
+    },
+    {
+     "id": "app5",
+     "point": "Fibonacci translates F(0)=0, F(1)=1, F(n)=F(n-1)+F(n-2) into tree recursion with base n ≤ 1, at O(2^n) time and O(n) space.",
+     "weight": "extended",
+     "evidence_hint": "States the recurrence/bases and exponential time with linear stack height."
+    }
+   ],
+   "probes": [
+    "Walk through printing 1 to N with head recursion versus a parameterised counter—what happens on the way down and up?",
+    "How would you reverse an array or check a palindrome recursively with two endpoints?"
+   ],
+   "hints": {
+    "1": "Pick one classic problem and name its base case first.",
+    "2": "Linear problems: shrink n or move indices; Fibonacci branches to n-1 and n-2.",
+    "3": "Print/sum/factorial: O(N) stack patterns; reverse/palindrome: meet-in-middle indices; Fibonacci: tree recursion O(2^n) time."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Recursion vs iteration",
+   "strong_answer": "Recursion mirrors the problem structure and call stack, but interviews push on stack-depth limits, call overhead, and rewriting iteratively to eliminate O(N) auxiliary stack space."
+  },
+  {
+   "topic": "Parameterised recursion vs functional recursion",
+   "strong_answer": "Parameterised recursion passes an accumulator down the call chain; functional recursion combines sub-call return values on the way up—choose based on whether the answer is built going down or composed coming back."
+  },
+  {
+   "topic": "Tail recursion vs head recursion",
+   "strong_answer": "Tail recursion’s recursive call is the last action (no post-return work); head recursion still runs logic after the call returns, which changes side-effect order such as print-before vs print-after."
+  },
+  {
+   "topic": "Naive recursive Fibonacci vs DP/memoization",
+   "strong_answer": "Pure tree recursion recomputes overlapping subproblems for O(2^n) time; memoizing repeated results is the Dynamic Programming next step, while space stays O(n) from recursion height."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Writing a recursive function with no valid base case, or a recursive step that does not shrink toward the base case.",
+   "correction": "Every path must reach a base case that returns directly; otherwise you get infinite recursion and a stack overflow."
+  },
+  {
+   "trap": "Treating naive recursive Fibonacci as an acceptable final solution.",
+   "correction": "It is exponential O(2^n) from redundant subproblems; call that out and move toward memoization/DP (and note O(n) stack height)."
+  },
+  {
+   "trap": "Ignoring stack cost when analyzing recursive solutions.",
+   "correction": "Space is driven by maximum call depth (often O(N) for linear recursion); interviewers may ask you to simulate the stack or rewrite iteratively."
+  },
+  {
+   "trap": "Using a narrow integer type for factorial.",
+   "correction": "Factorials grow extremely quickly, so use a wider type (e.g. long long) even for relatively small N; base case is 0! = 1."
+  },
+  {
+   "trap": "Confusing when work runs relative to the recursive call.",
+   "correction": "Tail recursion does the call last; head recursion does work after return—e.g. printing before the call yields N..1, printing after yields 1..N."
+  }
+ ]
+}

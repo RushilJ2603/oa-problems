@@ -1,0 +1,177 @@
+{
+ "id": "py_02_classes_and_instances",
+ "title": "Classes and Instances",
+ "type": "FUND",
+ "relevance": "Interviewers check that candidates can model stateful objects with a class blueprint, instantiate them, and attach per-object state via __init__ and self.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish a class as a blueprint and an instance as a concrete object created from it.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A class is a user-defined blueprint or prototype from which objects are created.",
+     "weight": "core",
+     "evidence_hint": "Candidate calls a class a blueprint/prototype used to create objects, not the object itself."
+    },
+    {
+     "id": "fund2",
+     "point": "An instance (object) is a specific realization created from that class blueprint.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts one class with multiple distinct instances that each realize the blueprint."
+    },
+    {
+     "id": "fund3",
+     "point": "A class is defined with the class keyword; an empty body can use pass and is still a valid class.",
+     "weight": "extended",
+     "evidence_hint": "Candidate writes or describes class Dog: pass and treats it as a usable class."
+    },
+    {
+     "id": "fund4",
+     "point": "Instantiation creates an object by calling the class as if it were a function (e.g. Dog()).",
+     "weight": "core",
+     "evidence_hint": "Candidate says you call the class like a function to get an instance, and may note type(my_dog) shows the Dog class."
+    }
+   ],
+   "probes": [
+    "What is the difference between a class and an instance, and how do you create an instance from a class in Python?"
+   ],
+   "hints": {
+    "1": "Think blueprint versus the concrete thing built from that blueprint.",
+    "2": "Mention the class keyword to define, then calling the class name with parentheses to instantiate.",
+    "3": "A class is the blueprint; my_dog = Dog() instantiates it, and type(my_dog) reports the Dog class."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how attributes, methods, __init__, and self give each object lasting state and behavior.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A class bundles state as attributes (data on the object) and behavior as methods (functions defined inside the class body).",
+     "weight": "core",
+     "evidence_hint": "Candidate separates attributes/data from methods/functions-on-the-object."
+    },
+    {
+     "id": "mech2",
+     "point": "__init__ is a special method automatically invoked whenever a new instance is created, used to initialize instance attributes.",
+     "weight": "core",
+     "evidence_hint": "Candidate says __init__ runs on construction and sets things like self.name and self.age."
+    },
+    {
+     "id": "mech3",
+     "point": "self refers to the specific instance being operated on; without self, names in __init__ are temporary locals that disappear when the method finishes.",
+     "weight": "core",
+     "evidence_hint": "Candidate explains self attaches values to that object's memory; bare locals would not persist on the instance."
+    },
+    {
+     "id": "mech4",
+     "point": "If an instance method omits self as its first parameter, calling it on an instance raises TypeError because Python automatically passes the instance as the first argument.",
+     "weight": "extended",
+     "evidence_hint": "Candidate names TypeError and that Python injects the instance as the invisible first argument."
+    },
+    {
+     "id": "mech5",
+     "point": "Calling an instance method on the class and passing the instance explicitly (e.g. Dog.bark(buddy)) works the same as calling it on the instance.",
+     "weight": "extended",
+     "evidence_hint": "Candidate says Dog.bark(buddy) is equivalent to buddy.bark() because the instance is passed as the first argument."
+    }
+   ],
+   "probes": [
+    "What do __init__ and self do when you create an object, and what goes wrong if you leave self out of an instance method?"
+   ],
+   "hints": {
+    "1": "Ask what runs automatically at construction and what self points at.",
+    "2": "Contrast self.name = name with a plain local name = name inside __init__.",
+    "3": "__init__ initializes instance attributes on creation; self is that instance; omitting self from def bark(): makes buddy.bark() raise TypeError because Python still passes the instance."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Decide when a class is warranted versus grouping functions another way.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Do not use a class merely to group standalone functions that share no state.",
+     "weight": "core",
+     "evidence_hint": "Candidate rejects empty/stateless 'utility classes' used only as function bags."
+    },
+    {
+     "id": "tr2",
+     "point": "For standalone functions with no shared state, prefer a module instead of a class.",
+     "weight": "core",
+     "evidence_hint": "Candidate says use a module when there is no per-instance state to share."
+    }
+   ],
+   "probes": [
+    "When would you put related functions in a class versus in a module?"
+   ],
+   "hints": {
+    "1": "Ask whether those functions share any object state.",
+    "2": "If nothing is stored on instances, a class adds little beyond a namespace.",
+    "3": "No shared state → module; shared state plus behavior on instances → class."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply class design so multiple instances keep independent state and methods update that state.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Independent instances keep separate state via self (e.g. alice_account and bob_account have separate balances).",
+     "weight": "core",
+     "evidence_hint": "Candidate explains two BankAccount objects do not share balance because each uses its own self."
+    },
+    {
+     "id": "app2",
+     "point": "Instance methods can modify that instance's state (e.g. deposit increases self.balance when amount > 0).",
+     "weight": "core",
+     "evidence_hint": "Candidate shows or describes deposit updating only the receiver's balance."
+    },
+    {
+     "id": "app3",
+     "point": "__init__ can take constructor parameters and defaults (e.g. owner and starting_balance) to set initial instance attributes.",
+     "weight": "extended",
+     "evidence_hint": "Candidate wires __init__(self, owner, starting_balance=0) into self.owner and self.balance."
+    },
+    {
+     "id": "app4",
+     "point": "Once objects hold state, the next concern is protecting that state from invalid values, which leads to encapsulation.",
+     "weight": "extended",
+     "evidence_hint": "Candidate links stateful objects to the need for encapsulation next."
+    }
+   ],
+   "probes": [
+    "Walk through a BankAccount (or similar) class: how do two accounts stay independent, and how does a method change one account's balance?"
+   ],
+   "hints": {
+    "1": "Picture two accounts created from the same class with different owners.",
+    "2": "Trace self.balance on each instance through __init__ and deposit.",
+    "3": "alice_account = BankAccount(\"Alice\", 100) and bob_account = BankAccount(\"Bob\") keep separate balances; alice_account.deposit(50) updates only Alice's balance via self."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Class vs module for grouping functions",
+   "strong_answer": "Use a class when you need per-instance state bundled with methods that operate on that state. If you only have standalone functions that share no state, put them in a module instead of a class."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Defining an instance method without self as the first parameter (e.g. def bark():).",
+   "correction": "Python still passes the instance as the first argument on buddy.bark(), so the call raises TypeError; write def bark(self):."
+  },
+  {
+   "trap": "Assigning attributes in __init__ without self (treating them as ordinary locals).",
+   "correction": "Those names disappear when __init__ finishes; use self.name = name (and similar) so the data is attached to the instance permanently."
+  },
+  {
+   "trap": "Using a class only as a bag of standalone functions with no shared state.",
+   "correction": "That is a poor fit for classes; use a module for that grouping instead."
+  }
+ ]
+}

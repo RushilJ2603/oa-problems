@@ -1,0 +1,239 @@
+{
+ "id": "cpp_s47_stl_algorithms",
+ "title": "STL Algorithms",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs expect candidates to write erase-remove, custom-key sorts, binary-search bounds, and choose sort vs partial_sort vs nth_element correctly.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that STL algorithms are free functions over half-open iterator ranges, parameterized by predicates and comparators.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Almost all STL algorithms operate on a half-open range [first, last): first is included, last is past-the-end and must not be dereferenced; first == last is a valid empty range.",
+     "weight": "core",
+     "evidence_hint": "Candidate states half-open semantics, that end() is never dereferenced, and that passing end() as both bounds is a valid empty range."
+    },
+    {
+     "id": "fund2",
+     "point": "Algorithms are free functions decoupled from containers; they work through iterators rather than as container member functions.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts member APIs with free functions in <algorithm> that take iterator pairs."
+    },
+    {
+     "id": "fund3",
+     "point": "Behaviour is parameterized by predicates: unary predicates (find_if, count_if, remove_if) take one element and return bool; binary predicates/comparators (sort, lower_bound) take two and must induce a strict weak ordering.",
+     "weight": "core",
+     "evidence_hint": "Candidate distinguishes unary vs binary callables and mentions strict weak ordering / operator< semantics."
+    },
+    {
+     "id": "fund4",
+     "point": "From C++20, many algorithms accept a projection applied to each element before the predicate/comparator; C++17 style uses a capturing lambda for the same effect.",
+     "weight": "extended",
+     "evidence_hint": "Candidate mentions proj / &Person::age with ranges::sort, or an equivalent capturing lambda comparator."
+    }
+   ],
+   "probes": [
+    "What does the half-open range [first, last) mean for STL algorithms, and what goes wrong if you treat last as inclusive?",
+    "How do you pass a custom sort key or search condition to an STL algorithm?"
+   ],
+   "hints": {
+    "1": "Think about where end() points and whether algorithms ever dereference it.",
+    "2": "Algorithms take two iterators and often a callable; classify that callable as unary predicate vs comparator.",
+    "3": "Answer shape: [first, last) includes first only; last is past-the-end; predicates/lambdas customize find_if/sort; never deref end()."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how core algorithm families actually behave: non-modifying queries, erase-remove, partitioning, sorting, binary search, heaps, and numeric folds.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "std::remove / remove_if / unique only relocate kept elements to the front and return a new logical end; they do not resize the container, so you must pair them with container erase (erase-remove idiom).",
+     "weight": "core",
+     "evidence_hint": "Candidate writes v.erase(std::remove(...), v.end()) and explains algorithms are container-agnostic so they cannot call erase themselves."
+    },
+    {
+     "id": "mech2",
+     "point": "std::sort is not stable (~O(N log N)); stable_sort preserves relative order of equal elements; partial_sort puts the top K into final sorted positions in O(N log K); nth_element places the n-th order statistic with average O(N) and only partitions around it.",
+     "weight": "core",
+     "evidence_hint": "Candidate maps each algorithm to stability/partial-order guarantees and the stated complexities from the material."
+    },
+    {
+     "id": "mech3",
+     "point": "On a sorted range, lower_bound finds the first element not less than (≥) the value, upper_bound the first strictly greater, equal_range the [lower, upper) run, and binary_search only returns existence — all O(log N) with random-access iterators.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts boolean binary_search with iterator-returning lower_bound/equal_range and states the sorted precondition."
+    },
+    {
+     "id": "mech4",
+     "point": "std::partition reorders by predicate without preserving relative order (O(N)); stable_partition preserves order within each group; partition_point binary-searches the predicate boundary on an already-partitioned range (O(log N)).",
+     "weight": "extended",
+     "evidence_hint": "Candidate distinguishes partition vs stable_partition and says partition_point is meaningless on an unpartitioned range."
+    },
+    {
+     "id": "mech5",
+     "point": "std::accumulate folds left with the init value’s type as the running type; std::reduce (C++17) may reorder/reassociate and needs a commutative associative op for a defined result.",
+     "weight": "extended",
+     "evidence_hint": "Candidate warns that accumulate(..., 0) can overflow in int and prefers 0LL when a wider sum is needed; contrasts ordered accumulate with reorderable reduce."
+    }
+   ],
+   "probes": [
+    "Walk through the erase-remove idiom line by line: what does remove return, and why is erase still required?",
+    "When would you reach for nth_element instead of partial_sort or sort?",
+    "What is the difference between lower_bound and binary_search on a sorted vector?"
+   ],
+   "hints": {
+    "1": "Algorithms only see iterators; ask what that implies for container size after remove.",
+    "2": "Separate “pack kept elements forward” from “truncate the container,” then map sort-family tools to top-K vs K-th element needs.",
+    "3": "Canonical form: v.erase(std::remove_if(v.begin(), v.end(), pred), v.end()); top K ordered → partial_sort; only K-th/median → nth_element; existence → binary_search, position/count → lower_bound/equal_range."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose among sorting variants, partition flavors, accumulate vs reduce, and classic iterator APIs vs C++20 ranges based on guarantees and constraints.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Need top K in order → partial_sort (O(N log K)); need only the K-th / median / unordered top K → nth_element (average O(N)); need a full stable multi-key sort → stable_sort or successive sorts from least to most significant key.",
+     "weight": "core",
+     "evidence_hint": "Candidate picks the algorithm from the required ordering guarantee, not habitually calling full sort."
+    },
+    {
+     "id": "tr2",
+     "point": "Prefer accumulate when left-to-right order matters; prefer reduce / parallel transform_reduce only when the operation is commutative and associative and reordering is acceptable.",
+     "weight": "core",
+     "evidence_hint": "Candidate refuses reduce with floating subtraction or stateful left-to-right callables."
+    },
+    {
+     "id": "tr3",
+     "point": "partition is O(N) but does not preserve relative order; stable_partition preserves order and is O(N) with enough buffer or O(N log N) without.",
+     "weight": "extended",
+     "evidence_hint": "Candidate trades stability for speed/memory when explaining which partition to use."
+    },
+    {
+     "id": "tr4",
+     "point": "C++20 ranges let you pass the container directly (std::ranges::sort(v)) with optional projections and richer return types, but classic begin/end overloads remain what most interview whiteboards expect.",
+     "weight": "extended",
+     "evidence_hint": "Candidate can write both styles and notes projections as the C++20 alternative to hand-rolled comparators."
+    }
+   ],
+   "probes": [
+    "You need the median of a large vector. Which algorithm and why not sort?",
+    "When is std::reduce the wrong choice compared to std::accumulate?"
+   ],
+   "hints": {
+    "1": "Ask what ordering you actually need after the call returns.",
+    "2": "Compare full sort vs partial order vs single order-statistic placement; separately ask whether the fold may reorder.",
+    "3": "Median/K-th → nth_element average O(N); ordered top K → partial_sort; order-sensitive fold → accumulate; reorder-OK parallel fold → reduce."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply interview-ready idioms: erase-remove, custom comparators, sorted-range queries, permutation enumeration, and destination sizing for copying algorithms.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Write the erase-remove (or erase-remove_if) one-liner from memory and explain that from C++20, std::erase / std::erase_if free functions wrap this for standard containers.",
+     "weight": "core",
+     "evidence_hint": "Candidate produces v.erase(std::remove_if(begin, end, pred), end) and mentions the C++20 wrappers."
+    },
+    {
+     "id": "app2",
+     "point": "Sort or search by a custom key with a lambda comparator; prefer a named lambda or small functor when reused, and never use a floating-point comparator that can return true for both (a,b) and (b,a).",
+     "weight": "core",
+     "evidence_hint": "Candidate shows sort(..., [](const T& a, const T& b){ return a.key < b.key; }) and states the broken-ordering trap."
+    },
+    {
+     "id": "app3",
+     "point": "Classic CP pattern: sort ascending first, then do { … } while (next_permutation(...)) to enumerate all distinct permutations; starting unsorted misses earlier permutations and stops early.",
+     "weight": "extended",
+     "evidence_hint": "Candidate insists on sorting before the next_permutation loop."
+    },
+    {
+     "id": "app4",
+     "point": "When writing to a destination range, pre-allocate enough space or use an inserter such as std::back_inserter; prefer four-iterator equal/mismatch (C++14) when second-range length is not obviously sufficient.",
+     "weight": "extended",
+     "evidence_hint": "Candidate avoids assuming copy/equal destinations are large enough and cites back_inserter or sized buffers."
+    }
+   ],
+   "probes": [
+    "Write code to remove all even elements from a vector using the standard idiom.",
+    "How do you count occurrences of a value in a sorted vector without a linear scan?",
+    "Show how you would enumerate all permutations of a small array."
+   ],
+   "hints": {
+    "1": "Name the algorithm that “removes” without changing size, then the container call that finishes the job.",
+    "2": "For counts on sorted data, think equal_range + distance; for permutations, think sorted start + next_permutation loop.",
+    "3": "erase(remove_if(...), end); auto [lo,hi]=equal_range(...); distance(lo,hi); sort then do-while next_permutation."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "std::sort vs std::partial_sort vs std::nth_element",
+   "strong_answer": "Full std::sort (~O(N log N), not stable) when the whole range must be ordered. partial_sort when you need the top K elements in sorted order (O(N log K)). nth_element when you only need the K-th / median or an unordered partition around that rank (average O(N))."
+  },
+  {
+   "topic": "std::partition vs std::stable_partition",
+   "strong_answer": "partition is O(N) and may scramble relative order within each side. stable_partition keeps relative order within groups; it is O(N) with enough buffer and O(N log N) if extra memory is unavailable."
+  },
+  {
+   "topic": "std::accumulate vs std::reduce",
+   "strong_answer": "accumulate is a left fold whose init type is the running type—use when order matters. reduce (C++17) may reorder/reassociate for parallelisation, so the op should be commutative and associative; otherwise prefer accumulate."
+  },
+  {
+   "topic": "std::binary_search vs std::lower_bound / equal_range",
+   "strong_answer": "binary_search only answers existence. Use lower_bound for the first ≥ insertion/match point, upper_bound for first >, and equal_range for the equal run / count—on a range already sorted with the same comparator."
+  },
+  {
+   "topic": "Classic iterator-pair algorithms vs C++20 std::ranges",
+   "strong_answer": "Ranges accept the container directly, support projections, and return richer result types, but classic begin/end overloads remain valid and are what most interview whiteboards still expect."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating last as inclusive or dereferencing end()",
+   "correction": "Ranges are half-open [first, last); last is past-the-end and never dereferenced. Off-by-one bugs usually come from treating last as inclusive."
+  },
+  {
+   "trap": "Assuming std::remove / remove_if / unique shrink the container",
+   "correction": "They only pack kept elements forward and return the new logical end; always pair with container erase (or C++20 std::erase / erase_if)."
+  },
+  {
+   "trap": "Three-iterator equal / mismatch when the second range may be shorter",
+   "correction": "Those overloads assume the second range is at least as long as the first; a shorter second range is undefined behaviour—prefer the four-iterator C++14 overloads."
+  },
+  {
+   "trap": "Using std::random_shuffle or unique without sorting",
+   "correction": "random_shuffle is removed in C++17—use std::shuffle with an explicit engine such as mt19937. unique only collapses consecutive duplicates; sort first if needed."
+  },
+  {
+   "trap": "Calling binary_search / lower_bound on an unsorted range, or using binary_search when you need a position",
+   "correction": "Sorted/partitioned precondition is required; unsorted input yields wrong answers in practice. binary_search is existence-only—use lower_bound or equal_range for where/how many."
+  },
+  {
+   "trap": "std::accumulate init type silently overflowing",
+   "correction": "The init argument’s type is the accumulation type: accumulate(..., 0) stays in int even for large ints or vector<long long>. Pass 0LL / 0.0 / a typed zero matching the desired result."
+  },
+  {
+   "trap": "Using reduce / parallel transform_reduce with non-associative or stateful ops",
+   "correction": "reduce may reorder operations—avoid non-associative ops (e.g. floating subtraction) and stateful left-to-right callables; prefer accumulate when order matters."
+  },
+  {
+   "trap": "Confusing std::move the algorithm with std::move the cast",
+   "correction": "The algorithm (#include <algorithm>) move-assigns a range into a destination; source elements are left valid but unspecified. The cast lives in <utility>."
+  },
+  {
+   "trap": "Confusing search with find_first_of",
+   "correction": "search finds the first contiguous subsequence match; find_end finds the last. find_first_of matches any value from a set of keys, not a contiguous subsequence."
+  },
+  {
+   "trap": "Parallel execution policies with unsafe callables",
+   "correction": "With par / par_unseq, element access and user callables must be thread-safe; overlapping mutation is a data race, and exceptions from parallel algorithms may call std::terminate."
+  }
+ ]
+}

@@ -1,0 +1,265 @@
+{
+ "id": "dsa_s20_binary_trees",
+ "title": "Binary Trees",
+ "type": "FUND",
+ "relevance": "Binary trees are a core hierarchical structure tested heavily in SDE interviews and OAs via traversals, structural checks, and recursive bottom-up patterns.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a binary tree is, its terminology, common shapes, and how DFS/BFS traversals are defined.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A binary tree is hierarchical and each node has at most two children (left and right).",
+     "weight": "core",
+     "evidence_hint": "States at most two children and contrasts trees with linear structures like arrays or linked lists."
+    },
+    {
+     "id": "fund2",
+     "point": "Height is the longest path from a node to a leaf; depth is the path length from the root to a node.",
+     "weight": "core",
+     "evidence_hint": "Clearly separates height (down to a leaf) from depth (from the root)."
+    },
+    {
+     "id": "fund3",
+     "point": "Full means every node has 0 or 2 children; complete fills levels left-to-right except possibly the last; perfect has all internal nodes with two children and all leaves at the same level; balanced means left/right heights differ by at most 1; degenerate means every internal node has exactly one child.",
+     "weight": "core",
+     "evidence_hint": "Names and distinguishes full, complete, perfect, balanced, and degenerate correctly."
+    },
+    {
+     "id": "fund4",
+     "point": "Preorder/inorder/postorder are DFS and differ only by when the node is processed: Node-Left-Right, Left-Node-Right, Left-Right-Node; BFS is level-order.",
+     "weight": "core",
+     "evidence_hint": "Recites the three DFS orders and contrasts them with level-by-level BFS."
+    },
+    {
+     "id": "fund5",
+     "point": "Trees may use array form (heap-style children at 2i+1 and 2i+2) or pointer/linked nodes; pointers are most common for arbitrary binary trees.",
+     "weight": "extended",
+     "evidence_hint": "Mentions both representations and that linked nodes are usual for arbitrary trees."
+    }
+   ],
+   "probes": [
+    "What is a binary tree, and how do height and depth differ?",
+    "Define full, complete, perfect, balanced, and degenerate binary trees.",
+    "How do preorder, inorder, and postorder differ, and how does BFS fit in?"
+   ],
+   "hints": {
+    "1": "Think about node degree and hierarchical terminology first.",
+    "2": "Separate shape definitions from traversal visit orders.",
+    "3": "Preorder=NLR, inorder=LNR, postorder=LRN; BFS walks level by level with a queue."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how recursive and iterative traversals work, plus the bottom-up DFS and parent-map patterns used in classic tree problems.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Recursive DFS traversals visit each node once in O(n) time with O(h) recursion-stack space (worst-case O(n), average O(log n) for balanced shapes).",
+     "weight": "core",
+     "evidence_hint": "Gives O(n) visits and O(h) stack, noting skewed vs average cases."
+    },
+    {
+     "id": "mech2",
+     "point": "Level-order BFS uses a queue and must capture size = queue.size() at the start of each loop to isolate one level; space can reach O(n) because a perfect tree level can hold n/2 nodes.",
+     "weight": "core",
+     "evidence_hint": "Mentions snapshotting queue size per level and widest-level queue occupancy."
+    },
+    {
+     "id": "mech3",
+     "point": "Iterative preorder uses an explicit stack and pushes right before left so LIFO processes left first; iterative inorder walks left while pushing, then pops/processes and moves right.",
+     "weight": "core",
+     "evidence_hint": "Explains right-first push for preorder and left-then-pop-then-right for inorder."
+    },
+    {
+     "id": "mech4",
+     "point": "Two-stack postorder builds Node-Right-Left then reverses via a second stack (O(n) space); one-stack postorder tracks lastProcessed to know whether the right child is done (O(h) space).",
+     "weight": "extended",
+     "evidence_hint": "Contrasts reverse-via-second-stack with last-processed one-stack control."
+    },
+    {
+     "id": "mech5",
+     "point": "A single iterative pass can emit pre/in/post by treating each node as a 3-state machine (state 1 pre, 2 in, 3 post), visiting each node 3 times.",
+     "weight": "extended",
+     "evidence_hint": "Describes stack pairs of node+state and the three visit moments."
+    },
+    {
+     "id": "mech6",
+     "point": "Bottom-up postorder returns child info upward: empty height is 0; max depth is 1 + max(left,right); balance can return -1 as a sentinel while computing height; diameter through a node is leftHeight + rightHeight.",
+     "weight": "core",
+     "evidence_hint": "Ties height base case, depth formula, -1 imbalance signal, and diameter as sum of child heights."
+    }
+   ],
+   "probes": [
+    "Walk through recursive preorder/inorder/postorder and their complexities.",
+    "How do you implement level-order so each level is grouped correctly?",
+    "How would you do iterative preorder and inorder with a stack?",
+    "How can one DFS pass check balance or compute diameter while returning height?"
+   ],
+   "hints": {
+    "1": "Start from the recursive visit order, then replace the call stack with an explicit stack or queue.",
+    "2": "For BFS, freeze the current level length before pushing children; for structural metrics, return height from children first.",
+    "3": "Empty -> height 0; balanced check propagates -1; diameter updates with leftHeight + rightHeight at each node."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare representation choices and recursive vs iterative/space-optimized approaches called out in the material.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Array representation suits heap-like complete shapes with index arithmetic, while pointer/linked nodes are preferred for arbitrary binary trees.",
+     "weight": "core",
+     "evidence_hint": "Says arrays are common for heaps and pointers for arbitrary trees."
+    },
+    {
+     "id": "tr2",
+     "point": "Naive per-node height checks for balance or diameter take O(N^2); combining the check with bottom-up height computation reduces them to O(N).",
+     "weight": "core",
+     "evidence_hint": "States brute O(N^2) vs single-pass O(N) with height reuse / -1 sentinel."
+    },
+    {
+     "id": "tr3",
+     "point": "Two-stack iterative postorder is simpler but uses O(n) space via st2; one-stack postorder uses O(h) but needs lastProcessed bookkeeping.",
+     "weight": "extended",
+     "evidence_hint": "Compares O(n) second-stack storage against O(h) one-stack control complexity."
+    },
+    {
+     "id": "tr4",
+     "point": "Morris inorder/preorder achieve O(1) extra space by temporarily threading predecessor right pointers, versus O(h) recursion or explicit-stack DFS.",
+     "weight": "core",
+     "evidence_hint": "Names temporary threads from inorder predecessor and O(1) auxiliary space."
+    },
+    {
+     "id": "tr5",
+     "point": "Counting nodes in a complete tree can be O(n) by visiting all nodes, or O(log^2 n) by short-circuiting perfect subtrees of height h as 2^h - 1 nodes.",
+     "weight": "extended",
+     "evidence_hint": "Uses equal left/right extreme heights to apply 2^h - 1 and recurse otherwise."
+    }
+   ],
+   "probes": [
+    "When would you store a binary tree in an array versus with child pointers?",
+    "Why is the naive balanced/diameter approach quadratic, and how do you make it linear?",
+    "What do you gain and lose moving from recursive DFS to Morris traversal?"
+   ],
+   "hints": {
+    "1": "Think about completeness/heap indexing versus arbitrary shapes.",
+    "2": "Reuse height already computed on the way up instead of recomputing per node.",
+    "3": "Morris threads predecessor->right temporarily for O(1) space; complete-tree counting uses 2^h - 1 on perfect subtrees."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply traversal and bottom-up patterns to standard medium/hard interview problems from the file.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Maximum path sum allows negative values, so discard negative subtree contributions with max(0, subtreeMaxPath); a path may turn at a node using val + left + right as a global candidate while returning only one side upward.",
+     "weight": "core",
+     "evidence_hint": "Mentions clamping negatives to 0 and splitting arch update vs upward return."
+    },
+    {
+     "id": "app2",
+     "point": "LCA: if root is null/p/q return root; if left and right searches both nonempty, root is LCA; otherwise propagate the nonempty side; a node may be a descendant of itself.",
+     "weight": "core",
+     "evidence_hint": "States the both-sides-non-null rule and self-descendant allowance."
+    },
+    {
+     "id": "app3",
+     "point": "Views: top view keeps the first BFS node per column; bottom view overwrites so the last remains; right view can take the last node per BFS level or DFS right-before-left when depth equals result size.",
+     "weight": "core",
+     "evidence_hint": "First vs last per column for top/bottom; last-per-level or right-first DFS for right view."
+    },
+    {
+     "id": "app4",
+     "point": "Distance-k / burn-tree style problems map parents first, then BFS radially through left, right, and parent; burn time is the number of BFS expansion levels until the queue empties.",
+     "weight": "extended",
+     "evidence_hint": "Describes parent map then multi-direction BFS; time increments per burned level."
+    },
+    {
+     "id": "app5",
+     "point": "Construction: preorder’s first (or postorder’s last) element is the root; inorder splits left/right sizes; serialize/deserialize can encode nulls (e.g. #) in level-order BFS.",
+     "weight": "core",
+     "evidence_hint": "Root from preorder first/postorder last, inorder partition, and BFS string with null markers."
+    },
+    {
+     "id": "app6",
+     "point": "Maximum width assigns indices with left 2i+1 and right 2i+2, measures last-first+1 including nulls between ends, and normalizes indices per level to avoid overflow.",
+     "weight": "extended",
+     "evidence_hint": "States heap-style indexing, width formula, and per-level index normalization."
+    }
+   ],
+   "probes": [
+    "How do you compute maximum path sum when node values can be negative?",
+    "Find the LCA of two nodes in a general binary tree.",
+    "How do top, bottom, and right views differ in what you keep per column or level?",
+    "How would you reconstruct a tree from preorder+inorder or serialize it?"
+   ],
+   "hints": {
+    "1": "Most hard tree answers return child state upward or BFS with extra metadata.",
+    "2": "For path/LCA/balance-style problems use postorder returns; for distance/views/width use BFS plus maps or indices.",
+    "3": "Path sum clamps negatives and updates on a turn; LCA returns root when both sides hit; construction uses preorder/postorder root + inorder split."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Array representation vs pointer/linked representation",
+   "strong_answer": "Arrays with children at 2i+1 and 2i+2 fit heaps/complete layouts; pointer nodes are the usual choice for arbitrary binary trees."
+  },
+  {
+   "topic": "Brute per-node height checks vs bottom-up single DFS",
+   "strong_answer": "Recomputing height at every node is O(N^2) for balance/diameter; returning height (and a -1 imbalance sentinel) in one postorder pass is O(N)."
+  },
+  {
+   "topic": "Two-stack vs one-stack iterative postorder",
+   "strong_answer": "Two stacks generate Node-Right-Left then reverse with O(n) space on st2; one stack uses O(h) space but must track lastProcessed to avoid re-entering the right child."
+  },
+  {
+   "topic": "Recursive/stack DFS vs Morris traversal",
+   "strong_answer": "Normal DFS uses O(h) stack space; Morris temporarily threads the inorder predecessor’s right pointer to get O(1) extra space, then removes the thread."
+  },
+  {
+   "topic": "Naive node count vs complete-tree height short-circuit",
+   "strong_answer": "Visiting all nodes is O(n); in a complete tree, equal leftmost/rightmost heights mean a perfect subtree of 2^h - 1 nodes, giving O(log^2 n) overall."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "In level-order, mixing nodes from adjacent levels in one loop pass.",
+   "correction": "Capture size = queue.size() at the start of each iteration and only process that many nodes as the current level."
+  },
+  {
+   "trap": "Treating an empty tree’s height as undefined or nonzero when writing recursive depth/balance code.",
+   "correction": "The height of a nullptr / empty tree is 0 and is the recursion base case."
+  },
+  {
+   "trap": "Assuming the diameter always passes through the root.",
+   "correction": "Diameter is the longest path between any two nodes and may lie entirely in a subtree; track max(leftHeight + rightHeight) at every node."
+  },
+  {
+   "trap": "Including negative subtree sums in maximum path sum.",
+   "correction": "Take max(0, subtreeMaxPath) so a negative branch is dropped; still allow a path to turn using val + left + right for the global answer."
+  },
+  {
+   "trap": "Pushing left before right on an iterative preorder stack.",
+   "correction": "Because a stack is LIFO, push right first, then left, so left is processed first."
+  },
+  {
+   "trap": "Using only downward child pointers for distance-k or burn-tree problems.",
+   "correction": "First build a parent map so BFS can move to left, right, and parent; mark visited to avoid revisiting."
+  },
+  {
+   "trap": "Trying to reconstruct a unique binary tree from a single traversal.",
+   "correction": "One traversal alone is insufficient; need one sequence that identifies the root and another (inorder) that partitions left/right subtree sizes."
+  },
+  {
+   "trap": "Forgetting that Morris traversal mutates the tree while running.",
+   "correction": "It creates temporary predecessor-to-current right threads and must clear them when revisited so the structure is restored."
+  }
+ ]
+}

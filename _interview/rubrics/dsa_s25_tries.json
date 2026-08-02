@@ -1,0 +1,195 @@
+{
+ "id": "dsa_s25_tries",
+ "title": "Tries",
+ "type": "FUND",
+ "relevance": "Tries are a common SDE interview and OA topic for prefix search, word dictionaries, and XOR-based bitwise optimization.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a trie is and why prefix operations run in time proportional to word length.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A trie is an n-ary tree where each edge is a character and each root-to-node path spells a string prefix.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes edges as characters and paths as prefixes, not as storing full strings at each node."
+    },
+    {
+     "id": "fund2",
+     "point": "A boolean flag at a node marks the end of a valid word.",
+     "weight": "core",
+     "evidence_hint": "Mentions isEnd (or equivalent) so prefixes and complete words can be distinguished."
+    },
+    {
+     "id": "fund3",
+     "point": "Insertion, search, and prefix-matching take O(L) time, where L is the word length, independent of how many words are stored.",
+     "weight": "core",
+     "evidence_hint": "States O(L) and that cost does not grow with the number of stored words."
+    },
+    {
+     "id": "fund4",
+     "point": "For lowercase English, a canonical node uses a fixed-size child array of size 26.",
+     "weight": "extended",
+     "evidence_hint": "Mentions next[26] or equivalent fixed alphabet indexing via ch - 'a'."
+    }
+   ],
+   "probes": [
+    "What is a trie, and why are insert/search/prefix checks O(L) regardless of how many words are in it?"
+   ],
+   "hints": {
+    "1": "Think about how words share paths for common prefixes.",
+    "2": "Each step follows one character edge; you walk at most L edges.",
+    "3": "n-ary tree, edge = character, path = prefix; end-of-word flag; time O(L) independent of dictionary size."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how insert, search, startsWith, and counter-augmented frequency/erase operations walk the trie.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "On insert, walk each character from the root, creating a missing child when needed, then set isEnd on the final node.",
+     "weight": "core",
+     "evidence_hint": "Describes create-if-absent per character and marking the last node as a word end."
+    },
+    {
+     "id": "mech2",
+     "point": "search requires reaching the final node with isEnd true; startsWith only requires that the prefix path exists.",
+     "weight": "core",
+     "evidence_hint": "Clearly separates path existence from the end-of-word flag."
+    },
+    {
+     "id": "mech3",
+     "point": "For frequency queries, augment nodes with cntEnd (words ending here) and cntPrefix (words sharing this path); insert increments them, erase decrements them.",
+     "weight": "extended",
+     "evidence_hint": "Names both counters and says insert increments along the path / at end, erase decrements the same counters."
+    },
+    {
+     "id": "mech4",
+     "point": "Basic insert is O(L) time and O(L) space; search and startsWith are O(L) time with O(1) auxiliary space.",
+     "weight": "extended",
+     "evidence_hint": "Recalls O(L) for all three and O(1) extra space for the queries."
+    }
+   ],
+   "probes": [
+    "Walk through insert, search, and startsWith on the same word—what differs at the last node?"
+   ],
+   "hints": {
+    "1": "Both search and startsWith follow the same character path.",
+    "2": "Ask what happens if the path exists but isEnd is false.",
+    "3": "search returns final isEnd; startsWith returns true once the prefix path is fully walked."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare child maps, memory layout, and when a trie beats a hash set.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "For small alphabets, a fixed child array beats unordered_map because lookups are cache-friendly with zero-overhead O(1) access.",
+     "weight": "core",
+     "evidence_hint": "Prefers array of 26 for lowercase English and cites cache-friendly O(1) lookups."
+    },
+    {
+     "id": "tr2",
+     "point": "For large alphabets such as full Unicode, array memory is prohibitive, so hash maps or balanced BSTs are used instead.",
+     "weight": "core",
+     "evidence_hint": "Switches to map/BST when the alphabet is huge."
+    },
+    {
+     "id": "tr3",
+     "point": "A hash set gives O(1) exact-word lookup, but a trie unlocks prefix queries and ordered traversals.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts exact membership with prefix/autocomplete capability."
+    },
+    {
+     "id": "tr4",
+     "point": "To avoid pointer allocations, an index-pool vector of array<int, 26> can represent children as integer indices.",
+     "weight": "extended",
+     "evidence_hint": "Mentions vector<array<int, 26>> (or equivalent) instead of Node*."
+    }
+   ],
+   "probes": [
+    "When would you store children in an unordered_map instead of next[26], and when is a trie preferable to a hash set?"
+   ],
+   "hints": {
+    "1": "Consider alphabet size and what queries you need.",
+    "2": "Small fixed alphabet favors arrays; Unicode favors maps; exact lookup vs prefixes.",
+    "3": "Array of 26 for English; map/BST for Unicode; hash set for exact words, trie for prefixes and ordered walks."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply tries to prefix dictionary problems, distinct substrings, and binary XOR tries.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "For longest word with all prefixes present, insert all words then require isEnd true on every node along the word's path (or DFS only along isEnd edges).",
+     "weight": "core",
+     "evidence_hint": "Checks every proper prefix is also a stored word via isEnd along the path."
+    },
+    {
+     "id": "app2",
+     "point": "Distinct substrings: insert every suffix into one trie; each unique root-to-node path is one distinct substring, equal to the node count excluding the root.",
+     "weight": "core",
+     "evidence_hint": "Explains suffixes in a trie and counting non-root nodes as distinct substrings."
+    },
+    {
+     "id": "app3",
+     "point": "A binary XOR trie uses next[2] and inserts 32-bit numbers MSB-first; max XOR greedily prefers the opposite bit at each level.",
+     "weight": "core",
+     "evidence_hint": "Mentions bit trie, 32 bits from MSB, and taking the opposite branch when present."
+    },
+    {
+     "id": "app4",
+     "point": "For max XOR under an upper bound m_i, sort queries by m_i offline and insert nums in ascending order so each element is inserted once before needed.",
+     "weight": "extended",
+     "evidence_hint": "Describes offline sort by limit and sweeping insertions into one trie."
+    }
+   ],
+   "probes": [
+    "How would you find the maximum XOR of two numbers in an array using a trie, and how does the offline-sort trick help when each query also has an upper bound m?"
+   ],
+   "hints": {
+    "1": "Store numbers as bit paths and try to mismatch bits.",
+    "2": "Insert 32 bits MSB→LSB; query greedily takes the opposite bit; for bounds, sort by m and insert gradually.",
+    "3": "Binary trie next[2]; greedy opposite bit adds that bit to XOR; sort queries by m_i and nums ascending, insert nums ≤ m before each query."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Fixed array of 26 vs unordered_map for children",
+   "strong_answer": "Small alphabets (lowercase English) favor next[26] for cache-friendly zero-overhead O(1) child lookup; large alphabets like full Unicode make the array too memory-heavy, so use a hash map or balanced BST."
+  },
+  {
+   "topic": "Hash set vs trie for a word dictionary",
+   "strong_answer": "A hash set gives O(1) exact-word lookup, but a trie supports prefix queries (startsWith/autocomplete) and ordered traversals that a flat set does not."
+  },
+  {
+   "topic": "Heap Node* pointers vs index-pool vector<array<int, 26>>",
+   "strong_answer": "Pointer nodes are simple but allocation-heavy; an index-pool stores children as integer indices in a vector of fixed arrays to avoid dynamic Node allocations when memory or GC is a bottleneck."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating path existence as proof that a full word was inserted.",
+   "correction": "search must check the final node's isEnd; startsWith only needs the prefix path to exist."
+  },
+  {
+   "trap": "Underestimating trie memory cost or defaulting to maps for English letters.",
+   "correction": "Each node holds 26 child pointers (many null), so tries are memory-heavy; for small alphabets prefer fixed arrays, and consider an index-pool if allocations hurt."
+  },
+  {
+   "trap": "Building a fresh XOR trie per query when answers are constrained by m_i.",
+   "correction": "Sort queries by m_i and nums ascending, then insert each num once when it becomes eligible—offline sweeping, not rebuild-per-query."
+  },
+  {
+   "trap": "Counting distinct substrings by inserting the string once or counting only leaves.",
+   "correction": "Insert every suffix; each unique path (non-root node) is one distinct substring because identical prefixes merge in the trie."
+  }
+ ]
+}

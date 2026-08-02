@@ -1,0 +1,248 @@
+{
+ "id": "os_04_cpu_scheduling",
+ "title": "CPU scheduling",
+ "type": "FUND",
+ "relevance": "Campus OAs and SDE interviews ask candidates to simulate schedulers on Gantt charts and compute turnaround/waiting/response times from arrival and burst data.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Cisco-style online assessments reuse templates that ask for average turnaround time under preemptive SJF and under preemptive priority.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what the CPU scheduler chooses among ready processes, preemptive vs non-preemptive mode, and the four derived timing metrics.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "The CPU scheduler picks one process from the ready queue using a criterion (arrival time, burst length, priority, or time quantum) and a mode (non-preemptive or preemptive).",
+     "weight": "core",
+     "evidence_hint": "Names ready queue, a criterion, and that mode is whether a running process can be interrupted."
+    },
+    {
+     "id": "fund2",
+     "point": "Non-preemptive means a process keeps the CPU until its burst finishes or it blocks; preemptive means it can be interrupted and returned to the ready queue when another process becomes more deserving.",
+     "weight": "core",
+     "evidence_hint": "Contrasts run-to-completion vs interrupt-and-requeue under the algorithm's criterion."
+    },
+    {
+     "id": "fund3",
+     "point": "Arrival Time is when a process enters the ready queue; Burst Time is the CPU time it requires.",
+     "weight": "core",
+     "evidence_hint": "Defines AT and BT without mixing them with derived metrics."
+    },
+    {
+     "id": "fund4",
+     "point": "Completion Time is when the process finishes; TAT = CT − AT; WT = TAT − BT; RT is time from arrival until first CPU allocation.",
+     "weight": "core",
+     "evidence_hint": "States all four definitions and the TAT/WT/RT relationships as given."
+    },
+    {
+     "id": "fund5",
+     "point": "In non-preemptive scheduling RT equals WT because the first CPU allocation starts the only unbroken run; they diverge only under preemption.",
+     "weight": "extended",
+     "evidence_hint": "Explains why RT=WT without preemption and that preemption splits first start from total waiting."
+    }
+   ],
+   "probes": [
+    "What does the CPU scheduler decide, and how do turnaround, waiting, and response time differ?"
+   ],
+   "hints": {
+    "1": "Start from the ready queue and what the algorithm keys on.",
+    "2": "Define AT and BT, then CT, TAT, WT, and RT from those.",
+    "3": "State TAT=CT−AT, WT=TAT−BT, RT=first CPU time−AT, and that RT=WT only when non-preemptive."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how FCFS, SJF, SRTF, Round Robin, priority, multilevel queue, and multilevel feedback queue actually dispatch work.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "FCFS runs processes in arrival order, non-preemptively; the CPU can sit idle until the next arrival even if later work exists (as in idle from 4 to 5 before P3).",
+     "weight": "core",
+     "evidence_hint": "Describes arrival-order non-preemptive dispatch and idle gap between finished work and next arrival."
+    },
+    {
+     "id": "mech2",
+     "point": "Non-preemptive SJF, among already-arrived processes, picks smallest burst time and runs it to completion; equal bursts break by arrival order (then process number).",
+     "weight": "core",
+     "evidence_hint": "Mentions arrived-set selection by BT, no mid-run preemption, and tie-break by arrival."
+    },
+    {
+     "id": "mech3",
+     "point": "SRTF always runs the process with smallest remaining burst; a shorter remaining arrival preempts the current process.",
+     "weight": "core",
+     "evidence_hint": "Says remaining time, not original BT, and preemption on a shorter newcomer."
+    },
+    {
+     "id": "mech4",
+     "point": "Round Robin gives each ready process at most one time quantum, then preempts unfinished work to the back of the ready queue; arrivals during a quantum enqueue before the preempted process is re-added.",
+     "weight": "core",
+     "evidence_hint": "States TQ cap, back-of-queue reinsert, and during-quantum arrivals ahead of the preempted job."
+    },
+    {
+     "id": "mech5",
+     "point": "Preemptive priority always runs the highest-priority ready process; a higher-priority arrival immediately displaces the running one; aging raises priority of long waiters to fight starvation.",
+     "weight": "core",
+     "evidence_hint": "Highest priority wins, new higher priority preempts, aging as starvation remedy."
+    },
+    {
+     "id": "mech6",
+     "point": "With CPU→I/O→CPU bursts, a process leaves the CPU for I/O and is not contending; return times and priority reshape the schedule and can create idle CPU gaps while jobs are still in the system.",
+     "weight": "extended",
+     "evidence_hint": "Explains leave/return for I/O, others run meanwhile, idle gaps possible despite jobs present."
+    },
+    {
+     "id": "mech7",
+     "point": "MLQ uses fixed-priority queues by process type with no migration between queues; MLFQ demotes a process that exhausts its quantum to the next queue (often with larger quantum), with the last queue FCFS.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts permanent queue assignment vs demotion on unfinished quantum, last level FCFS."
+    }
+   ],
+   "probes": [
+    "Walk through how SRTF and Round Robin decide who runs next at each event, and how MLQ differs from MLFQ."
+   ],
+   "hints": {
+    "1": "Pick one algorithm and say its criterion and mode first.",
+    "2": "For SRTF re-check remaining time at every arrival; for RR track the ready-queue order around quantum expiry.",
+    "3": "SRTF: shortest remaining preempts; RR: TQ then back of queue with mid-quantum arrivals ahead; MLQ no move, MLFQ demote on unfinished quantum."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Surface what each policy optimizes and what it costs (waiting, response, fairness, starvation, context switches).",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Non-preemptive SJF minimizes average waiting time for a fixed set of jobs available together, but cannot react to a short job arriving while a long job is already running.",
+     "weight": "core",
+     "evidence_hint": "States the fixed-set WT optimality claim and the mid-run short-job blind spot."
+    },
+    {
+     "id": "tr2",
+     "point": "RR keeps response time small—no process waits longer than (n−1)×TQ for its first slice—but pays with more context switches (each Gantt boundary between different processes is a switch).",
+     "weight": "core",
+     "evidence_hint": "Gives the first-slice bound in terms of n and TQ and links Gantt process changes to context switches."
+    },
+    {
+     "id": "tr3",
+     "point": "Priority scheduling can starve low-priority processes under a continuous stream of high-priority arrivals; aging is the standard remedy.",
+     "weight": "core",
+     "evidence_hint": "Names starvation of low priority and aging as the fix."
+    },
+    {
+     "id": "tr4",
+     "point": "MLFQ approximates shortest-job-first without knowing burst times: short jobs finish in early small-quantum queues; long jobs sink to FCFS; doubling quanta (2, 4, 8) limit how often a long job is preempted.",
+     "weight": "extended",
+     "evidence_hint": "Connects demotion/small early TQ to SJF-like behavior and doubling quanta to fewer preemptions for long jobs."
+    }
+   ],
+   "probes": [
+    "When would you prefer SJF, SRTF, RR, or MLFQ, and what do you give up in each case?"
+   ],
+   "hints": {
+    "1": "Compare what each optimizes: waiting time, response time, or fairness under unknown bursts.",
+    "2": "Contrast non-preemptive SJF's fixed-set WT property with RR's response bound and priority starvation.",
+    "3": "SJF: best average WT for a fixed arrived set but blind mid-run; RR: first slice within (n−1)×TQ with more switches; priority needs aging; MLFQ demotes long jobs without knowing BT."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Simulate schedules correctly under event-driven re-evaluation, including OA-style average TAT and priority-convention checks.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "For preemptive SJF/priority OA drills, build the Gantt by deciding at every arrival and every completion, then average TAT = CT − AT.",
+     "weight": "core",
+     "evidence_hint": "Says event-driven re-evaluation at arrivals and completions, then average of CT−AT."
+    },
+    {
+     "id": "app2",
+     "point": "In the five-process preemptive SJF template, forgetting to preempt when a shorter job arrives mid-run (for example P2→P3 at t=3) is the most common error; re-evaluate the ready set at every arrival.",
+     "weight": "core",
+     "evidence_hint": "Calls out mid-run shorter arrival preemption and re-check on every arrival, with the t=3 P2→P3 case."
+    },
+    {
+     "id": "app3",
+     "point": "Priority convention must be confirmed before scheduling: some examples use higher number = higher priority, others lower number = higher priority; flipping the convention flips the Gantt.",
+     "weight": "core",
+     "evidence_hint": "States both conventions appear and that misreading the direction invalidates the chart."
+    },
+    {
+     "id": "app4",
+     "point": "Under preemption, response time is not the same as waiting time (for example RR P1 has RT=0 and WT=7 because it is repeatedly preempted).",
+     "weight": "extended",
+     "evidence_hint": "Gives a concrete RT vs WT split under preemption rather than equating them."
+    }
+   ],
+   "probes": [
+    "Given arrival times, bursts, and either remaining-time or priority rules, produce the Gantt chart and average turnaround time.",
+    "Which priority convention is this problem using, and where would a missed preemption change CT?"
+   ],
+   "hints": {
+    "1": "List events: each arrival and each completion.",
+    "2": "At every event pick shortest remaining or highest priority per the stated convention, then compute each TAT=CT−AT and average.",
+    "3": "Re-evaluate on every arrival (not only completions); confirm whether smaller or larger priority number wins before drawing the Gantt."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Non-preemptive SJF vs SRTF",
+   "strong_answer": "Non-preemptive SJF gives minimum average waiting time for a fixed set of jobs available together but cannot yield to a short job that arrives mid-burst; SRTF preempts on smaller remaining time so it can react, at the cost of preemption and possible starvation of a long job that arrived first."
+  },
+  {
+   "topic": "Round Robin response time vs context switches",
+   "strong_answer": "RR bounds time to first slice by (n−1)×TQ and improves response fairness, but every boundary between different processes on the Gantt is a context switch, so smaller quanta raise switch overhead."
+  },
+  {
+   "topic": "Priority scheduling vs aging",
+   "strong_answer": "Always running the highest-priority ready process can starve low-priority work under continuous high-priority arrivals; aging gradually raises a waiting process's priority so it eventually runs."
+  },
+  {
+   "topic": "Multilevel Queue vs Multilevel Feedback Queue",
+   "strong_answer": "MLQ permanently assigns a process to a type-specific queue with no migration; MLFQ demotes processes that exhaust their quantum so short jobs leave early queues quickly while long jobs fall to FCFS, approximating SJF without knowing burst lengths in advance."
+  },
+  {
+   "topic": "CPU-only bursts vs CPU–I/O–CPU modeling",
+   "strong_answer": "Scheduling only CPU bursts misses that I/O removes a process from CPU contention and that I/O return times create idle gaps and reorder who is eligible; the schedule cannot be read from burst lengths alone."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming FCFS never idles if future work exists.",
+   "correction": "FCFS can leave the CPU idle until the next arrival (for example idle from 4 to 5 before P3 arrives)."
+  },
+  {
+   "trap": "Equating response time with waiting time under every algorithm.",
+   "correction": "RT equals WT only in non-preemptive runs; under preemption a process can start early and wait again later (for example RR P1: RT=0, WT=7)."
+  },
+  {
+   "trap": "Convoy effect ignored when praising FCFS simplicity.",
+   "correction": "A long early burst forces many short jobs to wait, inflating average waiting time."
+  },
+  {
+   "trap": "SJF tie between equal burst times left undefined.",
+   "correction": "Break ties by arrival order, then by process number (for example equal BT 4: earlier arrival runs first)."
+  },
+  {
+   "trap": "In Round Robin, re-adding the preempted process before processes that arrived during its quantum.",
+   "correction": "Arrivals during the quantum enqueue before the preempted process is placed back on the ready queue."
+  },
+  {
+   "trap": "Forgetting SRTF preemption when a shorter job arrives mid-run.",
+   "correction": "Re-evaluate remaining times at every arrival, not only at completions (classic miss: P2→P3 at t=3 in the five-process template)."
+  },
+  {
+   "trap": "Assuming one universal meaning of priority numbers.",
+   "correction": "Some problems treat higher number as higher priority, others treat lower number as higher priority—confirm before building the Gantt."
+  },
+  {
+   "trap": "Believing MLQ can promote a batch job into a system queue.",
+   "correction": "MLQ has no migration; a process stays in its assigned queue for life—MLFQ is what allows movement via demotion."
+  },
+  {
+   "trap": "Reading an I/O-aware schedule as if all bursts were pure CPU contention.",
+   "correction": "While a process is in I/O it does not contend for the CPU; return times drive idle gaps and preemption, so completion order is not determined by CPU bursts alone."
+  }
+ ]
+}

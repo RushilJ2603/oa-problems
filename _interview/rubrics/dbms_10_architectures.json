@@ -1,0 +1,181 @@
+{
+ "id": "dbms_10_architectures",
+ "title": "SQL vs NoSQL & NewSQL Architectures",
+ "type": "FUND",
+ "relevance": "Senior system design interviews test when not to use a traditional relational DB and how distributed data forces SQL, NoSQL, or NewSQL choices.",
+ "difficulty": "senior",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish scale-up vs scale-out and why relational vs non-relational designs diverge under distribution.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "SQL/relational databases historically scale vertically (scale-up): more performance means a bigger server with more RAM, CPU, and faster NVMe, because enforcing joins, row locking, and consistency across a network of many servers is slow due to network latency.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts vertical scale-up with the latency cost of strict relational rules across networked servers."
+    },
+    {
+     "id": "fund2",
+     "point": "NoSQL databases are designed to scale horizontally (scale-out) by distributing data across many cheap commodity servers, abandoning strict relational schemas, lacking traditional joins, and often relaxing consistency.",
+     "weight": "core",
+     "evidence_hint": "Candidate names horizontal scale-out and the schema/join/consistency relaxations that enable it."
+    },
+    {
+     "id": "fund3",
+     "point": "The CAP theorem says a distributed system can only guarantee two out of three: Consistency (every read gets the most recent write or an error), Availability (every request gets a non-error response), and Partition Tolerance (operation continues despite dropped network messages).",
+     "weight": "core",
+     "evidence_hint": "Candidate defines C, A, and P and states only two of three can be guaranteed."
+    },
+    {
+     "id": "fund4",
+     "point": "Network partitions are unavoidable in distributed systems, so engineers cannot choose CA; they must choose CP (consistency over availability during a partition) or AP (availability over consistency during a partition).",
+     "weight": "extended",
+     "evidence_hint": "Candidate explains why CA is off the table and frames the real choice as CP vs AP."
+    }
+   ],
+   "probes": [
+    "Why do traditional SQL databases tend to scale up while NoSQL systems scale out, and what does CAP force once data is distributed?"
+   ],
+   "hints": {
+    "1": "Start with how each model grows capacity, then what happens when nodes cannot talk.",
+    "2": "Contrast vertical hardware growth for relational rules versus horizontal distribution that drops joins and strict consistency; then name C, A, P.",
+    "3": "SQL scale-up because distributed joins/locks are latency-heavy; NoSQL scale-out across commodity nodes with relaxed schema/joins/consistency; partitions force CP vs AP, not CA."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how partition failure modes, BASE semantics, and NewSQL/Distributed SQL mechanisms actually work.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Under a network partition, an AP system stays available by accepting updates even if replicas diverge, while a CP system preserves consistency by refusing updates until communication is restored, sacrificing availability.",
+     "weight": "core",
+     "evidence_hint": "Candidate walks the bank-branch partition story: accept deposit and lose consistency (AP) vs refuse deposit and keep consistency (CP)."
+    },
+    {
+     "id": "mech2",
+     "point": "AP-oriented NoSQL systems often use BASE: Basically Available (a response even if data is slightly stale), Soft State (state can change from background node sync without new input), and Eventually Consistent (with no new updates, all nodes eventually return the same value).",
+     "weight": "core",
+     "evidence_hint": "Candidate expands B, A, S, E with stale reads, background sync, and eventual agreement."
+    },
+    {
+     "id": "mech3",
+     "point": "NewSQL/Distributed SQL aims for NoSQL-like horizontal scalability and geographical distribution while keeping strict ACID compliance and a standard SQL interface.",
+     "weight": "core",
+     "evidence_hint": "Candidate states the NewSQL goal: scale-out plus ACID SQL, not the old binary trade."
+    },
+    {
+     "id": "mech4",
+     "point": "Purpose-built systems like Google Cloud Spanner and CockroachDB use consensus protocols such as Raft; Spanner uses atomic clocks and GPS receivers to definitively order transactions globally.",
+     "weight": "extended",
+     "evidence_hint": "Candidate mentions Raft-style consensus and Spanner’s clock/GPS ordering for global consistency."
+    },
+    {
+     "id": "mech5",
+     "point": "Citus turns PostgreSQL into a distributed database by automatically sharding tables and routing queries across a cluster of Postgres nodes while maintaining SQL semantics.",
+     "weight": "extended",
+     "evidence_hint": "Candidate describes Citus sharding and query routing without leaving the Postgres dialect."
+    }
+   ],
+   "probes": [
+    "Walk through what happens to writes under a partition in AP vs CP, then how BASE and NewSQL each respond to the old SQL-vs-NoSQL scaling bind."
+   ],
+   "hints": {
+    "1": "Use a two-node failure where replicas cannot communicate, then name the consistency model that follows.",
+    "2": "Map accept-vs-refuse writes to AP/CP; unpack BASE’s three letters; then say how Spanner/CockroachDB/Citus keep SQL+ACID at scale.",
+    "3": "Partition: AP accepts and diverges, CP blocks to stay consistent; BASE = available/stale, soft state via sync, eventual same value; NewSQL = horizontal/geo scale with ACID SQL via Raft/clocks or Citus sharding."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Force an explicit comparison among vertical SQL, horizontal NoSQL, CAP priorities, and NewSQL as the middle path.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "The historical bind was SQL for strict ACID transactions with a vertical scaling ceiling versus NoSQL for horizontal scale while losing traditional transactions and joins.",
+     "weight": "core",
+     "evidence_hint": "Candidate states ACID+ceiling vs scale-out without classic transactions/joins."
+    },
+    {
+     "id": "tr2",
+     "point": "During a partition you must prefer either consistency (CP, may reject requests) or availability (AP, may serve divergent/stale state)—you cannot keep both.",
+     "weight": "core",
+     "evidence_hint": "Candidate ties the forced CP/AP choice to rejected requests vs divergent ledgers."
+    },
+    {
+     "id": "tr3",
+     "point": "NewSQL tries to remove the binary choice by offering horizontal scalability and geographical distribution together with ACID and standard SQL.",
+     "weight": "extended",
+     "evidence_hint": "Candidate positions NewSQL as ACID SQL without giving up scale-out/geo distribution."
+    }
+   ],
+   "probes": [
+    "If a design needs both multi-node scale and strict transactions, how do you argue SQL vs NoSQL vs NewSQL under CAP?"
+   ],
+   "hints": {
+    "1": "Name what each camp optimizes for first: transactions, availability at scale, or both.",
+    "2": "Contrast vertical ACID SQL, horizontal AP-leaning NoSQL, then NewSQL’s claim to join those properties.",
+    "3": "SQL: ACID but vertical ceiling; NoSQL: scale-out, weaker transactions/joins; partition forces CP vs AP; NewSQL: horizontal/geo + ACID SQL."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply consistency and architecture choices to concrete product constraints.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Eventual consistency is acceptable for a global social-network like counter where a friend may see the old count for a few seconds, but it is unacceptable for a banking ledger.",
+     "weight": "core",
+     "evidence_hint": "Candidate pairs social likes with eventual consistency and banking with the need for stricter consistency."
+    },
+    {
+     "id": "app2",
+     "point": "When you need horizontal scale and geographical distribution without abandoning ACID transactions and SQL, reach for NewSQL/Distributed SQL (purpose-built like Spanner/CockroachDB, or Postgres via Citus).",
+     "weight": "core",
+     "evidence_hint": "Candidate picks NewSQL/Distributed SQL when scale-out and ACID SQL are both requirements."
+    },
+    {
+     "id": "app3",
+     "point": "Teams that want to scale PostgreSQL horizontally without leaving its dialect/ecosystem can use Citus to shard and route across a Postgres cluster while keeping SQL semantics.",
+     "weight": "extended",
+     "evidence_hint": "Candidate recommends Citus specifically to stay in Postgres while sharding."
+    }
+   ],
+   "probes": [
+    "Would you allow eventual consistency for likes on a global feed? For a bank deposit? When would you pick Spanner/CockroachDB or Citus instead of plain Postgres or MongoDB-style NoSQL?"
+   ],
+   "hints": {
+    "1": "Separate user-facing counters from money movement, then ask what must remain true after a partition.",
+    "2": "Likes can lag briefly; ledgers cannot; pick NewSQL when you need both scale-out and ACID SQL.",
+    "3": "Social likes: eventual consistency fine for seconds of lag; banking: not acceptable; NewSQL/Spanner/CockroachDB/Citus when horizontal/geo scale plus ACID SQL is required."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Scale-Up (SQL) vs Scale-Out (NoSQL)",
+   "strong_answer": "Relational systems historically buy bigger machines because distributed joins, locks, and strict consistency are latency-heavy; NoSQL spreads data across many commodity servers by dropping strict schemas, traditional joins, and often strong consistency."
+  },
+  {
+   "topic": "CP vs AP under partition",
+   "strong_answer": "With P unavoidable, CP refuses or errors to keep one consistent state (e.g., block a deposit until nodes reconnect); AP keeps serving and may diverge (e.g., accept a deposit so balances temporarily disagree)."
+  },
+  {
+   "topic": "ACID (relational) vs BASE (AP NoSQL)",
+   "strong_answer": "ACID prioritizes strict transactional correctness; BASE favors responses even with stale data, soft state from background sync, and eventual agreement when updates stop—fine for social counters, not for banking ledgers."
+  },
+  {
+   "topic": "Classic SQL/NoSQL binary vs NewSQL",
+   "strong_answer": "Instead of ACID-with-vertical-ceiling versus scale-out-without-transactions/joins, NewSQL/Distributed SQL targets horizontal and geo scale while keeping ACID and standard SQL, via systems like Spanner/CockroachDB or Citus on PostgreSQL."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Calling a traditional single-node PostgreSQL database a CA system under CAP.",
+   "correction": "A single node can be consistent and available, but CAP applies to distributed systems; once PostgreSQL is distributed (e.g., synchronous replication across datacenters), it behaves as CP and will block writes rather than risk inconsistent state when the network fails."
+  }
+ ]
+}

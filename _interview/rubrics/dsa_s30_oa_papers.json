@@ -1,0 +1,230 @@
+{
+ "id": "dsa_s30_oa_papers",
+ "title": "Four Real OA Papers",
+ "type": "FUND",
+ "relevance": "SDE OAs hide tests and punish misread definitions, naive algorithms that ignore bounds, and unresolved ambiguous wording—skills these four papers train directly.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Flipkart HirePro paper (coding + SQL) transcribed from OA photos; DE Shaw, Millennium, and Uber coding sets formalized from post-test recall with [recon]/[assumed] flags.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the platform constraints and the recurring OA failure modes these papers illustrate.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "On Flipkart HirePro the editor gives a fixed function signature plus a main that does all I/O; you only fill the WRITE YOUR CODE HERE body and cannot see the test cases.",
+     "weight": "core",
+     "evidence_hint": "Mentions fixed signature, harness-owned main/I/O, invisible cases, and filling only the stub body."
+    },
+    {
+     "id": "fund2",
+     "point": "HirePro warns not to print arbitrary strings because they contribute to output and fail tests—so no debug cout may survive a submission.",
+     "weight": "core",
+     "evidence_hint": "Quotes the no-arbitrary-strings warning and ties it to why blind debugging is hard."
+    },
+    {
+     "id": "fund3",
+     "point": "Golden price means digitSum(G) - maxDigit(G) equals maxDigit(G), equivalently digitSum(G) equals 2 * maxDigit(G), matching samples like 352 and 11.",
+     "weight": "core",
+     "evidence_hint": "States the rewritten equality and checks 352 (sum 10, max 5) or 11 (sum 2, max 1)."
+    },
+    {
+     "id": "fund4",
+     "point": "When a worked explanation's intermediate arithmetic disagrees with the stated rule, trust the rule plus the sample output—not the explanation's intermediates.",
+     "weight": "extended",
+     "evidence_hint": "Cites Flipkart logistics weather score: explanation says 5 while summing valid R1 alerts yields 8, yet both clear >= 4 so sample outputs still match the rule."
+    }
+   ],
+   "probes": [
+    "What does the HirePro harness force you to do and forbid, and how do you correctly parse the golden-price definition from the prose?"
+   ],
+   "hints": {
+    "1": "Start from the editor/stub shape and the no-debug-print warning.",
+    "2": "Rewrite the golden-price sentence as an equality on digit sum and max digit, then check a sample.",
+    "3": "Say: fixed signature + harness I/O, no surviving cout; digitSum == 2 * maxDigit; if explanation and rule conflict, implement the rule and match sample output."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show the reframes and algorithms that solve the papers' core problems once the statement is parsed.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Marathon checkpoints need no tree build: each path string is the node's address, and a node is faulty iff both path+L and path+R exist in the set.",
+     "weight": "core",
+     "evidence_hint": "Describes hashing paths, empty path for the start, and summing nodes with both children present."
+    },
+    {
+     "id": "mech2",
+     "point": "DE Shaw music-player move-before plus positional query fights itself: vector is slow on moves, list is slow on index lookup, so an order-statistic structure (or sqrt buckets) is required at assumed n,q up to 2 * 10^5.",
+     "weight": "core",
+     "evidence_hint": "Names the opposite costs of vector vs list+iterator map and says the intended fix is order-statistic / sqrt decomposition / implicit treap."
+    },
+    {
+     "id": "mech3",
+     "point": "Maximum flips with positive prefixes uses optimistic flips into a max-heap and retracts the largest flipped magnitude when the running sum is no longer strictly positive.",
+     "weight": "core",
+     "evidence_hint": "Describes flip-all-then-unflip-largest (add back 2*x) until every prefix stays > 0, same regret shape as IPO / Course Schedule III."
+    },
+    {
+     "id": "mech4",
+     "point": "Checkerboard subgrids become constant-value rectangles after b[i][j] = g[i][j] XOR ((i+j) & 1), then counted with a histogram/monotonic-stack sweep in O(n*m).",
+     "weight": "extended",
+     "evidence_hint": "States the XOR parity transform and that a rectangle is checkerboard iff b is constant on it; mentions the stack sweep."
+    },
+    {
+     "id": "mech5",
+     "point": "With revisits allowed, shortest start-to-end walk covering k task nodes collapses to BFS distances among k+2 milestones plus bitmask DP; assumed k <= 15 makes the exponential factor intended.",
+     "weight": "core",
+     "evidence_hint": "Says concatenate shortest paths between milestones, then dp[mask][i] over task subsets; notes unit weights mean BFS not Dijkstra."
+    },
+    {
+     "id": "mech6",
+     "point": "Append-and-reverse is a content-independent position permutation: final b reads same-parity-as-(n-1) indices descending then the other parity ascending, so max b is all 1s then all 0s and s is the inverse perm.",
+     "weight": "extended",
+     "evidence_hint": "States the parity split formula, that characters do not affect landing spots, and recovering s by inverting the permutation onto 1s-then-0s."
+    },
+    {
+     "id": "mech7",
+     "point": "SQL 'not provided' means NULL, empty string, or only blank spaces—so use IS NULL OR TRIM(col) = '' on ContactNumber and Email, with EXISTS for at least one appointment.",
+     "weight": "core",
+     "evidence_hint": "Mentions TRIM for blanks, separate IS NULL because TRIM(NULL) is unknown, and EXISTS (or IN/GROUP BY) to avoid duplicating patients."
+    }
+   ],
+   "probes": [
+    "Pick Marathon checkpoints or the music-player queries and explain the intended structure without implementing the naive story.",
+    "How do the max-flips heap, checkerboard XOR, or task-node bitmask DP each follow from one load-bearing clause in the statement?"
+   ],
+   "hints": {
+    "1": "Name the reframing first (addresses / tension / optimistic regret / XOR / milestones / fixed perm / TRIM+EXISTS).",
+    "2": "For each, say which naive structure fails and what replaces it.",
+    "3": "Hit: path set + both children; order-statistic vs vector/list; heap retract largest; XOR then histogram count; BFS matrix + bitmask DP for small k; parity perm then invert; IS NULL OR TRIM with EXISTS."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast solution choices these papers force once constraints and wording are fixed.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Music player: sqrt-bucket decomposition is the OA engineering choice (~passes, short) while an implicit treap is asymptotically better but needs parent pointers for value-to-position and far more code.",
+     "weight": "core",
+     "evidence_hint": "Compares vector TLE, list TLE, bucket O(sqrt) amortized pass, treap O(log) optimal but longer and easier to get wrong."
+    },
+    {
+     "id": "tr2",
+     "point": "Task-cover walk: milestone BFS + bitmask DP fits large n with small k; BFS over (node, mask) is shorter code but needs memory on the order of n * 2^k, which fails at assumed n = 10^5 with k = 15.",
+     "weight": "core",
+     "evidence_hint": "States both methods and that the constraint on n vs k picks between them."
+    },
+    {
+     "id": "tr3",
+     "point": "Uber duplicate/segment penalty: pair-based reading collapses to sum of min(D,Seg) over equal boundaries; element/run-based reading needs partition DP—and a large n bound retroactively selects the greedy reading.",
+     "weight": "extended",
+     "evidence_hint": "Distinguishes Reading A O(n) greedy from Reading B non-linear run cost needing DP; notes candidate's partition-DP instinct and that n at 10^5 would kill O(n^2)."
+    }
+   ],
+   "probes": [
+    "When would you ship sqrt buckets versus an implicit treap for the playlist, or milestone DP versus state-space BFS for the task walk?",
+    "How does the penalty-rule reading and the n bound jointly decide greedy versus partition DP?"
+   ],
+   "hints": {
+    "1": "Compare what each approach optimizes and what it spends.",
+    "2": "Bring in code length, asymptotics, and which constraint breaks which method.",
+    "3": "Say: sqrt for OA speed/simplicity vs treap for log; DP when n large/k small vs (node,mask) BFS when n small; pair greedy if n is huge, run DP if n is small / statement expects partition DP."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the papers' meta-lessons under blind OA conditions before trusting hand-written examples.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "DE Shaw / Millennium style: the statement literally describes a hopeless naive method; reading the constraint bound first is what reveals order-statistic structures, one-pass heap greedy, linear-ish DP, or intended bitmask exponential.",
+     "weight": "core",
+     "evidence_hint": "Gives at least one pair: sounds like list edits / 2^n subsets / (nm)^2 rectangles / O(n^2) reverse-sim, but bounds demand the advanced reading."
+    },
+    {
+     "id": "app2",
+     "point": "Logistics Q4 is fidelity under volume: index tables, filter per-shipment facts, then per-route aggregates, then score/filter/sort—scoring in one pass over input is the usual loss.",
+     "weight": "core",
+     "evidence_hint": "Lists the fixed dependency order and that route average delay needs every shipment's delay count first, including delivered ones."
+    },
+    {
+     "id": "app3",
+     "point": "Ambiguous OA phrases (same as its adjacent; flip any consecutive subset) should be resolved by enumerating readings and preferring the clean structure—formula, contiguous feasible range, or separable greedy—not by guessing.",
+     "weight": "extended",
+     "evidence_hint": "Mentions Uber Q1 pair vs run and Q3 at-most-once complement giving 1 + n(n+1)/2 independent of content."
+    },
+    {
+     "id": "app4",
+     "point": "Hand-derived expected answers are unreliable: cross-checks caught wrong Flipkart/DE Shaw examples (max flips answer 3 not 2; music-player header/query mismatch), so brute-force oracles beat staring.",
+     "weight": "core",
+     "evidence_hint": "Cites at least one concrete wrong hand example and that on an OA you then 'fix' correct code."
+    }
+   ],
+   "probes": [
+    "You get a DE Shaw-style statement that sounds like simple array edits plus large bounds—what do you do before typing?",
+    "A sample explanation's intermediate disagrees with your implementation but sample output matches—what do you trust, and how do you validate hand examples?"
+   ],
+   "hints": {
+    "1": "Separate 'what the prose narrates' from 'what the bounds allow'.",
+    "2": "For spec problems, name the dependency order; for ambiguity, name competing readings.",
+    "3": "Say: bounds pick the algorithm; implement rule+output over explanation arithmetic; validate examples with brute force because hand answers were wrong in these notes."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "vector vs list vs sqrt buckets vs implicit treap (music player)",
+   "strong_answer": "vector: O(1) lookup, O(n) move → TLE at large q; list+iterator map: O(1) splice move, O(n) lookup → TLE; sqrt buckets: both ops ~O(sqrt n) amortized, short, passes; implicit treap: O(log n) both ways but needs parent pointers for value→position and much more code—prefer sqrt in an OA, mention treap in interview."
+  },
+  {
+   "topic": "milestone BFS + bitmask DP vs BFS on (node, mask)",
+   "strong_answer": "Both correct when revisits are allowed. Milestone matrix + dp[mask][i] is O((k+2)(n+m) + 2^k k^2) and fits large n with small k. State-space BFS is less code but O((n+m) 2^k) time/memory—unusable at assumed n = 10^5, k = 15."
+  },
+  {
+   "topic": "Uber duplicate penalty: per adjacent pair vs per element in a run",
+   "strong_answer": "Pair reading: each equal boundary independently pays min(D, Seg)—O(n) greedy. Run/element reading: cost is nonlinear in run length, greedy errs often, need partition DP. Candidate reaching for partition DP plus a small n bound points to the run reading; huge n points back to pairs."
+  },
+  {
+   "topic": "rule text + sample output vs sample explanation intermediates",
+   "strong_answer": "OA explanations are hand prose, not generated from the reference. Flipkart weather: explanation totals 5 but valid R1 alerts sum to 8; implementing the rule still matches both sample outputs because the threshold is >= 4. Ground truth is the rule plus printed samples."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Leaving HirePro stub seeds like sum=-1 or final_output=\"NONE\" unchanged when no/empty answer should be 0 or \"NA\".",
+   "correction": "Overwrite answer variables explicitly; the stub initializer is a decoy—the docstring/spec say return \"NA\", and a no-faulty-checkpoint case must print 0 not -1."
+  },
+  {
+   "trap": "Building Marathon as pointer nodes and missing that VLAs in the harness are a GCC extension, or returning -1 when nothing is faulty.",
+   "correction": "Hash path strings and test path+L / path+R; do not 'fix' the VLA; initialize the sum to 0."
+  },
+  {
+   "trap": "Computing routeAverageDelayEventCount after dropping delivered shipments, or inventing ids via defaultdict for invalid X9-style records.",
+   "correction": "Every shipment on the route counts in the average, delivered included; drop records whose shipment/route id does not exist—never create rows for them."
+  },
+  {
+   "trap": "SQL: col = '' only, or INNER JOIN Appointments for 'at least one'.",
+   "correction": "Treat NULL, '', and blank-only via IS NULL OR TRIM(col)=''; EXISTS (or IN / GROUP BY) keeps one row per patient; Doctors/Specialization tables are decoys."
+  },
+  {
+   "trap": "Using int for DE Shaw flip sums, checkerboard counts, or Uber's 1 + n(n+1)/2 at large n.",
+   "correction": "long long is mandatory: flip running sums reach far past 32-bit; all-checkerboard 2000×2000 is about 4·10^12; multiply n*(n+1) in 64-bit before dividing."
+  },
+  {
+   "trap": "Simulating Millennium append-and-reverse with a real reverse each step, or trusting an off-by-one parity formula.",
+   "correction": "Defer reverse with a deque + flipped flag (O(n)); verify closed-form index runs against a brute simulator—wrong second-run start duplicates index 0 for n = 1."
+  },
+  {
+   "trap": "Reaching for Dijkstra on unit-weight task graphs, or forbidding revisits when the statement allows them.",
+   "correction": "Unit weights ⇒ BFS; revisit permission is what makes legs independent and the milestone reduction valid—without it the problem is much harder."
+  },
+  {
+   "trap": "Assuming Uber 'flip substring' may be applied many times, or that the distinct-count depends on the bits of s.",
+   "correction": "Many flips of single chars yield all 2^n strings (too trivial); at most one complement of a block gives exactly 1 + n(n+1)/2 distinct results, independent of content."
+  }
+ ]
+}

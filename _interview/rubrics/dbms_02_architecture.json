@@ -1,0 +1,145 @@
+{
+ "id": "dbms_02_architecture",
+ "title": "Database Architecture",
+ "type": "FUND",
+ "relevance": "SDE interviews probe whether candidates can separate DBMS data-organization levels from application deployment tiers and explain data independence.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the ANSI/SPARC three-schema levels and what a schema is versus an instance.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "The three-schema architecture organises a database into three levels of abstraction whose purpose is data independence.",
+     "weight": "core",
+     "evidence_hint": "Candidate names external, conceptual, and internal levels and states the goal is insulating each level from changes beneath it."
+    },
+    {
+     "id": "fund2",
+     "point": "The external level has many external schemas (tailored user views); the conceptual level has a single conceptual schema (whole logical map); the internal level has the physical schema (on-disk storage, indexes, B-trees).",
+     "weight": "core",
+     "evidence_hint": "Candidate distinguishes many views vs one logical schema vs physical storage structures."
+    },
+    {
+     "id": "fund3",
+     "point": "A schema is the description of structure fixed at design time; an instance is the data values that populate it at a given moment.",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts structure (e.g. Student attributes) with the current populated data."
+    }
+   ],
+   "probes": [
+    "What are the three levels in the ANSI/SPARC architecture, and what does each describe?"
+   ],
+   "hints": {
+    "1": "Think about what different users see versus the whole logical design versus how bytes sit on disk.",
+    "2": "Map external → views, conceptual → tables/relationships/rules, internal → files/indexes/B-trees.",
+    "3": "Purpose is data independence: many external schemas, one conceptual schema, one physical schema below which the database sits on disk."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain logical and physical data independence and how each is achieved.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Logical data independence means changing the conceptual schema without disturbing external schemas and applications; it is realised chiefly through views and is harder in practice.",
+     "weight": "core",
+     "evidence_hint": "Candidate ties conceptual changes (add table, split relation) to shielding applications via views and notes it is the harder grade."
+    },
+    {
+     "id": "mech2",
+     "point": "Physical data independence means changing the physical schema without touching the conceptual schema—e.g. storage structure, underlying data structure, or adding/dropping an index.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists physical changes that should not require logical design or application changes."
+    }
+   ],
+   "probes": [
+    "What is the difference between logical and physical data independence?"
+   ],
+   "hints": {
+    "1": "One shields users/apps from logical redesign; the other shields the logical design from storage changes.",
+    "2": "Ask which level is changing: conceptual vs physical, and what stays stable above it.",
+    "3": "Logical: change conceptual schema, keep external schemas via views (harder). Physical: change storage/indexes/data structures, keep conceptual schema."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast two-tier versus three-tier placement of software and why a middle tier helps.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "In two-tier architecture, clients talk directly to the database server—only clients and the database.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes direct client-to-DB connection with no middle application server."
+    },
+    {
+     "id": "tr2",
+     "point": "In three-tier architecture, presentation, application/business, and data layers are separated so clients talk to an application server that talks to the database, aiding scalability and keeping concerns from tangling.",
+     "weight": "core",
+     "evidence_hint": "Candidate names the three layers and states separation of UI, business logic, and storage plus scalability."
+    }
+   ],
+   "probes": [
+    "How does a three-tier architecture differ from a two-tier one, and what does the extra tier buy you?"
+   ],
+   "hints": {
+    "1": "Ask where the business logic lives—on the client path to the DB, or on a middle server.",
+    "2": "Sketch client → DB versus client → application server → data source.",
+    "3": "Three-tier: presentation, business, data; extra tier separates UI, logic, and storage and aids scalability."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Show how three-schema and three-tier relate in a real request path without conflating them.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Three-schema is about how data is hidden and organised inside a DBMS; three-tier is about where software code runs; the entire three-schema stack lives inside the three-tier data tier.",
+     "weight": "core",
+     "evidence_hint": "Candidate states the keypoint: organisation/independence vs deployment, with three-schema inside the data tier."
+    },
+    {
+     "id": "app2",
+     "point": "On a request like View Profile, presentation hits the application tier, which queries the data tier; inside the DBMS the query uses an external view/API, maps via the conceptual schema, then reads bytes via the internal schema.",
+     "weight": "extended",
+     "evidence_hint": "Candidate walks request up/down the tiers and then through external → conceptual → internal inside the data tier."
+    }
+   ],
+   "probes": [
+    "A candidate confuses three-schema with three-tier—how would you explain how they fit together on a View Profile request?"
+   ],
+   "hints": {
+    "1": "One is DBMS abstraction levels; the other is where UI, logic, and DB processes run.",
+    "2": "Place the whole three-schema stack inside the data tier, then narrate one user action.",
+    "3": "Phone (presentation) → backend (application) → DB (data); inside DB: external view → conceptual tables → internal on-disk bytes."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Two-tier vs three-tier architecture",
+   "strong_answer": "Two-tier has clients talk directly to the database; three-tier inserts an application/business layer between presentation and data so UI, business logic, and storage stay separated, which aids scalability and avoids tangled concerns."
+  },
+  {
+   "topic": "Three-schema vs three-tier architecture",
+   "strong_answer": "Three-schema (ANSI/SPARC) organises data inside a DBMS for data independence (external/conceptual/internal); three-tier is a deployment split of presentation, application, and data. The whole three-schema architecture sits inside the three-tier data tier."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating three-schema and three-tier as the same three-layer stack because both say three.",
+   "correction": "They describe different things: three-schema is DBMS data organisation and independence; three-tier is where code runs. Hold them by nesting the entire three-schema stack inside the three-tier data tier."
+  },
+  {
+   "trap": "Assuming physical storage changes (indexes, B-trees, file layout) must force application or conceptual redesign.",
+   "correction": "Physical data independence means changing the physical schema—storage structure, data structures, indexes—should not require changing the conceptual schema or applications."
+  },
+  {
+   "trap": "Assuming logical redesign (add table, split relation) always breaks every user-facing app with no mitigation.",
+   "correction": "Logical data independence aims to change the conceptual schema without disturbing external schemas, realised chiefly through views—though it is harder to achieve in practice."
+  }
+ ]
+}

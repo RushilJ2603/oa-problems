@@ -1,0 +1,222 @@
+{
+ "id": "38_mobius_multiplicative",
+ "title": "Möbius Function, Multiplicative Functions & Divisor Sums",
+ "type": "CP",
+ "relevance": "Medium (divisor sieves / φ / “count pairs with gcd” show up in harder OAs and quant screens; full Möbius inversion is mainly a CF 1800–2200 rating-builder — Striver never covers it)",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Harder OA number-theory rounds: coprime pair counts via frequency + Möbius/IE over multiples (CSES Counting Coprime Pairs); sum of gcd/lcm over pairs or [1..n]^k via Σφ(d) or μ-inversion (ABC162 E / AGC LCM-sum, CF Div1 B/C); smallest n with σ/τ = c or Σσ(i) for huge n (Short Task / CSES Sum of Divisors — sieve vs floor-block); maximize gcd after deletions or pairwise-coprime checks disguised as array cleanup (Enlarge GCD).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Candidate maps coprime / gcd-lcm / divisor-sum wording to Möbius, totient, or harmonic-sieve templates.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Signal words: coprime pairs/subsequences, sum of gcd/lcm, square-free, “gcd exactly k”, σ or number of divisors under large n.",
+     "weight": "core",
+     "evidence_hint": "Lists several of those cues and ties them to multiplicative / Möbius tooling."
+    },
+    {
+     "id": "rec2",
+     "point": "“How many pairs in the array are coprime?” → frequency array + Möbius / IE over multiples (CSES Counting Coprime Pairs family).",
+     "weight": "core",
+     "evidence_hint": "Says count multiples then weight with μ, not pairwise gcd loops."
+    },
+    {
+     "id": "rec3",
+     "point": "Sum of gcd/lcm over pairs or over [1..n]^k → rewrite with Σ_d φ(d) or μ-inversion; huge Σσ(i) or min n with σ(n)=c → sieve vs floor-block maturity.",
+     "weight": "extended",
+     "evidence_hint": "Names φ/μ rewrite for gcd-lcm sums and sieve-or-floor for divisor-sum queries."
+    }
+   ],
+   "probes": [
+    "What wording makes you reach for Möbius or a divisor sieve instead of looping pairwise gcds?",
+    "How do you recognize a sum-of-gcd / sum-of-σ problem that needs inversion or floor blocks?"
+   ],
+   "hints": {
+    "1": "Look for coprime, exact-gcd, square-free, or divisor-sum language under large bounds.",
+    "2": "Coprime pairs → frequency + μ; gcd/lcm aggregates → φ or μ-inversion; huge Σσ → floor blocks.",
+    "3": "Say: coprime pairs use Σ μ(d)·C(c(d),2); exact-gcd needs multiples→exact inversion; Σσ for huge n is Dirichlet floor blocks."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Candidate states μ’s defining identity, the two inversion forms, and the main divisor-sum rewrite.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "μ(1)=1; μ(p1⋯pk)=(-1)^k on distinct primes; μ=0 if a squared factor; key identity Σ_{d|n} μ(d)=[n=1].",
+     "weight": "core",
+     "evidence_hint": "Gives the three μ cases and the [n=1] sum identity."
+    },
+    {
+     "id": "appr2",
+     "point": "Inversion: G(n)=Σ_{d|n} F(d) ⇒ F(n)=Σ_{d|n} μ(d)G(n/d); multiples form G(n)=Σ_{n|m} F(m) ⇒ F(n)=Σ_{n|m} μ(m/n)G(m).",
+     "weight": "core",
+     "evidence_hint": "States both the divisor-sum and multiples-sum inversion formulas."
+    },
+    {
+     "id": "appr3",
+     "point": "Divisor sums rewrite Σ_{i=1}^n f(i) as Σ_d g(d)⌊n/d⌋ and collapse into O(√n) floor-blocks; exact-gcd from cnt_mult via subtracting higher multiples or Σ μ(k) cnt_mult[kd].",
+     "weight": "extended",
+     "evidence_hint": "Mentions the floor rewrite plus either the subtractive exact-gcd pass or the μ form."
+    }
+   ],
+   "probes": [
+    "What is the Möbius identity that turns “gcd = 1” into a weighted sum over multiples?",
+    "How do you invert G built from F on divisors versus G built from F on multiples?"
+   ],
+   "hints": {
+    "1": "Start from Σ_{d|n} μ(d) and what it equals.",
+    "2": "That identity is [n=1]; use it to peel exact-gcd or coprimality out of multiples counts.",
+    "3": "State μ’s definition, Σ μ(d)=[n=1], then the two inversion arrows (divisors form and multiples form)."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Candidate can sketch μ/τ/σ sieves, the coprime-pair template, and Dirichlet floor blocks.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Linear/harmonic sieve: smallest-prime sieve in O(n); for μ mark square factors and flip signs on square-free; for τ/σ use for (i) for (j=i; j<=n; j+=i).",
+     "weight": "core",
+     "evidence_hint": "Describes SPF/linear sieve or the square-mark μ build and the multiples loop for τ/σ."
+    },
+    {
+     "id": "impl2",
+     "point": "Coprime-pair template: Σ_{i<j}[gcd(a_i,a_j)=1] = Σ_d μ(d)·C(c(d),2) with c(d)=#{a_i : d|a_i}.",
+     "weight": "core",
+     "evidence_hint": "Writes the μ-weighted binomial on multiple-counts."
+    },
+    {
+     "id": "impl3",
+     "point": "Floor/Dirichlet blocks: Σ ⌊n/i⌋ (and Σ i⌊n/i⌋) in O(√n) by jumping r=n/(n/l); exact-gcd: cnt_=[d]=cnt_mult[d]−Σ_{k≥2} cnt_=[kd] (or Σ μ(k) cnt_mult[kd]).",
+     "weight": "extended",
+     "evidence_hint": "Gives the r=n/(n/l) jump and one of the two exact-gcd conversions."
+    }
+   ],
+   "probes": [
+    "How do you precompute μ (or τ/σ) up to a bound, and how do you count coprime pairs from a frequency array?",
+    "Walk through evaluating Σ ⌊n/i⌋ in O(√n) and turning multiples-counts into exact-gcd counts."
+   ],
+   "hints": {
+    "1": "Separate “fill an array by multiples” from “sum floors by blocks”.",
+    "2": "μ via SPF or square-marking; τ/σ via j+=i; coprime pairs via μ·C(c(d),2); floors via constant ⌊n/i⌋ segments.",
+    "3": "Say: sieve μ/τ/σ; answer Σ μ(d) C(c(d),2); for floors take l..r with r=n/(n/l); exact = mult minus higher exact (or μ-weighted mult)."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Candidate states the right sieve / harmonic / floor-block bounds for the usual constraints.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Smallest-prime / linear sieve for μ,φ,τ,σ is O(n); harmonic DP on multiples (Orac-style dp[i]→dp[i·k]) is O(n log n).",
+     "weight": "core",
+     "evidence_hint": "States O(n) for the linear sieve and O(n log n) for the multiples DP."
+    },
+    {
+     "id": "cx2",
+     "point": "Dirichlet floor blocks evaluate Σ ⌊n/i⌋ / Σσ-style sums in O(√n); CSES Sum of Divisors uses this for n≤10^12.",
+     "weight": "core",
+     "evidence_hint": "Cites O(√n) floor blocks and the huge-n Σσ setting."
+    },
+    {
+     "id": "cx3",
+     "point": "τ sieve over multiples precomputes number of divisors for all x≤10^6; Prime Multiples IE is feasible for k≤20 primes.",
+     "weight": "extended",
+     "evidence_hint": "Mentions the 10^6 divisor precompute band and subset IE when k≤20."
+    }
+   ],
+   "probes": [
+    "What complexity do you claim for a linear μ sieve versus summing ⌊n/i⌋ up to a huge n?",
+    "When is a harmonic multiples loop enough, and when must you switch to floor blocks?"
+   ],
+   "hints": {
+    "1": "Compare “fill an array up to n” with “sum a floor function up to huge n”.",
+    "2": "Array precompute → O(n) sieve or O(n log n) multiples; single huge Σ⌊n/i⌋ → O(√n) blocks.",
+    "3": "Say: linear sieve O(n); harmonic DP O(n log n); Σ⌊n/i⌋ / Σσ for n≤10^12 in O(√n); τ up to 10^6 via multiples."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Candidate avoids μ square-factor bugs, multiples-vs-exact mixups, and wrong inversion form.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Setting μ nonzero when n has a squared prime factor — μ must be 0 on non-square-free n.",
+     "weight": "core",
+     "evidence_hint": "Explicitly zeros μ on any squared factor."
+    },
+    {
+     "id": "pit2",
+     "point": "Treating cnt_mult[d] as “gcd exactly d” without subtracting higher multiples or applying Σ μ(k) cnt_mult[kd].",
+     "weight": "core",
+     "evidence_hint": "Distinguishes divisible-by-d counts from exact-gcd counts and names the fix."
+    },
+    {
+     "id": "pit3",
+     "point": "Using the divisor-sum inversion formula when G was built as a sum over multiples (or the reverse).",
+     "weight": "extended",
+     "evidence_hint": "Matches F recovery to whether G summed over d|n or over n|m."
+    },
+    {
+     "id": "pit4",
+     "point": "Product of all divisors is n^{τ(n)/2} — careful with powers of primes / mod φ when evaluating under a modulus.",
+     "weight": "extended",
+     "evidence_hint": "States the product formula and flags prime-power / modular-φ care."
+    }
+   ],
+   "probes": [
+    "When is μ(n) zero, and what breaks if you ignore that?",
+    "What goes wrong if you invert with the wrong G form or treat multiples-counts as exact-gcd?"
+   ],
+   "hints": {
+    "1": "Check square-freeness before trusting a μ sign.",
+    "2": "Multiples counts are “d divides”; exact needs an extra pass or μ weighting.",
+    "3": "μ=0 on squares; exact = mult − higher exact (or μ·mult); pick divisor vs multiples inversion to match how G was defined."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Multiplicative sieve vs Dirichlet floor blocks",
+   "strong_answer": "Precompute σ/τ/μ on an array when you need many values up to a bound (Short Task-style inverse σ). For a single Σσ(i) (or Σ⌊n/i⌋) with huge n (CSES Sum of Divisors, n≤10^12), rewrite as Σ d⌊n/d⌋ and evaluate with O(√n) floor blocks — that is the sieve vs floor-block maturity test."
+  },
+  {
+   "topic": "Divisor-sum inversion vs multiples-sum inversion",
+   "strong_answer": "If G(n)=Σ_{d|n} F(d), recover F(n)=Σ_{d|n} μ(d)G(n/d). If G(n)=Σ_{n|m} F(m), recover F(n)=Σ_{n|m} μ(m/n)G(m). Pick the form that matches whether you aggregated over divisors or over multiples."
+  },
+  {
+   "topic": "Σ φ(d) rewrite vs μ-inversion for gcd/lcm sums",
+   "strong_answer": "Pair/tuple gcd or lcm aggregates can be rewritten with Σ_d φ(d) or peeled with μ-inversion from multiples counts (ABC162 E / AGC LCM-sum style); choose whichever matches the identity you already have for exact-gcd or for lcm in terms of gcd."
+  },
+  {
+   "topic": "Subtractive exact-gcd vs μ-weighted multiples",
+   "strong_answer": "From cnt_mult[d], either set cnt_=[d]=cnt_mult[d]−Σ_{k≥2} cnt_=[kd] (process large d first) or use Σ μ(k) cnt_mult[kd]; both implement the same [n=1]-driven inversion."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Leaving μ nonzero on numbers with a squared prime factor.",
+   "correction": "μ=0 whenever a squared factor is present; only square-free n gets ±1."
+  },
+  {
+   "trap": "Using counts of multiples of d as if they were counts with gcd exactly d.",
+   "correction": "Convert with cnt_=[d]=cnt_mult[d]−Σ_{k≥2} cnt_=[kd] or Σ μ(k) cnt_mult[kd] before summing."
+  },
+  {
+   "trap": "Applying the divisor-form Möbius inversion to a G that was summed over multiples (or vice versa).",
+   "correction": "Match the formula: divisors G ⇒ F(n)=Σ_{d|n} μ(d)G(n/d); multiples G ⇒ F(n)=Σ_{n|m} μ(m/n)G(m)."
+  },
+  {
+   "trap": "Trying to answer Σσ(i) for huge n by sieving up to n.",
+   "correction": "Rewrite Σ_{i=1}^n σ(i)=Σ_d d⌊n/d⌋ and evaluate with O(√n) Dirichlet floor blocks (n≤10^12 setting)."
+  },
+  {
+   "trap": "Computing the product of all divisors as a naive multiply without the closed form.",
+   "correction": "Product of all divisors of n is n^{τ(n)/2}; be careful with powers of primes and reductions mod φ."
+  }
+ ]
+}

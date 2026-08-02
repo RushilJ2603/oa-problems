@@ -1,0 +1,177 @@
+{
+ "id": "dbms_01_intro",
+ "title": "Introduction to database systems",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs expect candidates to separate database from DBMS, explain why a DBMS beats bare files, and name the main data models before diving into SQL or schema design.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Widely used systems named in the notes: Oracle (9i, 11g, 12c), Microsoft SQL Server, MySQL, and IBM DB2.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a database, a DBMS, and a database system are, and what kinds of data they manage.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A database system has two cooperating parts: the database (the data) and the DBMS (the software that operates on that data).",
+     "weight": "core",
+     "evidence_hint": "Candidate explicitly separates data from the software layer and says together they form a database system."
+    },
+    {
+     "id": "fund2",
+     "point": "A database is an organised collection of related data about some domain, not a heap of arbitrary files.",
+     "weight": "core",
+     "evidence_hint": "Mentions organised/related data and gives a domain example such as railway reservation or university records."
+    },
+    {
+     "id": "fund3",
+     "point": "A DBMS stores, retrieves, updates and protects data and mediates access to it.",
+     "weight": "core",
+     "evidence_hint": "Lists storage/retrieval/update/protection and access mediation as DBMS responsibilities."
+    },
+    {
+     "id": "fund4",
+     "point": "Managed data ranges from highly structured tabular records through unstructured data to raw web pages; an RDBMS specialises in structured tabular data.",
+     "weight": "extended",
+     "evidence_hint": "Distinguishes structured vs unstructured/web-page data and ties RDBMS to tables."
+    }
+   ],
+   "probes": [
+    "What is the difference between a database and a DBMS?",
+    "What kinds of data can a database system manage, and what is an RDBMS specialised for?"
+   ],
+   "hints": {
+    "1": "Think of the data collection versus the software that operates on it.",
+    "2": "Define database, define DBMS, then say what they form together; mention structured versus unstructured data.",
+    "3": "A database is organised related data; a DBMS stores, manipulates and controls access; together they are a database system; RDBMS targets structured tabular data."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how a DBMS improves on a file system along structure, concurrency, security and redundancy.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A DBMS stores data with explicit structure—named attributes (columns) of defined types—whereas a file system imposes no such structure on the bytes it holds.",
+     "weight": "core",
+     "evidence_hint": "Contrasts named typed attributes/columns with unstructured file bytes."
+    },
+    {
+     "id": "mech2",
+     "point": "A DBMS coordinates four kinds of overlapping access between two transactions: read–read (RR), read–write (RW), write–read (WR) and write–write (WW).",
+     "weight": "core",
+     "evidence_hint": "Names all four overlap kinds (RR, RW, WR, WW) as what concurrency control must handle."
+    },
+    {
+     "id": "mech3",
+     "point": "A DBMS enforces fine-grained role-based access control so different roles (for example student, faculty, dean) see and may touch only appropriate data.",
+     "weight": "core",
+     "evidence_hint": "Describes RBAC and that the same underlying data is exposed differently by role."
+    },
+    {
+     "id": "mech4",
+     "point": "A DBMS reduces redundancy from scattered duplicate facts and the inconsistencies that duplication breeds.",
+     "weight": "extended",
+     "evidence_hint": "Links file-side duplication to inconsistency and DBMS to reduced redundancy."
+    }
+   ],
+   "probes": [
+    "How does a DBMS control concurrent access that a file system does not?",
+    "How does role-based access control change what different users see?"
+   ],
+   "hints": {
+    "1": "Compare bare files to a DBMS on structure, many users, and who may see what.",
+    "2": "Cover attributes/types, the four conflict kinds RR/RW/WR/WW, and roles like student/faculty/dean.",
+    "3": "DBMS adds typed attributes, concurrency over RR/RW/WR/WW, RBAC by role, and less duplicated inconsistent data."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast the file-system approach with a DBMS on the axes the notes treat as advantages.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Flat files are comfortable for small amounts of data (a few kilobytes) but degrade as data grows; a DBMS is built to organise and query very large volumes (gigabytes and far beyond).",
+     "weight": "core",
+     "evidence_hint": "States the kilobytes-versus-gigabytes scale contrast between files and DBMS."
+    },
+    {
+     "id": "tr2",
+     "point": "The advantages of a DBMS over a file system are scale, enforced structure, concurrency control, security through role-based access, and reduced redundancy.",
+     "weight": "core",
+     "evidence_hint": "Lists those five advantage axes in one coherent answer."
+    }
+   ],
+   "probes": [
+    "Why prefer a DBMS over storing application data in ordinary files?",
+    "On which axes does a DBMS beat a file system?"
+   ],
+   "hints": {
+    "1": "List what goes wrong when many users and large data live in plain files.",
+    "2": "Walk scale, structure, concurrency, security, and redundancy one by one.",
+    "3": "Files suit small kilobyte data with no structure/concurrency/RBAC; DBMS wins on gigabyte-scale, attributes, RR/RW/WR/WW control, role-based security, and less redundancy."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Place the relational model among the named data-model families and know when RDBMS thinking applies.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A data model is the abstract framework that determines how data is structured and related.",
+     "weight": "core",
+     "evidence_hint": "Defines data model as the structuring/relating framework, not a vendor product."
+    },
+    {
+     "id": "app2",
+     "point": "The course names five families: network (owner–member graph), hierarchical (parent–child tree), relational (tables of rows and columns—the dominant model), entity–relationship (high-level design of entities and relationships), and object-oriented (data as objects).",
+     "weight": "core",
+     "evidence_hint": "Names the five models with a one-line characterisation of each, stressing relational as dominant."
+    },
+    {
+     "id": "app3",
+     "point": "Structured domain examples such as a railway booking system (for example IRCTC) or university student records are the natural fit for an RDBMS.",
+     "weight": "extended",
+     "evidence_hint": "Ties tabular structured domains to RDBMS rather than treating all data the same."
+    }
+   ],
+   "probes": [
+    "What data models does the course name, and which one underlies these notes?",
+    "When would you reach for an RDBMS rather than treating data as unstructured files or web pages?"
+   ],
+   "hints": {
+    "1": "Recall the historical model families and which one uses tables.",
+    "2": "List network, hierarchical, relational, ER, and object-oriented with a short structural cue for each.",
+    "3": "Five models: network graph, hierarchical tree, relational tables (dominant), ER design model, OO objects; RDBMS fits structured tabular domains like bookings or student records."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "File system vs DBMS",
+   "strong_answer": "Files are fine for small kilobyte-scale unstructured blobs but lack typed attributes, concurrency control over RR/RW/WR/WW, role-based access (student/faculty/dean), and anti-redundancy discipline; a DBMS is built for gigabyte-scale organised related data with those controls."
+  },
+  {
+   "topic": "Structured RDBMS data vs unstructured or web-page data",
+   "strong_answer": "An RDBMS specialises in structured tabular data with named attributes; database systems may also hold unstructured content and raw web pages, but those are outside the relational specialisation."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using “database” and “DBMS” interchangeably.",
+   "correction": "The database is the organised related data; the DBMS is the software that stores, manipulates and controls access; together they are the database system."
+  },
+  {
+   "trap": "Assuming a file system provides concurrency and fine-grained security comparable to a DBMS.",
+   "correction": "File systems do not coordinate RR/RW/WR/WW overlaps or express role-based access the way a DBMS does."
+  },
+  {
+   "trap": "Treating the ER model as another physical storage model alongside relational tables.",
+   "correction": "ER is a high-level design model of entities and relationships; the relational model is the dominant storage/query model of tables of rows and columns."
+  },
+  {
+   "trap": "Saying a DBMS only stores structured rows and columns.",
+   "correction": "Managed data ranges from structured records through unstructured data to raw web pages; RDBMS is the variety specialised for structured tabular data."
+  }
+ ]
+}

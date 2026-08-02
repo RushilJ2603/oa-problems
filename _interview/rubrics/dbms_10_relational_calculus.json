@@ -1,0 +1,159 @@
+{
+ "id": "dbms_10_relational_calculus",
+ "title": "Relational Calculus",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs use TRC to check whether candidates understand declarative querying and that relational calculus and relational algebra have the same expressive power.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what Tuple Relational Calculus is and how it differs from relational algebra.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "TRC is a non-procedural (declarative) query language: it specifies what data to retrieve, not how to execute the retrieval.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts TRC with procedural relational algebra and says TRC states the desired result without naming an operation sequence."
+    },
+    {
+     "id": "fund2",
+     "point": "A TRC expression has the form {t | P(t)}: the set of all tuples t for which predicate P(t) is true.",
+     "weight": "core",
+     "evidence_hint": "Candidate writes or describes the set-comprehension form with a free tuple variable and a predicate."
+    },
+    {
+     "id": "fund3",
+     "point": "Predicates are built from atomic attribute/constant comparisons combined with OR (∨), AND (∧), and NOT (¬), plus existential and universal quantifiers over relations.",
+     "weight": "extended",
+     "evidence_hint": "Candidate names the three connectives and mentions ∃/∀ as the way to quantify over tuples in relations."
+    }
+   ],
+   "probes": [
+    "What is Tuple Relational Calculus, and how does a TRC query differ from a relational-algebra expression?"
+   ],
+   "hints": {
+    "1": "Think about whether the language tells you the steps or only the result condition.",
+    "2": "Recall the set form that binds a tuple variable to a predicate built from comparisons, connectives, and quantifiers.",
+    "3": "TRC is declarative: {t | P(t)} is the set of tuples satisfying P, unlike relational algebra which sequences operators."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Establish how quantifiers and safety constrain what a TRC query may return.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "∃ t ∈ r (Q(t)) means there exists a tuple t in relation r such that Q(t) is true; ∀ t ∈ r (Q(t)) means Q(t) is true for all tuples t in r.",
+     "weight": "core",
+     "evidence_hint": "Candidate states both quantifiers with the “exists in r” / “for all in r” readings."
+    },
+    {
+     "id": "mech2",
+     "point": "An expression is unsafe if it can produce an infinite relation; systems therefore restrict queries to safe expressions whose results come only from the database domain (constants in the database relations or in the query).",
+     "weight": "core",
+     "evidence_hint": "Candidate links finiteness/computability to restricting results to the finite database domain rather than an open-ended universe."
+    },
+    {
+     "id": "mech3",
+     "point": "Domain Relational Calculus binds variables to single attributes (domains) rather than entire tuples, and shares the same expressive power as TRC and relational algebra.",
+     "weight": "extended",
+     "evidence_hint": "Candidate says DRC is the variable-per-attribute cousin of TRC and notes equal expressive power with TRC and RA."
+    }
+   ],
+   "probes": [
+    "What do the existential and universal quantifiers mean in TRC, and when is a TRC expression considered unsafe?"
+   ],
+   "hints": {
+    "1": "Separate the meaning of ∃/∀ from the separate issue of whether the result set is finite.",
+    "2": "Existential asserts some matching tuple in a relation; universal asserts the condition for every tuple; safety limits results to the database domain.",
+    "3": "∃ t ∈ r (Q(t)) / ∀ t ∈ r (Q(t)) as above; unsafe queries can be infinite (e.g. names of non-suppliers), so only safe expressions over the database domain are allowed."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Establish that TRC, DRC, and relational algebra differ in form but not in expressive power.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Relational algebra is procedural (dictates the sequence of operations); TRC is declarative (states what to retrieve without defining how).",
+     "weight": "core",
+     "evidence_hint": "Candidate clearly assigns procedural vs declarative to RA vs TRC."
+    },
+    {
+     "id": "tr2",
+     "point": "Despite different paradigms, TRC and relational algebra have the exact same expressive power: any query in one can be translated into the other.",
+     "weight": "core",
+     "evidence_hint": "Candidate asserts equivalence of expressive power and mutual translatability, not superiority of one language."
+    },
+    {
+     "id": "tr3",
+     "point": "DRC vs TRC is attribute/domain variables versus whole-tuple variables; DRC has the exact same expressive power as TRC and relational algebra.",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts binding granularity and again states equal power across DRC, TRC, and RA."
+    }
+   ],
+   "probes": [
+    "How do relational algebra, tuple relational calculus, and domain relational calculus compare in style and expressive power?"
+   ],
+   "hints": {
+    "1": "Separate surface style (how you write the query) from what queries you can express.",
+    "2": "RA sequences operators; TRC/DRC use predicates—DRC per attribute, TRC per tuple—then ask whether power differs.",
+    "3": "RA is procedural, TRC declarative, DRC attribute-variable; all three have the exact same expressive power and are inter-translatable."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Formulate TRC queries over Supplier, Parts, and Catalog, including multi-relation existential patterns.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Basic TRC retrieval projects attributes under membership and conditions, e.g. {S.name | Supplier(S)} and {P.name | Parts(P) ∧ P.color = 'Red'}.",
+     "weight": "core",
+     "evidence_hint": "Candidate writes a set comprehension with the free tuple in the target relation and AND for attribute filters."
+    },
+    {
+     "id": "app2",
+     "point": "Suppliers who supplied some part use an existential over Catalog linked by Sid: {S.Sid | Supplier(S) ∧ ∃ c(Catalog(c) ∧ c.Sid = S.Sid)}.",
+     "weight": "core",
+     "evidence_hint": "Candidate introduces ∃ c over Catalog and equates c.Sid with S.Sid (Sname variant only changes the projected attribute)."
+    },
+    {
+     "id": "app3",
+     "point": "Suppliers of some red part nest existentials through Catalog into Parts, checking pid equality and P.color = 'Red'.",
+     "weight": "extended",
+     "evidence_hint": "Candidate nests ∃ c and ∃ p, joining Sid then pid, and constrains part color to 'Red'."
+    }
+   ],
+   "probes": [
+    "Using Supplier, Parts, and Catalog, write a TRC query for the names of suppliers who supplied some red part."
+   ],
+   "hints": {
+    "1": "You need a path from Supplier through the linking Catalog relation into Parts.",
+    "2": "Existentially quantify a catalog tuple matching Sid, then a parts tuple matching pid with color 'Red', and project S.name.",
+    "3": "{S.name | Supplier(S) ∧ ∃ c(Catalog(c) ∧ c.Sid = S.Sid ∧ ∃ p(Parts(p) ∧ p.pid = c.pid ∧ p.color = 'Red'))}."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Relational Algebra vs Tuple Relational Calculus",
+   "strong_answer": "RA is procedural and sequences operations; TRC is declarative and uses {t | P(t)}. They have the exact same expressive power, so any query in one translates into the other."
+  },
+  {
+   "topic": "Tuple Relational Calculus vs Domain Relational Calculus",
+   "strong_answer": "TRC binds variables to whole tuples; DRC binds variables to single attributes/domains. DRC has the exact same expressive power as TRC and relational algebra."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating {s.name | ¬Supplier(s)} as a valid query for “everyone who is not a supplier.”",
+   "correction": "That expression is unsafe: the domain of names is theoretically infinite, so the result can be infinite. Restrict to safe expressions whose results come only from the database domain."
+  },
+  {
+   "trap": "Assuming TRC is more or less powerful than relational algebra because it is declarative.",
+   "correction": "Paradigm differs, but TRC and relational algebra have the exact same expressive power and are mutually translatable."
+  }
+ ]
+}

@@ -1,0 +1,199 @@
+{
+ "id": "dsa_s26_advanced_strings",
+ "title": "Advanced String Algorithms",
+ "type": "FUND",
+ "relevance": "Pattern matching, duplicate substrings, and palindromes are staple SDE OA/interview topics where naive O(n·m) or O(n²) approaches fail and linear string algorithms are expected.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish why naive search is too slow and what LPS, Z-array, rolling hash, and Manacher each compute.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Naive substring search takes O(n · m) time; KMP, Z-algorithm, and related methods achieve O(n + m) by avoiding re-examining characters via precomputed info or a rolling hash.",
+     "weight": "core",
+     "evidence_hint": "States naive is O(n·m) in n=text and m=pattern length, and names preprocessing (prefix/failure array) or rolling hash as the path to linear time."
+    },
+    {
+     "id": "fund2",
+     "point": "The KMP lps[i] value is the length of the longest proper prefix of pattern[0...i] that exactly matches a suffix of pattern[0...i]; a proper prefix is not the entire string, and lps[0] is always 0.",
+     "weight": "core",
+     "evidence_hint": "Defines LPS/failure function in terms of longest proper prefix that is also a suffix, and notes lps[0]=0."
+    },
+    {
+     "id": "fund3",
+     "point": "Z[i] stores the length of the longest substring starting at s[i] that is also a prefix of s.",
+     "weight": "core",
+     "evidence_hint": "Gives the Z-array definition as longest prefix-match length starting at each index i."
+    },
+    {
+     "id": "fund4",
+     "point": "Rabin–Karp compares a polynomial rolling hash of the pattern to each window of length m in the text, then verifies matches to resolve spurious collisions.",
+     "weight": "extended",
+     "evidence_hint": "Mentions hashing windows of length m, then character-by-character check when hashes collide."
+    }
+   ],
+   "probes": [
+    "What does the KMP LPS array store, and how does that differ from what the Z-array stores at each index?"
+   ],
+   "hints": {
+    "1": "One array is about prefixes that are also suffixes inside the pattern; the other compares each suffix-start to the whole string’s prefix.",
+    "2": "Name lps[i] for pattern[0...i] and Z[i] for the longest prefix of s that starts at i.",
+    "3": "lps[i] = longest proper prefix of pattern[0...i] that matches a suffix of that same substring; Z[i] = length of the longest substring starting at s[i] that matches a prefix of s."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how LPS fallback, Z-window reuse, rolling-hash updates, and Manacher’s mirror radius actually advance without restarting from scratch.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "On LPS mismatch with len ≠ 0, fall back with len = lps[len - 1] instead of resetting to 0; for pattern \"ABABACA\" the final lps is [0, 0, 1, 2, 3, 0, 1].",
+     "weight": "core",
+     "evidence_hint": "Walks the fallback (e.g. at 'C' in ABABACA: len goes lps[2]=1 then lps[0]=0) and cites the finished array [0,0,1,2,3,0,1]."
+    },
+    {
+     "id": "mech2",
+     "point": "In KMP search, on mismatch the lps array repositions the pattern pointer j without backtracking the text pointer i; matching takes O(n) because i never decrements, and LPS build is O(m), for total O(n + m) time and O(m) space.",
+     "weight": "core",
+     "evidence_hint": "Says i only moves forward; j = lps[j-1] on mismatch when j≠0; quotes O(n+m) time and O(m) LPS space."
+    },
+    {
+     "id": "mech3",
+     "point": "Z-algorithm keeps a rightmost match window [l, r]: if i > r compute naively; if i ≤ r set Z[i] = min(Z[i - l], r - i + 1) then try to extend past r and update [l, r].",
+     "weight": "core",
+     "evidence_hint": "Describes the [l,r] window, the min(Z[i-l], r-i+1) init when inside the window, and extending/updating when matching beyond r."
+    },
+    {
+     "id": "mech4",
+     "point": "A rolling hash slides a window in O(1) by removing the leftmost contribution, multiplying by base B, adding the new rightmost character, and applying modulo; example with text \"ABAC\", m=2, B=10, M=97 yields window hashes 12, then 21, then 13.",
+     "weight": "extended",
+     "evidence_hint": "Lists remove/shift/add/mod steps and can reproduce H=12 for \"AB\", 21 for \"BA\", 13 for \"AC\"."
+    },
+    {
+     "id": "mech5",
+     "point": "Manacher maintains centre C and right boundary R of the rightmost palindrome; for i < R, P[i] is at least min(R - i, P[i_mirror]) where i_mirror = C - (i - C), then expand and update C,R if the palindrome extends past R.",
+     "weight": "extended",
+     "evidence_hint": "Names C, R, mirror formula, and min(R-i, P[i_mirror]) initialization before expanding."
+    }
+   ],
+   "probes": [
+    "Walk through computing LPS for \"ABABACA\", then explain what KMP does with j on a mismatch during search."
+   ],
+   "hints": {
+    "1": "Start with i=1, len=0, lps[0]=0, and say what happens when pattern[i] ≠ pattern[len].",
+    "2": "On mismatch, set len = lps[len-1] (or j = lps[j-1] in search) rather than restarting the pattern from index 0 while leaving the text index alone.",
+    "3": "Final lps is [0,0,1,2,3,0,1]; in search, i never goes backward—only j is reset via LPS."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose among KMP/Z, Rabin–Karp, and Manacher versus simpler fallbacks based on the matching problem shape.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "For single pattern search, prefer KMP or Z-algorithm—both O(n+m) via preprocessing the pattern; Rabin–Karp is rarely faster for that case.",
+     "weight": "core",
+     "evidence_hint": "Picks KMP or Z for one pattern and notes Rabin–Karp is not usually faster for single-pattern matching."
+    },
+    {
+     "id": "tr2",
+     "point": "Prefer Rabin–Karp rolling hash for many queries, finding duplicate substrings, or multidimensional pattern matching because hashes compare lengths across starting positions flexibly.",
+     "weight": "core",
+     "evidence_hint": "Names multi-pattern / duplicates / multidimensional as the rolling-hash sweet spot."
+    },
+    {
+     "id": "tr3",
+     "point": "For longest palindromic substring, Manacher is optimal O(n), but expand-around-centre O(n²) is the usual interview-acceptable fallback if Manacher details are forgotten.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts Manacher O(n) with expand-around-centre O(n²) as the practical interview substitute."
+    }
+   ],
+   "probes": [
+    "When would you pick rolling hash over KMP or Z, and when is expand-around-centre enough instead of Manacher?"
+   ],
+   "hints": {
+    "1": "Think about one pattern versus many windows/lengths/queries, and about palindrome-specific search.",
+    "2": "Single pattern → KMP/Z; duplicates/multi-query/multidimensional → Rabin–Karp; palindrome → Manacher or O(n²) expand.",
+    "3": "State: KMP/Z for single O(n+m) search; Rabin–Karp when hashing many substrings; Manacher O(n) for longest palindromic substring with expand-around-centre O(n²) as fallback."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Map LPS, Z-concatenation, rolling-hash binary search, and Manacher to concrete problem patterns.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Longest happy prefix of s is exactly s.substr(0, lps[n-1])—the LPS value at the last index for the whole string.",
+     "weight": "core",
+     "evidence_hint": "Says compute LPS of s and take the prefix of length lps[n-1]."
+    },
+    {
+     "id": "app2",
+     "point": "Shortest palindrome by adding in front: build combined = s + \"#\" + reverse(s); lps.back() is the longest palindromic prefix length of s; reverse the remaining suffix and prepend it. The \"#\" stops the prefix from overlapping the suffix beyond the original string’s length.",
+     "weight": "core",
+     "evidence_hint": "Gives the s+\"#\"+rev(s) construction, uses final LPS as palindromic-prefix length, and mentions the separator’s role."
+    },
+    {
+     "id": "app3",
+     "point": "Z pattern search: combined = pattern + \"$\" + text; any i with Z[i] equal to pattern length is an occurrence (index adjusted relative to text).",
+     "weight": "extended",
+     "evidence_hint": "Describes pattern+$+text and checking Z[i]==m for matches."
+    },
+    {
+     "id": "app4",
+     "point": "Longest duplicate substring: binary search length L between 1 and n-1; for each L, rolling-hash all windows and verify on hash hits—O(n log n) time with O(n) hash-map space when hashing is good.",
+     "weight": "extended",
+     "evidence_hint": "Mentions binary search on length plus rolling-hash duplicate check, and O(n log n) / O(n) complexity."
+    }
+   ],
+   "probes": [
+    "How do you find the shortest string to prepend to make a palindrome using KMP’s LPS?"
+   ],
+   "hints": {
+    "1": "You need the longest prefix of s that is already a palindrome.",
+    "2": "Form one string from s, a separator, and reverse(s), then read the last LPS entry.",
+    "3": "combined = s + \"#\" + reverse(s); longest palindromic prefix length = lps.back(); reverse s[that_length...] and prepend it to s."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "KMP / Z-algorithm vs Rabin–Karp",
+   "strong_answer": "For a single pattern, KMP or Z both give deterministic O(n+m) via pattern preprocessing and Rabin–Karp is rarely faster; use rolling hash when you need many queries, duplicate-substring search, or multidimensional matching across starting positions."
+  },
+  {
+   "topic": "Manacher’s Algorithm vs Expand-Around-Centre",
+   "strong_answer": "Manacher finds the longest palindromic substring in optimal O(n) by reusing mirror radii inside the rightmost palindrome boundary; expand-around-centre is O(n²) but is almost always an acceptable interview fallback if Manacher’s details are forgotten."
+  },
+  {
+   "topic": "Single hash vs double hashing",
+   "strong_answer": "A large prime modulus reduces collisions, but on adversarial tests (e.g. LeetCode) double hashing with two different moduli makes a collision in both practically impossible; always verify character-by-character on hash equality because of spurious collisions."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating equal Rabin–Karp hashes as a confirmed match without comparing characters.",
+   "correction": "Hashes can collide (spurious collisions); always verify the window character by character, and use a large prime M—or double hashing—to minimise collisions."
+  },
+  {
+   "trap": "Assuming Rabin–Karp is always linear like KMP.",
+   "correction": "Average case is O(n + m), but many spurious collisions (e.g. searching \"AAA\" in \"AAAAA\") degrade to O(n · m) worst case."
+  },
+  {
+   "trap": "Forgetting to fix a negative rolling-hash value after modulo arithmetic when sliding the window.",
+   "correction": "After the remove/shift/add update, if the hash is negative, add MOD to convert it back to a positive residue."
+  },
+  {
+   "trap": "Building s + reverse(s) for shortest palindrome / LPS without a separator.",
+   "correction": "Use combined = s + \"#\" + reverse(s); the \"#\" prevents the matched prefix from overlapping the suffix beyond the original string’s length."
+  },
+  {
+   "trap": "In Z-algorithm, copying Z[i - l] unchanged whenever i ≤ r.",
+   "correction": "Only initialize Z[i] = min(Z[i - l], r - i + 1), then extend naively past r if possible—matches are not guaranteed beyond the current window."
+  }
+ ]
+}

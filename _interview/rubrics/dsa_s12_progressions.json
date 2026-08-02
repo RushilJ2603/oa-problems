@@ -1,0 +1,187 @@
+{
+ "id": "dsa_s12_progressions",
+ "title": "Progressions & Series",
+ "type": "FUND",
+ "relevance": "Campus OAs and aptitude rounds routinely test AP/GP/HP formulas, standard sums, telescoping series, and number-series pattern spotting.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the core AP/GP/HP definitions, means inequalities, and standard closed-form sums.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "AP nth term is a+(n-1)d; sum is n/2·(2a+(n-1)d) or n/2·(a+l).",
+     "weight": "core",
+     "evidence_hint": "States both the general term and at least one of the two Sn forms without mixing GP formulas."
+    },
+    {
+     "id": "fund2",
+     "point": "GP nth term is ar^{n-1}; finite sum is a(r^n-1)/(r-1); infinite sum is a/(1-r) when |r|<1.",
+     "weight": "core",
+     "evidence_hint": "Gives an and Sn, and explicitly gates the infinite formula on |r|<1."
+    },
+    {
+     "id": "fund3",
+     "point": "HP means the reciprocals of its terms form an AP; for two numbers AM≥GM≥HM and GM²=AM·HM.",
+     "weight": "core",
+     "evidence_hint": "Defines HP via reciprocal AP and cites both the ordering and the two-number identity."
+    },
+    {
+     "id": "fund4",
+     "point": "Standard sums: Σn=n(n+1)/2, Σn²=n(n+1)(2n+1)/6, Σn³=(n(n+1)/2)².",
+     "weight": "extended",
+     "evidence_hint": "Recalls all three closed forms, not just the triangular-number sum."
+    }
+   ],
+   "probes": [
+    "State the nth-term and sum formulas for an AP and a GP, and say when an infinite GP has a finite sum.",
+    "How is a harmonic progression defined, and how are AM, GM, and HM related for two numbers?"
+   ],
+   "hints": {
+    "1": "Start from the three progression types and what stays constant (difference vs ratio vs reciprocal AP).",
+    "2": "Write an and Sn for AP and GP side by side, then add the |r|<1 infinite case and the AM–GM–HM facts.",
+    "3": "AP: a+(n-1)d and n/2·(2a+(n-1)d); GP: ar^{n-1}, a(r^n-1)/(r-1), a/(1-r) if |r|<1; HP reciprocals are AP; GM²=AM·HM."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to compute terms, counts, and sums, including symmetric AP setups, HP via reciprocals, and telescoping splits.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Number of AP terms is n=(Last−First)/Difference+1.",
+     "weight": "core",
+     "evidence_hint": "Uses the quick count formula or solves an=a+(n-1)d for n correctly."
+    },
+    {
+     "id": "mech2",
+     "point": "For three terms in AP, assume a−d, a, a+d; for four terms, a−3d, a−d, a+d, a+3d (common difference 2d).",
+     "weight": "core",
+     "evidence_hint": "Sets up the symmetric parameterization before applying sum/product constraints."
+    },
+    {
+     "id": "mech3",
+     "point": "To find an HP term, convert to the reciprocal AP, take that AP term, then reciprocate.",
+     "weight": "core",
+     "evidence_hint": "Explicitly works in the reciprocal AP then inverts the result."
+    },
+    {
+     "id": "mech4",
+     "point": "Telescoping form 1/(n(n+1))=1/n−1/(n+1); more generally Σ 1/(k(k+d)) splits as (1/d)(1/k−1/(k+d)).",
+     "weight": "extended",
+     "evidence_hint": "Partial-fractions the general term and cancels intermediate terms to first-minus-last."
+    }
+   ],
+   "probes": [
+    "How do you quickly find how many terms are in a finite AP given first, last, and common difference?",
+    "Walk through finding a term of an HP and summing a series like 1/(1·2)+1/(2·3)+…+1/(99·100)."
+   ],
+   "hints": {
+    "1": "For HP, flip every term; for telescoping, try rewriting the general term as a difference.",
+    "2": "Count AP terms from an=a+(n-1)d; for three AP unknowns use a−d,a,a+d; cancel middle terms after 1/n−1/(n+1).",
+    "3": "n=(Last−First)/d+1; HP term = 1/(AP reciprocal term); Σ1/(k(k+1)) collapses to 1−1/(last+1)."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Clarify when to use finite vs infinite GP sums, and how not to confuse an nth term with a total sum.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Use S∞=a/(1−r) only when |r|<1; otherwise use the finite GP sum a(r^n−1)/(r−1).",
+     "weight": "core",
+     "evidence_hint": "States the convergence gate before applying the infinite formula."
+    },
+    {
+     "id": "tr2",
+     "point": "In OA wording, 'total saved after n weeks' needs Sn, while options often plant the nth deposit an as a trap.",
+     "weight": "core",
+     "evidence_hint": "Separates reading 'total' from 'in week n' and explains why an appears among distractors."
+    },
+    {
+     "id": "tr3",
+     "point": "For a bouncing ball from height H with rebound ratio r, total distance is H+2(rH/(1−r))=H((1+r)/(1−r)), not just the first drop or a single geometric trip.",
+     "weight": "extended",
+     "evidence_hint": "Isolates the initial drop, doubles the rebound legs, then sums the infinite GP."
+    }
+   ],
+   "probes": [
+    "When is the infinite GP sum valid, and what do you use instead if it is not?",
+    "A savings question asks for total after n doubling weeks—what trap options should you expect?"
+   ],
+   "hints": {
+    "1": "Ask whether the series stops after n terms or continues forever with |r|<1.",
+    "2": "Match the question verb: 'total' → Sn; 'this week' → an; bouncing needs initial H plus twice the rebound GP.",
+    "3": "|r|<1 ⇒ a/(1−r); else a(r^n−1)/(r−1); total savings is Sn not an; bounce D=H(1+r)/(1−r)."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply progression tools to OA story problems and number-series pattern puzzles.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Weekly savings that double each week is a GP; total after a fixed number of weeks is the finite GP sum Sn.",
+     "weight": "core",
+     "evidence_hint": "Identifies a and r, then computes Sn rather than the last week's deposit."
+    },
+    {
+     "id": "app2",
+     "point": "Bouncing-ball total path: first drop H, then infinite up-and-down rebounds with ratio r, giving D=H+2(rH/(1−r)).",
+     "weight": "core",
+     "evidence_hint": "Writes D as initial drop plus twice the geometric rebound heights and sums it."
+    },
+    {
+     "id": "app3",
+     "point": "Missing-term series may have differences that themselves form an AP; wrong-term series may follow n²±k or n³±k (or alternate squares and cubes).",
+     "weight": "extended",
+     "evidence_hint": "Checks first/second differences and square/cube patterns before guessing."
+    }
+   ],
+   "probes": [
+    "A ball dropped from height H rebounds to fraction r of the prior height each bounce—what total vertical distance does it travel before resting?",
+    "How would you approach a 'find the missing/wrong term' number series in an OA?"
+   ],
+   "hints": {
+    "1": "Translate the story into AP or GP parameters first; for puzzles, inspect differences and powers.",
+    "2": "Savings → GP Sn; bounce → H plus 2·(geometric rebound series); series → AP-of-differences or n²/n³ patterns.",
+    "3": "Double-savings total is a(r^n−1)/(r−1); bounce D=H(1+r)/(1−r); try differences-in-AP and n²±1 / alternating squares-cubes early."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "finite GP sum vs infinite GP sum",
+   "strong_answer": "Finite Sn=a(r^n−1)/(r−1) always applies for a stopped GP (r≠1). Infinite S∞=a/(1−r) is only valid when |r|<1; otherwise the series does not converge to that closed form."
+  },
+  {
+   "topic": "nth term vs total sum in OA wording",
+   "strong_answer": "If the stem asks for total saved/accumulated after n periods, compute Sn. Distractors often equal an (e.g. one week's deposit) or a mis-powered product like confusing 2^n factors—read 'total' versus 'in week n' carefully."
+  },
+  {
+   "topic": "initial drop vs rebound series (bouncing ball)",
+   "strong_answer": "Count the first drop H once, then every rebound height contributes an up and a down, i.e. the infinite series 2(rH+r²H+…). Closed form D=H+2(rH/(1−r))=H((1+r)/(1−r))."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "In 'find the wrong term' puzzles, checking consecutive differences once, seeing no simple AP/GP, and giving up.",
+   "correction": "Also test early whether terms match n²±k or n³±k (and similar power patterns) before abandoning the series."
+  },
+  {
+   "trap": "When a question asks for total money saved after n doubling weeks, selecting the nth week's deposit from the options.",
+   "correction": "Total means the GP sum Sn; the single-week amount an is a planted distractor."
+  },
+  {
+   "trap": "For doubling weekly savings starting at 10 for 10 weeks, computing 10×2^10 as the total.",
+   "correction": "Sn=a(r^n−1)/(r−1) gives 10(2^10−1)=10×1023=10230, not 10×2^10."
+  },
+  {
+   "trap": "For an alternating infinite GP, dropping the sign when finding r.",
+   "correction": "r is the ratio of consecutive terms (e.g. −3/9=−1/3); |r|<1 still licenses S∞=a/(1−r), which correctly handles a negative ratio."
+  }
+ ]
+}

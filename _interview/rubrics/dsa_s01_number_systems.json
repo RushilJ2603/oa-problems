@@ -1,0 +1,233 @@
+{
+ "id": "dsa_s01_number_systems",
+ "title": "Number Systems & Divisibility",
+ "type": "FUND",
+ "relevance": "Campus aptitude OAs and early SDE screens routinely test divisibility, HCF/LCM, remainders, unit digits, factorials, and base conversions as fast filter questions.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Cisco-style hex/register bit-counting appears; PrepInsta sources cite TCS/Infosys OA number-system patterns.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the number-type hierarchy, unique prime factorisation, core divisibility shortcuts, and the HCF–LCM identity.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Natural numbers start at 1; whole numbers include 0; integers include negatives; rationals are p/q with q ≠ 0 (terminating or repeating); irrationals are non-terminating non-repeating (e.g. √2, π).",
+     "weight": "core",
+     "evidence_hint": "Lists N / whole / Z / Q / irrational with the p/q and terminating-vs-non-repeating distinctions."
+    },
+    {
+     "id": "fund2",
+     "point": "A prime has exactly two distinct positive divisors (1 and itself); 1 is neither prime nor composite; a composite has more than two positive divisors.",
+     "weight": "core",
+     "evidence_hint": "States the two-divisor definition and explicitly excludes 1 from both prime and composite."
+    },
+    {
+     "id": "fund3",
+     "point": "Every integer N > 1 has a unique prime factorisation N = p^a q^b r^c …; number of factors is (a+1)(b+1)(c+1)… and sum of factors is the product of (p^{a+1}-1)/(p-1) over each prime power.",
+     "weight": "core",
+     "evidence_hint": "States uniqueness plus both the count and sum-of-factors formulas from the exponents."
+    },
+    {
+     "id": "fund4",
+     "point": "Divisibility shortcuts: 2/4/8 check last 1/2/3 digits; 3/9 check digit-sum; 5 ends in 0 or 5 and 10 ends in 0; 11 uses odd-vs-even position digit-sum difference equal to 0 or a multiple of 11; a composite like 72 requires co-prime factors (8 and 9).",
+     "weight": "core",
+     "evidence_hint": "Recites the last-digit, digit-sum, and alternating-sum rules and the co-prime-factor idea for composites."
+    },
+    {
+     "id": "fund5",
+     "point": "For any two numbers A and B, HCF(A,B) × LCM(A,B) = A × B; for fractions, HCF = (HCF of numerators)/(LCM of denominators) and LCM = (LCM of numerators)/(HCF of denominators).",
+     "weight": "extended",
+     "evidence_hint": "States the product identity and both fractional HCF/LCM formulas."
+    }
+   ],
+   "probes": [
+    "Define prime vs composite (including where 1 sits), state unique factorisation, and give the divisibility rules for 8, 9, and 11.",
+    "How are number of factors and sum of factors read off a prime factorisation, and what is the HCF–LCM product identity?"
+   ],
+   "hints": {
+    "1": "Start from number types and the two-divisor definition of a prime.",
+    "2": "Add unique factorisation, the (a+1)(b+1)… and geometric-sum factor formulas, then the last-digit / digit-sum / alternating rules and HCF×LCM=A×B.",
+    "3": "Prime = exactly two positive divisors and 1 is neither; N>1 factors uniquely as p^a q^b… with factor-count (a+1)(b+1)… and sum ∏(p^{a+1}-1)/(p-1); 8/9/11 use last three digits, digit sum, and odd–even digit-sum difference; HCF×LCM=A×B."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to compute factors, remainders (including Fermat/Euler), unit digits, last two digits, Legendre exponents, and base conversions.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Remainder algebra: (A+B) mod M = (A mod M + B mod M) mod M (and likewise for products); a negative remainder −R mod M is equivalent to (M−R) mod M, useful when a number is close to the divisor (e.g. 14 mod 15 ≡ −1).",
+     "weight": "core",
+     "evidence_hint": "States add/multiply reduction and the −R ↔ M−R conversion with a near-multiple example."
+    },
+    {
+     "id": "mech2",
+     "point": "Fermat: if p is prime and a is not divisible by p, then a^{p−1} mod p = 1. Euler generalises: if a and n are co-prime, a^{φ(n)} mod n = 1, with φ(n)=n(1−1/p)(1−1/q)… for n=p^x q^y ….",
+     "weight": "core",
+     "evidence_hint": "States Fermat for primes and Euler with the totient product formula for composite moduli."
+    },
+    {
+     "id": "mech3",
+     "point": "Unit-digit cyclicity: digits ending in 1 or 5 or 6 or 0 stay fixed (cycle length 1); 4 and 9 have cycle length 2; digits ending in 2 or 3 or 7 or 8 have cycle length 4; use n mod 4 for position, and if n mod 4 = 0 take the 4th cycle entry.",
+     "weight": "core",
+     "evidence_hint": "Groups unit digits by cycle length and explains the mod-4 = 0 → 4th-position rule."
+    },
+    {
+     "id": "mech4",
+     "point": "Last two digits: for bases ending in 1, tens digit is (a×b mod 10) with units 1; ending in 3/7/9, raise to a power that ends in 1 (e.g. 3^4=81, 7^4=2401, 9^2=81) then apply the ending-in-1 rule; ending in 5 → 75 only if tens digit is odd and the power is odd, otherwise 25.",
+     "weight": "extended",
+     "evidence_hint": "Recites the ending-in-1 shortcut, the raise-to-end-in-1 path for 3/7/9, and the 75-vs-25 rule for 5."
+    },
+    {
+     "id": "mech5",
+     "point": "Legendre: highest power of prime p dividing n! is ⌊n/p⌋+⌊n/p^2⌋+⌊n/p^3⌋+… until p^k > n. Trailing zeros in n! equal the highest power of 5, because factors of 10 need 2×5 and there are always more 2s than 5s.",
+     "weight": "core",
+     "evidence_hint": "Gives the floor-sum formula and ties trailing zeros to counting 5s only."
+    },
+    {
+     "id": "mech6",
+     "point": "Base B→decimal: multiply digits by B^0, B^1, B^2… right to left; decimal→base B: successive divide by B and read remainders upwards; each hex digit is exactly 4 bits (a nibble).",
+     "weight": "extended",
+     "evidence_hint": "States both conversion directions and the hex↔4-bit nibble link."
+    }
+   ],
+   "probes": [
+    "How do you reduce a large product modulo M using negative remainders, and when do you pick Fermat versus Euler?",
+    "Explain unit-digit cycles via n mod 4, the last-two-digits rule for a base ending in 5, and Legendre for the power of a prime in n!.",
+    "How do you convert binary to decimal and hex to a bit-count in a padded register?"
+   ],
+   "hints": {
+    "1": "Separate modular reduction tricks from the power-cycle and factorial-exponent tools.",
+    "2": "Cover (A mod M) products, −R≡M−R, Fermat vs φ(n), cycle lengths including mod-4=0, last-two-digit cases, Legendre floors, and base/hex conversion.",
+    "3": "Reduce each factor mod M and flip negative remainders with M−R; use a^{p−1}≡1 for prime p and a^{φ(n)}≡1 when co-prime; unit cycles are 1/2/4 with mod-4=0 → 4th entry; 5-ending powers give 75 only for odd tens digit and odd power else 25; trailing zeros = power of 5 via Legendre; hex digit = 4 bits."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose the cheaper modular or factorisation path—negative remainders, Fermat vs Euler, and counting 5s not 2s for trailing zeros.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer a negative remainder when the number sits just below a multiple of M (e.g. 16 mod 17 ≡ −1) because powers of −1 collapse faster than expanding the positive residue.",
+     "weight": "core",
+     "evidence_hint": "Explains choosing −1 near a multiple so that even powers become 1 quickly."
+    },
+    {
+     "id": "tr2",
+     "point": "Use Fermat when the modulus is prime; switch to Euler’s totient when the modulus is composite but co-prime to the base (e.g. powers mod 15 use φ(15)=8).",
+     "weight": "core",
+     "evidence_hint": "Contrasts prime-modulus Fermat with composite-modulus Euler and names the co-prime requirement."
+    },
+    {
+     "id": "tr3",
+     "point": "For trailing zeros in n!, compute only the exponent of 5 via Legendre—do not also compute the exponent of 2, since the 2s always outnumber the 5s.",
+     "weight": "core",
+     "evidence_hint": "States that trailing-zero count equals power of 5 alone because 2s exceed 5s."
+    },
+    {
+     "id": "tr4",
+     "point": "To write N as a product of two positive co-prime factors, each distinct prime-power block must go entirely to one side; with n distinct prime bases the number of ways is 2^{n−1} (unordered pairs such as 1×N and the split of the blocks).",
+     "weight": "extended",
+     "evidence_hint": "Explains whole-block assignment and the 2^{n−1} count for co-prime factor pairs."
+    }
+   ],
+   "probes": [
+    "When is a negative remainder faster than the positive one for power remainders, and when must you leave Fermat for Euler?",
+    "Why is counting factors of 2 wasted work for trailing zeros, and how do co-prime factor-pair counts follow from prime-power blocks?"
+   ],
+   "hints": {
+    "1": "Think about near-multiples, prime vs composite moduli, and which prime limits 10s in n!.",
+    "2": "Contrast −1 powers, Fermat vs φ(n), 5s-only trailing zeros, and whole prime-power blocks for co-prime splits.",
+    "3": "16≡−1 mod 17 collapses even powers; Fermat needs prime modulus while Euler needs co-prime a,n with a^{φ(n)}≡1; trailing zeros = power of 5 only; co-prime factorisations assign each p^a wholly and number 2^{n−1}."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply divisibility, HCF/LCM, CRT-style remainders, and base/hex reasoning to OA-style word problems.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Composite divisibility (e.g. by 72 or 36) splits into co-prime checks (8 and 9, or 4 and 9); digit-sum and last-two/three-digit tests pin the unknown digits.",
+     "weight": "core",
+     "evidence_hint": "Describes splitting 72→8&9 or 36→4&9 and solving unknown digits from those tests."
+    },
+    {
+     "id": "app2",
+     "point": "HCF/LCM word problems: unknown second number from HCF×LCM=A×B; numbers in ratio k:m:n that are pairwise co-prime have HCF = x and LCM = x·k·m·n; events repeating on intervals meet every LCM of the intervals.",
+     "weight": "core",
+     "evidence_hint": "Covers the product identity for a missing number, ratio×HCF for LCM, and LCM-of-intervals meeting times."
+    },
+    {
+     "id": "app3",
+     "point": "Same-remainder divisor problems: the greatest N that leaves the same remainder on x,y,z is HCF(|x−y|,|y−z|,|z−x|). Square-tile paving minimises tile count by taking tile side = HCF of the side lengths.",
+     "weight": "core",
+     "evidence_hint": "States the differences-HCF rule and max-square-tile = HCF of dimensions."
+    },
+    {
+     "id": "app4",
+     "point": "Simultaneous residue conditions (batched by 5 leave 3, by 7 leave 2) are solved by listing congruent sequences or CRT reasoning and taking the smallest common value.",
+     "weight": "extended",
+     "evidence_hint": "Frames the leftover-batch problem as finding the least N matching both residue classes."
+    },
+    {
+     "id": "app5",
+     "point": "Hex in a register: each hex digit expands to 4 bits; popcount is the total set bits across those nibbles, and leading zero padding on a wider register adds no ones.",
+     "weight": "extended",
+     "evidence_hint": "Converts hex digits to 4-bit groups, sums the 1-bits, and notes padding zeros do not count."
+    }
+   ],
+   "probes": [
+    "A six-digit number must be divisible by 72 with one unknown digit—what do you check first?",
+    "Bells toll on different intervals, or robots return to a start point: what quantity gives the next common meeting time?",
+    "How do you find the greatest number leaving equal remainders on three integers, and how do you count set bits from a hex register value?"
+   ],
+   "hints": {
+    "1": "Map each story to either a divisibility split, an HCF/LCM identity, or a residue system.",
+    "2": "For 72/36 use co-prime factors; for meetings use LCM of periods; for equal remainders use HCF of differences; for hex expand each digit to 4 bits.",
+    "3": "72→last three digits ÷8 and digit-sum ÷9; meeting time = LCM of lap/toll intervals; equal-remainder divisor = HCF of pairwise differences; max square tile side = HCF of sides; hex digit = 4 bits and pad zeros add no 1s."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Negative remainder vs positive residue",
+   "strong_answer": "When a value is one below a multiple of M (e.g. 16 mod 17 ≡ −1 or 14 mod 15 ≡ −1), keep −1 (or −R) through the power/product and convert back with M−R at the end; it collapses even powers of −1 immediately."
+  },
+  {
+   "topic": "Fermat's Little Theorem vs Euler's totient",
+   "strong_answer": "If the modulus p is prime and a is not a multiple of p, use a^{p−1}≡1 mod p. If the modulus n is composite but gcd(a,n)=1, use a^{φ(n)}≡1 mod n with φ(n)=n∏(1−1/p); e.g. φ(15)=8 so reduce the exponent mod 8."
+  },
+  {
+   "topic": "Counting 5s vs counting 2s for trailing zeros",
+   "strong_answer": "A trailing zero needs a factor 10=2×5; in n! the exponent of 2 always exceeds the exponent of 5, so trailing zeros equal only the Legendre sum for p=5—do not also compute the power of 2."
+  },
+  {
+   "topic": "Co-prime factor split vs arbitrary factorisation",
+   "strong_answer": "Co-prime factor pairs cannot share primes, so each full prime-power block of N goes to one factor; with n distinct prime bases there are 2^{n−1} such unordered products (including 1×N)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating 1 as a prime (or as composite).",
+   "correction": "A prime needs exactly two distinct positive divisors; 1 has only one, so it is neither prime nor composite."
+  },
+  {
+   "trap": "Computing both the power of 2 and the power of 5 when asked for trailing zeros in n!.",
+   "correction": "Only the highest power of 5 is needed; the file notes there are always more 2s than 5s, so 2s never limit the count."
+  },
+  {
+   "trap": "When using unit-digit cycles of length 4, treating n mod 4 = 0 as ‘remainder 0 → first cycle entry’.",
+   "correction": "If n mod 4 = 0, take the 4th position in the cycle, not the 0th/first."
+  },
+  {
+   "trap": "Searching for a common divisor of x,y,z directly when each leaves the same remainder.",
+   "correction": "That common remainder cancels in differences; the answer is HCF(|x−y|,|y−z|,|z−x|)."
+  },
+  {
+   "trap": "For n! unit-digit sums, adding unit digits of every factorial up through large n.",
+   "correction": "For all n≥5, n! ends in 0 (contains both 2 and 5), so only 1!+2!+3!+4! affect the final unit digit."
+  }
+ ]
+}

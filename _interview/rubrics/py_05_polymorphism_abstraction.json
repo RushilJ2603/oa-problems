@@ -1,0 +1,149 @@
+{
+ "id": "py_05_polymorphism_abstraction",
+ "title": "Polymorphism and Abstraction",
+ "type": "FUND",
+ "relevance": "Interviewers use duck typing, dunder methods, and ABCs to check whether candidates can customize shared interfaces and choose flexible vs strict contracts in Python.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what polymorphism and abstraction mean and how duck typing differs from inheritance-style sharing.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Polymorphism means many forms: different types can respond to the same method call in their own specific way.",
+     "weight": "core",
+     "evidence_hint": "Says objects of different types share a method name but each type supplies its own behavior."
+    },
+    {
+     "id": "fund2",
+     "point": "If inheritance is about sharing behavior, polymorphism is about customizing behavior under a shared name.",
+     "weight": "core",
+     "evidence_hint": "Contrasts shared inherited behavior with customized behavior behind one method name."
+    },
+    {
+     "id": "fund3",
+     "point": "Abstraction hides complex implementation details behind a simple interface; an ABC is a blueprint that cannot be instantiated and forces subclasses to implement specific methods.",
+     "weight": "extended",
+     "evidence_hint": "Defines abstraction as a simple interface over hidden details and ABC as a non-instantiable blueprint with required methods."
+    }
+   ],
+   "probes": [
+    "What does polymorphism mean in programming, and how does it differ from inheritance?"
+   ],
+   "hints": {
+    "1": "Think about the phrase many forms and a shared method name.",
+    "2": "Contrast sharing behavior through inheritance with customizing behavior under one name.",
+    "3": "Polymorphism: different types respond to the same call their own way; inheritance shares, polymorphism customizes under a shared name."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how duck typing, dunder/operator overloading, and ABCs actually work in Python.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "In duck typing, Python does not require the object to be an instance of a specific base class; it only checks that the needed method exists at call time.",
+     "weight": "core",
+     "evidence_hint": "Says animal_sound works on Dog/Cat/Robot because each has speak(), not because of a shared Animal parent."
+    },
+    {
+     "id": "mech2",
+     "point": "Magic/dunder methods let you define how operators and built-ins like +, ==, and str() behave on custom objects.",
+     "weight": "core",
+     "evidence_hint": "Mentions __add__/__str__/__eq__ and that p1 + p2 calls __add__."
+    },
+    {
+     "id": "mech3",
+     "point": "An ABC is created by inheriting from ABC and marking required methods with @abstractmethod from the abc module.",
+     "weight": "extended",
+     "evidence_hint": "Describes from abc import ABC, abstractmethod, subclassing ABC, and decorating required methods."
+    }
+   ],
+   "probes": [
+    "How does duck typing decide whether animal_sound(entity) is valid, and how would you overload + for a Point class?"
+   ],
+   "hints": {
+    "1": "Ask what Python looks for on the object at the moment speak() is called.",
+    "2": "Separate runtime method presence from class hierarchy, then name the dunder for +.",
+    "3": "Duck typing only needs speak() present; Point.__add__ defines +, and ABCs use ABC plus @abstractmethod."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose when flexible duck typing is enough versus when a strict ABC contract is warranted.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Duck typing enables loosely coupled, swappable components as long as they implement the expected interface.",
+     "weight": "core",
+     "evidence_hint": "Says systems stay flexible because callers depend on behavior (e.g. speak), not on a fixed type."
+    },
+    {
+     "id": "tr2",
+     "point": "Duck typing assumes consenting adults and trust; ABCs enforce contracts strictly so required methods exist before the program relies on them.",
+     "weight": "core",
+     "evidence_hint": "Prefers duck typing for small/trusted code and ABCs when a large system needs a guaranteed method like process_payment()."
+    }
+   ],
+   "probes": [
+    "When would you prefer duck typing over an Abstract Base Class, and when would you flip that choice?"
+   ],
+   "hints": {
+    "1": "Compare trust-based flexibility with compile-or-instantiate-time enforcement.",
+    "2": "Map duck typing to swappable interfaces and ABCs to guaranteed methods in larger systems.",
+    "3": "Duck typing for loosely coupled trusted code; ABCs when every PaymentProcessor must implement process_payment before use."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply polymorphism via duck typing, dunders, or ABCs to a concrete design or coding task.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A function can accept any object with the expected method (e.g. speak) without requiring a shared parent class.",
+     "weight": "core",
+     "evidence_hint": "Walks through animal_sound calling entity.speak() on Dog, Cat, and Robot interchangeably."
+    },
+    {
+     "id": "app2",
+     "point": "Subclassing an ABC without implementing its abstract methods fails when you try to instantiate the concrete class; the ABC itself also cannot be instantiated.",
+     "weight": "core",
+     "evidence_hint": "Says forgetting process_payment crashes on instantiate, and PaymentProcessor() raises TypeError."
+    },
+    {
+     "id": "app3",
+     "point": "Operator behavior for a custom type is implemented by writing the matching dunder, such as __add__ for + or __eq__ for equality.",
+     "weight": "extended",
+     "evidence_hint": "Points to Vector/Point __add__ and filling in __eq__ to compare the .x fields."
+    }
+   ],
+   "probes": [
+    "How would you enforce that every PaymentProcessor implements process_payment, and how would you make two Vector objects comparable with ==?"
+   ],
+   "hints": {
+    "1": "Think contract enforcement with abc, and equality via a dunder.",
+    "2": "ABC + @abstractmethod for the payment API; __eq__ comparing vector components.",
+    "3": "Inherit PaymentProcessor(ABC), implement process_payment; for Vector, def __eq__(self, other): return self.x == other.x."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Duck typing vs Abstract Base Classes",
+   "strong_answer": "Duck typing is flexible and loosely coupled: callers trust that objects quack (have the method) and components can be swapped without a shared base type, but missing methods surface as AttributeError at runtime. ABCs trade that flexibility for a strict contract—using ABC and @abstractmethod so subclasses must implement required methods and the abstract class itself cannot be instantiated—better when a large system needs guaranteed interfaces like process_payment()."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming duck typing will fail early or type-check that an object is an Animal before calling speak().",
+   "correction": "Python only checks for the method at call time; a missing speak() raises AttributeError at runtime and can crash the program."
+  },
+  {
+   "trap": "Trying to instantiate an ABC directly, or instantiating a subclass that omitted an @abstractmethod.",
+   "correction": "ABCs cannot be instantiated (TypeError), and a concrete subclass must implement every abstract method or instantiation fails."
+  }
+ ]
+}

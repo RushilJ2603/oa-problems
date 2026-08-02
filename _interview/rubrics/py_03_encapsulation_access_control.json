@@ -1,0 +1,157 @@
+{
+ "id": "py_03_encapsulation_access_control",
+ "title": "Encapsulation and Access Control",
+ "type": "FUND",
+ "relevance": "SDE interviews probe whether candidates understand Python’s convention-based encapsulation, name mangling, and @property validation versus compiler-enforced access control.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what encapsulation means and that Python uses conventions instead of language keywords for access control.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Encapsulation bundles data and the methods that operate on it in a class and restricts direct access to some components.",
+     "weight": "core",
+     "evidence_hint": "Candidate defines encapsulation as bundling attributes with methods and limiting direct access to internals."
+    },
+    {
+     "id": "fund2",
+     "point": "Unlike Java or C++, Python has no public/private/protected keywords and relies on conventions and trust (“we are all consenting adults here”).",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts compiler-enforced keywords with Python’s convention-and-trust model."
+    },
+    {
+     "id": "fund3",
+     "point": "By default, all attributes and methods in a Python class are public and accessible from anywhere.",
+     "weight": "extended",
+     "evidence_hint": "Candidate states that unmarked members are public and freely accessible."
+    }
+   ],
+   "probes": [
+    "How does encapsulation in Python differ from languages like Java or C++?"
+   ],
+   "hints": {
+    "1": "Think about whether Python has private or protected keywords.",
+    "2": "Contrast compiler-enforced access modifiers with naming conventions and trust.",
+    "3": "Python has no public/private/protected keywords; members are public by default and access is guided by convention (“consenting adults”)."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain single-underscore and double-underscore naming, including what name mangling actually does.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A single leading underscore (e.g. _engine_temp) is a convention for internal-use-only members; Python does not prevent access.",
+     "weight": "core",
+     "evidence_hint": "Candidate says _ means “internal; don’t rely on it,” and notes access still works (Staff Only on an unlocked door)."
+    },
+    {
+     "id": "mech2",
+     "point": "A double leading underscore (e.g. __serial_number) triggers name mangling: Python rewrites the name to include the class name (e.g. _Car__serial_number).",
+     "weight": "core",
+     "evidence_hint": "Candidate explains mangling to _ClassName__attr and that the bare __name raises AttributeError from outside."
+    },
+    {
+     "id": "mech3",
+     "point": "Name mangling’s primary purpose is avoiding name collisions under inheritance, not securing the attribute.",
+     "weight": "extended",
+     "evidence_hint": "Candidate rejects “security” as the goal and cites collision avoidance when subclasses inherit."
+    }
+   ],
+   "probes": [
+    "What happens if you access my_car.__serial_number, and can you still reach that value somehow?"
+   ],
+   "hints": {
+    "1": "Compare one underscore versus two.",
+    "2": "Two underscores rename the attribute; think about the mangled form with the class name.",
+    "3": "__serial_number becomes _Car__serial_number; direct access fails with AttributeError, but the mangled name still works—and that is for inheritance collisions, not security."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast convention-based privacy with enforced accessors and when @property is preferred over Java-style getters/setters.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Single-underscore “protection” keeps the public API clean and allows debugging inspection without hoops, at the cost of no real access barrier.",
+     "weight": "core",
+     "evidence_hint": "Candidate weighs clean API and easy debug access against the fact that anyone can still read the attribute."
+    },
+    {
+     "id": "tr2",
+     "point": "Java-style get_/set_ methods are considered unpythonic; @property makes a method act like an attribute while allowing validation.",
+     "weight": "core",
+     "evidence_hint": "Candidate prefers attribute-like @property over explicit getter/setter method names."
+    }
+   ],
+   "probes": [
+    "Why prefer @property over writing get_temperature and set_temperature methods in Python?"
+   ],
+   "hints": {
+    "1": "Think about how client code should read or assign the value.",
+    "2": "Clients should keep using attribute syntax while you add validation behind the scenes.",
+    "3": "@property exposes getter/setter as normal attribute access, which is the Pythonic alternative to Java-style get_/set_ methods."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply @property for validation and avoid the common setter recursion failure.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "@property plus a setter can validate assignments (e.g. reject temperature below -273.15) while callers still use attribute syntax.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes getter returning internal storage and setter raising on invalid values, with t.temperature = … calling the setter."
+    },
+    {
+     "id": "app2",
+     "point": "Starting with a public attribute and later switching to @property with the same name avoids rewriting all client code that uses the class.",
+     "weight": "core",
+     "evidence_hint": "Candidate explains the attribute interface stays stable when validation is added via @property."
+    },
+    {
+     "id": "app3",
+     "point": "Assigning to self.temperature inside the setter (instead of the backing self._temp_c) causes infinite recursion.",
+     "weight": "extended",
+     "evidence_hint": "Candidate names the failure: setter re-enters itself via the property name."
+    }
+   ],
+   "probes": [
+    "If you later need validation on a field that clients already use as a public attribute, how does @property help—and what goes wrong if the setter assigns to the property name itself?"
+   ],
+   "hints": {
+    "1": "Keep the same attribute name for callers.",
+    "2": "Store the real value on a private-by-convention field; never assign back through the property inside the setter.",
+    "3": "Add @property/@setter with the same public name so callers need no rewrite; inside the setter write self._temp_c (or similar)—assigning self.temperature recurses forever."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Convention-based access (_ / __) vs compiler-enforced private/protected",
+   "strong_answer": "Python signals intent with underscores and trusts callers (“consenting adults”); _ does not block access, and __ only mangles names for inheritance safety—not true privacy—unlike Java/C++ keywords."
+  },
+  {
+   "topic": "@property vs Java-style getters/setters",
+   "strong_answer": "Explicit get_/set_ methods are unpythonic; @property keeps attribute syntax for clients while allowing validation and a later switch from a bare public attribute without rewriting call sites."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Believing name mangling makes an attribute truly secure or inaccessible.",
+   "correction": "Python renames __serial_number to _Car__serial_number; knowing the class name still allows access. Mangling mainly avoids inheritance name collisions."
+  },
+  {
+   "trap": "Assuming a single underscore prevents access.",
+   "correction": "A single underscore is only a convention (Staff Only on an unlocked door); the attribute remains fully accessible."
+  },
+  {
+   "trap": "Assigning to self.temperature inside a @temperature.setter instead of the backing field.",
+   "correction": "That re-invokes the setter and causes infinite recursion; assign to the internal store (e.g. self._temp_c)."
+  }
+ ]
+}

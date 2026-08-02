@@ -1,0 +1,353 @@
+{
+ "id": "hq18_leaderboard",
+ "title": "Design a Gaming Leaderboard",
+ "type": "HLD",
+ "relevance": "High — Alex Xu System Design Interview Vol.2 Ch.10 classic; common at Meta / Google / PayPal / Amazon gaming & social rounds; tests Redis sorted sets, atomic increments, sharding, and real-time vs eventual consistency.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h03_caching",
+  "h04_databases_indexing",
+  "h05_db_scaling",
+  "h14_estimation",
+  "h10_api_design"
+ ],
+ "company_notes": "Campus/new-grad: common shorter HLD as a Redis data-structure pick once caching is known, often lighter than feed/chat. Experienced (1–4+ YOE): Meta / Google / PayPal / Amazon (gaming, social, fantasy sports) with depth on sharding, durability, friends boards, and anti-cheat. High frequency among Vol.2-style questions; treat as mandatory after caching foundations and before heavier designs like payments or stock exchange.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock ByteByteGo-style FRs/NFRs, scale class, clarifications, and out-of-scope lines before designing.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "Functional core: display top 10 (or top K), return a specific user's rank + score, and update scores server-side when a player wins a match.",
+     "weight": "core",
+     "evidence_hint": "Names top-K board, per-user rank+score, and server-side match-driven score updates."
+    },
+    {
+     "id": "req2",
+     "point": "NFRs: near-real-time rank visibility (not nightly batch), top-K and rank reads ≪ 100 ms p99, and durability enough to rebuild after Redis loss.",
+     "weight": "core",
+     "evidence_hint": "States near-real-time, sub-100 ms p99 reads, and rebuild-after-Redis-loss durability."
+    },
+    {
+     "id": "req3",
+     "point": "Default scale class ~5M DAU / ~25M MAU unless the interviewer overrides.",
+     "weight": "core",
+     "evidence_hint": "Anchors design talk to ~5M DAU / ~25M MAU."
+    },
+    {
+     "id": "req4",
+     "point": "Clarify score model (wins = +1 vs XP), real-time vs batch, monthly reset, tie-break, friends/regional boards, anti-cheat; bonus ±4 neighbors around a user.",
+     "weight": "extended",
+     "evidence_hint": "Asks the clarify-first product questions and mentions optional neighbor window."
+    },
+    {
+     "id": "req5",
+     "point": "Out of scope unless asked: matchmaking ELO math, anti-cheat ML, and full social graph.",
+     "weight": "extended",
+     "evidence_hint": "Explicitly parks ELO, ML anti-cheat, and full social graph."
+    }
+   ],
+   "probes": [
+    "What are the functional and non-functional requirements, default scale, and what are you leaving out of scope?"
+   ],
+   "hints": {
+    "1": "Separate must-have top-K and my-rank from optional neighbors/friends/windows.",
+    "2": "State near-real-time + ≪ 100 ms p99 reads, then name the default DAU/MAU.",
+    "3": "Core: top 10/K + user rank/score + server-side updates; NFR near-real-time ≪ 100 ms p99; ~5M DAU / ~25M MAU; park ELO/ML/full graph."
+   }
+  },
+  {
+   "phase": "estimation",
+   "goal": "Derive score-update QPS, read QPS, and ZSET memory to show a single Redis node is enough at default scale.",
+   "must_hit": [
+    {
+     "id": "est1",
+     "point": "Assume 5M DAU / 25M MAU and about 10 matches per user per day.",
+     "weight": "core",
+     "evidence_hint": "States 5M/25M and 10 matches/user/day out loud."
+    },
+    {
+     "id": "est2",
+     "point": "Score-update QPS ≈ ~500/s average and peak ~2.5k/s; top-10 fetch QPS ≈ ~50/s (reads cheap vs writes).",
+     "weight": "core",
+     "evidence_hint": "Quotes ~500/s avg, ~2.5k/s peak writes, and ~50/s top-10 reads."
+    },
+    {
+     "id": "est3",
+     "point": "ZSET memory ~26 B/member × 25M ≈ ~650 MB, plus skip-list overhead ≈ ~1–2 GB — one Redis node at this scale.",
+     "weight": "core",
+     "evidence_hint": "Walks ~26 B × 25M → ~650 MB and ~1–2 GB with overhead, concludes one node."
+    },
+    {
+     "id": "est4",
+     "point": "At 5M DAU a single Redis ZSET is enough; sharding is the 100× scale deep dive (500M DAU → ~65 GB, ~250k QPS).",
+     "weight": "extended",
+     "evidence_hint": "Says single ZSET at 5M DAU and reserves sharding for 500M DAU / ~65 GB / ~250k QPS."
+    }
+   ],
+   "probes": [
+    "Walk the Alex Xu-style back-of-envelope: DAU, match rate, score-update QPS, and ZSET memory — do we need to shard yet?"
+   ],
+   "hints": {
+    "1": "Start from DAU/MAU and matches per user per day before QPS.",
+    "2": "Compute write QPS and ZSET memory, then conclude single-node vs shard.",
+    "3": "5M/25M, 10 matches/day → ~500/s avg / ~2.5k/s peak writes; ~650 MB–~1–2 GB → one Redis node; shard at 500M DAU."
+   }
+  },
+  {
+   "phase": "api",
+   "goal": "Define server-only score writes and public top-K / rank / optional neighbor read APIs.",
+   "must_hit": [
+    {
+     "id": "api1",
+     "point": "Internal write only from game servers: POST /v1/scores with body {user_id, points} → 200 OK | 400; not callable by public clients.",
+     "weight": "core",
+     "evidence_hint": "Shows POST /v1/scores as game-server-only and returns 200/400."
+    },
+    {
+     "id": "api2",
+     "point": "GET /v1/scores returns top 10 entries with user_id, user_name, rank, and score.",
+     "weight": "core",
+     "evidence_hint": "Describes public top-10 list payload with rank and score fields."
+    },
+    {
+     "id": "api3",
+     "point": "GET /v1/scores/{user_id} returns that user's score and rank.",
+     "weight": "core",
+     "evidence_hint": "Names the per-user rank+score read endpoint."
+    },
+    {
+     "id": "api4",
+     "point": "Optional: GET /v1/scores/{user_id}/neighbors?k=4 for players around the user; later GET with window=weekly or /friends.",
+     "weight": "extended",
+     "evidence_hint": "Mentions neighbors?k=4 and optional weekly/friends reads."
+    }
+   ],
+   "probes": [
+    "What are the write and read APIs, and who is allowed to call the score write?"
+   ],
+   "hints": {
+    "1": "Keep score writes off public clients.",
+    "2": "Separate internal POST from public GET top-K and GET-by-user.",
+    "3": "POST /v1/scores (game servers only); GET /v1/scores top 10; GET /v1/scores/{id}; optional neighbors?k=4."
+   }
+  },
+  {
+   "phase": "data_model",
+   "goal": "Model Redis hot ranking keys plus a durable point log that can rebuild the ZSET.",
+   "must_hit": [
+    {
+     "id": "dm1",
+     "point": "Redis hot path: key leaderboard:{yyyy_mm} is a ZSET of user_id → score.",
+     "weight": "core",
+     "evidence_hint": "Names monthly ZSET key and member=user_id / score=points."
+    },
+    {
+     "id": "dm2",
+     "point": "Durable store: users(user_id PK, display_name, ...) and points(user_id, delta, created_at, match_id?) as audit/rebuild source; replay points into a new ZSET on failover.",
+     "weight": "core",
+     "evidence_hint": "Shows users + points tables and rebuild-by-replay."
+    },
+    {
+     "id": "dm3",
+     "point": "Optional Hash user:{id} for name/avatar metadata, or cache only top-K profiles.",
+     "weight": "extended",
+     "evidence_hint": "Separates profile Hash/cache from the ranking ZSET."
+    },
+    {
+     "id": "dm4",
+     "point": "Windowed keys like lb:daily:{date}, lb:weekly:{iso_week}, lb:alltime; writes amplify across active windows; EXPIRE on ephemeral daily/weekly keys.",
+     "weight": "extended",
+     "evidence_hint": "Lists per-window keys, write amplification, and EXPIRE on ephemeral windows."
+    }
+   ],
+   "probes": [
+    "What lives in Redis vs the durable DB, and how do time-windowed boards map to keys?"
+   ],
+   "hints": {
+    "1": "Redis holds the ranked projection; DB holds the rebuildable history.",
+    "2": "One ZSET key per leaderboard window, plus optional profile Hash.",
+    "3": "leaderboard:{yyyy_mm} ZSET; users + points for rebuild; lb:daily/weekly/alltime with EXPIRE on ephemeral keys."
+   }
+  },
+  {
+   "phase": "architecture",
+   "goal": "Place authoritative game validation, leaderboard service, Redis ZSET, and durable DB on write and read paths.",
+   "must_hit": [
+    {
+     "id": "arch1",
+     "point": "Write path: Client → Game Service validates match → Leaderboard Service → Redis ZINCRBY and durable DB (async or dual-write).",
+     "weight": "core",
+     "evidence_hint": "Draws game-authoritative validation then ZINCRBY + durable append."
+    },
+    {
+     "id": "arch2",
+     "point": "Read path: Client → Leaderboard Service → Redis (ZREVRANGE / ZREVRANK) then enrich names/avatars from user DB or profile cache.",
+     "weight": "core",
+     "evidence_hint": "Shows Redis rank/range reads plus profile enrichment."
+    },
+    {
+     "id": "arch3",
+     "point": "Durability split: Redis is the hot ranking projection; RDBMS/event log is source of truth for point history and ZSET rebuild.",
+     "weight": "core",
+     "evidence_hint": "States Redis projection vs DB/event-log source of truth."
+    },
+    {
+     "id": "arch4",
+     "point": "Optional Kafka (or queue) between game and leaderboard when analytics, push, or multiple consumers need the same score event.",
+     "weight": "extended",
+     "evidence_hint": "Inserts an optional queue for fan-out consumers without making it mandatory."
+    }
+   ],
+   "probes": [
+    "Sketch the write and read paths — where is the score authored, and what is Redis vs the DB for?"
+   ],
+   "hints": {
+    "1": "Game service owns match truth; clients never write ranks.",
+    "2": "Leaderboard service dual-writes Redis + durable log; reads hit Redis then enrich.",
+    "3": "Validate → (optional queue) → ZINCRBY + points row; reads ZREVRANGE/ZREVRANK + profile store."
+   }
+  },
+  {
+   "phase": "deep_dives",
+   "goal": "Defend Redis ZSET over SQL, atomic increments, sharding strategy, freshness, and exact vs approximate Top-K.",
+   "must_hit": [
+    {
+     "id": "dd1",
+     "point": "Reject SQL ORDER BY / nested COUNT(*) rank for real-time millions of players (O(N) under continuous updates); Redis ZSET keeps order on write with O(log N) insert/update/rank/range.",
+     "weight": "core",
+     "evidence_hint": "Contrasts O(N) SQL ranking with ZSET order-on-write O(log N)."
+    },
+    {
+     "id": "dd2",
+     "point": "Prefer ZINCRBY (or Lua) over get-score → add → set so concurrent match completions cannot lose increments.",
+     "weight": "core",
+     "evidence_hint": "Insists on atomic ZINCRBY and rejects non-atomic RMW."
+    },
+    {
+     "id": "dd3",
+     "point": "Sharding tradeoff: fixed score-range partitions make top-K hit one shard but players migrate on score change; hash/Redis Cluster makes writes easy but top-K needs scatter-gather merge and exact global ZREVRANK is hard.",
+     "weight": "core",
+     "evidence_hint": "Compares fixed-range locality vs hash-slot scatter-gather and hard global rank."
+    },
+    {
+     "id": "dd4",
+     "point": "Consistency: Redis primary for live ranks (accept replica lag); DB for durability; seconds of lag usually OK for games unless prize payouts need strong consistency.",
+     "weight": "extended",
+     "evidence_hint": "Separates live Redis ranks from durable DB and accepts seconds of lag for normal play."
+    },
+    {
+     "id": "dd5",
+     "point": "Exact gaming ranks vs approximate Top-K/trending (Count-Min Sketch / heavy-hitters): know when the interviewer pivots to fuzzy trending.",
+     "weight": "extended",
+     "evidence_hint": "Distinguishes exact player ranks from approximate trending Top-K."
+    }
+   ],
+   "probes": [
+    "Why not SQL ORDER BY? How do you update scores atomically? How would you shard, and is exact global rank still cheap?"
+   ],
+   "hints": {
+    "1": "Interviewers will poke SQL ranking and concurrent increments first.",
+    "2": "Then force the fixed-range vs hash-shard top-K/rank tradeoff.",
+    "3": "ZSET O(log N) + ZINCRBY; fixed-range vs Cluster scatter-gather; Redis live / DB durable; exact ranks ≠ approximate trending."
+   }
+  },
+  {
+   "phase": "bottlenecks",
+   "goal": "Scale past single-node Redis, hot top-K reads, shard rank costs, HA loss, write bursts, and abuse.",
+   "must_hit": [
+    {
+     "id": "bn1",
+     "point": "Single-node ceiling is memory (~tens of GB comfortable) and write QPS; past that, shard.",
+     "weight": "core",
+     "evidence_hint": "Names memory/QPS as the ceiling and sharding as the next step."
+    },
+    {
+     "id": "bn2",
+     "point": "Hot top-K reads: cache serialized top-10 JSON with short TTL or pub-sub invalidate; enrich profiles for top players only.",
+     "weight": "core",
+     "evidence_hint": "Caches top-10 payload and limits profile enrichment to top players."
+    },
+    {
+     "id": "bn3",
+     "point": "Hash-shard top-K: parallel ZREVRANGE 0 K-1 per shard then merge-sort in app; exact rank needs local rank plus counts on other shards (expensive) or approximate percentile for deep ranks.",
+     "weight": "core",
+     "evidence_hint": "Describes scatter-gather top-K merge and expensive exact cross-shard rank."
+    },
+    {
+     "id": "bn4",
+     "point": "Redis HA: primary + replica with AOF/RDB; rebuild from DB if both lost; score-range shards need user→score map and ZREM/ZADD on boundary cross.",
+     "weight": "extended",
+     "evidence_hint": "Covers replica/AOF/RDB, DB rebuild, and score-range migration ops."
+    },
+    {
+     "id": "bn5",
+     "point": "Write bursts (tournament finals): queue + batch consumers and shed non-critical neighbor queries; limit active windows and expire old daily keys; only trusted game servers POST /scores with idempotent match_id.",
+     "weight": "extended",
+     "evidence_hint": "Mentions queueing under finals, window write-amp control, and trusted/idempotent writes."
+    }
+   ],
+   "probes": [
+    "What breaks first as you grow, and how do top-K and exact rank work once the ZSET is sharded?"
+   ],
+   "hints": {
+    "1": "Start from single-node memory/QPS before inventing a cluster.",
+    "2": "Cover top-10 caching, scatter-gather top-K, and HA/rebuild.",
+    "3": "Shard past tens-of-GB/QPS; cache top-10; parallel ZREVRANGE+merge; primary/replica + DB rebuild; trusted idempotent POST /scores."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "SQL ORDER BY vs Redis ZSET",
+   "strong_answer": "SQL sorting/nested rank COUNT on read is O(N) and thrashs under continuous score updates because every write invalidates cached order. A Redis ZSET maintains order on write with hash-table ZSCORE O(1) and skip-list O(log N) insert/update/rank/range — the interview default for real-time millions of players."
+  },
+  {
+   "topic": "ZINCRBY (or Lua) vs get-score → add → set",
+   "strong_answer": "Non-atomic read-modify-write loses increments when concurrent matches complete for the same user. ZINCRBY (or a Lua script) makes the increment atomic so concurrent completions cannot drop points."
+  },
+  {
+   "topic": "Fixed score-range shards vs Redis Cluster hash slots",
+   "strong_answer": "Fixed score-range partitions keep global top-K on one shard but force player migration (ZREM/ZADD) when scores cross boundaries. Hash/Cluster sharding makes writes easy, but top-K needs scatter-gather merge from every shard and exact global ZREVRANK is expensive — often approximate or backed by a secondary aggregator."
+  },
+  {
+   "topic": "Exact gaming ranks vs approximate Top-K / trending",
+   "strong_answer": "Gaming leaderboards usually need exact positions for a player (ZSET ranks). Approximate structures like Count-Min Sketch / heavy-hitters fit trending or huge write fan-in where fuzzy Top-K is acceptable — a different problem than exact match leaderboards."
+  },
+  {
+   "topic": "Redis live ranks vs DB durability / freshness",
+   "strong_answer": "Use Redis as the hot ranking projection for low-latency live ranks and the RDBMS/event log as source of truth for rebuild. Accept seconds of replica/queue lag for ordinary games; require stronger consistency only when prize payouts depend on exact fresh ranks."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Leaving tie-break undefined when two players share a score",
+   "correction": "State competition vs dense vs unique ranking; Redis default unique order is lexicographic on member id, or use a composite score (points + inverted timestamp)."
+  },
+  {
+   "trap": "Letting the client write scores directly",
+   "correction": "Never; only the game service validates the match and the leaderboard service updates — stops MITM/cheat proxies."
+  },
+  {
+   "trap": "Treating Redis as the sole source of truth",
+   "correction": "If Redis dies, ranks must rebuild from a durable point log/DB snapshot; Redis is a hot projection with replica/failover, not the only store."
+  },
+  {
+   "trap": "Maintaining a ZSET per user for friends boards",
+   "correction": "Do not N-way fan-out ZSETs; pipeline ZSCORE for friend IDs and sort locally, or keep small per-clique boards if the graph is hot."
+  },
+  {
+   "trap": "One ZSET for daily, weekly, and all-time together",
+   "correction": "Use one ZSET key per window, EXPIRE ephemeral daily/weekly keys, and write to all active windows (accepting write amplification)."
+  },
+  {
+   "trap": "Claiming a single ZSET still works at 500M DAU",
+   "correction": "Must shard; walk fixed score-range vs Cluster hash and the scatter-gather tax on global top-K (~65 GB, ~250k QPS class)."
+  },
+  {
+   "trap": "Answering with approximate Top-K / trending sketches for exact player ranks",
+   "correction": "Gaming ranks usually need exact positions; reserve Count-Min / heavy-hitters for trending-style pivots."
+  }
+ ]
+}

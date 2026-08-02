@@ -1,0 +1,249 @@
+{
+ "id": "cpp_s55_cp_dsa_toolkit",
+ "title": "Competitive-programming and DSA toolkit",
+ "type": "FUND",
+ "relevance": "SDE OAs and CP-style interviews expect overflow-safe arithmetic, bitmask/builtin fluency, STL selection idioms (nth_element, lower_bound, PBDS), and awareness of unordered_map/rand pitfalls that silently WA or TLE.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Codeforces and AtCoder GCC judges commonly expose __gnu_pbds and adversarial anti-hash tests; default unordered_map is usually fine on LeetCode-style data but can TLE under Codeforces anti-hash hacks.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the contest boilerplate, integer-width discipline, and basic bit-mask mindset that keep large-input solutions correct and fast.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Contest fast I/O starts with ios::sync_with_stdio(false); cin.tie(nullptr); and printing '\\n' instead of endl in hot loops.",
+     "weight": "core",
+     "evidence_hint": "Recites the two sync/tie calls and prefers '\\n' because endl flushes."
+    },
+    {
+     "id": "fund2",
+     "point": "On typical platforms int is 32-bit and long long is 64-bit; use long long for products/sums that may exceed about 2^15 per factor or 2^31-1 for totals, and widen before multiply (e.g. 1LL * a[i] * a[j]).",
+     "weight": "core",
+     "evidence_hint": "Names 32/64-bit widths, when to reach for long long, and early promotion."
+    },
+    {
+     "id": "fund3",
+     "point": "Signed overflow is undefined behaviour — do not rely on wraparound; compute in a wider type (long long, or __int128 for products of two 64-bit values) then cast or take modulo.",
+     "weight": "core",
+     "evidence_hint": "States UB for signed overflow and names wider-type / modulo fixes."
+    },
+    {
+     "id": "fund4",
+     "point": "Bitwise ops encode subsets/flags cheaper than vector<bool>; prefer 1LL << k when k may reach 31 or more on a signed 32-bit int, and know set/clear/toggle/test plus x & -x for the lowest set bit.",
+     "weight": "extended",
+     "evidence_hint": "Mentions subset encoding, 1LL << k caution, and lowest-set-bit idiom."
+    }
+   ],
+   "probes": [
+    "What boilerplate do you put at the top of main for large contest input, and why avoid endl?",
+    "When does n * n blow up in int, and how do you fix overflow safely?"
+   ],
+   "hints": {
+    "1": "Think about stream syncing cost and what happens when a product no longer fits in 32 bits.",
+    "2": "Name sync_with_stdio/cin.tie, '\\n' vs flush, then long long / __int128 before multiply.",
+    "3": "ios::sync_with_stdio(false); cin.tie(nullptr); prefer '\\n'; classic WA is int for n=10^5 products/sums — use long long (or __int128), remembering signed overflow is UB."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show concrete toolkit mechanics: modular helpers, submasks/builtins/bitset, selection/permutation algorithms, compression/PBDS, custom hashing, and <random>.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Under a prime MOD (commonly 10^9+7), keep intermediates in [0, MOD) with add/sub normalisation; mul should widen via __int128 (or reduce carefully) because ((a%MOD)*(b%MOD))%MOD is safe only if that product still fits in the multiply type.",
+     "weight": "core",
+     "evidence_hint": "Mentions MOD range, negative normalisation, and widen-before-reduce for mul."
+    },
+    {
+     "id": "mech2",
+     "point": "Enumerate non-empty submasks with for (int s = m; s; s = (s - 1) & m); bitmask DP for subsets of n ≤ 20 uses dp[1 << n] with typical O(2^n · n) or O(3^n) passes.",
+     "weight": "core",
+     "evidence_hint": "Gives the (s-1)&m loop and n ≤ 20 / complexity band for bitmask DP."
+    },
+    {
+     "id": "mech3",
+     "point": "GCC builtins map to CPU instructions: __builtin_popcount(ll), clz/ctz, parity, and __lg; __builtin_clz(0), __builtin_ctz(0), and __lg(0) are undefined — guard x != 0.",
+     "weight": "core",
+     "evidence_hint": "Names popcount/clz/ctz/parity/__lg and the zero UB trap."
+    },
+    {
+     "id": "mech4",
+     "point": "nth_element is expected linear selection around the k-th element; partial_sort puts the smallest k sorted at the front in O(n log k); next_permutation needs an ascending sort first and costs O(n · n!) total for distinct elements.",
+     "weight": "core",
+     "evidence_hint": "Separates O(n) selection, O(n log k) top-k sorted, and sort+next_permutation enumeration."
+    },
+    {
+     "id": "mech5",
+     "point": "For static data prefer sorted vector + lower_bound/upper_bound; on set/map use member lower_bound (O(log n)) — free std::lower_bound on bidirectional set iterators can degrade to linear; compress coordinates with sort + unique + lower_bound to dense ranks.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts vector binary search, member vs free lower_bound on set, and compression recipe."
+    },
+    {
+     "id": "mech6",
+     "point": "GCC __gnu_pbds ordered_set gives find_by_order(k) (0-based k-th) and order_of_key(x) (count strictly < x) in O(log n); for multisets store pair<T,int> with a unique id.",
+     "weight": "extended",
+     "evidence_hint": "Names both order-statistic methods, complexity, and pair trick for duplicates."
+    },
+    {
+     "id": "mech7",
+     "point": "Defeat anti-hash attacks with a strong mix (e.g. SplitmixHash) plus a per-run FIXED_RANDOM seed; replace rand() with mt19937/mt19937_64 + uniform_int_distribution and std::shuffle — RAND_MAX is often only 2^15-1 = 32767 and rand()%n is biased.",
+     "weight": "extended",
+     "evidence_hint": "Ties custom seeded hash to mt19937+distribution+shuffle and names RAND_MAX/bias problems."
+    }
+   ],
+   "probes": [
+    "How do you iterate all submasks of a mask, and when is bitmask DP feasible?",
+    "How do you find the k-th element in a dynamic set in O(log n), and why is default unordered_map dangerous on adversarial tests?"
+   ],
+   "hints": {
+    "1": "Think subset-of-bits enumeration and order-statistic trees versus hash tables under attack.",
+    "2": "Name (s-1)&m, n ≤ 20 DP sizes, PBDS find_by_order/order_of_key, and seeded custom hash or map fallback.",
+    "3": "Submasks: s=(s-1)&m; bitmask DP for n≤20; PBDS find_by_order/order_of_key in O(log n); SplitmixHash + clock seed or use map; rng = mt19937 + uniform_int_distribution, not rand()%n."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast toolkit choices where speed, portability, and worst-case guarantees diverge.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "bitset<N> is compile-time fixed and word-parallel for &/|/<<; vector<bool> is bit-packed but has proxy-reference weirdness and no bulk bitwise ops between two vectors — for large compile-time N it is often dramatically faster for sieve/reachability/subset DP.",
+     "weight": "core",
+     "evidence_hint": "Contrasts fixed bitset algebra vs vector<bool> limitations and when bitset wins."
+    },
+    {
+     "id": "tr2",
+     "point": "Reach for sort when you need full order (O(n log n)), partial_sort for smallest k sorted (O(n log k)), and nth_element when you only need the k-th / partition (O(n)).",
+     "weight": "core",
+     "evidence_hint": "Maps the three tools to the three needs with their typical complexities."
+    },
+    {
+     "id": "tr3",
+     "point": "Default unordered_map can degrade to long collision chains and O(n^2) under anti-hash tests; fix with custom hash + random seed, or fall back to map for O(n log n) worst-case — PBDS is GCC-only and not portable to MSVC.",
+     "weight": "core",
+     "evidence_hint": "States hash degradation, custom-hash or map remedies, and PBDS portability limit."
+    },
+    {
+     "id": "tr4",
+     "point": "Nested vector<vector<int>> is clear but R separate allocations thrash cache; flat vector of size R*C with g[r*C+c] is contiguous and routinely faster for large grids; std::array when dimensions are compile-time constants.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts clarity vs locality and names flat indexing plus array for fixed dims."
+    }
+   ],
+   "probes": [
+    "bitset versus vector<bool> — when do you prefer which?",
+    "nth_element versus sort versus partial_sort — which do you pick for median vs top-k sorted vs full order?"
+   ],
+   "hints": {
+    "1": "Separate compile-time dense bit algebra from selection algorithms that avoid a full sort.",
+    "2": "Ask what N being a template argument buys you, and what each algorithm guarantees about order.",
+    "3": "bitset for fixed N + bulk ops; vector<bool> lacks those; nth_element O(n) for k-th, partial_sort O(n log k) for sorted top-k, sort O(n log n) for full order."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the toolkit under interview/OA pressure: diagnose WA/TLE causes and pick the right tool for the stated need.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Classic WA: int sum of an array of size n ≤ 10^5 with values up to 10^9, or n * n for n = 10^5 — name the overflow and fix with long long (or modular reduction).",
+     "weight": "core",
+     "evidence_hint": "Cites the n ≤ 10^5 / values-to-10^9 sum or n*n cases and long long/modular fix."
+    },
+    {
+     "id": "app2",
+     "point": "Answer \"count set bits\" with __builtin_popcount / popcountll (or Kernighan's x &= x-1 loop) and \"lowest set bit\" with x & -x; for k-th in a dynamic set mention PBDS find_by_order or a Fenwick/segment tree over compressed coordinates.",
+     "weight": "core",
+     "evidence_hint": "Gives both bit answers and both order-statistic approaches."
+    },
+    {
+     "id": "app3",
+     "point": "Why not rand()? — small RAND_MAX, poor quality, rand()%n bias; name mt19937 + uniform_int_distribution + std::shuffle, and seed hashes/pivots so adversarial tests cannot force O(n^2).",
+     "weight": "core",
+     "evidence_hint": "Lists RAND_MAX/quality/bias and the mt19937+distribution+shuffle+seed story."
+    },
+    {
+     "id": "app4",
+     "point": "For a hot R×C grid prefer flat g[r*C+c]; keep nested vectors for clarity or ragged rows; never pass huge grids by value — use references (or a flat vector).",
+     "weight": "extended",
+     "evidence_hint": "States flat vs nested choice and by-reference / flat to avoid silent deep copies."
+    }
+   ],
+   "probes": [
+    "Walk a strong CP/DSA C++ interview loop: overflow, bits, lower_bound vs set, nth_element vs sort, unordered_map hashing, rand replacement, nested vs flat grids.",
+    "Nested vector versus flat array for a grid — what do you say in an interview?"
+   ],
+   "hints": {
+    "1": "Interviewers want one named failure mode and one concrete snippet per tool.",
+    "2": "Cover long long overflow, popcount/x&-x, sorted vector lower_bound, nth_element, custom hash or map, mt19937, flat indexing.",
+    "3": "Overflow→long long; bits→popcount and x&-x; static search→sorted vector; k-th dynamic→PBDS/Fenwick; anti-hash→Splitmix or map; RNG→mt19937 not rand; grids→flat g[r*C+c], pass by reference."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "bitset vs vector<bool>",
+   "strong_answer": "Prefer bitset<N> when N is a compile-time constant and you need fast word-parallel &/|/shifts (sieve, reachability, subset DP). vector<bool> packs bits but has proxy references and no bulk bitwise ops between two vectors; for runtime-sized bitsets use vector<uint64_t> (Boost dynamic_bitset is rarely on judges)."
+  },
+  {
+   "topic": "sort vs partial_sort vs nth_element",
+   "strong_answer": "sort for full order at O(n log n); partial_sort when you need the smallest k sorted up front at O(n log k); nth_element when you only need the k-th element / a partition around it at expected O(n)."
+  },
+  {
+   "topic": "sorted vector + lower_bound vs set/map member lower_bound",
+   "strong_answer": "For static data a sorted vector plus lower_bound/upper_bound is usually faster and leaner. On set/map use the member lower_bound (O(log n)); free std::lower_bound on set iterators is only bidirectional and may degrade to linear."
+  },
+  {
+   "topic": "unordered_map + custom hash vs map",
+   "strong_answer": "Default unordered_map is fine for interviews/most LeetCode tests, but under Codeforces-style anti-hash data it can hit long chains and O(n^2). Use SplitmixHash (or similar) with a per-run random seed, or fall back to map for O(n log n) worst-case."
+  },
+  {
+   "topic": "rand() vs mt19937 + distributions",
+   "strong_answer": "rand() often has RAND_MAX only 2^15-1, poor quality, and rand()%n bias. Prefer mt19937/mt19937_64 with uniform_int_distribution and std::shuffle; seed from steady_clock and/or random_device so hashes and pivots are not hackable."
+  },
+  {
+   "topic": "nested vector grid vs flat vector",
+   "strong_answer": "Nested vector<vector<int>> is readable but makes R separate allocations and hurts cache. Flat vector of R*C with g[r*C+c] is contiguous and routinely faster for large grids; use std::array when dims are compile-time; keep nested for clarity or ragged rows."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using std::endl in a loop of many lines.",
+   "correction": "endl flushes every time; prefer '\\n' and flush only when interactive I/O truly needs it."
+  },
+  {
+   "trap": "Relying on signed int wraparound for overflow, or writing int ans = n * n when the product does not fit.",
+   "correction": "Signed overflow is UB. Widen with long long or __int128 before the multiply, then cast or reduce modulo."
+  },
+  {
+   "trap": "Mixing signed/unsigned or writing i < v.size() - 1 on an empty vector.",
+   "correction": "size_t underflow and int vs size_t promotions miscompare; prefer signed int/long long indices in CP unless you have a deliberate unsigned/bit-mask reason."
+  },
+  {
+   "trap": "Calling __builtin_clz(0), __builtin_ctz(0), or __lg(0).",
+   "correction": "Those are undefined behaviour; always guard with x != 0."
+  },
+  {
+   "trap": "std::accumulate(v.begin(), v.end(), 0) on large values.",
+   "correction": "The init type is the accumulator type — pass 0LL (or a long long zero) when the sum may overflow 32 bits."
+  },
+  {
+   "trap": "Using free std::lower_bound on a std::set.",
+   "correction": "Prefer set/map member lower_bound for O(log n); free lower_bound on bidirectional iterators may become linear."
+  },
+  {
+   "trap": "Shipping PBDS or identity-like unordered_map hashing as if portable/safe everywhere.",
+   "correction": "PBDS is GCC/libstdc++-only (won't compile under MSVC). Default integer hash can be anti-hashed — use a seeded custom hash or map."
+  },
+  {
+   "trap": "Sampling with rand() % n or seeding only with time(0).",
+   "correction": "rand()%n is biased when n does not divide RAND_MAX+1; use uniform_int_distribution with mt19937, and seed unpredictably (steady_clock / random_device) once per run."
+  },
+  {
+   "trap": "Passing huge vector<vector<int>> grids by value, or storing pointers/references to one shared row.",
+   "correction": "By-value copies every row; pointer aliases make \"all rows\" change together. Pass by reference (or use a flat vector); vector(R, row) itself copies row safely."
+  }
+ ]
+}

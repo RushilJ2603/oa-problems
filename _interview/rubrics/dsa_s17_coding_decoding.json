@@ -1,0 +1,187 @@
+{
+ "id": "dsa_s17_coding_decoding",
+ "title": "Coding–Decoding",
+ "type": "FUND",
+ "relevance": "Frequent campus OA / aptitude filter: recover a letter, digit, or symbol mapping under time pressure and apply it to a new word or message.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "PrepInsta source material is framed around TCS NQT-style coding-decoding.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the 1-indexed alphabet, its reverse/opposite map, and the default code families to try first.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Forward alphabet positions are 1-indexed: A=1, B=2, …, Z=26.",
+     "weight": "core",
+     "evidence_hint": "States A is 1 and Z is 26 without treating A as 0."
+    },
+    {
+     "id": "fund2",
+     "point": "Opposite/reverse position equals 27 minus the forward position (A↔26, B↔25, …, Z↔1).",
+     "weight": "core",
+     "evidence_hint": "Gives the 27−position rule and can exemplify A opposite Z."
+    },
+    {
+     "id": "fund3",
+     "point": "Most codes are a uniform +n/−n shift, a direct positional map, or opposite-letter substitution; test a uniform forward shift first.",
+     "weight": "core",
+     "evidence_hint": "Names those three families and says uniform forward shift is the first check."
+    }
+   ],
+   "probes": [
+    "What are the forward and reverse alphabet positions, and what should you try first when cracking a letter code?"
+   ],
+   "hints": {
+    "1": "Start from how letters are numbered A through Z.",
+    "2": "Relate each letter to its opposite using one fixed formula, then list common code shapes.",
+    "3": "Forward A=1…Z=26; reverse = 27 − forward; try uniform +n/−n, positional map, or opposite letter, starting with uniform forward shift."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to recover letter-shift, rearrangement, substitution, number/symbol, and multi-sentence message patterns step by step.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Position-by-position shifts can be progressive (e.g. +1,+2,+3,+4 on BAKE→CCNH), uniform (WATER→YCVGT is +2), alternating (−2,+2 on ROAST→PQYUR, including wrap-around), reverse-then-shift (MONKEY→XDJMNL: reverse then −1), or opposite-letter where each pair sums to 27 (SERVER→HVIIVI).",
+     "weight": "core",
+     "evidence_hint": "Distinguishes progressive, uniform, alternating, reverse-then−1, and sum-to-27 opposite patterns with matching examples."
+    },
+    {
+     "id": "mech2",
+     "point": "In substitution word coding, 'is called' is Actual→Code (blood is red, and red is called yellow → yellow), while 'means' is Code→Actual (hear with ear; mouth means ear → answer mouth).",
+     "weight": "core",
+     "evidence_hint": "Explicitly contrasts the two keywords and lands on yellow vs mouth for the classic traps."
+    },
+    {
+     "id": "mech3",
+     "point": "Other letter codes include direct letter→digit maps across given words (SEARCH→214673), reversing pair order (APPROACH pairs → CHOAPRAP; RESTRICT→CTRISTRE), and sorting letters alphabetically (PHYSICS→CHIPSSY; HISTORY→HIORSTY).",
+     "weight": "extended",
+     "evidence_hint": "Mentions digit lookup, reverse-pair order, and alphabetical sort with those exemplars."
+    },
+    {
+     "id": "mech4",
+     "point": "Number coding may be (sum of forward positions)×2 (HIDE→52), sum of reverse positions (SOME→56; shortcut Reverse Sum = 27n − forward sum), plain forward-position sum (BULL→47), or each forward position +6 as hyphenated numbers (MACHINE→19-7-…; DANGER→10-7-20-13-11-24).",
+     "weight": "core",
+     "evidence_hint": "Can state at least two of these formulas and apply one cleanly without mixing forward and reverse."
+    },
+    {
+     "id": "mech5",
+     "point": "Message/Chinese coding isolates codes by shared words across sentences (very→6; is→tod) or by structure Symbol+Letter+Number where number is word length and letter is the last letter (excel→^L5).",
+     "weight": "extended",
+     "evidence_hint": "Uses elimination across statements or length/last-letter structure rather than assuming left-to-right word order."
+    }
+   ],
+   "probes": [
+    "Walk through how you would crack BAKE→CCNH, MONKEY→XDJMNL, and a three-sentence digit message for 'very'."
+   ],
+   "hints": {
+    "1": "Compare each letter’s position change before guessing a global rule.",
+    "2": "If the first letter’s shift looks irregular, inspect the other end or a reverse; for messages, intersect common words.",
+    "3": "BAKE uses +1…+4; MONKEY is reverse then −1; hot=3 and day=5 leave 6=very in 356."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose encode vs decode direction, forward vs reverse alphabet, and how conditional rules stack when several could apply.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Decide encode vs decode from the stem: 'How is X written' applies the found +n pattern forward; 'Which word is coded as X' applies −n (as with HKTG→FIRE via −2).",
+     "weight": "core",
+     "evidence_hint": "Says they would reverse the shift when the coded form is given and the original is asked."
+    },
+    {
+     "id": "tr2",
+     "point": "For numeric letter codes, if forward-position sums fail (GO≠32 under 7+15), switch to reverse/opposite positions (or 27n − forward sum) before inventing a new rule.",
+     "weight": "core",
+     "evidence_hint": "Rejects forward sum for GO/SHE then verifies reverse sums 32 and 49."
+    },
+    {
+     "id": "tr3",
+     "point": "Conditional coding: if instructions say apply all valid rules sequentially, run every matching rule in order on the current code string (including Rule 3 changing the first vowel’s current code after earlier swaps), not only the first match.",
+     "weight": "extended",
+     "evidence_hint": "For OTHER, applies Rule 2 swap then Rule 3 + on the swapped first-vowel slot → +7@29."
+    }
+   ],
+   "probes": [
+    "When do you shift −n instead of +n, and how should stacked conditional encoding rules be ordered?"
+   ],
+   "hints": {
+    "1": "Read whether the stem asks for a code or an original word.",
+    "2": "Try forward positions first for number codes; if they miss, try opposites. For conditions, follow the stated priority.",
+    "3": "Decode uses the inverse shift; conditions that say 'all valid rules sequentially' mutate the string step by step, using post-swap codes for later rules."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply recovered patterns under OA-style opposite-letter, Chinese, and multi-rule conditional prompts without direction errors.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Opposite-letter OA: CLIENT maps via 27−position to XORVMG (same rule as SERVER→HVIIVI).",
+     "weight": "core",
+     "evidence_hint": "Produces XORVMG letter-by-letter from opposite positions."
+    },
+    {
+     "id": "app2",
+     "point": "Chinese/message OA: for excel, code must end in L5 (5 letters, last letter L), uniquely matching ^L5 among options without needing the full symbol map.",
+     "weight": "core",
+     "evidence_hint": "Eliminates to ^L5 using length and final letter only."
+    },
+    {
+     "id": "app3",
+     "point": "Conditional OA on the given map: MOTHER base 897@2* → Rule1 both ends ! → !97@2! → Rule3 first vowel O to + → !+7@2!; OTHER base 97@2* → Rule2 interchange → *7@29 → Rule3 first vowel’s current code to + → +7@29.",
+     "weight": "extended",
+     "evidence_hint": "States both final codes and notes Rule 3 edits the current first-vowel symbol after prior rules."
+    }
+   ],
+   "probes": [
+    "Encode CLIENT under the SERVER→HVIIVI rule, code excel from the Symbol+Letter+Number system, and give MOTHER and OTHER under the three sequential conditions."
+   ],
+   "hints": {
+    "1": "Reuse the pattern already verified on the sample word.",
+    "2": "For Chinese codes, lock number and trailing letter before symbols; for conditions, walk rules 1→2→3 on the live string.",
+    "3": "CLIENT→XORVMG; excel→^L5; MOTHER→!+7@2!; OTHER→+7@29."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Encode a new word vs decode a given code",
+   "strong_answer": "If asked how a new word is written, apply the recovered +n (or other) pattern forward; if asked which word is coded as a given string, invert the pattern (e.g. uniform +2 encode ⇒ −2 decode, as HKTG→FIRE)."
+  },
+  {
+   "topic": "'Is called' vs 'means' substitution",
+   "strong_answer": "'Is called' maps Actual→Code (real blood color red is called yellow ⇒ yellow); 'means' maps Code→Actual (mouth means ear ⇒ hear with mouth)."
+  },
+  {
+   "topic": "Forward alphabet sum vs reverse alphabet sum",
+   "strong_answer": "Try sum of forward positions (or ×2, or +k per letter) first; if it fails (GO forward sum 22 ≠ 32), use reverse/opposite positions, equivalently Reverse Sum = 27n − forward sum."
+  },
+  {
+   "topic": "First matching conditional rule vs all valid rules sequentially",
+   "strong_answer": "Follow the prompt: when told to apply all valid rules sequentially from 1 to 3, run every applicable rule in order on the updated code (Rule 3 uses the first vowel’s current code after earlier interchanges), not stop at the first hit."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Applying a +n forward shift when the question gives a coded word and asks for the original.",
+   "correction": "Decode with the inverse −n (or inverse of whatever encode rule you found)."
+  },
+  {
+   "trap": "Treating 'means' like 'is called' (or the reverse) and answering one substitution step in the wrong direction.",
+   "correction": "'Is called' = Actual→Code; 'means' = Code→Actual—check the keyword before answering."
+  },
+  {
+   "trap": "Assuming words in multi-sentence message coding line up in the same left-to-right order as their codes.",
+   "correction": "Isolate codes by finding common words across sentences and eliminating known mappings."
+  },
+  {
+   "trap": "In conditional coding, changing the original mapped vowel code under Rule 3 even after Rule 2 already swapped ends.",
+   "correction": "Rule 3 edits the first vowel’s current code in the string after prior sequential rules (OTHER: after swap the first slot is *, then becomes +)."
+  }
+ ]
+}

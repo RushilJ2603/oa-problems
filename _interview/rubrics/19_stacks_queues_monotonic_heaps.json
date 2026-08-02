@@ -1,0 +1,242 @@
+{
+ "id": "19_stacks_queues_monotonic_heaps",
+ "title": "Stacks, Queues, Monotonic Deque & Priority Queue",
+ "type": "CP",
+ "relevance": "High (These are foundational data structures that appear constantly in both FAANG OAs and Codeforces greedy/simulation tasks.)",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Amazon OA (Delivery Optimization): stream of packages, report median weight of the last K packages (Sliding Window Median). Google OA (Server Loads): for each sub-segment of length M find the maximum load, then return the minimum of those maximums (Monotonic Deque). Citadel/HR (Stock Span): daily price spans via consecutive prior days with lower price (Next Greater/Smaller via Monotonic Stack). Uber OA (Task Scheduling): overlapping jobs need a new resource — sort by start time and Min-Heap of end times (Room Allocation).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Map the prompt to stack LIFO, queue FIFO, monotonic stack/deque extrema, or priority-queue dynamic min/max.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Matching, parsing, recursive simulation, or LIFO state tracking signals a stack; FIFO processing, BFS, or fair scheduling signals a queue.",
+     "weight": "core",
+     "evidence_hint": "Names LIFO use cases (brackets/parsing/simulation) vs FIFO (BFS/scheduling) and picks stack or queue accordingly."
+    },
+    {
+     "id": "rec2",
+     "point": "Next greater/smaller element, stock span, or nearest-smaller wording signals a monotonic stack; sliding-window maximum/minimum over all windows of size K signals a monotonic deque.",
+     "weight": "core",
+     "evidence_hint": "Ties NGE/NSE/span/nearest-smaller to mono stack and window extrema to mono deque."
+    },
+    {
+     "id": "rec3",
+     "point": "Top K in a stream, dynamic running maximum/minimum, Task Scheduler-style cooldown simulation, interval resource reuse, or needing to undo a prior greedy choice signals a heap/priority queue.",
+     "weight": "core",
+     "evidence_hint": "Reaches for PQ for top-K, dynamic extrema, cooldown sim, room allocation, or regret/undo greedy."
+    },
+    {
+     "id": "rec4",
+     "point": "Running median of a stream (or of the last K packages) signals the two-heap pattern (max-heap lower half / min-heap upper half), not a single sorted buffer rewrite each time.",
+     "weight": "extended",
+     "evidence_hint": "Names two heaps for running/sliding medians and rejects full re-sort per query."
+    }
+   ],
+   "probes": [
+    "Is this LIFO matching, FIFO/BFS, next-greater/sliding extrema, or dynamic top-K / undo-greedy — and which structure?",
+    "Would you reach for a stack, queue, monotonic deque, or priority queue here—and why?"
+   ],
+   "hints": {
+    "1": "Listen for brackets/parsing, BFS order, next greater/smaller, window max/min, top K, or undoing a greedy pick.",
+    "2": "LIFO → stack; FIFO/BFS → queue; NGE/NSE/span → mono stack; window extrema → mono deque; top-K/dynamic min-max/regret → PQ; running median → two heaps.",
+    "3": "Say: matching/parsing/LIFO → stack; BFS/FIFO → queue; next greater/smaller or nearest smaller → monotonic stack; sliding window extrema of size K → monotonic deque; top K / cooldown / room reuse / undo suboptimal picks → priority queue; stream or last-K median → max-heap lower + min-heap upper."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "State the LIFO/FIFO, monotonic extremum, or heap/greedy plan before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Use a stack to resolve LIFO dependencies and a queue for FIFO processing; for next greater/smaller, maintain a strictly increasing or decreasing monotonic stack so each index is pushed and popped at most once.",
+     "weight": "core",
+     "evidence_hint": "Separates stack vs queue roles and describes mono stack for NGE/NSE with one push/pop per index."
+    },
+    {
+     "id": "appr2",
+     "point": "For sliding-window extrema, maintain a monotonic deque of candidates so every window’s max or min is available in O(N) total time; for Top K largest in a stream, keep a Min-Heap of size K instead of fully sorting.",
+     "weight": "core",
+     "evidence_hint": "Plans mono deque for all windows of size K in linear time and size-K min-heap for top-K."
+    },
+    {
+     "id": "appr3",
+     "point": "When a greedy choice might later fail, use a priority queue for Regret Greedy: track accepted choices and swap out the worst previous one (undo trick), as in Potions-style problems.",
+     "weight": "core",
+     "evidence_hint": "Describes PQ undo of the worst prior acceptance when greedy regret appears."
+    },
+    {
+     "id": "appr4",
+     "point": "For overlapping interval resources (Room Allocation / Uber scheduling), sort by start time and keep a Min-Heap of end times to reuse freed rooms; for running medians, keep Max-Heap lower half and Min-Heap upper half.",
+     "weight": "extended",
+     "evidence_hint": "States sort-by-start + min-heap of ends for rooms, and two-heap split for medians."
+    }
+   ],
+   "probes": [
+    "Walk through your plan: stack/queue, monotonic stack or deque, or heap — what invariant do you maintain?",
+    "When do you use a size-K min-heap, regret/undo PQ, or two heaps instead of a mono stack/deque?"
+   ],
+   "hints": {
+    "1": "Separate LIFO/FIFO simulation from extremum-in-order and from dynamic best-option heaps.",
+    "2": "NGE/NSE → mono stack; window max/min → mono deque O(N); top K → min-heap size K; failed greedy → regret PQ; rooms → sort start + min-heap ends; median → two heaps.",
+    "3": "Say: stack LIFO / queue FIFO; strictly increasing or decreasing mono stack for next greater/smaller; mono deque for sliding extrema in O(N); Min-Heap of size K for Top K (avoid full sort); PQ to undo worst prior greedy pick; sort starts + Min-Heap of ends for rooms; Max-Heap lower / Min-Heap upper for running medians."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Code stack simulation, monotonic stack/deque templates, histogram widths, size-K heap, and two-heap median mechanics.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Write state-tracking stacks for bracket matching, string parsing, or postfix evaluation; know when the monotonic stack must be increasing vs decreasing for next greater vs next smaller.",
+     "weight": "core",
+     "evidence_hint": "Sketches bracket/parsing stack use and states increasing vs decreasing choice for NGE/NSE."
+    },
+    {
+     "id": "impl2",
+     "point": "On histogram rectangles, pop from a monotonic stack and compute width as current_index - stack.top() - 1, then area from that width and the popped height.",
+     "weight": "core",
+     "evidence_hint": "Recites the width formula current_index - stack.top() - 1 and ties it to popped bar area."
+    },
+    {
+     "id": "impl3",
+     "point": "Implement the monotonic deque template (std::deque in C++): expire indices leaving the window from the front, pop dominated candidates from the back, and read the extremum at the front for every window of size K.",
+     "weight": "core",
+     "evidence_hint": "Describes front expiry, back pops of dominated values, and front as window max/min."
+    },
+    {
+     "id": "impl4",
+     "point": "Maintain a Min-Heap of size K for Top K largest elements; for running medians, rebalance a Max-Heap (lower half) and Min-Heap (upper half).",
+     "weight": "extended",
+     "evidence_hint": "Codes size-K min-heap for top-K and two-heap rebalance for median."
+    }
+   ],
+   "probes": [
+    "Show the monotonic stack or deque loop you would write, including the histogram width formula if relevant.",
+    "How do you implement size-K top tracking or the two-heap median split?"
+   ],
+   "hints": {
+    "1": "Start from push/pop invariants, then histogram width, then deque front/back, then heap size-K or two heaps.",
+    "2": "Increasing vs decreasing for NGE/NSE; width = current_index - stack.top() - 1; deque expire front / pop back; min-heap size K; max-heap lower + min-heap upper.",
+    "3": "Spell: state stack for brackets/parsing/postfix; mono stack increasing or decreasing for next greater/smaller; pop histogram with width current_index - stack.top() - 1; std::deque mono template for windows of size K; Min-Heap of size K for Top K; Max-Heap lower half / Min-Heap upper half for medians."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Confirm O(N) monotonic stack/deque passes and that size-K heaps beat full O(N log N) sorting for top-K.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Monotonic stack for next greater/smaller and monotonic deque for sliding-window extrema both run in O(N) because each element is pushed and popped at most a constant number of times.",
+     "weight": "core",
+     "evidence_hint": "States O(N) for mono stack and mono deque via amortized single push/pop per element."
+    },
+    {
+     "id": "cx2",
+     "point": "A Min-Heap of size K finds Top K largest elements in a stream while avoiding O(N log N) full sorting; Implement Queue using Stacks targets amortized O(1) queue operations.",
+     "weight": "core",
+     "evidence_hint": "Contrasts size-K heap vs O(N log N) sort and cites amortized O(1) for two-stack queue."
+    }
+   ],
+   "probes": [
+    "What is the time for next-greater via mono stack or window max via mono deque?",
+    "Why prefer a size-K heap over sorting the whole array for Top K, and what does queue-via-stacks amortize to?"
+   ],
+   "hints": {
+    "1": "Separate linear mono passes from heap-vs-sort and amortized queue design.",
+    "2": "Mono stack/deque → O(N); Top K → size-K min-heap, not O(N log N) sort; queue from stacks → amortized O(1).",
+    "3": "Say: next greater/smaller and sliding-window extrema in O(N) with mono stack/deque; Top K via Min-Heap of size K avoiding O(N log N) full sorting; Implement Queue using Stacks with amortized O(1) operations."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch wrong mono direction, missing histogram width, sorting instead of size-K heap, and skipping regret undo.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Using the wrong monotonic orientation (increasing when you need decreasing, or vice versa) breaks next greater vs next smaller answers.",
+     "weight": "core",
+     "evidence_hint": "Explicitly chooses increasing vs decreasing from whether the query is next greater or next smaller."
+    },
+    {
+     "id": "pit2",
+     "point": "Computing histogram areas without width current_index - stack.top() - 1 (or equivalent nearest-smaller bounds) yields wrong rectangle widths.",
+     "weight": "core",
+     "evidence_hint": "Applies the stated width formula when popping bars from the mono stack."
+    },
+    {
+     "id": "pit3",
+     "point": "Fully sorting in O(N log N) for Top K when a Min-Heap of size K suffices, or using a heap for sliding-window maximum when the O(N) monotonic deque is the intended tool.",
+     "weight": "core",
+     "evidence_hint": "Rejects full sort for top-K and names mono deque—not a heap—as the O(N) window-max structure."
+    },
+    {
+     "id": "pit4",
+     "point": "Committing irreversible greedy picks when the problem needs Regret Greedy: a PQ must track and swap out the worst previously accepted choice.",
+     "weight": "extended",
+     "evidence_hint": "Recognizes undo/swap-worst via PQ (Potions-style) instead of one-way greedy accepts."
+    }
+   ],
+   "probes": [
+    "What goes wrong if the mono stack is oriented the wrong way or histogram width is computed incorrectly?",
+    "When is full sorting or a heap the wrong tool compared to a size-K heap, mono deque, or regret PQ?"
+   ],
+   "hints": {
+    "1": "Check mono direction, histogram width formula, top-K vs sort, window max structure, and greedy undo.",
+    "2": "Increasing vs decreasing for NGE/NSE; width = current_index - stack.top() - 1; size-K min-heap not O(N log N) sort; window max → O(N) deque; regret → PQ undo worst pick.",
+    "3": "Say: match increasing/decreasing stack to next greater vs smaller; pop histogram with width current_index - stack.top() - 1; Top K with Min-Heap of size K, not full O(N log N) sort; sliding-window maximum with monotonic deque in O(N); when greedy may fail, PQ-swap the worst prior choice (Regret Greedy)."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Stack (LIFO) vs Queue (FIFO)",
+   "strong_answer": "Stacks resolve LIFO dependencies (matching, parsing, recursive simulation); queues handle FIFO processing (BFS, fair scheduling). Pick by whether the next unit of work is the most recent or the oldest pending."
+  },
+  {
+   "topic": "Monotonic stack vs Monotonic deque",
+   "strong_answer": "Monotonic stacks answer next greater/smaller (and histogram / nearest-smaller style ranges); monotonic deques answer sliding-window maximum/minimum over all windows of size K in O(N)."
+  },
+  {
+   "topic": "Min-Heap of size K vs full O(N log N) sorting for Top K",
+   "strong_answer": "For Top K largest elements in a stream, keep a Min-Heap of size K; full sorting is the heavier default that the checklist says to avoid when only the running top set is needed."
+  },
+  {
+   "topic": "Monotonic stack vs Two Pointers for Trapping Rain Water",
+   "strong_answer": "Trapping Rain Water is solvable conceptually via stacks or two pointers; both are valid hard-OA paths—choose based on whether you frame bounds as nearest greater barriers (stack) or left/right height pointers."
+  },
+  {
+   "topic": "One priority queue vs two heaps for medians",
+   "strong_answer": "A single PQ gives dynamic min or max (or top-K / regret undo); running medians need the Max-Heap (lower half) / Min-Heap (upper half) combo so the middle is always at the heap boundary."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Maintaining the wrong monotonic direction for next greater vs next smaller.",
+   "correction": "Memorize the O(N) monotonic stack template and choose increasing vs decreasing from the comparison the query needs."
+  },
+  {
+   "trap": "Popping histogram bars without computing width as current_index - stack.top() - 1.",
+   "correction": "On each pop, width is current_index - stack.top() - 1; multiply by the popped height for area."
+  },
+  {
+   "trap": "Sorting the whole array in O(N log N) just to answer Top K.",
+   "correction": "Use a Min-Heap of size K to track the Top K largest elements in a stream."
+  },
+  {
+   "trap": "Using a heap (or re-sorting) for every sliding-window maximum instead of the linear deque.",
+   "correction": "Apply the monotonic deque template (std::deque in C++) so all windows of size K are answered in O(N)."
+  },
+  {
+   "trap": "Taking irreversible greedy choices when a later input makes an earlier accept suboptimal.",
+   "correction": "Use Regret Greedy: a priority queue tracks accepted choices so you can swap out the worst previously accepted one."
+  },
+  {
+   "trap": "Tracking a running median with one structure that is fully re-sorted each time.",
+   "correction": "Use the two-heap pattern: Max-Heap for the lower half and Min-Heap for the upper half (and for last-K medians, the same idea with sliding deletions)."
+  }
+ ]
+}

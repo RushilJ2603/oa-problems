@@ -1,0 +1,191 @@
+{
+ "id": "dsa_s02_percentages",
+ "title": "Percentages",
+ "type": "FUND",
+ "relevance": "Percentages underpin campus OA aptitude and SDE screening questions on successive change, base reversal, and multi-step word problems.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish percentage as a fraction of 100 and fluent fraction↔percentage conversion for quick arithmetic.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "x% equals the fraction x/100.",
+     "weight": "core",
+     "evidence_hint": "Candidate states x% = x/100 without hesitation."
+    },
+    {
+     "id": "fund2",
+     "point": "Common fraction–percentage pairs include 1/2 = 50%, 1/4 = 25%, 1/5 = 20%, 1/8 = 12.5%, and 1/10 = 10%.",
+     "weight": "core",
+     "evidence_hint": "Recalls several table entries such as 1/8 = 12.5% or 1/5 = 20%."
+    },
+    {
+     "id": "fund3",
+     "point": "1/3 = 33.33%, 1/6 = 16.66%, 1/7 = 14.28%, 1/9 = 11.11%, and 1/11 = 9.09%.",
+     "weight": "extended",
+     "evidence_hint": "Mentions at least one of these repeating-decimal percentage equivalents from the speed table."
+    }
+   ],
+   "probes": [
+    "What is 12.5% of 840, and how do you get it using a fraction?",
+    "If 30% of a number is 12.6, what is the number?",
+    "What percentage of 2.5 kg is 50 g?"
+   ],
+   "hints": {
+    "1": "Rewrite the percent as a simple fraction before multiplying.",
+    "2": "12.5% is 1/8; for ‘percent of a number,’ solve (percent/100)×x = given part.",
+    "3": "1/8 × 840 = 105; x = 12.6×100/30 = 42; convert 2.5 kg to 2500 g so 50/2500×100% = 2%."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Apply successive-change and reversal formulas correctly for chained percent changes and base recovery.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "For successive percentage changes a% then b%, the net change is a + b + (ab)/100 percent.",
+     "weight": "core",
+     "evidence_hint": "Writes or states the successive-change formula and plugs in signed a and b."
+    },
+    {
+     "id": "mech2",
+     "point": "If a value increases by x%, restoring the original requires a decrease of (100x)/(100+x) percent; equivalently, a fractional increase of 1/n reverses by a decrease of 1/(n+1).",
+     "weight": "core",
+     "evidence_hint": "States the reversal formula or the 1/n → 1/(n+1) shortcut."
+    },
+    {
+     "id": "mech3",
+     "point": "An increase of 20% followed by a decrease of 20% yields a net change of −4%, i.e. a 4% decrease.",
+     "weight": "extended",
+     "evidence_hint": "Computes 20 − 20 + (20)(−20)/100 = −4% and interprets the sign as decrease."
+    },
+    {
+     "id": "mech4",
+     "point": "Length +10% and width −10% change area by −1% via the successive-change formula on the product.",
+     "weight": "extended",
+     "evidence_hint": "Treats area as successive changes: +10 − 10 − (10×10)/100 = −1%."
+    }
+   ],
+   "probes": [
+    "A price rises 20% then falls 20%. What is the net percentage change?",
+    "A’s salary is 25% more than B’s. By what percent is B’s salary less than A’s?",
+    "Petrol price rises 10%. By what percent must consumption fall to keep expenditure unchanged?"
+   ],
+   "hints": {
+    "1": "Successive percents do not simply add; use the product-style net formula.",
+    "2": "Plug signed a and b into a + b + ab/100; for ‘more than / less than,’ change the comparison base.",
+    "3": "20 and −20 give −4%; 25% = 1/4 more implies 1/5 = 20% less; 10% = 1/10 price rise implies consumption cut of 1/11 ≈ 9.09%."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Distinguish canceling equal percent moves, ‘of remaining’ vs ‘of original,’ and ‘increased by’ vs misread capacity phrasing.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "An equal-percentage increase then decrease does not cancel to 0%; an increase of x% followed by a decrease of x% always yields a net loss of (x²)/100 percent.",
+     "weight": "core",
+     "evidence_hint": "Rejects 0% and states the net loss is (x²)/100%."
+    },
+    {
+     "id": "tr2",
+     "point": "When spending is ‘30% of the remaining’ after a prior 20% outlay, you must not add 20% + 30% = 50% on the original total.",
+     "weight": "core",
+     "evidence_hint": "Applies the second percent only to what is left after the first deduction."
+    },
+    {
+     "id": "tr3",
+     "point": "In utilization wording, ‘increased by 25% of its current load’ is a successive change on the current utilization, not an additive +25% of total capacity.",
+     "weight": "extended",
+     "evidence_hint": "Starts from 60, multiplies by 1.25 to 75, then by 0.90 to 67.5, rather than adding 25 to the capacity percent."
+    }
+   ],
+   "probes": [
+    "Why doesn’t +x% then −x% return you to the original value?",
+    "In an income problem, rent takes 20% and food takes 30% of the remaining—how do you find savings?",
+    "A server at 60% capacity grows by 25% of current load then shrinks by 10% of the new load—what utilization results?"
+   ],
+   "hints": {
+    "1": "Think about whether the second percent uses the same base as the first.",
+    "2": "After +x%, the new base is larger, so −x% of that larger base removes more absolute amount than was added.",
+    "3": "Net loss is (x²)/100%; savings = 0.70×0.80×I = 0.56I; 60→75→67.5 so utilization is 67.5%."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Solve multi-step OA-style word problems: exams, elections, pulp/water, discounts, and successive record cleanup.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Exam pass-mark setups equate two expressions of the pass level (e.g. 0.30M + 15 = 0.40M − 35) to recover maximum marks M = 500.",
+     "weight": "core",
+     "evidence_hint": "Sets up the shared pass mark equation and solves for M = 500."
+    },
+    {
+     "id": "app2",
+     "point": "In fresh vs dry fruit, solid pulp mass is invariant: 100 kg fresh at 68% water has 32 kg pulp, which is 80% of dry mass, so dry fruit is 40 kg.",
+     "weight": "core",
+     "evidence_hint": "Holds pulp fixed at 32 kg and solves 0.8D = 32 → D = 40 kg."
+    },
+    {
+     "id": "app3",
+     "point": "Stacked discounts on $200: 15% then loyalty x% ending at $136 implies x = 20.",
+     "weight": "extended",
+     "evidence_hint": "Gets 200×0.85 = 170, then 170×(1 − x/100) = 136 ⇒ x = 20."
+    },
+    {
+     "id": "app4",
+     "point": "Corrupt records: remove 20%, then repair 15% of remaining, leaving 0.68C = 1700 so C = 2500.",
+     "weight": "extended",
+     "evidence_hint": "Chains 0.8C then 0.85 of that to 0.68C = 1700 → C = 2500."
+    }
+   ],
+   "probes": [
+    "A student at 30% fails by 15 marks; another at 40% is 35 marks above pass. What is maximum marks?",
+    "Fresh fruit is 68% water and dry fruit 20% water. How much dry fruit from 100 kg fresh?",
+    "After 20% corrupt records removed and 15% of remaining repaired, 1700 corrupt remain—how many initially?"
+   ],
+   "hints": {
+    "1": "Write one equation for the shared unknown (pass mark, pulp, or initial count).",
+    "2": "Express both students’ results relative to pass marks; keep non-water mass constant; multiply survival fractions for successive cleanup.",
+    "3": "0.30M + 15 = 0.40M − 35 ⇒ M = 500; pulp 32 kg ⇒ D = 40 kg; 0.68C = 1700 ⇒ C = 2500."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Equal % increase then decrease vs assuming net 0%",
+   "strong_answer": "They do not cancel: +x% then −x% always leaves a net loss of (x²)/100%; e.g. +20% then −20% is a 4% decrease."
+  },
+  {
+   "topic": "% of remaining vs % of original total",
+   "strong_answer": "Later percents may apply only to what remains after prior deductions; e.g. 20% rent then 30% of remaining on food means savings are 70% of 80% = 56% of income, not 50% spent."
+  },
+  {
+   "topic": "‘Increased by’ of current load vs additive % of total capacity",
+   "strong_answer": "‘Increased by 25% of its current load’ scales the current utilization (60 → 75), then a further −10% of the new load yields 67.5%, not +25 percentage points of total capacity."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming +x% followed by −x% nets to 0%.",
+   "correction": "Net change is −(x²)/100%; equal up-then-down always produces a loss."
+  },
+  {
+   "trap": "Adding 20% + 30% when the 30% is of the remaining income after rent.",
+   "correction": "Apply 30% only to the 80% left; savings = 0.70 × 0.80 × I = 0.56I."
+  },
+  {
+   "trap": "Reading utilization growth as +25% of total server capacity instead of +25% of current load.",
+   "correction": "Scale current load: 60 × 1.25 = 75, then 75 × 0.90 = 67.5% of capacity."
+  },
+  {
+   "trap": "Forgetting that ‘A is 25% more than B’ uses B as base when asking how much percent less B is than A.",
+   "correction": "Use the reversal: 25% = 1/4 more ⇒ B is 1/5 = 20% less than A."
+  }
+ ]
+}

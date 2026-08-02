@@ -1,0 +1,181 @@
+{
+ "id": "py_03_data_types",
+ "title": "Data Types",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs routinely ask candidates to distinguish Python built-in numeric and collection types and their mutability, ordering, and overflow behaviour.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish Python's built-in numeric and collection types and what each represents.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Python ships with built-in types including numeric types (int, float, bool, complex) and collection types (list, tuple, set, dictionary).",
+     "weight": "core",
+     "evidence_hint": "Names the main built-in numeric and collection families without inventing extra types."
+    },
+    {
+     "id": "fund2",
+     "point": "int has arbitrary precision and is limited only by available memory, not by a fixed width.",
+     "weight": "core",
+     "evidence_hint": "States ints are unbounded (memory-limited) rather than fixed-width."
+    },
+    {
+     "id": "fund3",
+     "point": "bool values are True and False; complex numbers have a real and imaginary part written with a j suffix on the imaginary component.",
+     "weight": "extended",
+     "evidence_hint": "Mentions True/False and the j imaginary suffix for complex."
+    },
+    {
+     "id": "fund4",
+     "point": "List is an ordered mutable sequence; tuple is an ordered immutable sequence; set is an unordered collection of unique elements; dictionary maps keys to values.",
+     "weight": "core",
+     "evidence_hint": "Correctly pairs each collection with order/mutability/uniqueness/key-value role."
+    }
+   ],
+   "probes": [
+    "What built-in numeric and collection types does Python provide, and how does each one differ in role?"
+   ],
+   "hints": {
+    "1": "Start by splitting numeric types from collection types.",
+    "2": "For collections, contrast order, mutability, uniqueness, and key–value mapping.",
+    "3": "List ordered mutable; tuple ordered immutable; set unordered unique; dict key:value; int unbounded; bool True/False; complex uses j."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how float overflow, brace syntax, and mutability/uniqueness actually behave.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A float literal like 1e309 that exceeds float range yields the special floating-point value inf; that overflow belongs to floats, not to unbounded int.",
+     "weight": "core",
+     "evidence_hint": "Says 1e309 → inf and contrasts with writing the same magnitude as an integer expression."
+    },
+    {
+     "id": "mech2",
+     "point": "A list is dynamic and may hold mixed types; a tuple cannot be changed after creation.",
+     "weight": "core",
+     "evidence_hint": "Mentions dynamic/mixed-type lists and post-creation immutability of tuples."
+    },
+    {
+     "id": "mech3",
+     "point": "A set stores no duplicates and no order; braces write both sets and dictionaries, distinguished by key: value pairs.",
+     "weight": "core",
+     "evidence_hint": "Notes uniqueness/no order for sets and that {k: v} vs bare braces separates dict from set."
+    },
+    {
+     "id": "mech4",
+     "point": "Booleans are a subtype of integers in Python.",
+     "weight": "extended",
+     "evidence_hint": "States bool is a subtype of int."
+    }
+   ],
+   "probes": [
+    "What happens if you write 1e309, and how do set and dictionary brace literals differ?"
+   ],
+   "hints": {
+    "1": "Think about whether 1e309 is an int or float literal.",
+    "2": "Float overflow produces inf; sets lack order/duplicates; dicts need key: value inside braces.",
+    "3": "1e309 → inf (float); int would hold the exact value as an integer expression; set {} unique unordered; dict {k: v}; bool subtypes int."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare closely related types where the wrong choice changes mutability, capacity, or syntax meaning.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer int over float when you need exact large whole values: floats can overflow to inf while int has arbitrary precision.",
+     "weight": "core",
+     "evidence_hint": "Contrasts float inf overflow with unbounded int holding exact integer values."
+    },
+    {
+     "id": "tr2",
+     "point": "Choose list when you need an ordered mutable (changeable) sequence; choose tuple when you need an ordered fixed/immutable sequence.",
+     "weight": "core",
+     "evidence_hint": "Mutable/changeable list vs fixed/immutable tuple, both ordered."
+    },
+    {
+     "id": "tr3",
+     "point": "A list is Python's closest analogue to a C array, but unlike a typical C array it is dynamic and may hold mixed types.",
+     "weight": "extended",
+     "evidence_hint": "Compares list to C array while noting dynamic sizing and mixed types."
+    }
+   ],
+   "probes": [
+    "When would you use a list versus a tuple, or an int versus a float, for a large magnitude?"
+   ],
+   "hints": {
+    "1": "Ask whether the value must stay exact and whether the collection must change.",
+    "2": "Float range failure vs unbounded int; mutable list vs immutable tuple.",
+    "3": "1e309-style float overflow → inf; int memory-limited precision; list changeable ordered; tuple fixed ordered; list ≈ dynamic mixed-type C array."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Pick the right literal/form for a stated need using the type glosses and syntax cues.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Use [] for an ordered changeable collection, () for an ordered fixed collection, {} for an unordered unique collection, and {k: v} for keyed lookups.",
+     "weight": "core",
+     "evidence_hint": "Maps each bracket/brace form to the glossed purpose without mixing set and dict."
+    },
+    {
+     "id": "app2",
+     "point": "Write imaginary components with a j suffix when you need a complex number; use True/False for boolean values.",
+     "weight": "extended",
+     "evidence_hint": "Uses j for complex and True/False for bool in the right situation."
+    }
+   ],
+   "probes": [
+    "Given a need for keyed lookups versus unique unordered items, which literal form do you write and why?"
+   ],
+   "hints": {
+    "1": "Look at whether you need keys, uniqueness, or changeability.",
+    "2": "Braces alone are not enough—key: value means dictionary.",
+    "3": "[] changeable ordered; () fixed ordered; {} unique unordered; {k: v} keyed; complex uses j; bool uses True/False."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "int vs float for large magnitudes",
+   "strong_answer": "Float literals that exceed float range (e.g. 1e309) become inf; an unbounded int would hold the exact value if written as an integer expression."
+  },
+  {
+   "topic": "list vs tuple",
+   "strong_answer": "Both are ordered sequences; list is mutable/changeable and dynamic (may hold mixed types), tuple is immutable/fixed after creation."
+  },
+  {
+   "topic": "list vs C array",
+   "strong_answer": "List is the closest Python analogue to a C array, but it is dynamic and may hold mixed types."
+  },
+  {
+   "topic": "set vs dictionary brace syntax",
+   "strong_answer": "Both use braces; a dictionary is distinguished by key: value pairs, while a set stores unique unordered elements without those pairs."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating 1e309 as an integer overflow or assuming ints overflow the same way.",
+   "correction": "1e309 is a float literal; exceeding float range yields inf. That overflow is float behaviour; unbounded int would hold the exact value as an integer expression."
+  },
+  {
+   "trap": "Assuming braces always mean a set (or always a dict).",
+   "correction": "Braces serve both; key: value pairs distinguish a dictionary from a set."
+  },
+  {
+   "trap": "Treating bool as unrelated to int.",
+   "correction": "Booleans are a subtype of integers in Python."
+  },
+  {
+   "trap": "Assuming a tuple can be changed like a list after creation.",
+   "correction": "A tuple cannot be changed after creation; lists are mutable."
+  }
+ ]
+}

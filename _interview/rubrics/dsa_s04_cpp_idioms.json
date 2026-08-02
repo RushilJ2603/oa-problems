@@ -1,0 +1,243 @@
+{
+ "id": "dsa_s04_cpp_idioms",
+ "title": "C++ Idioms, Gotchas & the CP Toolkit",
+ "type": "FUND",
+ "relevance": "SDE OAs and interviews commonly probe C++ STL idioms and silent gotchas that turn correct algorithms into TLE, UB, or wrong answers under contest constraints.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish core C++ utilities candidates must know: emplace, comparators, modern randomness, and small CP helpers.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "emplace/emplace_back construct the element in-place in the container; insert/push_back often build a temporary then move or copy it in.",
+     "weight": "core",
+     "evidence_hint": "Contrasts temporary construction on push_back(Node(...)) with emplace_back(args...) writing directly into container memory."
+    },
+    {
+     "id": "fund2",
+     "point": "std::priority_queue defaults to std::less<T> (max-heap); use std::greater<T> for a min-heap.",
+     "weight": "core",
+     "evidence_hint": "States the default comparator and how greater flips heap order."
+    },
+    {
+     "id": "fund3",
+     "point": "Since C++14, std::less<> (and similar) can be transparent, enabling heterogeneous lookup such as finding a const char* in a set of std::string without building a temporary string.",
+     "weight": "extended",
+     "evidence_hint": "Mentions omitting the template argument and gives a string-literal find example."
+    },
+    {
+     "id": "fund4",
+     "point": "Prefer <random> engines like std::mt19937 (32-bit) or std::mt19937_64 (64-bit) over legacy rand(), which is predictably flawed and low-quality.",
+     "weight": "core",
+     "evidence_hint": "Rejects rand(), names mt19937 / mt19937_64 and ties randomness to avoiding worst-case behavior or adversarial hashes."
+    },
+    {
+     "id": "fund5",
+     "point": "assert catches false conditions by terminating; __int128 helps avoid overflow on intermediate 64-bit multiplies but needs custom I/O; std::tie unpacks pairs/tuples and supports lexicographical multi-field compares (pre-C++17 structured bindings).",
+     "weight": "extended",
+     "evidence_hint": "Names all three utilities and the __int128 I/O caveat plus tie for lex compare."
+    }
+   ],
+   "probes": [
+    "When would you use emplace_back instead of push_back, and how do you turn a priority_queue into a min-heap?",
+    "Why prefer mt19937 over rand() in competitive programming?"
+   ],
+   "hints": {
+    "1": "Think about where the object is constructed and what comparator priority_queue uses by default.",
+    "2": "In-place construction vs temporary; less vs greater; <random> vs rand().",
+    "3": "emplace_back builds in container memory; greater<T> yields a min-heap; mt19937/mt19937_64 replace low-quality rand()."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain the concrete failure modes behind the classic STL and I/O bugs that cause wrong answers, UB, or TLE.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "map/unordered_map operator[] on a missing key silently default-inserts; use count, find, or at for read-only checks.",
+     "weight": "core",
+     "evidence_hint": "Describes silent insertion and names count/find/at as safe alternatives."
+    },
+    {
+     "id": "mech2",
+     "point": "multiset.erase(val) erases every equal element; erase a single occurrence via an iterator from find.",
+     "weight": "core",
+     "evidence_hint": "States all-vs-one erase behavior and the find-then-erase-iterator fix."
+    },
+    {
+     "id": "mech3",
+     "point": "A sort comparator must be a strict weak ordering: equal elements must compare false; using <= instead of < yields undefined behavior.",
+     "weight": "core",
+     "evidence_hint": "Links <= in a comparator to UB (segfault or infinite loop) and requires < for equals."
+    },
+    {
+     "id": "mech4",
+     "point": "mid=(l+r)/2 can overflow; prefer l+(r-l)/2. Plain 1<<k overflows when k is at least 31 because 1 is a 32-bit int; use 1LL<<k for a 64-bit shift base.",
+     "weight": "core",
+     "evidence_hint": "Gives both overflow patterns and the corrected midpoint and 1LL forms."
+    },
+    {
+     "id": "mech5",
+     "point": "Default unordered_map hashing is deterministic and can be collision-attacked into per-op O(n) and TLE; mitigate with a randomized custom hash or fall back to map at O(log n).",
+     "weight": "extended",
+     "evidence_hint": "Explains adversarial collisions and names custom seeded hash or std::map as fixes."
+    },
+    {
+     "id": "mech6",
+     "point": "std::endl writes a newline and flushes; heavy flushing (e.g. on the order of 10^5 lines) can TLE—prefer '\\n'. vector<bool> stores bit proxies, so bool&/pointers to elements fail; use vector<char> or vector<int> when real references are needed.",
+     "weight": "extended",
+     "evidence_hint": "Separates endl flush cost from vector<bool> proxy semantics and the char/int alternative."
+    },
+    {
+     "id": "mech7",
+     "point": "vector growth can reallocate and dangle prior element references; erase invalidates iterators (and later ones in a vector)—update with it=c.erase(it). cin>> leaves a trailing newline that a following getline may consume as an empty string; consume whitespace (e.g. cin>>ws) first.",
+     "weight": "extended",
+     "evidence_hint": "Covers reallocation dangling refs, erase return-value loop pattern, and cin/getline leftover newline."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you check map membership with m[key], and how do you erase only one copy from a multiset?",
+    "Why can (l+r)/2 and 1<<k both fail, and why is endl dangerous on large output?"
+   ],
+   "hints": {
+    "1": "Separate silent mutation, erase-by-value, overflow, and flush costs.",
+    "2": "operator[] inserts; erase(val) clears all equals; midpoint sum and 32-bit shift bases overflow; endl flushes.",
+    "3": "Use count/find/at; erase(find(val)); l+(r-l)/2 and 1LL<<k; print with '\\n'."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Weigh idioms where the file states when one choice wins over another.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer emplace/emplace_back for complex objects (custom structs, strings) to skip extra copies/moves; for primitive ints the gain is negligible.",
+     "weight": "core",
+     "evidence_hint": "States complex-object benefit and that int performance difference is negligible."
+    },
+    {
+     "id": "tr2",
+     "point": "Against adversarial unordered_map TLE, choose a randomized custom hash for average O(1) behavior, or accept map's O(log n) as a simpler safe fallback.",
+     "weight": "core",
+     "evidence_hint": "Frames custom hash vs map as the security/simplicity tradeoff from the file."
+    },
+    {
+     "id": "tr3",
+     "point": "Contest macros (e.g. all(x)) save keystrokes but hurt readability and debugging if overused; fast I/O is mandatory when input/output exceeds 10^5 operations.",
+     "weight": "extended",
+     "evidence_hint": "Balances macro brevity against readability and ties sync_with_stdio/tie to the 10^5 I/O threshold."
+    }
+   ],
+   "probes": [
+    "When is emplace worth it versus push_back, and when would you abandon unordered_map for map?",
+    "How do you decide between macros for speed of typing and keeping code debuggable?"
+   ],
+   "hints": {
+    "1": "Think object cost, hash attacks, and contest vs maintainability.",
+    "2": "Complex types favor emplace; collisions favor custom hash or map; macros help only if used sparingly; large I/O needs fast setup.",
+    "3": "emplace for structs/strings; custom hash or map under attack; light macros; fast I/O above 10^5 ops."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the CP toolkit: templates, graph/matrix reading, and the 10^8 operations complexity heuristic.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A typical CP template disables sync_with_stdio and unties cin, uses typedefs/macros sparingly, and loops solve() across test cases.",
+     "weight": "core",
+     "evidence_hint": "Mentions ios_base::sync_with_stdio(false), cin.tie(NULL), and a multi-test solve loop."
+    },
+    {
+     "id": "app2",
+     "point": "Pre-size matrices and adjacency lists before filling; for undirected graphs push both directions, and adj(nodes+1) supports 1-indexing.",
+     "weight": "core",
+     "evidence_hint": "Prefers pre-allocation over repeated push_back growth and describes bidirectional edges plus 1-based adj sizing."
+    },
+    {
+     "id": "app3",
+     "point": "Mental model: about 10^8 basic ops per second—e.g. N≤10 allows N! or 2^N; N≤20 allows 2^N; N≤10^4 allows N^2; N≤10^5 needs N log N or N; N≤10^9 needs log N or constant time.",
+     "weight": "core",
+     "evidence_hint": "Recites the 10^8 rule and matches the listed N thresholds to the stated complexities without inventing extras."
+    }
+   ],
+   "probes": [
+    "Walk through a minimal contest main: what I/O setup and structure do you use?",
+    "Given N up to 10^5, what time complexities are safe under the 10^8 operations rule?"
+   ],
+   "hints": {
+    "1": "Template I/O flags and constraint-to-complexity mapping.",
+    "2": "sync_with_stdio/tie plus solve loop; preallocate graphs; map N bands to allowed big-O.",
+    "3": "Fast I/O + while(t--) solve(); pre-sized grid/adj; at 10^5 need O(N log N) or O(N) under ~10^8 ops/s."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "emplace/emplace_back vs insert/push_back",
+   "strong_answer": "Use emplace when constructing complex objects in-place to avoid temporaries and extra copies/moves; for primitive ints the difference is negligible."
+  },
+  {
+   "topic": "custom hashed unordered_map vs std::map",
+   "strong_answer": "Default unordered_map can TLE under adversarial collisions; a randomized custom hash restores practical average-case speed, while map is a simpler O(log n) fallback."
+  },
+  {
+   "topic": "std::endl vs '\\n'",
+   "strong_answer": "endl flushes after the newline and can TLE on massive output; use '\\n' and let the buffer flush naturally."
+  },
+  {
+   "topic": "vector<bool> vs vector<char>/vector<int>",
+   "strong_answer": "vector<bool> saves space via bit packing but returns proxies you cannot take a real bool& or pointer to; use vector<char> or vector<int> when references matter."
+  },
+  {
+   "topic": "contest macros vs readable code",
+   "strong_answer": "Macros like all(x) cut typing in timed contests but excessive macros destroy readability and make debugging harder; use them judiciously."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using m[key] to test membership in map/unordered_map.",
+   "correction": "operator[] default-inserts; use count, find, or at for read-only checks."
+  },
+  {
+   "trap": "Calling multiset.erase(val) intending to remove one occurrence.",
+   "correction": "erase(val) removes all equals; erase(ms.find(val)) removes one."
+  },
+  {
+   "trap": "Sorting with a comparator that uses <=.",
+   "correction": "Violates strict weak ordering and causes UB; equal elements must return false—use <."
+  },
+  {
+   "trap": "Computing mid as (l+r)/2 or shifting with 1<<k for large k.",
+   "correction": "Use l+(r-l)/2; use 1LL<<k because plain 1 is a 32-bit int and overflows when k is at least 31."
+  },
+  {
+   "trap": "Relying on default unordered_map under adversarial tests.",
+   "correction": "Deterministic hashing can degrade to O(n) per op; use a randomized custom hash or switch to map."
+  },
+  {
+   "trap": "Printing large output with std::endl.",
+   "correction": "endl flushes every time; use '\\n' to avoid TLE."
+  },
+  {
+   "trap": "Taking a bool& or pointer into vector<bool>.",
+   "correction": "Elements are proxies, not real bools; pass by value or store char/int."
+  },
+  {
+   "trap": "Holding a reference into a vector across push_back.",
+   "correction": "Reallocation invalidates references; re-index via v[i] instead of caching refs."
+  },
+  {
+   "trap": "Erasing inside a loop without updating the iterator.",
+   "correction": "erase invalidates iterators; assign it = c.erase(it) (and only ++it when not erasing)."
+  },
+  {
+   "trap": "Calling getline right after cin>>.",
+   "correction": "Trailing newline left by >> makes getline read an empty string; consume whitespace first (e.g. cin>>ws)."
+  }
+ ]
+}

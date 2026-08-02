@@ -1,0 +1,155 @@
+{
+ "id": "py_04_variables_and_binding",
+ "title": "Variables and Binding",
+ "type": "FUND",
+ "relevance": "Interviewers probe whether candidates understand that Python names are rebindable references to typed objects, not fixed-type slots like in C/Java.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a Python variable is and that types are not declared on names.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A variable is a name bound to a value; assignment uses =.",
+     "weight": "core",
+     "evidence_hint": "Says a variable is a name attached to a value via =, not a typed storage slot."
+    },
+    {
+     "id": "fund2",
+     "point": "Python is dynamically typed: a variable's type is inferred from the assigned value and is never declared.",
+     "weight": "core",
+     "evidence_hint": "Contrasts a = 5 with invalid int a = 5 and states types are not declared up front."
+    },
+    {
+     "id": "fund3",
+     "point": "None is Python's null value — a literal meaning no value.",
+     "weight": "extended",
+     "evidence_hint": "Calls None the null/no-value literal and notes assigning it alone prints nothing."
+    }
+   ],
+   "probes": [
+    "What does it mean that Python is dynamically typed?",
+    "What is None, and what happens if you only assign it?"
+   ],
+   "hints": {
+    "1": "Think about whether you write a type next to the name when you assign.",
+    "2": "Compare valid a = 5 with the C/Java-style declaration shown as contrast.",
+    "3": "Type comes from the value; None means no value and assigning it does not print by itself."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how names rebind at runtime and what happens when a name was never bound.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "The same name may be rebound to a value of a completely different type during a program's life — dynamic binding.",
+     "weight": "core",
+     "evidence_hint": "Walks through a bound first to an integer then to a string and names this freedom dynamic binding."
+    },
+    {
+     "id": "mech2",
+     "point": "The type lives on the object itself, not on the name; a name is like a sticky name tag that can be moved between objects.",
+     "weight": "core",
+     "evidence_hint": "Uses the sticky name-tag vs fixed-bucket analogy and says type is on the object."
+    },
+    {
+     "id": "mech3",
+     "point": "Referring to a name that was never assigned raises NameError, and execution stops at the failing line.",
+     "weight": "extended",
+     "evidence_hint": "States NameError for an unbound bare name and that later lines never run."
+    }
+   ],
+   "probes": [
+    "Can you reassign the same variable to a different type? What is that called?",
+    "What happens if you evaluate a name that was never assigned?"
+   ],
+   "hints": {
+    "1": "Ask where the type lives — on the name or on the object.",
+    "2": "Describe moving the name tag from one object to another, then what a never-bound name does.",
+    "3": "Binding can change at runtime (dynamic binding); an unbound name raises NameError and stops execution."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast Python's rebindable names with fixed-type variables in statically typed languages.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "In C or Java a variable is like a fixed plastic bucket that only accepts one declared type; in Python a variable is a sticky name tag that can be moved to a differently typed object.",
+     "weight": "core",
+     "evidence_hint": "Retells the bucket vs sticky name-tag analogy and ties it to where type lives."
+    },
+    {
+     "id": "tr2",
+     "point": "Statically typed languages force you to declare the type up front; Python never declares the type on the name.",
+     "weight": "extended",
+     "evidence_hint": "Says int a = 5 is the static contrast and is not valid Python; Python infers from the value."
+    }
+   ],
+   "probes": [
+    "How do Python variables differ from variables in C or Java?",
+    "Why is int a = 5 shown in the notes if it is not valid Python?"
+   ],
+   "hints": {
+    "1": "Picture a bucket that only holds one kind of thing versus a movable label.",
+    "2": "Separate the name from the object: who owns the type in each model?",
+    "3": "C/Java: fixed typed slot declared up front; Python: rebindable name, type on the object."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply binding rules to reassignment and unbound-name errors in real snippets.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "You can assign a number to a name and then assign a string to the same name; Python does not complain — it rebinds the name to the new object.",
+     "weight": "core",
+     "evidence_hint": "Describes rebinding from a number to a string and that Python simply moves the name."
+    },
+    {
+     "id": "app2",
+     "point": "Evaluating a bare unbound name is an error, not a silent no-op; later assignments and prints after that line never run.",
+     "weight": "core",
+     "evidence_hint": "Names the NameError trap and that execution stops so later statements do not execute."
+    }
+   ],
+   "probes": [
+    "Walk through assigning a number then a string to the same name — what happens?",
+    "If the first line is a bare unbound name, do later assignment and print lines still run?"
+   ],
+   "hints": {
+    "1": "Trace what the name points to after each assignment.",
+    "2": "For the error case, ask whether Python skips the bad line or stops.",
+    "3": "Rebind silently across types; unbound bare name → NameError and nothing after it runs."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Sticky name tag (Python) vs fixed typed bucket (C/Java)",
+   "strong_answer": "In C/Java the variable is a fixed-type slot (bucket) that rejects the wrong kind of value; in Python the name is a sticky tag you can peel off one object and slap onto another, so the type lives on the object and the binding can change at runtime."
+  },
+  {
+   "topic": "Dynamic typing vs static typing",
+   "strong_answer": "Static languages force a type declaration up front (as in int a = 5); Python never declares the type on the name — the type is inferred from the value assigned, and that binding can later change."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Evaluating a bare name that has not been bound is a silent no-op or just leaves the name as None.",
+   "correction": "It raises NameError, and execution stops at that line — later assignments and prints never run."
+  },
+  {
+   "trap": "Thinking int a = 5 is valid Python because it shows a typed variable.",
+   "correction": "That form is only a contrast with statically typed languages; it is not valid Python syntax."
+  },
+  {
+   "trap": "Expecting assigning None to print or show something by itself.",
+   "correction": "None means no value; assigning it does not print anything on its own."
+  }
+ ]
+}

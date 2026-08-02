@@ -1,0 +1,215 @@
+{
+ "id": "os_03_threads",
+ "title": "Threads and concurrency models",
+ "type": "FUND",
+ "relevance": "SDE interviews probe whether candidates understand shared-memory concurrency, user/kernel thread models, and hazards that show up in multithreaded server and runtime code.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a thread is, what it shares with siblings, and why threads are used despite concurrency hazards.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A thread is the basic unit of CPU execution within a process — a single instruction sequence the scheduler can run independently; a process starts with one thread and may gain several that share the process memory.",
+     "weight": "core",
+     "evidence_hint": "Candidate defines a thread as a schedulable instruction sequence inside a process and notes multiple threads share that process's memory."
+    },
+    {
+     "id": "fund2",
+     "point": "Threads share address space (text, data, heap), open files/sockets, globals/statics, signal handlers/accounting/PID; each keeps a private stack, registers (including SP), program counter, TID, scheduling state, and TLS.",
+     "weight": "core",
+     "evidence_hint": "Candidate correctly separates shared process-wide resources from per-thread private state, especially heap/globals vs stack/PC/registers."
+    },
+    {
+     "id": "fund3",
+     "point": "Shared heap and globals let threads communicate by reading/writing shared variables without IPC, but that shared writable state is what creates race conditions and motivates synchronization.",
+     "weight": "core",
+     "evidence_hint": "Candidate links easy shared-variable communication to the danger of races."
+    },
+    {
+     "id": "fund4",
+     "point": "Threads buy responsiveness, easy resource sharing, economy vs processes, and multicore scalability; hazards include data races, deadlocks, oversubscription, and false sharing.",
+     "weight": "extended",
+     "evidence_hint": "Candidate lists both benefits (e.g. UI stays live while a worker blocks) and named hazards like oversubscription or false sharing."
+    }
+   ],
+   "probes": [
+    "What does a thread share with other threads in the same process, and what stays private?",
+    "Why use threads instead of processes, and what goes wrong when you do?"
+   ],
+   "hints": {
+    "1": "Start from one process gaining several threads of execution.",
+    "2": "Contrast process-wide address space and descriptors with each thread's stack and registers.",
+    "3": "Shared heap/globals mean no IPC but also races; benefits are responsiveness/sharing/economy/scalability, costs are races/deadlocks/oversubscription/false sharing."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain user vs kernel threads, multithreading mapping models, concurrency vs parallelism, and Amdahl's bound.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "User-level threads are managed by a user library the kernel never sees (cheap switches, no mode switch) but a blocking syscall blocks the whole process; kernel-level threads are scheduled individually, can run on many cores, and a block affects only that thread at higher switch cost.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts who manages the threads, switch cost, blocking behavior, and multicore capability."
+    },
+    {
+     "id": "mech2",
+     "point": "Many-to-one maps many user threads to one kernel thread (cheap switches; blocking freezes all; no true multicore); one-to-one maps each user thread to its own kernel thread (true parallelism; creation is a kernel op with OS caps) and is today's default on Linux NPTL, Windows, and macOS.",
+     "weight": "core",
+     "evidence_hint": "Candidate explains both mappings and names one-to-one as the modern default on major OSes."
+    },
+    {
+     "id": "mech3",
+     "point": "Many-to-many maps many user threads onto a smaller pool of kernel threads (parallelism with bounded kernel overhead; complex two-level scheduling); two-level is many-to-many plus optional 1:1 bound threads for critical work.",
+     "weight": "extended",
+     "evidence_hint": "Candidate describes the pool mapping and optional binding, mentioning complexity as the cost."
+    },
+    {
+     "id": "mech4",
+     "point": "Concurrency is dealing with many tasks at once (structure; time-slicing on one core counts); parallelism is executing many tasks at the same instant and needs multiple cores — a single core can be concurrent but never truly parallel.",
+     "weight": "core",
+     "evidence_hint": "Candidate separates interleaving/structure from simultaneous multicore execution, often with the chef analogy or equivalent."
+    },
+    {
+     "id": "mech5",
+     "point": "Amdahl's law: Speedup = 1 / ((1-P) + P/N); for a program that is 20% strictly sequential, as N goes to infinity speedup approaches 1/(1-P) = 1/0.2 = 5× — the serial fraction, not core count, is the ceiling.",
+     "weight": "core",
+     "evidence_hint": "Candidate states the formula or the 20% sequential → 5× max speedup interview result and names the serial fraction as the limit."
+    },
+    {
+     "id": "mech6",
+     "point": "The kernel tracks each thread with a TCB holding TID, saved registers, PC, stack pointer, state, and a pointer back to the process's PCB.",
+     "weight": "extended",
+     "evidence_hint": "Candidate names the TCB and lists key fields tying the thread to its PCB."
+    }
+   ],
+   "probes": [
+    "What is the fatal flaw of pure user-level threads?",
+    "Max speedup of a program that is 20% strictly sequential, on 1000 cores?",
+    "How do many-to-one, one-to-one, and many-to-many map user threads to kernel threads?"
+   ],
+   "hints": {
+    "1": "Ask who the kernel schedules: the process, or each thread.",
+    "2": "Walk blocking-syscall behavior, then the mapping table, then concurrency vs parallelism and Amdahl.",
+    "3": "User-level: blocking freezes all; one-to-one is today's default; concurrency ≠ parallelism; 20% sequential ⇒ 5× ceiling as N→∞."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare thread-management and mapping choices and the scale-vs-preemption trade of lightweight user-space threads.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "User-level threads trade very cheap switches for inability to use multiple cores and for whole-process stalls on any blocking call; kernel-level threads trade higher mode-switch cost for per-thread blocking and true multicore parallelism.",
+     "weight": "core",
+     "evidence_hint": "Candidate frames the cost/benefit of each management layer without conflating them with mapping models."
+    },
+    {
+     "id": "tr2",
+     "point": "One-to-one gives true parallelism and isolated blocking but makes thread creation a kernel operation under OS count caps; many-to-many (and app-level thread pools) keep parallelism while bounding kernel overhead, at the cost of more complex scheduling.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts isolation/parallelism of 1:1 with bounded overhead and complexity of M:N / pools."
+    },
+    {
+     "id": "tr3",
+     "point": "Fibers, green threads, goroutines, virtual threads, and coroutines trade kernel preemption for enormous cheap concurrency by cooperative user-space scheduling that relies on tasks yielding (e.g. at I/O, channels, await/yield).",
+     "weight": "extended",
+     "evidence_hint": "Candidate says scale comes from cooperative yielding onto few OS/carrier threads, at the cost of depending on yields."
+    }
+   ],
+   "probes": [
+    "When would you prefer one-to-one over many-to-many (or a thread pool)?",
+    "What do goroutines or Java virtual threads give up to support huge numbers of concurrent tasks?"
+   ],
+   "hints": {
+    "1": "Think about blocking calls and how many cores you need.",
+    "2": "Compare creation/switch cost and scheduling complexity across models.",
+    "3": "1:1 isolates blocking and parallelizes; M:N/pools/goroutines/Loom bound OS threads but need cooperative yield."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply concurrency models to thread pools, safety/reentrancy/TLS, fork-in-multithreaded processes, and modern lightweight runtimes.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A thread pool creates a fixed set of workers that wait on a shared work queue, pick up tasks, run them, and return — bounding concurrency and removing per-task creation latency (many-to-many at the application level).",
+     "weight": "core",
+     "evidence_hint": "Candidate describes fixed workers + queue and names bounding concurrency / avoiding spawn-per-task cost."
+    },
+    {
+     "id": "app2",
+     "point": "Thread-safe code behaves correctly under concurrent threads (locks, atomics, or no shared mutable state); reentrant code can be interrupted and re-entered safely with no static/global mutable state and no pointers to static data — all reentrant code is thread-safe, but not all thread-safe code is reentrant (a mutex-guarded function can self-deadlock if a signal handler re-enters it).",
+     "weight": "core",
+     "evidence_hint": "Candidate distinguishes the two and gives the mutex + signal-handler self-deadlock counterexample."
+    },
+    {
+     "id": "app3",
+     "point": "If a thread in a multithreaded process calls fork, the child gets only the calling thread; mutexes held by vanished threads stay locked forever in the child, so the child should generally only exec or call async-signal-safe functions.",
+     "weight": "core",
+     "evidence_hint": "Candidate states only the caller survives in the child and explains the locked-mutex hazard and exec/async-signal-safe guidance."
+    },
+    {
+     "id": "app4",
+     "point": "TLS is data that looks global but has a private instance per thread (e.g. C errno, Java ThreadLocal); Go goroutines multiplex many-to-many onto a small OS-thread pool yielding at I/O/channels; Java virtual threads yield on blocking I/O onto few carriers; coroutines yield at explicit await/yield.",
+     "weight": "extended",
+     "evidence_hint": "Candidate defines TLS with an example and briefly describes at least one lightweight runtime's multiplexing/yield points."
+    }
+   ],
+   "probes": [
+    "What happens if a thread in a multithreaded process calls fork?",
+    "Is every thread-safe function reentrant? Why or why not?",
+    "Why use a thread pool instead of spawning a thread per request?"
+   ],
+   "hints": {
+    "1": "Consider what state exists after fork and what 'thread-safe' guarantees.",
+    "2": "fork copies only the caller; mutexes vs signal re-entry; pools bound workers on a queue.",
+    "3": "Child inherits only the forking thread so held locks stick; mutex-guarded code can self-deadlock on signal re-entry; pools reuse fixed workers."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "User-level threads vs kernel-level threads",
+   "strong_answer": "User-level threads switch very cheaply with no mode switch but cannot use multiple cores and any blocking syscall stalls the whole process; kernel-level threads cost a mode switch to schedule but block only the calling thread and run in parallel across cores."
+  },
+  {
+   "topic": "One-to-one vs many-to-many (and thread pools)",
+   "strong_answer": "One-to-one gives true parallelism and isolates blocking to one thread, but creation is a kernel operation under OS caps; many-to-many and application thread pools keep parallelism while bounding kernel/thread count and creation latency, at the cost of more complex two-level or queue-based scheduling."
+  },
+  {
+   "topic": "Preemptive kernel threads vs cooperative lightweight threads",
+   "strong_answer": "Kernel-scheduled threads get preemption and OS-level isolation of blocking; fibers/green threads/goroutines/virtual threads/coroutines multiplex huge numbers onto few OS threads cheaply but depend on cooperative yields at I/O, channels, or await/yield points."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming pure user-level threads can block in one thread while others keep running.",
+   "correction": "The kernel sees one process, so a blocking syscall blocks the entire process and every other user-level thread stalls with it."
+  },
+  {
+   "trap": "Equating concurrency with parallelism.",
+   "correction": "Concurrency is dealing with many tasks at once (including time-slicing on one core); parallelism is executing many tasks at the same instant and requires multiple cores."
+  },
+  {
+   "trap": "Expecting more cores to remove an Amdahl ceiling when much work is serial.",
+   "correction": "If 20% of work is strictly sequential, as N→∞ speedup approaches 1/0.2 = 5× — the serial fraction, not core count, is the limit."
+  },
+  {
+   "trap": "Treating mutex-protected thread-safe code as reentrant.",
+   "correction": "All reentrant code is thread-safe, but a mutex-guarded function can self-deadlock if a signal handler re-enters it before the first call finishes."
+  },
+  {
+   "trap": "Expecting fork in a multithreaded process to duplicate all threads cleanly.",
+   "correction": "The child gets only the calling thread; mutexes held by threads that vanish stay locked forever, so the child should generally only exec or use async-signal-safe functions."
+  },
+  {
+   "trap": "Spawning an unbounded number of threads per task for scalability.",
+   "correction": "Per-task creation is expensive and can exhaust the system; oversubscription causes context-switch thrash — thread pools bound concurrency with a fixed worker set on a shared queue."
+  }
+ ]
+}

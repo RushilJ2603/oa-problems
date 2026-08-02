@@ -1,0 +1,156 @@
+{
+ "id": "dsa_s06_ages_partnership",
+ "title": "Ages & Partnership",
+ "type": "FUND",
+ "relevance": "Campus OAs and aptitude rounds test ages via time-shifted ratios and partnership via Capital×Time profit splits, often wrapped as equity vesting or shared-resource billing.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "OA wrappers often frame partnership as startup equity vesting or AWS-style shared-resource billing; the Capital×Time math is unchanged.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the present-age variable rule and the Capital×Time profit-share principle.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Always set the present age as the variable; translate “N years ago” to x−N and “N years hence/later” to x+N, then form equations from the given ratio conditions.",
+     "weight": "core",
+     "evidence_hint": "Candidate picks present ages as unknowns and systematically offsets by N before writing any past/future ratio equation."
+    },
+    {
+     "id": "fund2",
+     "point": "Partnership profits are split in the ratio Capital×Time: if A invests C_A for T_A and B invests C_B for T_B, the profit ratio is C_A T_A : C_B T_B.",
+     "weight": "core",
+     "evidence_hint": "Candidate states profit shares track investment weight = capital times duration, not capital alone when times differ."
+    }
+   ],
+   "probes": [
+    "How do you choose variables and rewrite “N years ago / hence” in an ages ratio problem?",
+    "When two partners invest unequal amounts for unequal times, how is profit shared?"
+   ],
+   "hints": {
+    "1": "Start from present ages, not a past snapshot.",
+    "2": "Ages: present = x, past = x−N, future = x+N. Partnership: weight each partner by capital times months invested.",
+    "3": "Write present ages as variables, offset by N for the stated time, equate ratios; for partnership use C_A T_A : C_B T_B."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show exact setups for age equations, constant age-gap, equal-time capital ratios, and multi-phase capital weights.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "From a present age ratio (e.g. mother:daughter = 7:1 as 7x and x), apply the past ratio only after subtracting the elapsed years from both ages, then solve the resulting equation.",
+     "weight": "core",
+     "evidence_hint": "Candidate writes (7x−4)/(x−4)=19 (or analogous), clears, and recovers present ages before answering a future-age ask."
+    },
+    {
+     "id": "mech2",
+     "point": "The age difference between two people is constant at any time, so a past “A was k times B” condition can be solved using that fixed difference on past ages.",
+     "weight": "core",
+     "evidence_hint": "Candidate notes the gap is unchanged (e.g. still 24 ten years ago), sets past ages as ky and y with ky−y equal to the gap, then adds years back to present."
+    },
+    {
+     "id": "mech3",
+     "point": "If everyone invests for the same duration, profit splits by capital ratio alone; if someone joins mid-year or capital changes mid-year, compute each phase’s Capital×Time and sum weights before sharing profit.",
+     "weight": "core",
+     "evidence_hint": "Candidate uses capital-only parts when times match, otherwise builds weights like (C1×t1)+(C2×t2) or months-after-join, then multiplies profit by that partner’s share of total parts."
+    },
+    {
+     "id": "mech4",
+     "point": "For a present-age sum with a past ratio, the sum of ages N years ago equals the present sum minus 2N (two people), then apply the past ratio parts to that past sum.",
+     "weight": "extended",
+     "evidence_hint": "Candidate subtracts 2N from the present sum, splits the past sum by the past ratio (e.g. 3:1 → 3/4 of past sum), then adds N to get present age."
+    }
+   ],
+   "probes": [
+    "Walk through setting up a present ratio plus a different past ratio as equations.",
+    "Partner Y joins after several months of a year—how do you compute Y’s profit weight?",
+    "How can a fixed age gap replace a present-age variable when the multiple is given for the past?"
+   ],
+   "hints": {
+    "1": "Offset every age to the same clock time before writing a ratio or product.",
+    "2": "Ages: present ratio → variables; past ratio → subtract years first. Partnership: months invested = year length minus join delay; changing capital → sum of phase weights.",
+    "3": "Example shapes: (7x−4)/(x−4)=19; past gap 5y−y=24; same-time capital 3:4; mid-year join uses 8 months of 12; changing capital (4000×8)+(6000×4)."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast capital-only vs Capital×Time splits and salary-off-the-top vs pure capital division.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Equal investment duration → profit by capital ratio only; unequal durations (late join, early exit, or mid-year capital change) → must use Capital×Time weights instead of raw capital.",
+     "weight": "core",
+     "evidence_hint": "Candidate explains when dropping time is valid and when omitting months would mis-share profit."
+    },
+    {
+     "id": "tr2",
+     "point": "A working partner may take a stated percent of total profit as salary first; only the remainder is divided by capital ratio, so total receipt = salary + capital share of the remainder.",
+     "weight": "core",
+     "evidence_hint": "Candidate separates 20% off the top, splits 80% by 2:3 capital parts, and combines salary plus remainder share to recover total profit from a given receipt."
+    }
+   ],
+   "probes": [
+    "When is splitting by capital alone enough, and when must you multiply by time?",
+    "How does a working-partner salary change the profit equations versus a pure capital partnership?"
+   ],
+   "hints": {
+    "1": "Ask whether every rupee was deployed for the same number of months.",
+    "2": "Same months → capital ratio; different months or changing capital → sum Capital×Time. Salary cases: peel percent first, then split what’s left.",
+    "3": "Same-year full investment → e.g. 45000:60000 = 3:4 of profit; late join or capital change → weighted months; 20% salary then 2:3 of the remaining 80%."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Map OA story wrappers (founder equity, shared cloud billing) back to Capital×Time partnership math.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Startup founder dividends based on capital-time contribution are ordinary partnership weights: months active after join (and explicit stay length on exit) times capital, then profit parts.",
+     "weight": "core",
+     "evidence_hint": "Candidate converts join delays and early exits into months invested, forms Capital×Time ratios, and allocates the founders’ dividend by those parts."
+    },
+    {
+     "id": "app2",
+     "point": "Shared cloud/cluster bills split by node-usage time use the same idea: treat nodes as “capital” and hours as “time,” then charge by that weight ratio.",
+     "weight": "core",
+     "evidence_hint": "Candidate computes each project’s nodes×hours, forms the ratio of weights, and multiplies the monthly bill by that project’s share of total parts."
+    }
+   ],
+   "probes": [
+    "Three founders join and leave at different months—how do you compute one founder’s dividend share?",
+    "How would you allocate a monthly cluster bill across projects with different node counts and daily hours?"
+   ],
+   "hints": {
+    "1": "Ignore the SaaS/cloud story labels; recover capital and duration.",
+    "2": "Weight = money×months active, or nodes×hours; then share = weight/total × payout.",
+    "3": "Late join → fewer months; early exit → only stated stay months; billing → nodes×hours parts of the monthly cost."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Capital-only split vs Capital × Time",
+   "strong_answer": "If all partners invest for the same duration, profit follows the capital ratio alone. If join times, exit times, or capital amounts change mid-period, each partner’s share must use Capital×Time (summing phase weights when capital changes), not raw capital."
+  },
+  {
+   "topic": "Working-partner salary then capital split vs pure capital split",
+   "strong_answer": "With a working-partner salary, a stated percent of total profit is taken off the top first; only the remainder is divided by capital ratio. Pure capital partnership applies the capital (or Capital×Time) ratio to the entire profit with no salary peel."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Applying a sum, product, or difference constraint to a ratio from a different point in time without shifting ages.",
+   "correction": "If the ratio describes the situation N years ago, offset all present ages by −N (or use past ages explicitly) before imposing that ratio; never mix a present sum/product with an unshifted past ratio."
+  },
+  {
+   "trap": "Treating a mid-year join as a full year of investment.",
+   "correction": "Months invested equal the period actually funded—e.g. joining after 4 months of a 12-month year means 8 months in the Capital×Time weight."
+  },
+  {
+   "trap": "Assuming an early-leaving partner stays through year-end.",
+   "correction": "Use only the stated active duration (e.g. stays 4 months) in Capital×Time, not “from join until month 12.”"
+  }
+ ]
+}

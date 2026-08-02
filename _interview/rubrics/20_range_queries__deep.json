@@ -1,0 +1,280 @@
+{
+ "id": "20_range_queries__deep",
+ "title": "Range queries: Fenwick, segtree, sparse table (Depth Pass)",
+ "type": "CP",
+ "relevance": "High (second ladder after CSES/EDU templates — CF Div2 C–E “rewrite the ask into a merge / walk / offline count,” GCD-sparse tricks, and custom node structs that still appear as hard OA twists)",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Coverage scheduling: each query marks a range; assign priorities/values to maximize sum — Little Girl / difference-array frequency. Unique/distinct in window: distinct SKUs on [l,r] — Distinct Values / last-occurrence Fenwick. Custom aggregate API: max subarray sum after point edits or count of second-max in a segment — Subarray Sum Queries / Second Largest Query. Pair/subsequence counting under order constraints: increasing length-k / dominance pairs — Subsequences / Jealous Two.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot when range DS stops being a pasted template and needs custom merge, offline Fenwick, or sparse+pointers.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "After Dynamic Range Sum / Hotel Queries / Sereja-and-Brackets-classics, contest range DS requires inventing what each node stores (max subarray, top-2, GCD+count), running Fenwick offline over sorted endpoints, or pairing a sparse table with two pointers / binary lifting on idempotent ops.",
+     "weight": "core",
+     "evidence_hint": "Names custom node contents, offline Fenwick over endpoints, or sparse+two-pointers/binary lifting instead of pasting a basic template."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognize it when many [l,r] asks survive only if you pre-merge associative info, when updates are rare-but-heavy (digit-sum, D(n)), or when the answer is a count of pairs/subsequences that a frequency BIT can accumulate while sweeping.",
+     "weight": "core",
+     "evidence_hint": "Cites pre-merge associative info, rare-but-heavy updates, or sweeping frequency-BIT pair/subsequence counts as the cue."
+    },
+    {
+     "id": "rec3",
+     "point": "OA wording maps to coverage scheduling (Little Girl), distinct SKUs in [l,r] (Distinct Values), custom aggregates like max subarray / second-max (Subarray Sum Queries / Second Largest Query), or order-constrained pair counts (Subsequences / Jealous Two).",
+     "weight": "extended",
+     "evidence_hint": "Ties one of those OA shapes to the matching depth-pass pattern."
+    }
+   ],
+   "probes": [
+    "What in the statement says this is custom merge, offline Fenwick, or sparse+pointers rather than paste Dynamic Range Sum / basic PURS?",
+    "Is the ask many [l,r] associative merges, rare-but-heavy digit-sum/D(n) updates, or a sweeping pair/subsequence count?"
+   ],
+   "hints": {
+    "1": "Ask whether a pasted Fenwick/segtree sum node is enough, or the node/query model must be invented.",
+    "2": "Signals: invent node fields; offline sorted endpoints; sparse+two pointers on idempotent ops; rare-but-heavy replace; frequency BIT while sweeping.",
+    "3": "Say: pre-merge associative info / offline Fenwick / sparse+pointers; OA cousins are coverage assign, distinct in window, max-subarray or second-max API, and dominance / length-k subsequence counts."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Choose the right depth model: coverage rearrange, GCD prune, offline last-occurrence, dual affine mins, layered BIT DP, sparse+pointers, stable replace, or custom merge.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Coverage → rearrange: build range “+1 usefulness” via difference array, then greedily assign largest values to most-queried indices (Little Girl and Maximum Sum).",
+     "weight": "core",
+     "evidence_hint": "Builds per-index query frequency with a difference array and assigns largest a_i to hottest indices."
+    },
+    {
+     "id": "appr2",
+     "point": "Offline last-occurrence: sort queries by r, walk i=1..n, add(prev[a_i],-1), add(i,+1), answer distinct on [l,r] as sum(r)-sum(l-1) (Distinct Values Queries).",
+     "weight": "core",
+     "evidence_hint": "Sorts by r, maintains last occurrence on a Fenwick, and answers with two prefix sums."
+    },
+    {
+     "id": "appr3",
+     "point": "Dual affine trees: pizza cost |x-i|+a_i rewrites as query min(a_i-i)+x left of x and min(a_i+i)-x right — two point-update range-min segtrees (Pizzeria Queries).",
+     "weight": "core",
+     "evidence_hint": "Folds ±i into stored values and answers left/right range mins independently."
+    },
+    {
+     "id": "appr4",
+     "point": "GCD segtree prune: if node_gcd % x == 0 skip; else recurse — with at most one “bad” child you get near-O(log n) replace/check (Bash and a Tough Math Puzzle).",
+     "weight": "extended",
+     "evidence_hint": "Skips divisible GCD nodes and relies on at most one bad child for early exit."
+    },
+    {
+     "id": "appr5",
+     "point": "Layered BIT DP: dp[k][i] = sum dp[k-1][j] over a_j < a_i via Fenwick on value; k trees or one reused layer (Subsequences).",
+     "weight": "extended",
+     "evidence_hint": "Accelerates increasing-subsequence DP layers with Fenwick on compressed values."
+    },
+    {
+     "id": "appr6",
+     "point": "Sparse + monotonic pointers: for each L, grow R while gcd(L..R) (or max-min) still satisfies a predicate — each endpoint moves O(n) total (Array Stabilization / Friends and Subsequences).",
+     "weight": "extended",
+     "evidence_hint": "Pairs sparse RMQ/GCD with two pointers so endpoints move O(n) total."
+    },
+    {
+     "id": "appr7",
+     "point": "2D / dominance: sort one axis, Fenwick the other (Jealous Two, Box in Box, Tufurama).",
+     "weight": "extended",
+     "evidence_hint": "Sorts one constraint and BIT-queries the other for dominance/pair counts."
+    }
+   ],
+   "probes": [
+    "Do you rearrange by coverage frequency, answer offline by r, rewrite distance as a_i±i mins, or prune a GCD segtree?",
+    "When is the model layered BIT DP, sparse+two pointers, or sort-one-axis Fenwick-the-other?"
+   ],
+   "hints": {
+    "1": "Match the ask to one non-obvious trick, not a generic PURS template.",
+    "2": "Diff coverage+sort; offline last-occurrence; dual a_i±i mins; GCD prune; k-layer BIT DP; sparse+pointers; sort+BIT dominance.",
+    "3": "Say: Little Girl diff+assign; Distinct Values sort-by-r last-occurrence; Pizzeria two affine mins; Bash GCD prune; Subsequences layered BIT; Array Stabilization/Friends sparse+pointers; Jealous Two/Box/Tufurama sort+BIT."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Encode custom merge nodes, offline Fenwick bookkeeping, stable-range skips, and Fenwick walk/binary-lift restores.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Custom merge beyond sum/min: node = (total, pref, suf, best) for max subarray, or (mx, mx_cnt, second, second_cnt) for second-largest frequency — merge is pure casework on the two children.",
+     "weight": "core",
+     "evidence_hint": "Writes the four-field max-subarray merge or top-2-with-freq casework merge."
+    },
+    {
+     "id": "impl2",
+     "point": "For max-subarray merge nodes, empty subarray allowed ⇒ best≥0 (Subarray Sum Queries / GSS1-style).",
+     "weight": "core",
+     "evidence_hint": "Forces best to be at least 0 when empty subarray is allowed."
+    },
+    {
+     "id": "impl3",
+     "point": "“Replace until stable” segtree: store range max; if max ≤ 2 (or digit-sum fixed point) skip; else point-update children — total updates O(n log A) (SUM and REPLACE / Range Update Point Query).",
+     "weight": "core",
+     "evidence_hint": "Skips stable segments via range max (or digit-sum fixed points) and only updates children that can still change."
+    },
+    {
+     "id": "impl4",
+     "point": "Walk/binary-lift on Fenwick prefix sums restores permutations and finds k-th remaining (Restore Permutation / Multiset family).",
+     "weight": "extended",
+     "evidence_hint": "Binary-lifts on BIT prefix sums to locate the needed remaining value/position."
+    },
+    {
+     "id": "impl5",
+     "point": "Range Update Point Query digit-sum ops: values stabilize ≤9; maintain “still large” indices in a set / segtree and skip fixed points.",
+     "weight": "extended",
+     "evidence_hint": "Tracks only indices still above the digit-sum fixed point and skips the rest."
+    }
+   ],
+   "probes": [
+    "What fields does your merge node need for max subarray vs second-largest frequency, and how do you merge two children?",
+    "How do you skip stable replace segments, and when do you binary-lift on a Fenwick prefix sum?"
+   ],
+   "hints": {
+    "1": "Write the node struct and the skip/walk mechanics before coding the whole tree.",
+    "2": "(sum,pref,suf,best) with best≥0 if empty allowed; top-2 freqs; skip when max≤2 or digit-sum fixed; BIT binary-lift for k-th remaining.",
+    "3": "Say: GSS1-style four-tuple with best≥0; Second Largest top-2+counts; SUM and REPLACE skip max≤2 with O(n log A) potential; Restore Permutation binary-lift on BIT; digit-sum stabilize ≤9 with a set of still-large indices."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Explain why offline sweeps, sparse+pointers, and stable-range early exits beat naive per-query full scans.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Idempotent static ops (min/max/GCD) → sparse table; then two-pointer / BS on endpoints is O(n log) or O(n), not O(n²).",
+     "weight": "core",
+     "evidence_hint": "States sparse for idempotent ops and endpoint search as O(n log) or O(n), not O(n²)."
+    },
+    {
+     "id": "cx2",
+     "point": "Early-exit / “stable range” updates: if the aggregate already implies no change, do not push into children — complexity comes from potential, not from q log n worst-case alone.",
+     "weight": "core",
+     "evidence_hint": "Attributes cost to a potential/early-exit argument rather than claiming every query is full tree work."
+    },
+    {
+     "id": "cx3",
+     "point": "Sparse + monotonic pointers: each endpoint moves O(n) total when growing R under a GCD or max-min predicate.",
+     "weight": "extended",
+     "evidence_hint": "Says each endpoint moves O(n) total across the two-pointer sweep."
+    },
+    {
+     "id": "cx4",
+     "point": "GCD segtree prune with at most one bad child yields near-O(log n) replace/check.",
+     "weight": "extended",
+     "evidence_hint": "Cites the at-most-one-bad-child prune for near-O(log n) behavior."
+    }
+   ],
+   "probes": [
+    "Why is sparse+two-pointers not O(n²) on endpoint searches?",
+    "Where does the cost of replace-until-stable or GCD-prune actually come from?"
+   ],
+   "hints": {
+    "1": "Separate static idempotent queries from update-heavy replace loops.",
+    "2": "Sparse then O(n log)/O(n) endpoint motion; stable ranges charged to potential not q log n alone; GCD prune near-O(log n).",
+    "3": "Say: idempotent → sparse + two-pointer/BS is O(n log) or O(n), not O(n²); skip when aggregate implies no change (potential, not q log n alone); endpoints O(n) total; Bash prune near-O(log n)."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch compression, overflow, incomplete node fields, and missing offline/early-exit bookkeeping.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Always compress before BIT when values/pref hit 10^9; keep long long for sums and XOR-of-sums mixes.",
+     "weight": "core",
+     "evidence_hint": "Compresses large values/prefixes and uses long long for sum and XOR mixes."
+    },
+    {
+     "id": "pit2",
+     "point": "Node design checklist failure: missing fields so children cannot merge (need sum+pref+suf+best; gcd; top-2; OR of bits; or min with index as required).",
+     "weight": "core",
+     "evidence_hint": "Lists which fields are necessary for the asked merge and notices a missing one."
+    },
+    {
+     "id": "pit3",
+     "point": "Answering commuting [l,r] distinct/pair queries online when offline > online: should sort by r (or by value), Fenwick the sweeping side, and answer in input order via ids.",
+     "weight": "extended",
+     "evidence_hint": "Sorts commuting queries, sweeps with Fenwick, and restores input order by ids."
+    },
+    {
+     "id": "pit4",
+     "point": "Pushing into children on a stable range whose aggregate already implies no change (max≤2 / digit-sum fixed point / node_gcd divisible).",
+     "weight": "extended",
+     "evidence_hint": "Skips recursion when the node aggregate already proves the update/check is done."
+    }
+   ],
+   "probes": [
+    "What breaks if you BIT raw 10^9 values, or merge max-subarray with only a sum field?",
+    "When should you refuse to recurse into children, and when should queries be answered offline?"
+   ],
+   "hints": {
+    "1": "Depth bugs are missing compression, merge fields, or early-exit/offline discipline.",
+    "2": "Compress at 10^9; long long for sums/XOR mixes; enough merge fields; offline sort-by-r; skip stable aggregates.",
+    "3": "Say: compress before BIT at 10^9 and use long long; design sum+pref+suf+best / top-2 / gcd fields; offline when queries commute; do not push if max≤2, digit-sum fixed, or gcd already divisible."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Offline vs online when queries commute",
+   "strong_answer": "Offline > online when queries commute: sort by r (or by value), Fenwick the sweeping side, answer in input order via ids (Distinct Values / last-occurrence family)."
+  },
+  {
+   "topic": "Sparse table vs segtree for idempotent static ops",
+   "strong_answer": "Idempotent static ops (min/max/GCD) → sparse table; then two-pointer / BS on endpoints is O(n log) or O(n), not O(n²) — prefer this over a segtree when there are no updates."
+  },
+  {
+   "topic": "Custom merge node vs sum/min-only tree",
+   "strong_answer": "When the API needs max subarray or second-largest frequency, store (total, pref, suf, best) or (mx, mx_cnt, second, second_cnt) and merge by casework — a sum/min-only node cannot answer."
+  },
+  {
+   "topic": "Dual affine range-mins vs searching |x-i|+a_i directly",
+   "strong_answer": "Fold ±i into the stored value so plain range-min answers best index near x: query min(a_i-i)+x left and min(a_i+i)-x right with two PUR-min segtrees (Pizzeria Queries)."
+  },
+  {
+   "topic": "Early-exit stable-range updates vs touching the whole segment every time",
+   "strong_answer": "If the aggregate already implies no change (max≤2, digit-sum fixed point, node_gcd % x == 0), do not push into children; complexity comes from potential, not from q log n worst-case alone."
+  },
+  {
+   "topic": "Sort+BIT dominance vs nested 2D structures",
+   "strong_answer": "For 2D / dominance pair counts, sort one axis and Fenwick the other (Jealous Two, Box in Box, Tufurama) rather than building a full 2D tree when one dimension can be swept."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "BIT on raw values/prefixes that hit 10^9, or int sums for large aggregates / XOR-of-sums mixes.",
+   "correction": "Always compress before BIT when values/pref hit 10^9; keep long long for sums and XOR-of-sums mixes."
+  },
+  {
+   "trap": "Max-subarray merge that forbids the empty subarray when the problem allows it.",
+   "correction": "Empty subarray allowed ⇒ best≥0 (Subarray Sum Queries / GSS1-style)."
+  },
+  {
+   "trap": "Answering distinct-on-[l,r] with Mo or online structure when last-occurrence offline Fenwick fits.",
+   "correction": "Sort queries by r, walk i=1..n with add(prev[a_i],-1), add(i,+1), answer sum(r)-sum(l-1)."
+  },
+  {
+   "trap": "Range digit-sum / D(n) replace that updates every index every time.",
+   "correction": "Values stabilize ≤9 (digit-sum) or skip segments with max≤2 (SUM and REPLACE); maintain still-large indices and charge updates to O(n log A) potential."
+  },
+  {
+   "trap": "GCD divisibility replace/check that always recurses into both children.",
+   "correction": "If node_gcd % x == 0 skip; else recurse — at most one bad child gives near-O(log n) (Bash and a Tough Math Puzzle)."
+  },
+  {
+   "trap": "Pizza / distance cost answered by scanning neighbors of x.",
+   "correction": "Rewrite |x-i|+a_i as left min(a_i-i)+x and right min(a_i+i)-x on two point-update range-min segtrees."
+  },
+  {
+   "trap": "Node that stores only sum/min when the ask needs second-max frequency or max subarray.",
+   "correction": "Use (mx, mx_cnt, second, second_cnt) or (total, pref, suf, best) and merge by casework on the two children."
+  }
+ ]
+}

@@ -1,0 +1,246 @@
+{
+ "id": "20_range_queries",
+ "title": "Range queries: prefix, sparse table, Fenwick/BIT, segment tree (lazy stretch)",
+ "type": "CP",
+ "relevance": "High — static range aggregates, point-update range queries, and inversion / order-statistic counting are staples of OAs and Div2 C–D; Fenwick + basic segtree are the interview DS upgrade past plain prefix sums.",
+ "difficulty": "mid",
+ "prereqs": [
+  "04_prefix_sums_difference_arrays"
+ ],
+ "company_notes": "Design NumArray with point update and range sum → LC 307 / CSES Dynamic Range Sum (Amazon/Meta-style API). Count inversions / smaller to the right → LC 315 / Fenwick or merge sort (classic hard OA). Many static range min/max or XOR queries → sparse table or prefix XOR (CSES Static RMQ / Range Xor). First seat/hotel/server that can take load x then decrease capacity → Hotel Queries / walk-on-segtree.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Map the prompt to prefix, sparse table, Fenwick/BIT, segment tree, or lazy from static vs updates and the aggregate type.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Static sum/XOR → prefix; static min/max/GCD → sparse table; once updates appear → Fenwick or segment tree.",
+     "weight": "core",
+     "evidence_hint": "States that three-way split from the checklist: prefix for static sum/XOR, sparse for static idempotent, tree when updates exist."
+    },
+    {
+     "id": "rec2",
+     "point": "Signal words: many queries on [l,r], update index then re-query, k-th element in a multiset, count inversions / nested segments, assign to first hotel with enough rooms.",
+     "weight": "core",
+     "evidence_hint": "Lists those signal phrases and ties them to range-query DS rather than naive scans."
+    },
+    {
+     "id": "rec3",
+     "point": "“Design NumArray: update index, query range sum” or “count inversions / how many smaller to the right” are core OA shapes for Fenwick/segtree (LC 307 / LC 315).",
+     "weight": "core",
+     "evidence_hint": "Names NumArray-with-updates or count-smaller-after-self and reaches for Fenwick or segtree."
+    },
+    {
+     "id": "rec4",
+     "point": "Range updates with range queries → lazy propagation (stretch); arbitrary associative merges or “walk to first index with …” → segment tree.",
+     "weight": "extended",
+     "evidence_hint": "Separates lazy RURQ stretch from basic PURS and names walk-on-segtree for first-feasible index."
+    }
+   ],
+   "probes": [
+    "Static range sum vs static range min vs point-update range sum—what structure do you pick for each?",
+    "What wording pushes you from prefix/sparse table into Fenwick, segtree, or lazy?"
+   ],
+   "hints": {
+    "1": "Ask whether the array changes and whether the op is sum/XOR or min/max/GCD.",
+    "2": "Static sum/XOR → prefix; static idempotent → sparse; updates → Fenwick/segtree; walk-first / custom merge → segtree; RURQ → lazy stretch.",
+    "3": "Say: static sum/XOR → prefix; static min/max/GCD → sparse table; updates → Fenwick or segtree; NumArray/inversions → Fenwick/segtree; first hotel ≥ x → walk segtree; range update+query → lazy."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "State the right structure and query/update plan before coding templates.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Static + idempotent (min/max/GCD) → sparse table: O(1) query after O(n log n) preprocess, using two overlapping blocks of length 2^{floor(log(r−l+1))}.",
+     "weight": "core",
+     "evidence_hint": "Names sparse table for idempotent aggregates and the two-block O(1) query idea."
+    },
+    {
+     "id": "appr2",
+     "point": "Point updates + range sum → Fenwick (BIT) or segment tree; Fenwick range is sum(r) − sum(l−1).",
+     "weight": "core",
+     "evidence_hint": "Chooses BIT/segtree for PURS and writes the two-prefix difference for range sum."
+    },
+    {
+     "id": "appr3",
+     "point": "Arbitrary associative merges or walk-to-first-index → segment tree with associative merge (sum, min, XOR, or a struct).",
+     "weight": "core",
+     "evidence_hint": "Says segtree when merge is custom or you descend for first index with a property."
+    },
+    {
+     "id": "appr4",
+     "point": "Fenwick as frequency / order statistic: compress values, add(pos, ±1), find k-th by binary lifting on prefix sums (List Removals / Multiset).",
+     "weight": "extended",
+     "evidence_hint": "Describes compress + ±1 freq BIT and k-th via prefix binary lifting."
+    }
+   ],
+   "probes": [
+    "When is sparse table enough, and when must you switch to Fenwick or a segment tree?",
+    "How do you use a Fenwick as an order-statistic structure for k-th / inversions?"
+   ],
+   "hints": {
+    "1": "Separate static idempotent from point-update sum and from walk/custom merge.",
+    "2": "Sparse for static min/max/GCD; BIT/segtree for PURS; freq BIT for k-th/inversions; segtree for walk/custom merge.",
+    "3": "Say: sparse O(1) after O(n log n) with two overlapping 2^{floor(log(r−l+1))} blocks; PURS via BIT/segtree with sum(r)−sum(l−1); compress+±1 BIT for k-th; segtree merge/walk for first ≥ x."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Confirm Fenwick bit tricks, sparse-table recurrence, segtree template, walk descent, and lazy tags.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Fenwick is 1-indexed: add(i,δ) via i += i & −i; sum(i) via i −= i & −i; always long long on CF.",
+     "weight": "core",
+     "evidence_hint": "Recites the i & −i loops for add/sum and mentions 1-indexing plus long long."
+    },
+    {
+     "id": "impl2",
+     "point": "Sparse table build: st[k][i] = op(st[k−1][i], st[k−1][i+2^{k−1}]); query with two overlapping power-of-two blocks.",
+     "weight": "core",
+     "evidence_hint": "Writes that recurrence and the two-block idempotent query."
+    },
+    {
+     "id": "impl3",
+     "point": "Segment tree template: build / point-update / range-query with associative merge; iterative or recursive both fine.",
+     "weight": "core",
+     "evidence_hint": "Sketches build, point update, range query sharing one merge function."
+    },
+    {
+     "id": "impl4",
+     "point": "Walk/descent: first index with tree[node] ≥ x (Hotel Queries / CF EDU “first at least X”).",
+     "weight": "extended",
+     "evidence_hint": "Describes descending the max (or similar) tree to the leftmost feasible leaf."
+    },
+    {
+     "id": "impl5",
+     "point": "Lazy (stretch): store pending add/assign tags; push before recursing; compose tags correctly (assign kills prior adds).",
+     "weight": "extended",
+     "evidence_hint": "Mentions push-before-recurse and that assign overrides earlier add tags."
+    }
+   ],
+   "probes": [
+    "Write the Fenwick add and prefix-sum loops using i & −i.",
+    "How do you build a sparse table, and how does Hotel Queries walk the segment tree?"
+   ],
+   "hints": {
+    "1": "Start from 1-index Fenwick loops, then sparse recurrence, then segtree merge/walk.",
+    "2": "i += i&−i / i −= i&−i; st[k][i] from two half-length blocks; merge on segtree; descend for first ≥ x; lazy push + assign kills adds.",
+    "3": "Spell: 1-indexed BIT add/sum with i&−i and long long; st[k][i]=op(st[k−1][i], st[k−1][i+2^{k−1}]); segtree build/point-update/range-query; walk first tree[node]≥x; lazy tags with push and assign killing prior adds."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Anchor sparse-table and updateable-tree costs to the bounds stated in the topic.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Sparse table answers idempotent range queries in O(1) after O(n log n) preprocess.",
+     "weight": "core",
+     "evidence_hint": "States O(n log n) build and O(1) query for static min/max/GCD."
+    },
+    {
+     "id": "cx2",
+     "point": "With n ≤ 2·10^5, Fenwick/segtree solutions must stay O((n+q) log n); naive per-query scans are too slow.",
+     "weight": "core",
+     "evidence_hint": "Cites the n ≤ 2·10^5 constraint and the O((n+q) log n) target for updateable structures."
+    }
+   ],
+   "probes": [
+    "What are sparse-table preprocess and query costs for static RMQ?",
+    "Under n ≤ 2·10^5 with updates, what total complexity do you need from Fenwick or a segment tree?"
+   ],
+   "hints": {
+    "1": "Contrast static sparse-table costs with online updateable trees under large n.",
+    "2": "Sparse: O(n log n) then O(1); with updates and n ≤ 2·10^5 stay O((n+q) log n).",
+    "3": "Say: sparse table O(n log n) preprocess, O(1) idempotent query; Fenwick/segtree under n ≤ 2·10^5 in O((n+q) log n) only."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch indexing, overflow, missing compression, wrong structure choice, and lazy tag composition bugs.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Off-by-one on inclusive [l,r] and 0- vs 1-indexing; Fenwick must stay 1-indexed.",
+     "weight": "core",
+     "evidence_hint": "Calls out inclusive bounds and BIT 1-indexing explicitly."
+    },
+    {
+     "id": "pit2",
+     "point": "Overflow on CF: always use long long for Fenwick/prefix-style sums under contest constraints.",
+     "weight": "core",
+     "evidence_hint": "Insists on long long for BIT/range sums on Codeforces."
+    },
+    {
+     "id": "pit3",
+     "point": "Values up to 10^9 need coordinate compression before BIT/segtree (Salary Queries, inversions).",
+     "weight": "core",
+     "evidence_hint": "Compresses to ranks before building a frequency BIT when values are huge."
+    },
+    {
+     "id": "pit4",
+     "point": "Lazy tag mistakes: forgetting push before recursing, or composing add/assign wrong—assign must kill prior adds.",
+     "weight": "extended",
+     "evidence_hint": "States push-before-child and assign overriding earlier adds."
+    }
+   ],
+   "probes": [
+    "What indexing and overflow bugs show up first when coding a Fenwick?",
+    "When must you compress, and what goes wrong with lazy add vs assign composition?"
+   ],
+   "hints": {
+    "1": "Check inclusive bounds, BIT base index, 64-bit sums, compression, and lazy push/compose.",
+    "2": "[l,r] inclusive; Fenwick 1-indexed; long long on CF; compress 10^9 values; push before recurse; assign kills adds.",
+    "3": "Say: inclusive [l,r] and 1-indexed BIT; always long long on CF; compress values up to 10^9; lazy push before recursing and let assign kill prior adds."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Prefix sums vs sparse table vs Fenwick/segment tree",
+   "strong_answer": "Static sum/XOR → prefix; static min/max/GCD → sparse table O(1) after O(n log n); once point updates appear → Fenwick or segment tree."
+  },
+  {
+   "topic": "Fenwick (BIT) vs segment tree",
+   "strong_answer": "Point updates + range sum (or XOR-as-sum) → either Fenwick or segtree; arbitrary associative merges, custom node structs, or walk-to-first-index (≥ x) → segment tree."
+  },
+  {
+   "topic": "Plain PURS tree vs lazy propagation",
+   "strong_answer": "Point update / range query stays with basic Fenwick or segtree; range updates with range queries need lazy tags (stretch)—push before recursing and compose so assign kills prior adds."
+  },
+  {
+   "topic": "Sparse table vs segment tree for static RMQ",
+   "strong_answer": "If the array never changes and the op is idempotent (min/max/GCD), sparse table is the O(1)-query choice; if updates or non-idempotent/custom merges appear, use a segment tree instead."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Scanning each [l,r] query when many queries ask for an associative aggregate.",
+   "correction": "Precompute or maintain a structure: prefix, sparse table, Fenwick, or segment tree depending on static vs updates."
+  },
+  {
+   "trap": "Using a sparse table when the array must support updates.",
+   "correction": "Sparse table is for static idempotent queries; switch to Fenwick or segment tree once updates appear."
+  },
+  {
+   "trap": "0-indexing a Fenwick or mixing inclusive [l,r] bounds.",
+   "correction": "Keep Fenwick 1-indexed; add via i += i & −i, sum via i −= i & −i; range = sum(r) − sum(l−1)."
+  },
+  {
+   "trap": "Building a BIT/segtree on raw values up to 10^9 for frequency / order-statistic queries.",
+   "correction": "Coordinate-compress first (Salary Queries, inversions), then add(pos, ±1) and query ranks."
+  },
+  {
+   "trap": "Overflow on Codeforces with Fenwick or long prefix sums.",
+   "correction": "Always use long long for these structures under CF constraints."
+  },
+  {
+   "trap": "Lazy add/assign composed incorrectly or push skipped.",
+   "correction": "Push pending tags before recursing; assign kills prior adds when composing tags."
+  }
+ ]
+}

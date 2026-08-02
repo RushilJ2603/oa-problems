@@ -1,0 +1,193 @@
+{
+ "id": "dsa_s25_nonverbal",
+ "title": "Non-verbal Reasoning",
+ "type": "FUND",
+ "relevance": "Hardware and general-aptitude OAs test spatial working memory with figure series, analogies, mirror/water images, counting, folding, and Raven's-matrix completion under tight time pressure.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Raven's-matrix pattern completion appears on inductive-reasoning assessments used by SHL, AMCAT, and CoCubes; similar figure items appear on hardware and general-aptitude OAs.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that non-verbal items are about spotting one consistent figure transformation and naming the four that cover almost every item.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Non-verbal items give figures, not words: a pattern is transformed step by step and you predict, complete, or classify it by spotting one consistent transformation.",
+     "weight": "core",
+     "evidence_hint": "Candidate says the skill is identifying a single rule—rotation, reflection, count change, or position shift—and applying it, not reading verbal logic."
+    },
+    {
+     "id": "fund2",
+     "point": "The four transformations that explain almost every figure item are rotation (fixed angle, same direction each step), reflection (flip across a line), count change (dots/sides/lines increase or decrease by a fixed amount), and position shift (an element moves a fixed step).",
+     "weight": "core",
+     "evidence_hint": "Lists all four and notes you should test them in order until one fits."
+    },
+    {
+     "id": "fund3",
+     "point": "A mirror image is reflection across a vertical line (left↔right); a water image is reflection across a horizontal line at the base (top↔bottom).",
+     "weight": "extended",
+     "evidence_hint": "Clearly separates vertical flip (mirror) from horizontal flip (water) without calling either a rotation."
+    }
+   ],
+   "probes": [
+    "What are the four transformations you should try first on a non-verbal figure item?",
+    "How does a mirror image differ from a water image?"
+   ],
+   "hints": {
+    "1": "Think about what kinds of single rules can turn one figure into the next.",
+    "2": "Name rotate, reflect, count, and shift; then define mirror as left↔right and water as top↔bottom.",
+    "3": "Almost every item is one of: fixed-angle rotation, line reflection, fixed count change, or fixed position shift; mirror flips left↔right, water flips top↔bottom."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to apply series, analogy, classification, counting, folding, matrix, embedded, dot, grouping, and rule-detection procedures mechanically.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "In a figure series, when the pattern is confusing, count something numeric—sides, dots, line segments, or rotation angle—and check for an arithmetic step such as a steady +1 or a fixed-angle turn.",
+     "weight": "core",
+     "evidence_hint": "Mentions counting a quantity or angle across frames and predicting the next value, e.g. sides 3→4→5→6 so next is seven, or arrow 45° clockwise each step."
+    },
+    {
+     "id": "mech2",
+     "point": "In a figure analogy, find the transformation from A to B and apply that identical transformation to C.",
+     "weight": "core",
+     "evidence_hint": "Says A→B is the rule (e.g. 90° clockwise), then applies the same turn to C rather than inventing a new rule."
+    },
+    {
+     "id": "mech3",
+     "point": "When counting figures in a composite drawing, count systematically by size (small then large), never at random; for a grid of cells, rectangles equal choosing 2 of the vertical lines times 2 of the horizontal lines.",
+     "weight": "extended",
+     "evidence_hint": "Describes size-class counting and/or the line-pair rule, e.g. 4 small + 4 large triangles = 8, or binom on the three vertical and three horizontal lines giving 9 rectangles."
+    },
+    {
+     "id": "mech4",
+     "point": "In paper folding and punching, punched holes reappear mirrored across every fold line; each fold doubles the holes by reflecting them across that crease.",
+     "weight": "extended",
+     "evidence_hint": "After a right-onto-left fold and one punch, expects two holes symmetric about the vertical centre line on unfold."
+    }
+   ],
+   "probes": [
+    "Walk through how you would continue a figure series or complete an A:B :: C:? analogy.",
+    "How do you count triangles or rectangles in a composite figure, and what happens to punched holes when you unfold a folded sheet?"
+   ],
+   "hints": {
+    "1": "Separate series (continue the rule) from analogy (copy A→B onto C).",
+    "2": "For counting, group by size or use line pairs on a grid; for folding, reflect the hole across each crease.",
+    "3": "Series: arithmetic count or fixed turn; analogy: same transform on C; counting: small+large or choose 2 lines each way; folding: each fold mirrors and doubles holes."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Distinguish reflection from rotation, mirror from water, and visual hunting from mechanical counting under OA time pressure.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "A reflection is not a rotation: a chiral shape with no symmetry that has been flipped can never be recreated by turning the original—handedness, not just orientation, must be checked.",
+     "weight": "core",
+     "evidence_hint": "States that the mirrored odd-one-out cannot be produced by any rotation of the others, even if it looks merely tilted."
+    },
+    {
+     "id": "tr2",
+     "point": "Quick test for mirror vs water: in a mirror image left/right swap while up/down stay; in a water image up/down swap while left/right stay—tracking one directional feature avoids confusing either with a 180° rotation.",
+     "weight": "core",
+     "evidence_hint": "Uses one pointing feature (e.g. flag direction and base) to reject a 180° rotation distractor for water or an unchanged/rotated option for mirror."
+    },
+    {
+     "id": "tr3",
+     "point": "For grids, do not hunt visually—use the counting rule; the reliable OA method is mechanical (name rotate/reflect/count/shift and apply once), not artistic intuition, under about a minute or less per figure.",
+     "weight": "extended",
+     "evidence_hint": "Prefers the binom/line-pair or size-class method and naming a single transformation over eyeballing under time pressure."
+    }
+   ],
+   "probes": [
+    "When classifying odd-one-out figures, how do you tell a rotation of the same shape from a reflection?",
+    "How do you keep mirror images, water images, and 180° rotations straight?"
+   ],
+   "hints": {
+    "1": "Ask whether turning alone could produce the figure, or whether left/right vs up/down flipped.",
+    "2": "Check handedness for odd-one-out; for mirror/water track one directional feature and keep the other axis fixed.",
+    "3": "Mirrored chiral figure ≠ any rotation; mirror swaps left↔right only; water swaps top↔bottom only; 180° rotation changes both axes and is a common trap."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the mechanical checklist to the main OA item types: matrix completion, embedded figures, dot regions, grouping, and stated-rule checks.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "In a 3×3 figure matrix (Raven's format), find the rule across rows and down columns—e.g. a quantity that rises by one moving right and moving down—and fill the blank cell that continues it.",
+     "weight": "core",
+     "evidence_hint": "Reads a pattern like rows 1,2,3 / 2,3,4 / 3,4,? and supplies the next count (5 dots) rather than guessing from appearance alone."
+    },
+    {
+     "id": "app2",
+     "point": "An embedded figure must appear at the same size, orientation, and proportion; a rotated or mirror-flipped copy does not count.",
+     "weight": "core",
+     "evidence_hint": "Rejects an inverted chevron (∨) when the target is an upward ∧, and accepts only the option containing that exact pair of strokes."
+    },
+    {
+     "id": "app3",
+     "point": "In a dot situation, track membership for each overlapping shape (inside/outside) and pick the option with the same region; for grouping, split by a hidden shared property such as straight-edged vs curved; for rule detection, check the stated numeric rule figure by figure.",
+     "weight": "extended",
+     "evidence_hint": "E.g. inside triangle and circle but outside square; groups (1,3,5) straight vs (2,4,6) curved; or dots equal sides only on the matching polygon."
+    }
+   ],
+   "probes": [
+    "How would you complete a 3×3 Raven's-style matrix of figures?",
+    "What must be true for a figure to count as containing an embedded target, and how do you solve a dot-region or grouping item?"
+   ],
+   "hints": {
+    "1": "Look for a row/column progression, then for exact containment or region membership.",
+    "2": "Matrix: same increment across and down; embedded: same size/orientation; dot: list inside/outside for each shape.",
+    "3": "Continue the matrix count rule into the blank; reject reflected/rotated embeds; match all overlap constraints; group by the shared property or verify the stated rule."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Reflection vs rotation",
+   "strong_answer": "A flipped chiral figure cannot be obtained by any rotation of the original; odd-one-out and mirror-image items hinge on handedness, so a 90°-rotated member still belongs while the mirrored one is the outsider."
+  },
+  {
+   "topic": "Mirror image vs water image",
+   "strong_answer": "Mirror flips left↔right with up/down unchanged; water flips top↔bottom with left/right unchanged. A 180° rotation changes both axes and is the standard distractor for both."
+  },
+  {
+   "topic": "Visual hunting vs systematic counting",
+   "strong_answer": "Counting by size class or by choosing pairs of grid lines beats eyeballing composites; for an m×n cell grid, rectangles are binom(m+1,2)×binom(n+1,2), so a 2×2 grid yields 9."
+  },
+  {
+   "topic": "Mechanical transformation naming vs artistic intuition",
+   "strong_answer": "Under a minute or less per figure on hardware/aptitude OAs, name the single transformation (rotate/reflect/count/shift), apply it once, and for folding remember each fold doubles holes by reflecting across the crease—rather than relying on visual guesswork."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating a reflection as if it were a rotation, or picking the figure that merely looks tilted differently as the odd one out.",
+   "correction": "A mirrored chiral shape can never be recreated by turning; the outsider is the one whose handedness differs, while a 90°-rotated figure still belongs to the group."
+  },
+  {
+   "trap": "Confusing a water image with a 180° rotation (e.g. flag ends up pointing the wrong way).",
+   "correction": "Water keeps left/right and only swaps top/bottom; track one directional feature so the base-at-top, still-pointing-the-same-way image wins over the rotated distractor."
+  },
+  {
+   "trap": "Confusing a mirror image with an unchanged figure, a 180° rotation, or a water image.",
+   "correction": "Mirror flips left↔right only; base stays at the bottom while left/right pointing reverses—unchanged, 180°-rotated, and top↔bottom options are wrong."
+  },
+  {
+   "trap": "When counting triangles, missing the inverted middle triangle or the large outer triangle; when counting squares, forgetting the outer square.",
+   "correction": "Count by size: e.g. 4 small + 4 large = 8 in the diagonals square; 4 small + 1 outer = 5 squares; midpoint triangle figure is 4 small + 1 large = 5."
+  },
+  {
+   "trap": "On unfold after a single vertical fold punch, forgetting the second layer or mirroring across the wrong axis.",
+   "correction": "The punch goes through both layers, so unfolding yields two holes symmetric about the vertical fold (centre line), not one hole, a horizontal mirror, or invented extras."
+  },
+  {
+   "trap": "Accepting a rotated or mirror-flipped copy as an embedded figure (e.g. inverted ∨ for target ∧).",
+   "correction": "The embedded target must match at the same size, orientation, and proportion; reflection or rotation is the standard distractor and does not count."
+  }
+ ]
+}

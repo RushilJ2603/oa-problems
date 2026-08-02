@@ -1,0 +1,246 @@
+{
+ "id": "29_string_suffix_structures",
+ "title": "String Suffix Structures: Suffix Array, Suffix Automaton, Aho–Corasick",
+ "type": "CP",
+ "relevance": "Medium — almost never a literal OA template (Striver skips these), but multi-pattern dictionary search, distinct/repeated substrings, and “k-th substring” show up in harder screens; primarily Candidate Master rating-builders.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Longest duplicated/repeated substring (appears ≥ twice) → max LCP or binary search + hash (LC-style Hard). Dictionary/multi-needle “which keywords appear in the document” → Aho–Corasick (or SA if one fixed text, many queries). Distinct or k-th lex substring → SA+LCP or SAM path DP (CSES Order I/II / CF 128B). Harder CP: cyclic minimal rotation, “string must contain pattern P”, lex-smallest erase/append builds (CSES Required Substring / CF Erase and Extend).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Map wording to suffix array+LCP, suffix automaton, or Aho–Corasick instead of O(n^2) substring scans.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Signals: “many patterns vs one text”, “count distinct / k-th / repeating substrings”, “substring that appears in ≥2 places”, or “build string avoiding / forcing a pattern” → suffix structures (SA/SAM/AC), not naive scans.",
+     "weight": "core",
+     "evidence_hint": "Lists those signal phrases and reaches for SA/SAM/AC rather than O(n^2) enumeration."
+    },
+    {
+     "id": "rec2",
+     "point": "“Longest substring that appears ≥ twice” / longest duplicated substring → max LCP (or binary search + hash).",
+     "weight": "core",
+     "evidence_hint": "Names the ≥2-occurrence longest-repeat shape and answers max LCP (optionally BS+hash)."
+    },
+    {
+     "id": "rec3",
+     "point": "“Find which of these keywords appear in the document” → Aho–Corasick (or SA if one fixed text and many queries).",
+     "weight": "core",
+     "evidence_hint": "Maps multi-needle dictionary search to AC, mentioning SA as the fixed-text alternative."
+    },
+    {
+     "id": "rec4",
+     "point": "Tool pick cue: one pattern → KMP/Z/hash; many patterns → AC; all-substring aggregates / k-th / LCS of two strings → SA+LCP or SAM.",
+     "weight": "extended",
+     "evidence_hint": "States that one-vs-many vs all-substring/k-th/two-string-LCS split across KMP/Z/hash, AC, and SA/SAM."
+    }
+   ],
+   "probes": [
+    "What wording makes you reach for SA+LCP, SAM, or Aho–Corasick instead of hashing/KMP alone?",
+    "Is this one pattern, many patterns, or an all-substring / k-th / repeat aggregate?"
+   ],
+   "hints": {
+    "1": "Listen for multi-pattern vs one text, distinct/k-th/repeating substrings, or ≥2 occurrences.",
+    "2": "One pattern → KMP/Z/hash; many needles → AC; distinct/k-th/repeat/LCS-of-two → SA+LCP or SAM.",
+    "3": "Say: many patterns vs one text / distinct / k-th / repeating / appears in ≥2 places / avoid-or-force a pattern → SA, SAM, or AC; longest ≥2-occurrence → max LCP; keyword dictionary in a document → AC (or SA on fixed text)."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "State how SA+LCP, SAM, and AC index substrings so queries become binary searches or automaton walks.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Suffix array = sorted list of suffix starts; pair with Kasai LCP for adjacent overlaps — distinct count = n(n+1)/2 − ∑LCP, longest repeat = max LCP, pattern search = binary search on SA.",
+     "weight": "core",
+     "evidence_hint": "Defines SA+LCP roles and states the distinct, max-repeat, and binsearch-on-SA uses."
+    },
+    {
+     "id": "appr2",
+     "point": "Suffix automaton = minimal DFA of all substrings (O(n) states); len[v] − len[link[v]] = new distinct substrings ending in state v; endpos / link-tree DP for occurrences.",
+     "weight": "core",
+     "evidence_hint": "Calls SAM a minimal all-substring DFA with O(n) states and states the len−link distinct and endpos/link-tree occurrence plan."
+    },
+    {
+     "id": "appr3",
+     "point": "Aho–Corasick = trie of many patterns + KMP-style fail links — scan the text once and aggregate matches on the fail tree.",
+     "weight": "core",
+     "evidence_hint": "Describes trie + fail links, one text scan, and fail-tree aggregation."
+    },
+    {
+     "id": "appr4",
+     "point": "Minimal cyclic rotation: SA on s+s or Booth’s O(n); contain/avoid pattern: automaton DP on KMP/AC/SAM states with accepted/forbidden marks.",
+     "weight": "extended",
+     "evidence_hint": "Names SA-of-s+s or Booth for least rotation, and state DP for contain/avoid."
+    }
+   ],
+   "probes": [
+    "How do SA+LCP, SAM, and AC each turn substring queries into searches or walks?",
+    "For distinct count vs multi-pattern match vs minimal rotation, which structure and why?"
+   ],
+   "hints": {
+    "1": "Index all substrings (or the dictionary) so you never rescan O(n^2) pairs.",
+    "2": "SA sorts suffix starts + LCP; SAM is the minimal substring DFA; AC is a multi-pattern trie with fail links.",
+    "3": "Say: SA+LCP → distinct = n(n+1)/2−∑LCP, longest repeat = max LCP, pattern via SA binsearch; SAM → O(n) states, distinct via len−link, occurrences via endpos/link tree; AC → trie+fail, one scan, aggregate on fail tree; rotation via SA(s+s) or Booth O(n)."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Build SA+Kasai, SAM extend with endpos/link DP, and AC fail/go correctly enough to solve core shapes.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Build SA in O(n log n) (doubling + radix) or call ACL suffix_array; always build Kasai LCP in O(n) next.",
+     "weight": "core",
+     "evidence_hint": "States O(n log n) SA (doubling/radix or ACL) then Kasai LCP in O(n)."
+    },
+    {
+     "id": "impl2",
+     "point": "SAM node fields: next[], link, len (+ firstpos / endpos size); online sam_extend(c); distinct = ∑(len[v]−len[link[v]]); propagate endpos sizes up the link tree (larger len → smaller); clone nodes start at 0.",
+     "weight": "core",
+     "evidence_hint": "Lists those fields, extend, distinct sum, upward endpos push, and clone endpos 0."
+    },
+    {
+     "id": "impl3",
+     "point": "Aho–Corasick: insert patterns into a trie, BFS fail links (fail = KMP on the trie), go(v,c) transitions; exit/output links for matches; for counts ++cnt[state] while scanning, then sum cnt over fail-tree subtrees (or push to parent).",
+     "weight": "core",
+     "evidence_hint": "Describes trie insert, BFS fails, go, output links, and fail-tree count push/sum."
+    },
+    {
+     "id": "impl4",
+     "point": "Pattern in text via SA: binary-search first/last suffix with that prefix (O(|P| log n) compares); k-th distinct: walk SA/SAM counting new prefixes per state; multiplicity variants use SAM endpos sizes × path DP.",
+     "weight": "extended",
+     "evidence_hint": "States SA prefix range binsearch cost and SA/SAM walks for k-th distinct vs multiplicity."
+    }
+   ],
+   "probes": [
+    "Walk through building SA+LCP, then how you’d count distinct substrings or search a pattern.",
+    "How do you construct SAM or AC and get occurrence/match counts?"
+   ],
+   "hints": {
+    "1": "Separate construction (SA/Kasai, sam_extend, AC BFS fails) from the aggregation query.",
+    "2": "After SA always Kasai; SAM needs endpos up the link tree with clones at 0; AC marks then pushes on the fail tree.",
+    "3": "Say: SA O(n log n)+Kasai O(n); distinct n(n+1)/2−∑LCP; SA pattern binsearch O(|P| log n); SAM next/link/len/extend, distinct ∑(len−len[link]), endpos up link tree, clones 0; AC trie+BFS fail+go, ++cnt then fail-tree sums."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State the construction and query costs that appear for SA, LCP, SAM, and SA pattern search.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "SA via doubling + radix (or ACL) is O(n log n); Kasai LCP is O(n).",
+     "weight": "core",
+     "evidence_hint": "Quotes O(n log n) for SA and O(n) for Kasai LCP."
+    },
+    {
+     "id": "cx2",
+     "point": "SAM has O(n) states; indexing avoids O(n^2) substring scans.",
+     "weight": "core",
+     "evidence_hint": "States O(n) SAM states and contrasts with O(n^2) scans."
+    },
+    {
+     "id": "cx3",
+     "point": "Binary-searching a pattern as a SA prefix costs O(|P| log n) compares.",
+     "weight": "core",
+     "evidence_hint": "Gives the O(|P| log n) SA pattern-search bound."
+    },
+    {
+     "id": "cx4",
+     "point": "Minimal rotation can be Booth’s O(n) (or SA on s+s); large-n erase/append (Erase and Extend Hard) forces linear / O(n log n) SA or dueling, not O(n^2).",
+     "weight": "extended",
+     "evidence_hint": "Mentions Booth O(n) and that hard erase/extend needs linear or O(n log n), not O(n^2)."
+    }
+   ],
+   "probes": [
+    "What are the build costs for SA, Kasai LCP, and SAM, and the SA pattern-search cost?",
+    "When does an O(n^2) string build fail the constraints here?"
+   ],
+   "hints": {
+    "1": "Separate SA build, LCP build, SAM size, and pattern binsearch costs.",
+    "2": "SA O(n log n), Kasai O(n), SAM O(n) states, SA pattern O(|P| log n); hard builds forbid O(n^2).",
+    "3": "Say: SA O(n log n)+Kasai O(n); SAM O(n) states vs O(n^2) scans; pattern on SA O(|P| log n); Booth O(n) for minimal rotation; Erase and Extend Hard needs linear/O(n log n), not O(n^2)."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch wrong LCP/endpos/fail-tree bookkeeping and picking the wrong string tool.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Forgetting Kasai LCP after building SA, or mis-stating distinct as something other than n(n+1)/2 − ∑LCP[i] (and longest repeating length as max LCP).",
+     "weight": "core",
+     "evidence_hint": "Insists on building Kasai next and using those exact distinct / max-LCP formulas."
+    },
+    {
+     "id": "pit2",
+     "point": "On SAM, failing to propagate endpos sizes up the link tree, or initializing clone nodes with nonzero endpos instead of 0.",
+     "weight": "core",
+     "evidence_hint": "Requires upward endpos push and clone nodes starting at 0."
+    },
+    {
+     "id": "pit3",
+     "point": "On AC multi-pattern counts, only incrementing cnt[state] while scanning and never summing/pushing over the fail-tree subtrees (or to parent).",
+     "weight": "core",
+     "evidence_hint": "Requires the fail-tree aggregation step after the scan increments."
+    },
+    {
+     "id": "pit4",
+     "point": "Using one-pattern KMP/Z/hash when many patterns need AC, or using AC when the ask is all-substring aggregates / k-th / LCS of two strings (need SA+LCP or SAM).",
+     "weight": "extended",
+     "evidence_hint": "Restates the pick-tool split and flags the wrong-structure choice."
+    }
+   ],
+   "probes": [
+    "What breaks distinct-count or occurrence answers if LCP, endpos, or AC fail-tree bookkeeping is wrong?",
+    "When is AC the wrong tool versus SA/SAM?"
+   ],
+   "hints": {
+    "1": "Check LCP after SA, SAM clones/endpos direction, and AC fail-tree push.",
+    "2": "Distinct needs ∑LCP; SAM clones start at 0 and push endpos up; AC must aggregate on the fail tree; match tool to one vs many vs all-substring.",
+    "3": "Say: always Kasai after SA; distinct = n(n+1)/2−∑LCP, longest repeat = max LCP; SAM endpos up link tree, clones 0; AC ++cnt then fail-tree sum/push; one pattern→KMP/Z/hash, many→AC, all-substring/k-th/two-string LCS→SA+LCP or SAM."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "One pattern (KMP/Z/hash) vs many patterns (Aho–Corasick)",
+   "strong_answer": "One pattern → KMP/Z/hash; many patterns against one text → Aho–Corasick (trie + fail links, one scan). Prefer SA when the text is fixed and queries are many SA prefix searches."
+  },
+  {
+   "topic": "SA+LCP vs SAM for distinct / k-th / repeats",
+   "strong_answer": "Both handle distinct substrings and k-th walks; SA+LCP gives distinct via n(n+1)/2−∑LCP and longest repeat via max LCP; SAM gives distinct via ∑(len[v]−len[link[v]]) and occurrence/multiplicity via endpos and link-tree / path DP."
+  },
+  {
+   "topic": "SA binary search vs Aho–Corasick for multi-pattern existence",
+   "strong_answer": "Finding Patterns-style checks can use SA range binary search or an Aho walk; AC is the natural multi-needle scan-and-aggregate tool, while SA shines for prefix/occurrence queries on one prepared text."
+  },
+  {
+   "topic": "Booth vs SA of s+s for minimal rotation",
+   "strong_answer": "Least cyclic shift via Booth’s O(n) or by building SA on s+s; both are valid—Booth is linear dedicated, SA reuses the general suffix template."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Building a suffix array and skipping Kasai LCP.",
+   "correction": "Always build Kasai LCP in O(n) next; distinct substrings use n(n+1)/2 − ∑LCP[i], and longest repeating substring length is max LCP."
+  },
+  {
+   "trap": "Initializing SAM clone nodes with the same endpos size as the original instead of 0.",
+   "correction": "Clone nodes start at 0; propagate endpos sizes up the SAM link tree (larger len → smaller)."
+  },
+  {
+   "trap": "Counting AC matches only at the states visited while scanning the text.",
+   "correction": "After ++cnt[state] on the scan, sum cnt over fail-tree subtrees (or push to parent) so matches implied by fail links are counted."
+  },
+  {
+   "trap": "Reaching for AC when the problem needs all-substring aggregates, k-th substring, or LCS-of-two-strings style answers.",
+   "correction": "Pick SA+LCP or SAM for those; reserve AC for many patterns vs one text (and automaton DP for contain/avoid)."
+  },
+  {
+   "trap": "Solving large-n erase/append lex-smallest builds with an O(n^2) approach.",
+   "correction": "Hard Erase and Extend forces linear / O(n log n) SA or dueling, not O(n^2)."
+  }
+ ]
+}

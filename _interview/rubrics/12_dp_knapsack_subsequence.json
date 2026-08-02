@@ -1,0 +1,221 @@
+{
+ "id": "12_dp_knapsack_subsequence",
+ "title": "DP III: Knapsack Variants & Subsequence (LCS, Edit Distance, Subset-Sum, Partition)",
+ "type": "CP",
+ "relevance": "0/1 / unbounded knapsack, subset-sum, partition, LCS, and edit distance are among the most reused OA / interview DP patterns",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "OA/interview flavors: budget/resource selection as 0/1 knapsack; equal-split/fair-division as partition/subset-sum (sometimes with remove-one or min-difference twists); change-making as min coins or number of ways (loop-order is a common reject); string transform/alignment as edit distance, LCS, or distinct-subsequence counting on disguised product/DNA strings.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Confirm the candidate maps wording to knapsack/subset-sum/partition vs two-string subsequence DP.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "“Maximum value under a budget” / pick items or projects under a cost cap maps to 0/1 knapsack.",
+     "weight": "core",
+     "evidence_hint": "Names 0/1 knapsack or Book Shop / Knapsack 1 style maximize-under-cap."
+    },
+    {
+     "id": "rec2",
+     "point": "“Can you make sum / split equally” maps to subset-sum or partition (reduce to subset sum of total/2).",
+     "weight": "core",
+     "evidence_hint": "Says partition equal subset sum or subset-sum reachability of half the total."
+    },
+    {
+     "id": "rec3",
+     "point": "“Longest common …” or “minimum operations to transform” maps to LCS or edit distance on two string prefixes.",
+     "weight": "extended",
+     "evidence_hint": "Mentions LCS length/alignment or Levenshtein insert/delete/replace."
+    }
+   ],
+   "probes": [
+    "What DP family is this—knapsack/subset-sum, or two-string subsequence—and what phrase in the prompt tipped you off?"
+   ],
+   "hints": {
+    "1": "Look for a capacity/budget versus two sequences you must align or transform.",
+    "2": "Budget/max score → knapsack; equal split → subset-sum/partition; longest common / min edits → LCS or edit distance.",
+    "3": "Spot it when you see “maximum value under a budget”, “can you make sum / split equally”, “longest common …”, or “minimum operations to transform”."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Establish update direction, problem reductions, and the two-string transitions.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "0/1 knapsack updates the 1D DP backward so each item is used at most once; unbounded updates forward.",
+     "weight": "core",
+     "evidence_hint": "States descending/backward for 0/1 and ascending/forward for unbounded/coin DP."
+    },
+    {
+     "id": "appr2",
+     "point": "Partition / Target Sum style problems reduce to “does a subset sum to T?” (or count such subsets), e.g. total/2 or (sum+target)/2.",
+     "weight": "core",
+     "evidence_hint": "Explicitly reduces fair split or signed-sum counting to a subset-sum instance."
+    },
+    {
+     "id": "appr3",
+     "point": "When capacity W is huge but values are small, flip state: dp[value] = min weight (Knapsack 2 pattern).",
+     "weight": "extended",
+     "evidence_hint": "Swaps dimension to minimize weight for each value instead of indexing by weight."
+    },
+    {
+     "id": "appr4",
+     "point": "Subsequence string DP on prefixes: match/skip for LCS; insert/delete/replace for edit distance.",
+     "weight": "core",
+     "evidence_hint": "Describes dp[i][j] over two prefixes with those transition families."
+    }
+   ],
+   "probes": [
+    "For this problem, is the inner update 0/1 or unbounded—and if it’s partition or Target Sum, what subset-sum target do you reduce to?"
+   ],
+   "hints": {
+    "1": "Ask whether each item may be taken once or many times, and whether the ask is reachability, best value, or ways.",
+    "2": "Backward 1D for 0/1; forward for unbounded; partition/Target Sum → subset sum to total/2 or (sum+target)/2.",
+    "3": "If W is huge, use dp[value] = min weight; for two strings, LCS is match/skip and edit distance is insert/delete/replace."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Verify they can code 1D knapsack update order and the standard LCS / edit-distance transitions.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Code 0/1 knapsack in O(nW) with a 1D array updated descending so each item is used at most once.",
+     "weight": "core",
+     "evidence_hint": "Sketches nested loops with weight walking high→low for each item."
+    },
+    {
+     "id": "impl2",
+     "point": "Code unbounded / coin DP ascending; know outer-capacity vs outer-coin loop order distinguishes permutations vs combinations.",
+     "weight": "core",
+     "evidence_hint": "Mentions ascending updates and that Coin Combinations I vs II differ by loop order."
+    },
+    {
+     "id": "impl3",
+     "point": "Edit distance: on match dp[i][j] = dp[i-1][j-1]; else 1 + min(insert, delete, replace).",
+     "weight": "core",
+     "evidence_hint": "Writes the three mismatch transitions plus the equal-char copy."
+    },
+    {
+     "id": "impl4",
+     "point": "Optional stretch: bitset reachability via dp |= dp << w when only yes/no subset-sum matters.",
+     "weight": "extended",
+     "evidence_hint": "Mentions shifting/OR bitset trick for achievable sums."
+    }
+   ],
+   "probes": [
+    "Walk through the 1D update for one item, then write the edit-distance recurrence for dp[i][j]."
+   ],
+   "hints": {
+    "1": "Think about whether reusing the same item in the same pass would be legal.",
+    "2": "0/1: descend weights; unbounded: ascend; coins: loop order = combinations vs permutations.",
+    "3": "Match → dp[i-1][j-1]; else 1 + min(insert, delete, replace); subset-sum-only can use dp |= dp << w."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Anchor the classical 0/1 knapsack cost and when to change the state dimension.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Classical 0/1 knapsack is O(nW) time with a 1D capacity array.",
+     "weight": "core",
+     "evidence_hint": "States O(nW) for the standard weight-indexed DP."
+    },
+    {
+     "id": "cx2",
+     "point": "If W is huge and values are small, switch to value-indexed state (min weight per value) instead of weight-indexed DP.",
+     "weight": "extended",
+     "evidence_hint": "Explains flipping the dimension as in AtCoder Knapsack 2 rather than forcing large W."
+    }
+   ],
+   "probes": [
+    "What is the time complexity of the standard 0/1 knapsack DP, and when do you refuse to index by W?"
+   ],
+   "hints": {
+    "1": "Count states by items times capacities you actually store.",
+    "2": "Weight-indexed 0/1 is O(nW); huge W forces another state choice.",
+    "3": "Quote O(nW) for classical 0/1; if W is huge, use dp[value] = min weight."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Surface the reject-level bugs around loop order, update direction, and reductions.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Coin “number of ways” problems: wrong loop order swaps combinations and permutations—a common OA reject.",
+     "weight": "core",
+     "evidence_hint": "Calls out Coin Combinations I vs II / order-matters vs combinations loop-order bug."
+    },
+    {
+     "id": "pit2",
+     "point": "Updating ascending on a 0/1 item (or descending on unbounded) silently allows the wrong reuse pattern.",
+     "weight": "core",
+     "evidence_hint": "Ties direction of the 1D pass to at-most-once vs unlimited reuse."
+    },
+    {
+     "id": "pit3",
+     "point": "Counting partition ways (e.g. Two Sets II) needs modular arithmetic—answers are mod 10^9+7.",
+     "weight": "extended",
+     "evidence_hint": "Mentions taking ways modulo 10^9+7 for equal-sum splits of 1..n."
+    }
+   ],
+   "probes": [
+    "What silent bug makes “ways to make amount” fail tests even when min-coins is correct?"
+   ],
+   "hints": {
+    "1": "Compare your coin loops to whether order of coins should matter.",
+    "2": "Outer capacity / inner coin vs the twin order; also check 0/1 vs unbounded pass direction.",
+    "3": "Wrong loop order ↔ combinations vs permutations; wrong 1D direction ↔ illegal reuse; counting splits often mod 10^9+7."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "0/1 backward update vs unbounded forward update",
+   "strong_answer": "Descend the 1D capacity array for 0/1 so each item is used at most once; ascend for unbounded/coin DP so an item can be reused in the same pass."
+  },
+  {
+   "topic": "Coin combinations vs permutations (loop order)",
+   "strong_answer": "Outer capacity / inner coin vs its twin decides whether order matters (permutations) or only combinations are counted—the CSES Coin Combinations I/II pair."
+  },
+  {
+   "topic": "Weight-indexed knapsack vs value-as-state",
+   "strong_answer": "When W is huge but values are small, store min weight per value (Knapsack 2) instead of best value per weight."
+  },
+  {
+   "topic": "Full subset-sum DP vs bitset reachability",
+   "strong_answer": "If only yes/no achievable sums matter, bitset dp |= dp << w is a fast reachability trick; use full DP when you need values, counts, or reconstruction."
+  },
+  {
+   "topic": "LCS length only vs reconstruction",
+   "strong_answer": "Length is the base dp[i][j] table; recovering an actual LCS string needs parent backtracking (AtCoder LCS), not only the length."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using the same ascending coin DP for both “order matters” and “combinations only”.",
+   "correction": "Treat loop order as part of the spec—Coin Combinations I vs II are twins; mismatch is a common reject."
+  },
+  {
+   "trap": "Updating 0/1 knapsack forward in 1D (or unbounded backward).",
+   "correction": "0/1 must update descending so each item is used at most once; unbounded must update ascending."
+  },
+  {
+   "trap": "Trying to solve equal-split / Target Sum without a subset-sum reduction.",
+   "correction": "Reduce to “subset sums to T” (or count such subsets), e.g. total/2 or (sum+target)/2."
+  },
+  {
+   "trap": "Implementing only LCS length when the judge wants the string.",
+   "correction": "Keep parents / backtrack to reconstruct one LCS, as in AtCoder Educational DP F."
+  },
+  {
+   "trap": "Forgetting modular reduction on partition counting.",
+   "correction": "Ways to split into equal sums (Two Sets II) are taken mod 10^9+7."
+  }
+ ]
+}

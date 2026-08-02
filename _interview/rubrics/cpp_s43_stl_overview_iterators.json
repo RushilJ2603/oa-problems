@@ -1,0 +1,235 @@
+{
+ "id": "cpp_s43_stl_overview_iterators",
+ "title": "STL and Iterators",
+ "type": "FUND",
+ "relevance": "Interviewers probe whether candidates understand half-open ranges, iterator categories, and why algorithms like std::sort couple to iterator capability rather than container type.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the STL's four pillars and iterators as the cursor abstraction that decouples algorithms from containers.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "The STL's four pillars are Containers, Iterators, Algorithms, and Function Objects (functors/lambdas), with allocators managing memory behind the scenes.",
+     "weight": "core",
+     "evidence_hint": "Lists the four named pillars and may mention allocators as the behind-the-scenes fifth."
+    },
+    {
+     "id": "fund2",
+     "point": "Algorithms operate on iterators rather than containers directly, so one algorithm (e.g. std::sort) works for any container whose iterators support the required operations.",
+     "weight": "core",
+     "evidence_hint": "States decoupling: no per-container sort; iterators are the glue."
+    },
+    {
+     "id": "fund3",
+     "point": "An iterator provides a pointer-like interface (*, ++, and usually ==/!=) so algorithms traverse a sequence without knowing whether it lives in a vector, list, stream, or raw array.",
+     "weight": "core",
+     "evidence_hint": "Defines iterator as pointer-like cursor/abstraction over container storage."
+    },
+    {
+     "id": "fund4",
+     "point": "STL ranges are half-open [begin, end): begin is included, end is excluded and must never be dereferenced—it is a one-past-the-last sentinel.",
+     "weight": "core",
+     "evidence_hint": "Explains [begin, end), empty when begin==end, and that *end() is undefined behaviour."
+    }
+   ],
+   "probes": [
+    "What are the four pillars of the STL, and how do iterators let one algorithm work across different containers?",
+    "What does end() point to, and why must you never dereference it?"
+   ],
+   "hints": {
+    "1": "Think bookmark into a container, not the container's storage layout.",
+    "2": "Name Containers, Iterators, Algorithms, Function Objects; then explain half-open [begin, end).",
+    "3": "end() is one-past-the-last (sentinel); empty means begin==end; *v.end() is UB like reading past an array."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Check command of accessors, const-correctness, the category hierarchy, and portable helpers in <iterator>.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Containers expose begin/end (mutating), cbegin/cend (always read-only), and rbegin/rend / crbegin/crend for reverse traversal where ++ walks backwards.",
+     "weight": "core",
+     "evidence_hint": "Distinguishes forward vs reverse and mutating vs const accessors from the table."
+    },
+    {
+     "id": "mech2",
+     "point": "std::begin/std::end free functions work for STL containers and built-in arrays; prefer them in generic code because member .begin() fails on raw arrays.",
+     "weight": "extended",
+     "evidence_hint": "Mentions free begin/end, arrays lacking members, and range-based for using free-function lookup."
+    },
+    {
+     "id": "mech3",
+     "point": "iterator allows read/write of the element; const_iterator allows only reading—and const_iterator is not the same as a const iterator (const iterator cannot be reseated but may still allow *it = value).",
+     "weight": "core",
+     "evidence_hint": "Separates element constness from iterator-object constness; notes iterator→const_iterator conversion is one-way."
+    },
+    {
+     "id": "mech4",
+     "point": "Classic iterator categories are Input, Output, Forward, Bidirectional, Random-Access; Contiguous (C++17/C++20) refines Random-Access with contiguous storage—list is bidirectional, vector is contiguous/random-access.",
+     "weight": "core",
+     "evidence_hint": "Names the hierarchy and contrasts list vs vector; may note std::sort needs random-access."
+    },
+    {
+     "id": "mech5",
+     "point": "std::advance mutates in place; std::next/std::prev return a new iterator; std::distance returns hop count—O(1) for random-access, O(N) (or O(|n|) for advance) otherwise; prev requires bidirectional.",
+     "weight": "core",
+     "evidence_hint": "Compares mutate-vs-return and complexity by category; states prev needs bidirectional."
+    }
+   ],
+   "probes": [
+    "Name the iterator categories and which category std::list versus std::vector provide.",
+    "What is the difference between a const_iterator and a const iterator?",
+    "When would you use std::advance versus std::next, and what is their complexity?"
+   ],
+   "hints": {
+    "1": "Categories form a ladder of capabilities algorithms demand.",
+    "2": "Input/Output → Forward → Bidirectional → Random-Access → Contiguous; helpers abstract category gaps.",
+    "3": "list: bidirectional (no it+n); vector: random-access/contiguous; advance mutates O(1)/O(|n|); next non-mutating; prev needs bidirectional."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Surface when category requirements and adaptor choice force different APIs or complexity.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "std::sort requires random-access iterators, so it cannot be used on std::list; use list::sort instead.",
+     "weight": "core",
+     "evidence_hint": "Links sort's random-access demand to list's bidirectional-only iterators."
+    },
+    {
+     "id": "tr2",
+     "point": "Writing it+n or end-begin is legal only for random-access; <iterator> helpers give one spelling for every category with complexity that degrades gracefully.",
+     "weight": "core",
+     "evidence_hint": "Contrasts operator+ on vector with std::advance on list."
+    },
+    {
+     "id": "tr3",
+     "point": "front_inserter requires push_front (deque/list, not vector) and reverses apparent copy order because each insert lands at the front; prefer back_inserter or inserter at end() for stable order.",
+     "weight": "extended",
+     "evidence_hint": "States push_front requirement and order-reversal trap versus back_inserter."
+    }
+   ],
+   "probes": [
+    "Why can't you call std::sort on a std::list, and what do you use instead?",
+    "Why prefer std::advance/std::distance over it+n / end-begin in generic code?"
+   ],
+   "hints": {
+    "1": "Match algorithm requirements to what the iterator can do.",
+    "2": "Random-access enables O(1) jumps; bidirectional walks; adaptors change assignment into insert.",
+    "3": "std::sort needs random-access → list::sort; helpers O(1) on random-access else linear; front_inserter reverses order."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply iterators in real code: adaptors, streams, range-based for, invalidation, and C++20 ranges.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Inserter adaptors turn *it=value into push_back (back_inserter), push_front (front_inserter), or insert(hint,value) (inserter)—so std::copy can append into an empty destination.",
+     "weight": "core",
+     "evidence_hint": "Explains back_inserter with copy into empty vector; may mention set/map via inserter."
+    },
+    {
+     "id": "app2",
+     "point": "Stream iterators adapt iostreams: istream_iterator is a single-pass input iterator with default-constructed end-of-stream sentinel; ostream_iterator writes via << on assignment.",
+     "weight": "extended",
+     "evidence_hint": "Describes copy from istream_iterator to back_inserter and ostream_iterator with delimiter."
+    },
+    {
+     "id": "app3",
+     "point": "Range-based for is syntactic sugar over begin/end (members or ADL free functions); the type only needs iterators supporting !=, ++, and *.",
+     "weight": "core",
+     "evidence_hint": "Desugars for (T x : range) into begin/end loop; mentions by-value vs reference binding."
+    },
+    {
+     "id": "app4",
+     "point": "Mutating a container can invalidate iterators (e.g. vector push_back may reallocate); using an invalidated iterator or dereferencing end() is undefined behaviour—re-obtain iterators after mutations.",
+     "weight": "core",
+     "evidence_hint": "Gives vector reallocation example and rule-of-thumb that list/map typically invalidate only erased elements."
+    },
+    {
+     "id": "app5",
+     "point": "reverse_iterator::base() does not point at the same element as *rit—it is the forward iterator one past the element rit dereferences (classic off-by-one).",
+     "weight": "extended",
+     "evidence_hint": "States base() is one past *rit when mixing reverse and forward iterators."
+    }
+   ],
+   "probes": [
+    "How would you use std::copy to append into an empty vector without pre-sizing it?",
+    "What does a range-based for loop expand to under the hood?",
+    "What happens to existing iterators if you push_back into a vector that reallocates?"
+   ],
+   "hints": {
+    "1": "Adaptors and free begin/end let algorithms talk to containers, arrays, and streams uniformly.",
+    "2": "back_inserter for append; range-for uses begin/end; invalidation is dangling after storage moves.",
+    "3": "std::copy(..., std::back_inserter(dest)); for desugars to begin!=end ++; after vector realloc *old_it is UB; rit.base() is one past *rit."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "std::sort vs list::sort",
+   "strong_answer": "std::sort needs random-access iterators; std::list only provides bidirectional, so use member list::sort instead of std::sort on list."
+  },
+  {
+   "topic": "it + n / end - begin vs std::advance / std::distance",
+   "strong_answer": "Arithmetic is only for random-access; helpers work for every category—O(1) on random-access, O(N) or O(|n|) otherwise—so prefer helpers in generic code."
+  },
+  {
+   "topic": "Member begin/end vs std::begin / std::end",
+   "strong_answer": "Free std::begin/std::end work for containers and built-in arrays; member .begin() fails on raw arrays; prefer free functions in generic code (range-based for uses them)."
+  },
+  {
+   "topic": "back_inserter vs front_inserter",
+   "strong_answer": "back_inserter uses push_back and preserves copy order; front_inserter needs push_front (not vector) and reverses apparent order; use inserter at end() if you need stable order without push_back."
+  },
+  {
+   "topic": "iterator vs const_iterator (and vs const iterator)",
+   "strong_answer": "iterator can mutate elements; const_iterator cannot write through *; a const iterator cannot be reseated (++ fails) but may still allow *it=value—orthogonal axes of constness."
+  },
+  {
+   "topic": "Pre-C++20 iterator pairs vs C++20 ranges",
+   "strong_answer": "Ranges let algorithms take a whole range (std::ranges::sort(v)) instead of begin/end pairs; under the hood a range still has begin and end—half-open ranges, categories, and invalidation still apply."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Dereferencing end(), rend(), cend(), etc.",
+   "correction": "They are sentinels (one-past-the-last / one-before-first), not elements; *v.end() is undefined behaviour."
+  },
+  {
+   "trap": "Confusing const_iterator with const iterator",
+   "correction": "const_iterator forbids writing through *it but can be advanced; const iterator cannot be reseated but may still allow *it = value if it is a mutating iterator type."
+  },
+  {
+   "trap": "Calling std::prev on a pure forward or input iterator",
+   "correction": "std::prev requires bidirectional or stronger; std::next works from input iterators upward."
+  },
+  {
+   "trap": "Assuming reverse_iterator::base() refers to the same element as *rit",
+   "correction": "base() is the underlying forward iterator one past the element the reverse iterator dereferences—mixing directions without adjusting causes off-by-one bugs."
+  },
+  {
+   "trap": "Using front_inserter and expecting copy to preserve order",
+   "correction": "Each push_front lands at the front, so relative order reverses; prefer back_inserter or inserter at end() for stable order."
+  },
+  {
+   "trap": "std::distance(first, last) with unreachable or wrong-order iterators on non-random-access ranges",
+   "correction": "last must be reachable by incrementing first; unrelated containers or wrong order is undefined behaviour."
+  },
+  {
+   "trap": "Using iterators after a mutating operation that may reallocate or erase",
+   "correction": "Invalidated iterators are UB to use; after push_back/erase/insert, re-obtain iterators from return values or begin() again—rules vary by container."
+  },
+  {
+   "trap": "Surprising early termination with istream_iterator",
+   "correction": "It uses operator>>, so formatting/locale and leftover characters in the stream can stop typed reads early."
+  }
+ ]
+}

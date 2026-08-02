@@ -1,0 +1,210 @@
+{
+ "id": "dsa_s19_syllogisms_venn",
+ "title": "Syllogisms & Venn Diagrams",
+ "type": "FUND",
+ "relevance": "Placement OAs and company logic tests use Venn-based syllogisms, possibility conclusions, either-or pairs, and set counting/min-max overlap questions.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the Venn mappings for categorical statements and the definite-vs-possibility rule.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "All A are B means circle A is drawn entirely inside circle B.",
+     "weight": "core",
+     "evidence_hint": "Candidate draws A fully nested in B for universal affirmative."
+    },
+    {
+     "id": "fund2",
+     "point": "No A is B means circle A and circle B are disjoint with no overlap.",
+     "weight": "core",
+     "evidence_hint": "Candidate draws two non-overlapping circles for universal negative."
+    },
+    {
+     "id": "fund3",
+     "point": "Some A are B means the circles overlap; Some A are not B means at least one part of A is outside B.",
+     "weight": "core",
+     "evidence_hint": "Candidate shows overlap for Some, and an A-outside-B region for Some-not."
+    },
+    {
+     "id": "fund4",
+     "point": "A definite conclusion must hold in every valid diagram; a possibility conclusion holds if it is true in at least one valid diagram.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts must-always-true vs can-be-drawn-once."
+    }
+   ],
+   "probes": [
+    "How do you represent All, No, Some, and Some-not on a Venn diagram, and when is a conclusion definite versus only possible?"
+   ],
+   "hints": {
+    "1": "Think of each category as a circle and how the four statement types place those circles.",
+    "2": "Map All→nested, No→disjoint, Some→overlap, Some-not→A partly outside B; then separate always-true from can-be-true.",
+    "3": "Definite = true in every valid diagram; possibility = true in at least one valid diagram."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how conclusions follow from nesting, overlap, disjointness, Only a few, and complementary either-or pairs.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Overlap is bidirectional: Some dogs are birds implies Some birds are dogs, but Some cats are birds need not follow from All cats are dogs and Some dogs are birds.",
+     "weight": "core",
+     "evidence_hint": "Candidate keeps Cats inside Dogs, Birds overlapping Dogs optionally missing Cats, and treats the dogs-birds overlap as symmetric."
+    },
+    {
+     "id": "mech2",
+     "point": "Nested All chains force All of the innermost in the outermost, and the innermost region also yields Some of the outermost are the innermost.",
+     "weight": "core",
+     "evidence_hint": "For All pens are pencils and All pencils are erasers: both All pens are erasers and Some erasers are pens follow."
+    },
+    {
+     "id": "mech3",
+     "point": "When a set overlaps a region forbidden from another set, the overlapping members are definitely not that other set, but the rest of the set may still meet it.",
+     "weight": "core",
+     "evidence_hint": "No tree is a flower + Some trees are fruits ⇒ Some fruits are not flowers, but not No fruit is a flower."
+    },
+    {
+     "id": "mech4",
+     "point": "Only a few A are B means Some A are B and Some A are not B.",
+     "weight": "core",
+     "evidence_hint": "Candidate translates Only a few engineers are coders into overlap plus a forced engineers-outside-coders region."
+    },
+    {
+     "id": "mech5",
+     "point": "Standard complementary either-or pairs are Some A are B with No A is B, and All A are B with Some A are not B, when neither conclusion is individually definite and they exhaust possibilities.",
+     "weight": "core",
+     "evidence_hint": "Candidate names those two pairs and requires same subject/predicate plus exhaustive coverage."
+    },
+    {
+     "id": "mech6",
+     "point": "Some A are B and Some A are not B do not form an either-or pair because both can be true at once.",
+     "weight": "extended",
+     "evidence_hint": "Candidate rejects either-or for Some/Some-not and may answer Neither when neither is definite."
+    }
+   ],
+   "probes": [
+    "Given All cats are dogs and Some dogs are birds, which of Some cats are birds and Some birds are dogs follows, and why?",
+    "When do two conclusions form an either-or complementary pair, and why is Some plus Some-not not such a pair?"
+   ],
+   "hints": {
+    "1": "Sketch the forced regions first, then ask what must be true in every diagram versus only in some.",
+    "2": "Check symmetry of stated overlaps, nesting for All-chains, and whether undefined pairs are complementary or merely underdetermined.",
+    "3": "Only II in the cats/dogs/birds case; either-or uses Some↔No or All↔Some-not, never Some↔Some-not."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast definite conclusions with possibility conclusions and true complementary pairs with false either-or pairs.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Possibility can allow full engulfing of a nested set into an overlap region, but fails if some members are forced into a set disjoint from the target.",
+     "weight": "core",
+     "evidence_hint": "All lions being bears can be possible; all tigers being wolves cannot when some tigers are bears and no bear is a wolf."
+    },
+    {
+     "id": "tr2",
+     "point": "An undefined subject-predicate pair may still be either-or if every diagram makes exactly one of the complementary conclusions true.",
+     "weight": "core",
+     "evidence_hint": "For doors/windows/roofs or cars/buses/trains, candidate picks Either I or II when the pair is complementary and exhaustive."
+    },
+    {
+     "id": "tr3",
+     "point": "Relying on one minimum-overlap diagram for Some is unsafe; extreme cases including complete overlap must be tested.",
+     "weight": "extended",
+     "evidence_hint": "Candidate mentions checking full overlap so Some does not force Some-not."
+    }
+   ],
+   "probes": [
+    "How do you decide whether All X being Y is a possibility, and how is that different from treating two conclusions as either-or?",
+    "Why must you test complete-overlap diagrams when the premises only say Some?"
+   ],
+   "hints": {
+    "1": "Ask whether you need one workable diagram or truth in every diagram.",
+    "2": "For possibility, try to draw the claimed arrangement without breaking premises; for either-or, check complementary exhaustion.",
+    "3": "Lions-in-bears can work; all-tigers-wolves cannot; Some does not imply Some-not because complete overlap is allowed."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply Venn syllogism rules and set formulas to counting, three-set inclusion-exclusion, exactly-two, and min-max overlap.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "For 80 students with 45 Math, 50 Science, and 10 neither, union is 70, intersection is 25, and exactly one is 45.",
+     "weight": "core",
+     "evidence_hint": "Candidate uses 80−10=70, then 45+50−intersection=70 ⇒ intersection 25, then exactly one =20+25=45 or |M|+|S|−2|∩|."
+    },
+    {
+     "id": "app2",
+     "point": "Three-set inclusion-exclusion with 40, 50, 30 and pairwise 15, 10, 12 plus all-three 5 gives union 88, so none of 100 is 12.",
+     "weight": "core",
+     "evidence_hint": "Candidate computes 40+50+30−15−10−12+5=88 and 100−88=12."
+    },
+    {
+     "id": "app3",
+     "point": "Exactly two sports requires subtracting the all-three count from each pairwise intersection: 20−10, 15−10, 10−10 sum to 15.",
+     "weight": "core",
+     "evidence_hint": "Candidate gets 10+5+0=15 after removing the triple from each pair."
+    },
+    {
+     "id": "app4",
+     "point": "For 200 employees with 130 coffee and 110 tea, overlap is at most 110 and at least 40.",
+     "weight": "core",
+     "evidence_hint": "Max = min(130,110)=110; min from 130+110−overlap ≤200 ⇒ overlap ≥40."
+    },
+    {
+     "id": "app5",
+     "point": "Minimum all-three passes among 100 with 80/75/70 passers is 25 by maximizing disjoint failures 20+25+30=75.",
+     "weight": "extended",
+     "evidence_hint": "Candidate uses failures 20, 25, 30, sums to 75, then 100−75=25."
+    }
+   ],
+   "probes": [
+    "In a class of 80 with 45 Math, 50 Science, and 10 neither, how many like exactly one subject?",
+    "For 130 coffee and 110 tea drinkers among 200 employees, what are the min and max who drink both?"
+   ],
+   "hints": {
+    "1": "Write the union from total minus neither, or bound overlap with min set size and the union ≤ total constraint.",
+    "2": "Two-set: |∪|=|A|+|B|−|∩|; exactly one = |A|+|B|−2|∩|; three-set add back the triple.",
+    "3": "Exactly one =45; coffee/tea overlap ranges from 40 to 110."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Definite conclusion vs possibility conclusion",
+   "strong_answer": "Definite must hold in every valid diagram; possibility only needs one valid diagram. Example: All lions being bears can be drawn, but all tigers being wolves cannot because bear-tigers are barred from wolves."
+  },
+  {
+   "topic": "Complementary either-or pairs vs false Some/Some-not pairs",
+   "strong_answer": "Either-or uses Some A are B with No A is B, or All A are B with Some A are not B, when neither is individually definite and they exhaust cases. Some with Some-not is not either-or because both can be true together, so the answer may be Neither."
+  },
+  {
+   "topic": "Maximum overlap vs minimum overlap in two sets",
+   "strong_answer": "Maximum overlap is the size of the smaller set (e.g. min(130,110)=110). Minimum overlap is forced by |A|+|B|−|∩| ≤ total (e.g. ≥40 when total is 200)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating Some A are B as implying Some A are not B.",
+   "correction": "In formal logic Some means at least one, possibly all. Test extreme cases including complete overlap; do not rely on a single minimum-overlap diagram."
+  },
+  {
+   "trap": "Calling Some A are B and Some A are not B an either-or complementary pair.",
+   "correction": "Those are not mutually exclusive and do not exhaust a dichotomy. If neither follows definitely, the answer is Neither, not Either I or II."
+  },
+  {
+   "trap": "Reading pairwise intersection counts as exactly-two without removing the all-three region.",
+   "correction": "Pairwise figures include the triple. Exactly two = each pairwise minus all-three, then sum those exclusive double regions."
+  },
+  {
+   "trap": "Assuming an optional overlap is a definite conclusion.",
+   "correction": "If a circle can but need not meet another (e.g. Birds with Cats while overlapping Dogs), the Some conclusion does not follow; only relations forced in every diagram do."
+  }
+ ]
+}

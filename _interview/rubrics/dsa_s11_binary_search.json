@@ -1,0 +1,207 @@
+{
+ "id": "dsa_s11_binary_search",
+ "title": "Binary Search",
+ "type": "FUND",
+ "relevance": "Interviewers use it to test recognition of sorted or monotonic spaces and the ability to abstract a problem into a feasibility predicate that flips once.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that binary search works on a sorted or monotonic space via an invariant that keeps the answer in [lo, hi] while halving the window.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Binary search operates on a sorted or monotonic space to locate a target in logarithmic time.",
+     "weight": "core",
+     "evidence_hint": "Candidate states sorted/monotonic input and log-time search by repeatedly discarding half the space."
+    },
+    {
+     "id": "fund2",
+     "point": "A robust template keeps the invariant that the target always exists within the search window [lo, hi], evaluates a midpoint, and halves the space while maintaining that invariant.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes an inclusive window and that each step shrinks it without breaking the invariant."
+    },
+    {
+     "id": "fund3",
+     "point": "The same template extends to boundaries: lower bound is the first element ≥ target and upper bound is the first element > target, mapping to std::lower_bound and std::upper_bound.",
+     "weight": "extended",
+     "evidence_hint": "Candidate distinguishes first ≥ vs first > and names the STL equivalents."
+    }
+   ],
+   "probes": [
+    "When does binary search apply, and what invariant should your loop maintain?",
+    "What are lower bound and upper bound, and how do they differ from an exact-match search?"
+   ],
+   "hints": {
+    "1": "Think about what property of the search space lets you safely discard half of it.",
+    "2": "Frame the loop as: answer stays in [lo, hi]; mid decides which side to keep.",
+    "3": "Lower bound = first ≥ target; upper bound = first > target; both reuse the same invariant-based window."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show correct midpoint, exact-match and boundary updates, rotated-array half identification, and the isValid(mid) answer-space pattern.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Always compute the midpoint with the overflow-safe formula int mid = lo + (hi - lo) / 2, not (lo + hi) / 2.",
+     "weight": "core",
+     "evidence_hint": "Candidate writes or states lo + (hi - lo) / 2 and explains overflow risk of lo + hi."
+    },
+    {
+     "id": "mech2",
+     "point": "For exact match on a sorted array: if nums[mid] < target set lo = mid + 1; if greater set hi = mid - 1; return -1 when the window is exhausted.",
+     "weight": "core",
+     "evidence_hint": "Candidate uses lo = mid + 1 / hi = mid - 1 and returns -1 when not found."
+    },
+    {
+     "id": "mech3",
+     "point": "For lower bound, initialize ans to the array size; when arr[mid] ≥ target record ans = mid and search left with hi = mid - 1; otherwise lo = mid + 1.",
+     "weight": "core",
+     "evidence_hint": "Candidate tracks a candidate index, moves left on ≥ target, and may return the array size if all elements are smaller."
+    },
+    {
+     "id": "mech4",
+     "point": "In a rotated sorted array with distinct values, at any midpoint at least one half (lo..mid or mid..hi) is strictly sorted; identify that half and check whether the target lies in its bounds.",
+     "weight": "extended",
+     "evidence_hint": "Candidate checks which half is sorted via endpoint comparison, then decides keep vs discard using target range."
+    },
+    {
+     "id": "mech5",
+     "point": "Binary search on answers separates search from feasibility: write bool isValid(mid) and binary-search the numeric range for the boundary where isValid flips from false to true.",
+     "weight": "extended",
+     "evidence_hint": "Candidate describes searching a value range and testing mid with a monotonic predicate helper."
+    }
+   ],
+   "probes": [
+    "Walk through the exact-match and lower-bound templates—how do the boundary updates differ?",
+    "In a rotated sorted array, how do you decide which half to discard?",
+    "How do you structure binary search on the answer space for something like Koko eating bananas?"
+   ],
+   "hints": {
+    "1": "Focus on what you assign to lo and hi after comparing mid—off-by-one here is the usual bug.",
+    "2": "Exact match discards mid; lower/upper bound records a feasible mid then continues toward the boundary.",
+    "3": "Rotated: one half is sorted—test target against that half’s endpoints. Answer-space: binary-search k/day/capacity and use isValid(mid)."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast linear vs logarithmic search, distinct vs duplicate rotated arrays, and flattened vs staircase 2D search.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "On a sorted array, linear scan is O(n) while binary search is O(log n) time and O(1) extra space for the basic templates.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts scanning every element with halving, and notes constant auxiliary space."
+    },
+    {
+     "id": "tr2",
+     "point": "Search in rotated sorted array with distinct values stays O(log n); with duplicates, when nums[lo] == nums[mid] == nums[hi] you must shrink lo++ and hi--, and the worst case is O(n).",
+     "weight": "core",
+     "evidence_hint": "Candidate explains the ambiguous triple-equal case and the average O(log n) / worst-case O(n) split."
+    },
+    {
+     "id": "tr3",
+     "point": "For a row-and-column-sorted matrix that is not globally flattened-sorted, per-row binary search is O(M log N) while staircase search from a corner is O(M + N).",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts row-wise binary searches with eliminating a row or column each step in O(M + N)."
+    }
+   ],
+   "probes": [
+    "How do duplicates change complexity for search in a rotated sorted array?",
+    "For Search a 2D Matrix II, when would you prefer staircase search over binary search per row?"
+   ],
+   "hints": {
+    "1": "Ask what you can still prove about a half when endpoint values are equal.",
+    "2": "Distinct rotated halves always give a sorted side; duplicates can make both sides ambiguous.",
+    "3": "Staircase from top-right eliminates a full row or column per step for O(M + N); per-row lower_bound is O(M log N)."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply boundary templates and answer-space binary search to classic array, allocation, and 2D problems.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Search insert position is exactly lower bound: the first index where the element is ≥ target (insertion point if absent).",
+     "weight": "core",
+     "evidence_hint": "Candidate equates the problem to lower bound without a separate exact-match path."
+    },
+    {
+     "id": "app2",
+     "point": "First and last occurrence use two binary searches (move left on match for first, move right for last); count of occurrences is last - first + 1, or 0 if absent.",
+     "weight": "core",
+     "evidence_hint": "Candidate runs two boundary searches and derives count from the endpoints."
+    },
+    {
+     "id": "app3",
+     "point": "Minimize-maximum / maximize-minimum problems (Koko, bouquets, ship capacity, aggressive cows, book allocation, split array) binary-search the answer and greedily test feasibility.",
+     "weight": "core",
+     "evidence_hint": "Candidate names the min-max/max-min signal, states the answer range, and describes a greedy isValid check."
+    },
+    {
+     "id": "app4",
+     "point": "Median of two sorted arrays binary-searches the partition index on the smaller array so left halves total (m + n + 1) / 2 elements, validating cross bounds between left maxes and right mins.",
+     "weight": "extended",
+     "evidence_hint": "Candidate searches the smaller array, sets j from the half-size formula, and checks left1 ≤ right2 and left2 ≤ right1."
+    }
+   ],
+   "probes": [
+    "How would you find the first and last position of a target in a sorted array with duplicates?",
+    "You need to minimize the maximum load across contiguous allocations—what’s the pattern?",
+    "How do you find the median of two sorted arrays in better than linear time?"
+   ],
+   "hints": {
+    "1": "Boundaries and answer ranges are often the same template with a different predicate.",
+    "2": "For occurrences: lower-bound style for first, symmetric rightward search for last. For allocation: search pages/capacity/distance and greedily count groups.",
+    "3": "Partition the smaller array; j = (m+n+1)/2 - i; accept when left maxes ≤ opposite right mins."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Linear scan vs binary search on a sorted array",
+   "strong_answer": "Linear is O(n); because the array is sorted you can discard half each step for O(log n) time and O(1) space with a few index variables."
+  },
+  {
+   "topic": "Exact-match template vs boundary (lower/upper bound) template",
+   "strong_answer": "Exact match returns mid on equality and shrinks with lo = mid + 1 or hi = mid - 1. Boundaries keep a candidate ans (often initialized to array size), update when the predicate holds, and continue toward the first feasible index—pick one of each and stay consistent."
+  },
+  {
+   "topic": "Rotated search with distinct values vs with duplicates",
+   "strong_answer": "With distinct values, one half is always sorted and you discard a half each step in O(log n). With duplicates, nums[lo] == nums[mid] == nums[hi] blocks that test, so you shrink lo++/hi--; average O(log n), worst case O(n)."
+  },
+  {
+   "topic": "Flattened binary search (2D Matrix I) vs staircase search (2D Matrix II)",
+   "strong_answer": "If each row starts after the previous row ends, flatten to size M × N and search in O(log (M × N)) via row = mid / N, col = mid % N. If only rows and columns are sorted independently, flatten is invalid; staircase from a corner yields O(M + N), better than O(M log N) per-row searches."
+  },
+  {
+   "topic": "Binary search on indices vs binary search on the answer space",
+   "strong_answer": "Index search probes array elements. Answer-space search probes a numeric range when feasibility is monotonic (if x works, larger/smaller values also work), using isValid(mid) to find the boundary—standard for minimize-max / maximize-min."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Writing int mid = (lo + hi) / 2 when lo and hi are large",
+   "correction": "That sum can overflow to a negative midpoint and crash; always use int mid = lo + (hi - lo) / 2."
+  },
+  {
+   "trap": "Off-by-one boundary updates such as lo = mid instead of lo = mid + 1",
+   "correction": "Almost every binary search bug is an off-by-one that can infinite-loop; pick one exact-match and one boundary template and apply them consistently."
+  },
+  {
+   "trap": "Assuming nums[lo] <= nums[mid] proves the left half is sorted when duplicates exist",
+   "correction": "If nums[lo] == nums[mid] == nums[hi], neither half is identifiable (e.g. [3, 1, 2, 3, 3, 3, 3]); shrink with lo++ and hi-- until the ambiguity clears."
+  },
+  {
+   "trap": "Computing mid * mid directly when finding floor square root",
+   "correction": "mid * mid can overflow; use a wider type (e.g. long long) or compare with mid <= n / mid."
+  },
+  {
+   "trap": "Treating a row-and-column-sorted matrix as a single flattened sorted array",
+   "correction": "That flatten trick needs each row’s first element greater than the previous row’s last; otherwise use staircase elimination or per-row binary search."
+  }
+ ]
+}

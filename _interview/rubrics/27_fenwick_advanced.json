@@ -1,0 +1,247 @@
+{
+ "id": "27_fenwick_advanced",
+ "title": "Fenwick / BIT advanced: 2D, order-statistics, inversions, range-update",
+ "type": "CP",
+ "relevance": "High — inversion counting, “how many ≤ x”, and k-th in a dynamic multiset show up constantly in OAs; range-add / 2D rectangle sum are the CF Div2 C–D upgrade past plain prefix sums.",
+ "difficulty": "mid",
+ "prereqs": [
+  "04_prefix_sums_difference_arrays",
+  "20_range_queries"
+ ],
+ "company_notes": "Count smaller elements to the right → LC 315 / Tessoku inversions (Amazon/Meta-style Hard). Order-statistic API: add, delete k-th, or count in [L,R] under updates → Multiset / Salary Queries / List Removals. NumMatrix: update cell, query subrectangle sum → 2D BIT (CSES Forest Queries II; interview API often mirrors LC 308). Many range increments then read the array / range sums → Greg and Array / CSES Range Update / two-BIT RURQ (difference-array interviews that scale to n,q∼10^5).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Map the prompt to inversion BIT, order-statistic frequency BIT, BIT-as-difference / two-BIT RURQ, or 2D BIT from signal wording.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "“For each index, count how many smaller elements appear to its right” (LC 315 / Tessoku inversions) → compress + scan with a frequency BIT.",
+     "weight": "core",
+     "evidence_hint": "Names smaller-to-the-right / inversions and reaches for compress + Fenwick frequency scan."
+    },
+    {
+     "id": "rec2",
+     "point": "“Support add value, delete k-th, or count elements in [L,R] under updates” → order-statistic / frequency BIT (Multiset / Salary Queries / List Removals).",
+     "weight": "core",
+     "evidence_hint": "Maps dynamic k-th / range-count-under-updates to a frequency Fenwick API."
+    },
+    {
+     "id": "rec3",
+     "point": "“Many range increments, then read the array / range sums” → BIT-as-difference or two-BIT RURQ; “NumMatrix: update cell, query subrectangle” → 2D BIT.",
+     "weight": "core",
+     "evidence_hint": "Splits range-add family from 2D cell-update + rectangle-sum and names the matching BIT shapes."
+    },
+    {
+     "id": "rec4",
+     "point": "Signal words: count pairs with order constraint, k-th remaining element, many range increments, trees in a subrectangle with toggles, nested segments.",
+     "weight": "extended",
+     "evidence_hint": "Lists those signal phrases and ties them to advanced Fenwick patterns rather than plain prefix sums."
+    }
+   ],
+   "probes": [
+    "Does this ask for inversions / k-th, range increments, or a subrectangle with updates — and which Fenwick shape fits?",
+    "What wording pushes you past plain prefix sums into frequency BIT, difference BIT, or 2D BIT?"
+   ],
+   "hints": {
+    "1": "Ask whether the ask is order counting, dynamic k-th / [L,R] counts, range adds, or 2D rectangle sums with updates.",
+    "2": "Smaller-to-the-right → inversion BIT; add/delete k-th / count [L,R] → freq BIT; range increments → diff / two BITs; cell update + subrectangle → 2D BIT.",
+    "3": "Say: LC 315-style smaller-right → compress+scan freq BIT; Multiset/Salary/List Removals → order-statistic BIT; many range increments → BIT-as-diff or two-BIT RURQ; NumMatrix/LC 308 → 2D BIT; signal words include order pairs, k-th remaining, range increments, subrectangle toggles, nested segments."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "State the Fenwick plan for inversions, find_kth, range updates, two-BIT RURQ, 2D rectangles, or BIT-for-DP before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Inversions / smaller-to-the-right: compress values, scan L→R or R→L, query prefix then add(rank,1).",
+     "weight": "core",
+     "evidence_hint": "States compress, directional scan, query-then-update on ranks."
+    },
+    {
+     "id": "appr2",
+     "point": "Order statistics: BIT as frequency table; find k-th by binary lifting on prefix sums (find_kth).",
+     "weight": "core",
+     "evidence_hint": "Describes counts in the BIT and binary lifting to the k-th rank."
+    },
+    {
+     "id": "appr3",
+     "point": "Range update: store a difference array in the BIT — add(l,+v), add(r+1,−v), point value = prefix; for range-add + range-sum use two BITs.",
+     "weight": "core",
+     "evidence_hint": "Separates one-BIT point query after range add from two-BIT RURQ."
+    },
+    {
+     "id": "appr4",
+     "point": "2D: nest the i+=i&-i loops; rectangle = inclusion–exclusion of four corners. BIT-for-DP: when transition is max/sum over ranks < v, replace the loop with a Fenwick.",
+     "weight": "extended",
+     "evidence_hint": "Mentions nested Fenwick loops with four-corner rect and Fenwick replacing a ranks-<v DP loop."
+    }
+   ],
+   "probes": [
+    "Walk through inversions vs find_kth vs range-add — what does each query and update do on the BIT?",
+    "When do you need two BITs, and how does a 2D rectangle query use four corners?"
+   ],
+   "hints": {
+    "1": "Split frequency/order-stat uses from difference/RURQ and from 2D nesting.",
+    "2": "Inversions: compress, scan, query then add(rank,1); k-th via binary lifting on counts; range add → diff BIT; RURQ → two BITs; 2D → nested loops + four corners.",
+    "3": "Say: compress+scan query-then-add for inversions; freq BIT + find_kth binary lifting; add(l,+v)/add(r+1,−v) for point query; two BITs for range-add+range-sum; nest i+=i&-i and four-corner inclusion–exclusion; DP max/sum over ranks < v → Fenwick."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Code 1-indexed Fenwick primitives, compression, find_kth walk, difference/two-BIT formulas, and 2D rectangle identity.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "1-indexed BIT: add(i,δ) via i += i&-i; sum(i) via i -= i&-i; range = sum(r)-sum(l-1); always long long on CF.",
+     "weight": "core",
+     "evidence_hint": "Writes those exact add/sum loops, the two-prefix range, and long long on CF."
+    },
+    {
+     "id": "impl2",
+     "point": "Coordinate compression before any value-as-index BIT when a_i≤10^9; offline-collect all values (array + query endpoints).",
+     "weight": "core",
+     "evidence_hint": "Collects all values offline and maps to ranks before indexing the BIT."
+    },
+    {
+     "id": "impl3",
+     "point": "Order statistic find_kth: walk bits of pos while bit[pos+bit] < k (List Removals / Multiset). Range update + range query: two BITs B1,B2 with prefix(i)=i·sum(B1,i)-sum(B2,i) (SPREAD / cp-algorithms).",
+     "weight": "core",
+     "evidence_hint": "States the binary-lifting k-th walk and the two-BIT prefix formula."
+    },
+    {
+     "id": "impl4",
+     "point": "2D BIT: nest both loops; rect(x1,y1,x2,y2)=S(x2,y2)-S(x1-1,y2)-S(x2,y1-1)+S(x1-1,y1-1).",
+     "weight": "extended",
+     "evidence_hint": "Writes nested Fenwick updates/queries and that exact four-corner identity."
+    }
+   ],
+   "probes": [
+    "Write 1-indexed add and sum with i&-i, then how you compress values up to 10^9.",
+    "How do you binary-lift to the k-th, and what is the two-BIT / 2D rectangle formula?"
+   ],
+   "hints": {
+    "1": "Start from 1-index loops and compression, then find_kth / RURQ / 2D identities.",
+    "2": "i += i&-i / i -= i&-i; compress a_i≤10^9 offline; walk bits while bit[pos+bit] < k; two BITs prefix(i)=i·sum(B1,i)-sum(B2,i); four-corner rect.",
+    "3": "Spell: 1-indexed add/sum with i&-i and long long; offline compress when a_i≤10^9; find_kth walks bits while bit[pos+bit] < k; RURQ prefix(i)=i·sum(B1,i)-sum(B2,i); rect = S(x2,y2)-S(x1-1,y2)-S(x2,y1-1)+S(x1-1,y1-1)."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Anchor Fenwick prefix, 2D rectangle, and OA-scale bounds to costs stated in the topic.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Fenwick prefix sums answer “how many / how much before index i” in O(log n).",
+     "weight": "core",
+     "evidence_hint": "States O(log n) for a Fenwick prefix query/update-style step."
+    },
+    {
+     "id": "cx2",
+     "point": "2D BIT point toggle + rectangle sum is O(log^2 n) (Forest Queries II).",
+     "weight": "core",
+     "evidence_hint": "Cites O(log^2 n) for 2D point update and rectangle sum."
+    },
+    {
+     "id": "cx3",
+     "point": "Order-statistic Multiset stretch targets n,q≤10^6; difference-array / two-BIT RURQ interviews scale to n,q∼10^5.",
+     "weight": "extended",
+     "evidence_hint": "Mentions those two constraint regimes from Multiset and the RURQ interview note."
+    }
+   ],
+   "probes": [
+    "What is the cost of a Fenwick prefix versus a 2D BIT rectangle query?",
+    "What n,q scales do Multiset-style find_kth and two-BIT RURQ interviews assume?"
+   ],
+   "hints": {
+    "1": "Contrast 1D Fenwick prefix cost with nested 2D loops, then name the stated constraints.",
+    "2": "Prefix O(log n); 2D toggle+rect O(log^2 n); Multiset n,q≤10^6; RURQ interviews n,q∼10^5.",
+    "3": "Say: Fenwick prefix in O(log n); 2D BIT point toggle + rectangle sum O(log^2 n); Multiset stretch n,q≤10^6; two-BIT RURQ difference interviews scale to n,q∼10^5."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch 1-indexing, compression, overflow, difference off-by-ones, and 2D inclusion–exclusion sign errors.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Fenwick must stay 1-indexed; add uses i += i&-i and sum uses i -= i&-i — 0-based loops are a default WA.",
+     "weight": "core",
+     "evidence_hint": "Insists on 1-indexing and the correct ± i&-i directions."
+    },
+    {
+     "id": "pit2",
+     "point": "Values with a_i≤10^9 need coordinate compression before a value-as-index BIT; collect array values and query endpoints offline.",
+     "weight": "core",
+     "evidence_hint": "Compresses huge values (and query endpoints) before indexing the BIT."
+    },
+    {
+     "id": "pit3",
+     "point": "Always long long on CF for Fenwick sums; range-add point query must do both add(l,v) and add(r+1,-v).",
+     "weight": "core",
+     "evidence_hint": "Names long long on CF and the closing add(r+1,-v) of the difference update."
+    },
+    {
+     "id": "pit4",
+     "point": "2D rectangle mistakes: wrong four-corner signs — must be S(x2,y2)-S(x1-1,y2)-S(x2,y1-1)+S(x1-1,y1-1).",
+     "weight": "extended",
+     "evidence_hint": "Recites the inclusion–exclusion signs for the four corners."
+    }
+   ],
+   "probes": [
+    "What indexing and overflow bugs show up first when coding an advanced Fenwick?",
+    "What goes wrong if you skip compression, forget add(r+1,-v), or botch 2D four-corner signs?"
+   ],
+   "hints": {
+    "1": "Check 1-indexing, 64-bit sums, compression, difference endpoints, and 2D signs.",
+    "2": "1-indexed ±i&-i; long long on CF; compress a_i≤10^9 offline; add(l,v) and add(r+1,-v); four-corner +/− pattern.",
+    "3": "Say: stay 1-indexed with i+=i&-i / i-=i&-i; always long long on CF; compress when a_i≤10^9 including query endpoints; range add needs add(r+1,-v); rect = S(x2,y2)-S(x1-1,y2)-S(x2,y1-1)+S(x1-1,y1-1)."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "BIT-as-difference vs two BITs",
+   "strong_answer": "Range update + point query stores a difference array in one BIT — add(l,+v), add(r+1,−v), point = prefix. Range-add + range-sum needs two BITs B1,B2 with prefix(i)=i·sum(B1,i)-sum(B2,i) (SPREAD / cp-algorithms)."
+  },
+  {
+   "topic": "Static 2D four-corner prefix vs 2D BIT",
+   "strong_answer": "Static rectangle sums use the four-corner identity on a 2D prefix (Forest Queries / Counting Points). With point toggles or cell updates plus subrectangle sums, nest Fenwick loops in a 2D BIT (Forest Queries II) at O(log^2 n)."
+  },
+  {
+   "topic": "Naive DP loop over ranks vs BIT-for-DP",
+   "strong_answer": "When the transition is max/sum over ranks < v, replace the loop with a Fenwick (Flowers, Increasing Subsequence II, Bubble Sort Graph) so each transition uses Fenwick prefix aggregates instead of scanning lower ranks."
+  },
+  {
+   "topic": "Inversion scan direction L→R vs R→L",
+   "strong_answer": "Both work after compression: scan L→R or R→L, query how many already seen are < (or >) the current rank, then add(rank,1) — choose the direction that matches “smaller to the left” vs “smaller to the right”."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Implementing Fenwick 0-indexed or flipping the i&-i update/query directions.",
+   "correction": "Keep a 1-indexed BIT: add via i += i&-i, sum via i -= i&-i; range = sum(r)-sum(l-1)."
+  },
+  {
+   "trap": "Using raw values as BIT indices when a_i≤10^9.",
+   "correction": "Coordinate-compress first; offline-collect all values from the array and query endpoints, then map to ranks."
+  },
+  {
+   "trap": "Range-add implemented as only add(l,v) without closing the difference.",
+   "correction": "Difference in BIT needs add(l,v) and add(r+1,-v); point value is sum(i)."
+  },
+  {
+   "trap": "Using int for Fenwick aggregates on Codeforces.",
+   "correction": "Always use long long on CF for Fenwick / prefix-style sums."
+  },
+  {
+   "trap": "Wrong signs on a 2D rectangle query.",
+   "correction": "Use inclusion–exclusion: rect(x1,y1,x2,y2)=S(x2,y2)-S(x1-1,y2)-S(x2,y1-1)+S(x1-1,y1-1)."
+  },
+  {
+   "trap": "Broken find_kth walk on a frequency BIT.",
+   "correction": "Binary-lift on prefix sums: walk bits of pos while bit[pos+bit] < k (List Removals / Multiset)."
+  }
+ ]
+}

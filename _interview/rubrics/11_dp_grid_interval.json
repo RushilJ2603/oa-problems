@@ -1,0 +1,246 @@
+{
+ "id": "11_dp_grid_interval",
+ "title": "DP II: Grid DP & Interval DP",
+ "type": "CP",
+ "relevance": "High (Extremely common in OAs, especially path-finding grids and substring palindromes)",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Robot right/down max-coin / path grids → basic Grid DP (Amazon, Citadel). Merge adjacent slimes/stones by sum cost → Interval DP MCM. Longest palindromic subsequence / min insertions to palindrome (Google, Microsoft). Two players picking from array ends under optimal play → dp[L][R] minimax interval DP.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Confirm the candidate maps wording to Grid DP (2D path) versus Interval/Range DP (length-ordered subarrays/substrings).",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Grid DP navigates a 2D matrix (usually right/down) with state dp[r][c] depending on adjacent cells, often for min/max path sum or combinations.",
+     "weight": "core",
+     "evidence_hint": "Names dp[r][c] fed by neighboring cells on a right/down (or similar) grid walk."
+    },
+    {
+     "id": "rec2",
+     "point": "Interval DP uses dp[L][R] on smaller intervals such as dp[L+1][R] or dp[L][k] + dp[k+1][R], filling shortest intervals before longer ones.",
+     "weight": "core",
+     "evidence_hint": "States dp[L][R] depends only on strictly smaller intervals and is ordered by length."
+    },
+    {
+     "id": "rec3",
+     "point": "Interval DP is the cue when you must merge adjacent elements, partition an array, or solve palindrome/game-theory questions on a substring.",
+     "weight": "core",
+     "evidence_hint": "Lists merge/partition/palindrome/end-pick game as the recognition triggers."
+    },
+    {
+     "id": "rec4",
+     "point": "OA wording like robot collecting coins on a board, merge-all min cost, longest palindromic subsequence, or two players picking ends maps to this family.",
+     "weight": "extended",
+     "evidence_hint": "Matches at least two of those interview phrasings to Grid or Interval DP."
+    }
+   ],
+   "probes": [
+    "What makes you pick Grid DP versus Interval DP on a new problem?",
+    "Which OA phrases scream robot-path grids, MCM merges, palindrome substrings, or end-pick games?"
+   ],
+   "hints": {
+    "1": "Ask whether the state lives on a grid cell or on a contiguous [L,R] segment.",
+    "2": "Grid: right/down dp[r][c] from neighbors. Interval: merge/partition/palindrome/game, filled short→long.",
+    "3": "Say: Grid = dp[r][c] adjacent path/combos; Interval = dp[L][R] from smaller intervals by length; cues are merge, partition, palindrome, or end-pick games."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Get the candidate to name the right transition template: grid neighbors, length-ordered intervals, MCM split-k, game, or palindrome ends.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Standard grid transitions read from (r-1, c) and (r, c-1) (with clean edge handling).",
+     "weight": "core",
+     "evidence_hint": "Writes or states those two parent cells as the usual grid recurrence."
+    },
+    {
+     "id": "appr2",
+     "point": "Interval fill loops length = 2...N, then L = 0...(N - length), with R = L + length - 1.",
+     "weight": "core",
+     "evidence_hint": "States that exact length-then-L ordering and R formula."
+    },
+    {
+     "id": "appr3",
+     "point": "Matrix Chain Multiplication style uses nested loops for L, for R, for k in L...R-1 to split the interval.",
+     "weight": "core",
+     "evidence_hint": "Names the triple loop and k as the split point."
+    },
+    {
+     "id": "appr4",
+     "point": "Zero-sum end-pick games set dp[L][R] = max(val[L] - dp[L+1][R], val[R] - dp[L][R-1]).",
+     "weight": "core",
+     "evidence_hint": "Quotes that max-of-two-ends recurrence."
+    },
+    {
+     "id": "appr5",
+     "point": "Palindromic interval DP matches ends: if S[L] == S[R] then dp[L][R] builds from dp[L+1][R-1] (plus the problem’s increment).",
+     "weight": "extended",
+     "evidence_hint": "States the equal-ends shortcut into the inner substring."
+    },
+    {
+     "id": "appr6",
+     "point": "For two agents moving simultaneously on a grid, enforce r1 + c1 = r2 + c2 = step to drop a state dimension.",
+     "weight": "extended",
+     "evidence_hint": "Mentions the shared step/diagonal equality as the dimension cut."
+    }
+   ],
+   "probes": [
+    "Before coding, is this neighbor-grid DP, length-ordered interval DP, MCM split-k, end-pick game, or palindrome ends?",
+    "For two robots on one grid, how do you shrink the joint state?"
+   ],
+   "hints": {
+    "1": "Classify path-on-grid vs interval-on-array/string, then pick the transition family.",
+    "2": "Grid uses (r-1,c)/(r,c-1); intervals use length→L→R; MCM adds k; games use the max ends formula; palindromes match S[L]/S[R].",
+    "3": "Say: neighbors (r-1,c),(r,c-1); length=2...N, R=L+length-1; for L,R,k in L...R-1; max(val[L]-dp[L+1][R], val[R]-dp[L][R-1]); equal ends → dp[L+1][R-1]; multi-agent → r1+c1=r2+c2=step."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Verify the candidate can write clean grid tables, previous-row rolling space, and the standard interval/MCM loop skeletons.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Implement 2D Grid DP with dp[r][c] and explicit boundary checks when reading (r-1, c) and (r, c-1).",
+     "weight": "core",
+     "evidence_hint": "Sketches the 2D table and guards first row/column (or equivalent) cleanly."
+    },
+    {
+     "id": "impl2",
+     "point": "Space-optimize Grid DP from O(N*M) to O(M) by keeping only the previous row.",
+     "weight": "core",
+     "evidence_hint": "Describes rolling to a single prior-row array of width M."
+    },
+    {
+     "id": "impl3",
+     "point": "Code the interval skeleton: for length = 2...N, for L = 0...(N - length), set R = L + length - 1, then fill dp[L][R].",
+     "weight": "core",
+     "evidence_hint": "Writes that nested length/L loop with the R assignment."
+    },
+    {
+     "id": "impl4",
+     "point": "For MCM-style merges, nest for k in L...R-1 inside the [L,R] cell (and use prefix sums when the merge cost needs range sums, as in Slimes).",
+     "weight": "extended",
+     "evidence_hint": "Shows the k-split loop and mentions prefix sums when cost is a subarray sum."
+    }
+   ],
+   "probes": [
+    "Write the grid recurrence with boundaries, then the length-ordered interval loops.",
+    "How do you roll grid space to the previous row, and where does the MCM k loop sit?"
+   ],
+   "hints": {
+    "1": "Start from a Unique Paths / Min Path Sum table, then the length→L→R interval nest.",
+    "2": "Guard (r-1,c)/(r,c-1); roll to previous row O(M); intervals set R=L+length-1; MCM adds k in L...R-1.",
+    "3": "Say: dp[r][c] from (r-1,c)/(r,c-1) with edge guards; keep only prior row for O(M); length=2...N, L=0...(N-length), R=L+length-1; MCM for k in L...R-1 (+ prefix sums if needed)."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State the file’s grid space reduction and the multi-agent state-dimension cut—without inventing asymptotics not in the source.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Grid DP space can drop from O(N*M) to O(M) when only the previous row is needed.",
+     "weight": "core",
+     "evidence_hint": "Quotes O(N*M) → O(M) via prior-row rolling."
+    },
+    {
+     "id": "cx2",
+     "point": "Simultaneous multi-agent grid DP uses r1 + c1 = r2 + c2 = step to cut one dimension from the joint state.",
+     "weight": "core",
+     "evidence_hint": "Explains the shared step identity as the space/state reduction."
+    }
+   ],
+   "probes": [
+    "How do you shrink a standard grid DP’s memory footprint?",
+    "How does the simultaneous two-agent constraint reduce state size?"
+   ],
+   "hints": {
+    "1": "Separate full-table space from multi-agent state design.",
+    "2": "Previous-row rolling gives O(M); equal manhattan/step ties the two agents.",
+    "3": "Say: O(N*M)→O(M) keeping the previous row; enforce r1+c1=r2+c2=step to drop a dimension."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch wrong interval fill order, sloppy grid edges, forward-only survival DP, and boundary-blind MCM variants.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Filling intervals in the wrong order (not shortest-to-longest) makes dp[L][R] read uncomputed smaller intervals.",
+     "weight": "core",
+     "evidence_hint": "Names length-ordered processing as mandatory for correctness."
+    },
+    {
+     "id": "pit2",
+     "point": "Omitting clean (r-1, c) / (r, c-1) boundary checks corrupts first-row/first-column grid transitions.",
+     "weight": "core",
+     "evidence_hint": "Calls out missing edge guards as the classic grid bug."
+    },
+    {
+     "id": "pit3",
+     "point": "Dungeon-style survival: a forward path state is insufficient to guarantee survival—need bottom-up thinking from the requirement side.",
+     "weight": "core",
+     "evidence_hint": "Says forward DP alone cannot certify min HP / survival."
+    },
+    {
+     "id": "pit4",
+     "point": "Hard MCM variants like Burst Balloons make subproblems depend on the open boundaries, not only the interior split.",
+     "weight": "extended",
+     "evidence_hint": "Mentions that the interval’s bordering values enter the transition."
+    }
+   ],
+   "probes": [
+    "What breaks if you fill dp[L][R] before shorter intervals, or skip grid edge guards?",
+    "Why is forward DP not enough for Dungeon Game, and what makes Burst Balloons harder than plain MCM?"
+   ],
+   "hints": {
+    "1": "Check fill order, grid edges, and whether the ask needs a reverse/bottom-up survival view.",
+    "2": "Short→long intervals; guard first row/col; Dungeon needs bottom-up survival; Burst Balloons folds boundary balloons into the cost.",
+    "3": "List: wrong length order → stale/missing deps; missing (r-1,c)/(r,c-1) guards; forward state ≠ survival; Burst Balloons depends on interval boundaries."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Full O(N*M) grid table vs O(M) previous-row rolling",
+   "strong_answer": "Keep the full 2D table when you need all cells or multi-source combinations; if transitions only need the prior row, roll to O(M) space."
+  },
+  {
+   "topic": "Grid DP (adjacent cells) vs Interval DP (length-ordered [L,R])",
+   "strong_answer": "Use Grid DP for right/down (or jagged) path/combo boards; use Interval DP when the answer on a contiguous segment depends only on strictly smaller segments—merges, partitions, palindromes, end-pick games."
+  },
+  {
+   "topic": "Endpoint-only interval transitions vs MCM split-at-k",
+   "strong_answer": "Palindrome/game styles often only touch dp[L+1][R], dp[L][R-1], or dp[L+1][R-1]; merge-all / stick-cut / triangulation needs an explicit k in L...R-1 (MCM)."
+  },
+  {
+   "topic": "Forward path DP vs bottom-up survival DP (Dungeon Game)",
+   "strong_answer": "Ordinary min/max path sums work forward from the start; survival / min initial resource can require bottom-up formulation because forward state alone does not guarantee survival."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Computing dp[L][R] before all shorter intervals are done.",
+   "correction": "Process intervals ordered by length from shortest to longest (length = 2...N, then L, then R = L + length - 1)."
+  },
+  {
+   "trap": "Reading (r-1, c) or (r, c-1) without boundary handling on the first row/column.",
+   "correction": "Initialize edges carefully and only add a parent cell when it exists."
+  },
+  {
+   "trap": "Trying to solve Dungeon Game with a normal forward min-path DP.",
+   "correction": "Forward state is insufficient to guarantee survival—formulate bottom-up from the survival requirement."
+  },
+  {
+   "trap": "Tracking two simultaneous grid agents with a full 4D position state and no coupling.",
+   "correction": "Use r1 + c1 = r2 + c2 = step to cut a dimension from the state space."
+  },
+  {
+   "trap": "Treating Burst Balloons like plain interior-only MCM.",
+   "correction": "In that MCM variation the subproblems depend on the boundary values around the interval, not only the split k."
+  }
+ ]
+}

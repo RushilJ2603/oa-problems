@@ -1,0 +1,232 @@
+{
+ "id": "dsa_s01_cpp_essentials",
+ "title": "C++ Essentials for DSA",
+ "type": "FUND",
+ "relevance": "Campus OAs and DSA rounds reject otherwise-correct C++ for TLE from slow I/O, silent overflow, or accidental O(n) container copies.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the practical C++ subset that keeps DSA solutions fast, type-safe, and free of silent wrap-around.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Default cin/cout sync with C stdin/stdout and cin is tied to cout, so heavy I/O can become a TLE bottleneck.",
+     "weight": "core",
+     "evidence_hint": "Mentions sync between C++ and C streams and/or cin flushing cout on reads as the default cost."
+    },
+    {
+     "id": "fund2",
+     "point": "int is 32-bit (~-2 x 10^9 to 2 x 10^9); long long is 64-bit (~-9 x 10^18 to 9 x 10^18); long long is mandatory when summing 10^5 values up to 10^9 each or multiplying two 10^9 integers.",
+     "weight": "core",
+     "evidence_hint": "States the int vs long long ranges and when long long is required for sums/products."
+    },
+    {
+     "id": "fund3",
+     "point": "Never pass std::vector or std::string by value unless a copy is intended; pass const& (read-only) or & (mutable) for O(1) overhead instead of O(n).",
+     "weight": "core",
+     "evidence_hint": "Contrasts O(n) by-value copies with O(1) reference passing for containers."
+    },
+    {
+     "id": "fund4",
+     "point": "std::pair bundles two elements and std::tuple three or more; both provide lexicographical comparison, useful for sorting multidimensional data or graph edges.",
+     "weight": "extended",
+     "evidence_hint": "Names pair/tuple, how many elements each holds, and lex comparison use cases."
+    }
+   ],
+   "probes": [
+    "Why can default C++ I/O alone cause TLE on large inputs, and which integer type do you reach for when products of 10^9 values appear?"
+   ],
+   "hints": {
+    "1": "Think about what cin/cout do with C streams by default, and where 32-bit int stops being safe.",
+    "2": "Cover sync/tie overhead, int vs long long ranges, and when summing or multiplying forces 64-bit.",
+    "3": "Default sync keeps C and C++ streams aligned and cin flushes cout; int is ~±2 x 10^9 while long long is ~±9 x 10^18 and is required for 10^5 x 10^9 sums or 10^9 x 10^9 products."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how fast I/O hooks, overflow timing, buffer leftovers, and unsigned arithmetic actually behave.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "ios_base::sync_with_stdio(false) drops C/C++ stream sync overhead; cin.tie(nullptr) removes the automatic flush of cout before each cin read.",
+     "weight": "core",
+     "evidence_hint": "Explains both sync_with_stdio(false) and cin.tie(nullptr) and what each removes."
+    },
+    {
+     "id": "mech2",
+     "point": "std::endl writes a newline and forces a flush; '\\n' only inserts a newline so the buffer can flush optimally.",
+     "weight": "core",
+     "evidence_hint": "States endl = newline + flush versus '\\n' = newline only."
+    },
+    {
+     "id": "mech3",
+     "point": "If both operands are 32-bit ints, overflow happens before assignment to long long; cast one operand (e.g. (long long)a + b). Shifting 1 << 40 is undefined; use 1LL << 40.",
+     "weight": "core",
+     "evidence_hint": "Covers pre-assignment overflow on int+int and the 1LL << k literal fix."
+    },
+    {
+     "id": "mech4",
+     "point": "cin >> leaves a trailing newline; an immediate getline reads an empty string unless you consume it (e.g. cin.ignore(256, '\\n')). size_t from .size() is unsigned, so size()-1 underflows when size is 0.",
+     "weight": "extended",
+     "evidence_hint": "Mentions leftover-newline + ignore/dummy getline, and size_t underflow on empty containers."
+    },
+    {
+     "id": "mech5",
+     "point": "double has 53 bits of precision (~15-17 decimal digits); never compare floats with ==—compare abs(a-b) against a small epsilon such as 1e-9.",
+     "weight": "extended",
+     "evidence_hint": "Gives double precision bits/digits and the absolute-difference epsilon pattern."
+    }
+   ],
+   "probes": [
+    "Walk through sync_with_stdio(false) plus cin.tie(nullptr), then explain why long long bad = a + b can still overflow when a and b are int.",
+    "What goes wrong if you call getline right after cin >> n, and if you write for (size_t i = 0; i < arr.size() - 1; ++i) on an empty array?"
+   ],
+   "hints": {
+    "1": "Separate stream-speed hooks from when the overflow actually occurs in the expression.",
+    "2": "Explain false sync, nullptr tie, endl vs '\\n', cast-before-add, leftover newline, and unsigned wrap on size()-1.",
+    "3": "sync_with_stdio(false) and cin.tie(nullptr) cut sync/flush cost; endl flushes every time; int+int overflows before long long store so cast one side; use 1LL << 40; ignore leftover '\\n' before getline; empty size_t size()-1 wraps."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Judge when CP shortcuts help versus when they scramble I/O, hurt readability, or pick the wrong callable form.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "After sync_with_stdio(false), mixing scanf/printf with cin/cout is unsafe because the streams are no longer synchronized.",
+     "weight": "core",
+     "evidence_hint": "Warns against mixing C and C++ I/O once sync is disabled."
+    },
+    {
+     "id": "tr2",
+     "point": "Aggressive macros (e.g. #define rep(...)) shorten code but harm readability, break scoping, and make debugging harder—use sparingly.",
+     "weight": "core",
+     "evidence_hint": "Balances CP macro convenience against scoping/readability/debug costs."
+    },
+    {
+     "id": "tr3",
+     "point": "Lambdas are the usual custom comparator; functors (operator()) are still required when a type name is expected, such as the third template parameter of std::priority_queue.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts lambda instances with functor types for priority_queue."
+    },
+    {
+     "id": "tr4",
+     "point": "__int128 helps intermediate multiplications beyond 64-bit limits but cannot be read or printed directly via cin/cout.",
+     "weight": "extended",
+     "evidence_hint": "States __int128 usefulness and the cin/cout limitation."
+    }
+   ],
+   "probes": [
+    "When is sync_with_stdio(false) a win, and what I/O mixing rule does it impose?",
+    "When would you prefer a functor over a lambda for a custom comparator?"
+   ],
+   "hints": {
+    "1": "Speed from desync has a compatibility cost; callables differ for types vs instances.",
+    "2": "Contrast desynced stream mixing, macro aggressiveness, lambda vs functor for priority_queue, and __int128 I/O limits.",
+    "3": "Desync speeds I/O but forbids mixing scanf/printf with cin/cout; keep macros light; use a functor type for priority_queue's compare parameter; __int128 needs manual I/O."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the checklist patterns for input shape, safe midpoints, float printing, and recursive lambdas in real DSA code.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Typical input is either read-until-EOF (while (cin >> x)) or read n then n elements into a vector.",
+     "weight": "core",
+     "evidence_hint": "Describes both EOF-stream and count-then-n reading patterns."
+    },
+    {
+     "id": "app2",
+     "point": "Safe binary-search midpoint is mid = l + (r - l) / 2; (l + r) / 2 overflows when l + r > 2^31-1.",
+     "weight": "core",
+     "evidence_hint": "Gives the l + (r - l) / 2 form and why (l + r) / 2 fails."
+    },
+    {
+     "id": "app3",
+     "point": "For floating output use cout with fixed and setprecision, or printf with a format like %.5f; stringstream is the clean way to tokenize a space-separated string or convert between ints and strings.",
+     "weight": "extended",
+     "evidence_hint": "Mentions iomanip fixed/setprecision or printf, plus stringstream tokenization/conversion."
+    },
+    {
+     "id": "app4",
+     "point": "Recursive lambdas need an explicit signature via std::function, or a C++17 self-passing auto& trick; C++23 adds auto self.",
+     "weight": "extended",
+     "evidence_hint": "Names std::function and/or self-passing (and optionally C++23 auto self) for recursion."
+    }
+   ],
+   "probes": [
+    "How do you read either EOF-terminated integers or an n-then-n-elements block, and how do you pick a midpoint in binary search without overflow?",
+    "Show a recursive DFS/fib lambda in C++17 and how you would print a double to five decimal places."
+   ],
+   "hints": {
+    "1": "Start from the two input shapes and the midpoint formula that avoids adding l and r.",
+    "2": "Cover EOF vs n-then-n, l+(r-l)/2, float formatting, stringstream tokens, and recursive-lambda typing.",
+    "3": "while (cin >> x) or read n then loop; mid = l + (r - l) / 2; fixed/setprecision or printf(\"%.5f\"); stringstream for tokens; std::function or self(self, ...) for recursion."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "std::endl vs '\\n'",
+   "strong_answer": "endl inserts a newline and forces a flush, so looping it over thousands of items can TLE; '\\n' only inserts a newline and lets the buffer flush optimally."
+  },
+  {
+   "topic": "pass-by-value vs const& / & for containers",
+   "strong_answer": "Passing vector/string by value copies in O(n); const& gives O(1) read-only access and & gives O(1) mutable access—only pass by value when a copy is intentional."
+  },
+  {
+   "topic": "cin/cout with sync_with_stdio(false) vs scanf/printf",
+   "strong_answer": "Desyncing drastically speeds C++ streams, but then mixing scanf/printf with cin/cout scrambles I/O; alternatively scanf/printf are inherently fast and need no sync_with_stdio(false)."
+  },
+  {
+   "topic": "aggressive macros vs type aliases / plain code",
+   "strong_answer": "Short aliases like using ll = long long or all(x) are common, but aggressive #define loops break scoping, hurt readability, and complicate debugging—use sparingly."
+  },
+  {
+   "topic": "lambda vs functor for custom compare",
+   "strong_answer": "Lambdas are the usual inline comparator; a functor type overloading operator() is required when a type name is expected, such as priority_queue's third template parameter."
+  },
+  {
+   "topic": "float == vs epsilon comparison",
+   "strong_answer": "Representation error makes == unreliable; compare abs(a-b) against a small epsilon (e.g. 1e-9)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Mixing scanf/printf with cin/cout after ios_base::sync_with_stdio(false).",
+   "correction": "Keep to one I/O family after disabling sync; the streams are no longer synchronized and output can scramble."
+  },
+  {
+   "trap": "Using std::endl inside a tight output loop.",
+   "correction": "Prefer '\\n'; endl flushes every iteration and can cause TLE."
+  },
+  {
+   "trap": "Calling getline immediately after cin >> x.",
+   "correction": "cin >> leaves a trailing newline; consume it with cin.ignore(...) or a dummy getline before reading the line."
+  },
+  {
+   "trap": "Writing long long sum = a + b when a and b are int.",
+   "correction": "Overflow occurs in the int addition before assignment; cast one operand to long long first."
+  },
+  {
+   "trap": "Using 1 << k for a large shift such as 40.",
+   "correction": "A 32-bit literal shift is undefined behavior; write 1LL << k."
+  },
+  {
+   "trap": "for (size_t i = 0; i < arr.size() - 1; ++i) when arr is empty.",
+   "correction": "size_t underflow turns 0-1 into a huge bound; cast to int or check empty() first."
+  },
+  {
+   "trap": "Comparing doubles with ==.",
+   "correction": "Compare absolute difference against a small epsilon such as 1e-9."
+  },
+  {
+   "trap": "Using (l + r) / 2 as a binary-search midpoint.",
+   "correction": "Use l + (r - l) / 2 so l + r cannot exceed 2^31-1 and overflow."
+  }
+ ]
+}

@@ -1,0 +1,231 @@
+{
+ "id": "dbms_03_ddl",
+ "title": "Data Definition Language (DDL)",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs test whether candidates can define schemas safely, enforce integrity with constraints, and distinguish DDL operations like TRUNCATE, DROP, and ALTER from row-level DML.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that DDL defines schema structure and that constraints actively reject invalid data.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "DDL commands define, modify, and destroy database object structure (tables, views, indexes, schemas), not the row data itself.",
+     "weight": "core",
+     "evidence_hint": "Candidate says DDL is about the blueprint/schema of objects rather than inserting or updating business rows."
+    },
+    {
+     "id": "fund2",
+     "point": "CREATE TABLE creates a new empty table; integrity rules are enforced via constraints that reject violating INSERT or UPDATE operations entirely.",
+     "weight": "core",
+     "evidence_hint": "Mentions empty table creation plus constraints as guardians that fail the whole statement on violation."
+    },
+    {
+     "id": "fund3",
+     "point": "PRIMARY KEY uniquely identifies each row and is equivalent to UNIQUE plus NOT NULL; a table can have at most one primary key.",
+     "weight": "core",
+     "evidence_hint": "States uniqueness, non-nullness, and the single-primary-key limit."
+    },
+    {
+     "id": "fund4",
+     "point": "UNIQUE allows multiple unique columns and can often accept multiple nulls because null is not equal to null; NOT NULL forbids empty values; CHECK enforces a logical condition; REFERENCES is an inline foreign key; DEFAULT supplies a fallback when a value is omitted.",
+     "weight": "extended",
+     "evidence_hint": "Lists several column constraints with the UNIQUE-null nuance and DEFAULT as fallback rather than validation."
+    }
+   ],
+   "probes": [
+    "What is DDL, and how do PRIMARY KEY, UNIQUE, NOT NULL, CHECK, and foreign-key constraints protect data when you create a table?"
+   ],
+   "hints": {
+    "1": "Think schema blueprint versus the data stored in rows.",
+    "2": "Walk column constraints: identity of a row, nullability, uniqueness, predicates, parent references, and defaults.",
+    "3": "DDL shapes tables/views/indexes; PRIMARY KEY = UNIQUE + NOT NULL (one per table); UNIQUE may allow multiple nulls; violations fail the whole INSERT/UPDATE."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how table-level constraints, referential actions, views, indexes, ALTER, and identity columns actually work.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Table-level constraints are declared after columns when rules span multiple columns or need explicit names (composite PRIMARY KEY, named FOREIGN KEY, CHECK, UNIQUE).",
+     "weight": "core",
+     "evidence_hint": "Describes CONSTRAINT ... after column list for composite keys and named FKs/checks."
+    },
+    {
+     "id": "mech2",
+     "point": "Foreign-key referential actions control parent delete/update: RESTRICT blocks immediately if children exist (default); NO ACTION is similar but deferred to transaction end; CASCADE deletes/updates matching children; SET NULL blanks the child FK; SET DEFAULT applies the child's DEFAULT.",
+     "weight": "core",
+     "evidence_hint": "Names the five actions and contrasts immediate RESTRICT vs deferred NO ACTION vs CASCADE/SET NULL/SET DEFAULT."
+    },
+    {
+     "id": "mech3",
+     "point": "A view stores the query, not the data; querying it runs the stored query against live base tables. Materialized views store a physical snapshot and need manual refresh (e.g. REFRESH MATERIALIZED VIEW CONCURRENTLY) because they go stale when base tables change.",
+     "weight": "core",
+     "evidence_hint": "Contrasts virtual stored query vs on-disk snapshot plus explicit refresh."
+    },
+    {
+     "id": "mech4",
+     "point": "Updatable views in simple one-to-one cases (single base table, no GROUP BY, JOINs, or DISTINCT) allow UPDATE/INSERT that pass through to the underlying table.",
+     "weight": "extended",
+     "evidence_hint": "States the simplicity conditions and that modifications hit the base table."
+    },
+    {
+     "id": "mech5",
+     "point": "Indexes (usually B-Tree) avoid sequential full-table scans; types include unique, composite (column order matters), and partial indexes; ALTER TABLE can add/drop/rename columns, change types, and add/drop constraints or defaults without dropping the table.",
+     "weight": "extended",
+     "evidence_hint": "Mentions B-Tree/scan avoidance plus at least composite/partial and several ALTER forms."
+    },
+    {
+     "id": "mech6",
+     "point": "GENERATED ALWAYS AS IDENTITY prevents manual ID inserts; SERIAL still allows override and can desynchronize the sequence. Generated columns in PostgreSQL are STORED (written to disk). Temporary tables exist only for the current session and vanish on disconnect; CTAS creates and populates a table from a SELECT.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts IDENTITY vs SERIAL, STORED generated columns, session-scoped temps, and CTAS snapshotting."
+    }
+   ],
+   "probes": [
+    "If a parent row is deleted, what do ON DELETE CASCADE, RESTRICT, SET NULL, SET DEFAULT, and NO ACTION do—and how do views, indexes, and ALTER TABLE fit into DDL mechanics?"
+   ],
+   "hints": {
+    "1": "Start from what happens to child rows when the parent changes.",
+    "2": "Cover named/composite constraints, the five referential actions, view vs materialized view, then index/ALTER basics.",
+    "3": "RESTRICT blocks now; NO ACTION checks at commit; CASCADE follows children; SET NULL/DEFAULT rewrite FKs; views store queries; materialized views need REFRESH; indexes are usually B-Trees; ALTER evolves structure in place."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Surface the read/write, freshness, and safety tradeoffs the file emphasizes for indexes, views, CASCADE, and deletion commands.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Indexes speed reads but every INSERT/UPDATE/DELETE must also maintain the index, so over-indexing slows writes.",
+     "weight": "core",
+     "evidence_hint": "Explicitly pairs faster reads with slower DML from index maintenance."
+    },
+    {
+     "id": "tr2",
+     "point": "Regular views always see live data; materialized views are fast because precomputed but become stale until manually refreshed.",
+     "weight": "core",
+     "evidence_hint": "Freshness vs speed tradeoff with mandatory refresh called out."
+    },
+    {
+     "id": "tr3",
+     "point": "OVERUSING ON DELETE CASCADE risks catastrophic cascading deletes across related tables; RESTRICT is the safer default for critical data.",
+     "weight": "core",
+     "evidence_hint": "Warns about silent mass deletion and prefers RESTRICT for critical data."
+    },
+    {
+     "id": "tr4",
+     "point": "TRUNCATE empties a table at storage-page level (DDL) keeping structure; DELETE removes rows one-by-one with full logging and trigger firing; DROP destroys structure and data.",
+     "weight": "extended",
+     "evidence_hint": "Separates structure retention, logging/triggers, and total object destruction."
+    }
+   ],
+   "probes": [
+    "Compare indexing and materialized views for performance versus freshness/write cost, and when would you choose RESTRICT over CASCADE or TRUNCATE over DELETE?"
+   ],
+   "hints": {
+    "1": "Every speedup here has a maintenance or safety cost.",
+    "2": "Index write amplification; matview staleness; CASCADE blast radius; TRUNCATE vs row-logged DELETE.",
+    "3": "More indexes → faster reads, slower writes; matviews need REFRESH; CASCADE can wipe dependents—prefer RESTRICT; TRUNCATE deallocates pages and skips ON DELETE triggers, DELETE logs and fires them."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply DDL choices to real schema and cleanup scenarios without mixing up DROP, TRUNCATE, and DELETE.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Use views to hide complex JOINs and to grant access to a column/row subset (e.g. exclude salary) without exposing the base table.",
+     "weight": "core",
+     "evidence_hint": "Gives simplicity and security use cases for CREATE VIEW."
+    },
+    {
+     "id": "app2",
+     "point": "Choose referential actions deliberately: RESTRICT/NO ACTION to protect parents with children; CASCADE only when child rows should disappear with the parent; SET NULL when orphaning via null FK is acceptable.",
+     "weight": "core",
+     "evidence_hint": "Maps business intent to a specific ON DELETE/ON UPDATE action."
+    },
+    {
+     "id": "app3",
+     "point": "For bulk emptying while keeping the table, prefer TRUNCATE (optionally RESTART IDENTITY); use DELETE when you need WHERE filters, full logging, or ON DELETE triggers; use DROP (optionally CASCADE) only when the object itself should go.",
+     "weight": "core",
+     "evidence_hint": "Picks the right removal command for structure retention, selective delete, or full destroy."
+    },
+    {
+     "id": "app4",
+     "point": "Use CTAS to snapshot query results into a physical table for analytics; use TEMPORARY tables as session-scoped scratchpads that other connections cannot see.",
+     "weight": "extended",
+     "evidence_hint": "Names CTAS for snapshots and temp tables for session-local work."
+    }
+   ],
+   "probes": [
+    "You need a secure employee listing without salaries, a safe FK delete policy, and a way to clear a huge logs table—what DDL would you write and why?"
+   ],
+   "hints": {
+    "1": "Match the tool to the goal: projection, referential policy, or mass clear.",
+    "2": "View for restricted columns; ON DELETE choice for parent/child; TRUNCATE/DELETE/DROP for cleanup.",
+    "3": "CREATE VIEW without salary; default RESTRICT unless children should go; TRUNCATE for fast full clear (no ON DELETE triggers), DELETE for filtered/trigger-aware removal, DROP to remove the table."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Index coverage vs write throughput",
+   "strong_answer": "Indexes (typically B-Tree) avoid sequential scans and speed lookups, but every insert/update/delete must update the indexes too, so over-indexing speeds reads while severely slowing writes."
+  },
+  {
+   "topic": "Regular view vs materialized view",
+   "strong_answer": "A regular view stores only the query and always returns live base-table data; a materialized view stores a precomputed snapshot for fast reads but goes stale until you manually REFRESH MATERIALIZED VIEW (CONCURRENTLY in the example)."
+  },
+  {
+   "topic": "ON DELETE CASCADE vs RESTRICT",
+   "strong_answer": "CASCADE automatically deletes matching child rows with the parent, which can silently wipe departments, employees, and audit logs; RESTRICT blocks parent deletion when children exist and is the safer default for critical data."
+  },
+  {
+   "topic": "TRUNCATE vs DELETE vs DROP",
+   "strong_answer": "DROP destroys table structure and data; DELETE removes rows one-by-one with full logging and fires triggers (and can use WHERE); TRUNCATE is DDL that deallocates data pages, keeps structure, is minimally logged, cannot activate ON DELETE triggers, and in PostgreSQL is fully transactional with ROLLBACK restoring data."
+  },
+  {
+   "topic": "GENERATED ALWAYS AS IDENTITY vs SERIAL",
+   "strong_answer": "GENERATED ALWAYS AS IDENTITY blocks manual ID inserts; SERIAL still allows override, which can desynchronize the sequence."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating UNIQUE like PRIMARY KEY regarding nulls",
+   "correction": "UNIQUE can often accept multiple null values because null is not equal to null; PRIMARY KEY implies NOT NULL as well."
+  },
+  {
+   "trap": "Defaulting every foreign key to ON DELETE CASCADE",
+   "correction": "CASCADE can cascade through departments, employees, and audit logs and delete an organization's data in milliseconds; use RESTRICT by default for critical data."
+  },
+  {
+   "trap": "Assuming TRUNCATE behaves like DELETE for triggers and categorization",
+   "correction": "TRUNCATE is DDL operating at storage/page level; it cannot activate ON DELETE triggers, so audit-on-delete logic will not run."
+  },
+  {
+   "trap": "Assuming TRUNCATE cannot be rolled back",
+   "correction": "In PostgreSQL, TRUNCATE inside a transaction can be ROLLBACKed and the data is restored."
+  },
+  {
+   "trap": "Expecting a temporary table to be visible from another connection",
+   "correction": "TEMPORARY tables exist only for the current session; another connection or terminal will not see them."
+  },
+  {
+   "trap": "Expecting a materialized view to stay current automatically",
+   "correction": "Base-table changes do not update the materialized snapshot; you must run REFRESH MATERIALIZED VIEW (CONCURRENTLY in the example)."
+  },
+  {
+   "trap": "Assuming any view accepts UPDATE/INSERT",
+   "correction": "Only simple views mapping one-to-one to a single base table without GROUP BY, JOINs, or DISTINCT are updatable in PostgreSQL."
+  },
+  {
+   "trap": "Ignoring composite index column order",
+   "correction": "For multi-column indexes, column order matters heavily for how the query optimizer can use the index."
+  }
+ ]
+}

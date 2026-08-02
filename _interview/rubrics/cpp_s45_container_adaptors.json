@@ -1,0 +1,238 @@
+{
+ "id": "cpp_s45_container_adaptors",
+ "title": "Container Adaptors",
+ "type": "FUND",
+ "relevance": "Interviewers probe stack/queue/priority_queue defaults, why adaptors hide iterators, and how to build min-heaps and custom comparators for BFS/DFS/Dijkstra-style code.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that adaptors wrap a sequence container and publish only a narrow LIFO, FIFO, or priority API with no iterators.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A container adaptor is not a new container; it wraps an underlying sequence container and restricts the interface to specialised behaviour.",
+     "weight": "core",
+     "evidence_hint": "Says it wraps deque/vector/list (etc.) and exposes only the adaptor’s narrow API, not a general sequence."
+    },
+    {
+     "id": "fund2",
+     "point": "The three standard adaptors are std::stack, std::queue, and std::priority_queue.",
+     "weight": "core",
+     "evidence_hint": "Names all three standard adaptors."
+    },
+    {
+     "id": "fund3",
+     "point": "Adaptors intentionally expose no iterators: no traversal, no range-based for, and no indexed access.",
+     "weight": "core",
+     "evidence_hint": "States you cannot iterate or index; only manipulate via the adaptor’s strict operations."
+    },
+    {
+     "id": "fund4",
+     "point": "All three are thin wrappers that forward to the underlying container (and for priority_queue, to heap algorithms in <algorithm>).",
+     "weight": "extended",
+     "evidence_hint": "Mentions forwarding and that choosing the underlying container changes performance, not the public API."
+    }
+   ],
+   "probes": [
+    "What is a container adaptor in C++, and how does it differ from a normal sequence container?",
+    "Why do stack, queue, and priority_queue have no iterators?"
+   ],
+   "hints": {
+    "1": "Think wrapper, not storage.",
+    "2": "Name the three adaptors and what each access pattern allows.",
+    "3": "Adaptor = underlying container + narrow LIFO/FIFO/priority API; no begin/end or indexing."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Cover defaults, required underlying ops, interfaces, heap layout, and comparator/min-heap rules.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "std::stack defaults to std::deque<T>; the underlying container must support push_back, pop_back, and back (vector or list also work).",
+     "weight": "core",
+     "evidence_hint": "Gives the template default as deque and lists the three required operations."
+    },
+    {
+     "id": "mech2",
+     "point": "std::queue defaults to std::deque<T> and needs push_back, pop_front, front, and back; std::vector is not valid because it lacks efficient pop_front.",
+     "weight": "core",
+     "evidence_hint": "Says deque default, list OK, vector ill-formed/useless for lacking pop_front."
+    },
+    {
+     "id": "mech3",
+     "point": "std::priority_queue defaults to std::vector<T> and Compare = std::less, yielding a max-heap; it is a binary heap over a random-access container.",
+     "weight": "core",
+     "evidence_hint": "States vector default, less → max-heap, binary-heap implementation."
+    },
+    {
+     "id": "mech4",
+     "point": "For a binary heap in a vector (0-based), left child is at 2*i+1, right at 2*i+2, parent at (i-1)/2; top is c.front() at index 0.",
+     "weight": "core",
+     "evidence_hint": "Recites the index formulas and that top is the root at index 0."
+    },
+    {
+     "id": "mech5",
+     "point": "priority_queue push/emplace/pop are O(log n); top is O(1); stack/queue push and pop are amortised O(1) with O(1) top/front/back/size/empty.",
+     "weight": "core",
+     "evidence_hint": "Matches the complexity table: heap logarithmic push/pop, constant top; stack/queue amortised O(1) ends."
+    },
+    {
+     "id": "mech6",
+     "point": "pop() returns void on all three; read with top()/front() first. priority_queue::top returns const T& only so the heap invariant cannot be broken by mutation.",
+     "weight": "core",
+     "evidence_hint": "Says void pop, read-then-pop pattern, and const-only top on priority_queue."
+    },
+    {
+     "id": "mech7",
+     "point": "A min-heap needs Compare = std::greater and thus an explicit Container (usually std::vector<T>); comparator returns true when the first argument has lower priority than the second.",
+     "weight": "extended",
+     "evidence_hint": "Writes priority_queue<T, vector<T>, greater<T>> and explains the lower-priority / inverted comparator rule."
+    },
+    {
+     "id": "mech8",
+     "point": "priority_queue has no decrease-key or iteration; contest workaround is push duplicates and lazy-skip stale entries when top distance is worse than best known.",
+     "weight": "extended",
+     "evidence_hint": "Describes push-new-pair + skip-if-stale (Dijkstra-style), not in-place key updates."
+    }
+   ],
+   "probes": [
+    "What are the default underlying containers for stack, queue, and priority_queue, and why can’t queue use vector?",
+    "How do you make a min-heap with std::priority_queue, and how is the heap stored in the vector?",
+    "Why does priority_queue::top return const T&, and what does pop return?"
+   ],
+   "hints": {
+    "1": "Defaults differ: ends vs random access.",
+    "2": "Queue needs both ends; priority_queue needs heap ops on a random-access sequence plus Compare.",
+    "3": "deque for stack/queue, vector + less (max-heap) for priority_queue; min-heap = greater; children 2i+1/2i+2; void pop; const top."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Judge when to pick each adaptor and which underlying container fits growth, ends, and random-access needs.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "deque is stack’s default because it grows efficiently at both ends without vector’s occasional large reallocations, while still giving amortised O(1) push_back/pop_back/back; prefer vector when the stack stays small or cache locality matters more.",
+     "weight": "core",
+     "evidence_hint": "Contrasts deque growth vs vector reallocations and when vector is preferable."
+    },
+    {
+     "id": "tr2",
+     "point": "Queue needs efficient ops at both ends, so deque or list; stack only needs the back end. priority_queue needs random access (vector or deque), not list.",
+     "weight": "core",
+     "evidence_hint": "Ties FIFO both-ends requirement to deque/list and heap random-access to vector/deque."
+    },
+    {
+     "id": "tr3",
+     "point": "Use stack/queue when the algorithm’s discipline is the point (DFS/BFS); use priority_queue when you always need the current best key; if you need decrease-key, arbitrary deletes, or sorted iteration, use set/multiset or another heap instead.",
+     "weight": "extended",
+     "evidence_hint": "Maps adaptors to DFS/BFS vs Dijkstra/top-K and names set when the adaptor API is too narrow."
+    }
+   ],
+   "probes": [
+    "When would you back a stack with vector instead of the default deque?",
+    "When is priority_queue the wrong tool compared to set?"
+   ],
+   "hints": {
+    "1": "Match ends and access pattern to the container.",
+    "2": "Stack = back only; queue = front+back; heap = random access + top only.",
+    "3": "deque default for stack/queue; vector for priority_queue; set when you need decrease-key or ordered walk."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply adaptors to classic interview patterns and correct comparator/custom-type setup.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Classic stack uses: matching brackets, explicit-stack DFS, undo/redo, postfix evaluation; no iterators because the contract is LIFO-only.",
+     "weight": "core",
+     "evidence_hint": "Lists those uses and ties missing iterators to preserving LIFO abstraction."
+    },
+    {
+     "id": "app2",
+     "point": "Queues power BFS, sliding-window problems, and producer–consumer buffering.",
+     "weight": "core",
+     "evidence_hint": "Names BFS / sliding window / producer–consumer as queue roles."
+    },
+    {
+     "id": "app3",
+     "point": "For custom types, supply a functor with operator() or a lambda with decltype(cmp) and pass cmp to the constructor; stateful lambdas fail if default-constructed without pq(cmp).",
+     "weight": "extended",
+     "evidence_hint": "Shows functor or decltype(cmp) + constructor argument; warns about capturing lambdas without passing cmp."
+    },
+    {
+     "id": "app4",
+     "point": "Python list simulates stack, collections.deque a queue, and heapq a min-heap by default—unlike C++ priority_queue’s max-heap default.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts Python heapq min-heap default with C++ max-heap default."
+    }
+   ],
+   "probes": [
+    "Give interview uses of stack vs queue vs priority_queue.",
+    "How do you put a custom struct into a priority_queue with a lambda comparator?"
+   ],
+   "hints": {
+    "1": "Map LIFO / FIFO / best-key to algorithms.",
+    "2": "Think brackets/DFS vs BFS vs Dijkstra/top-K, plus comparator wiring.",
+    "3": "Stack: brackets/DFS; queue: BFS; priority_queue: best key; lambda needs decltype(cmp) and pq(cmp)."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "deque vs vector as stack backing",
+   "strong_answer": "deque is default: efficient growth at ends without vector’s occasional large reallocations, still amortised O(1) back ops; choose vector when the stack stays small or cache locality matters more than growth behaviour."
+  },
+  {
+   "topic": "deque/list vs vector as queue backing",
+   "strong_answer": "queue needs efficient push_back and pop_front plus front/back, so deque (default) or list work; vector is invalid/poor because it lacks efficient pop_front."
+  },
+  {
+   "topic": "vector/deque vs list as priority_queue backing",
+   "strong_answer": "priority_queue needs random access for heap algorithms, so vector (default) or deque; list lacks random access and is not a fit."
+  },
+  {
+   "topic": "priority_queue vs set/multiset",
+   "strong_answer": "priority_queue when you only need push/pop/top of the current best key; if you need decrease-key, arbitrary deletes, or sorted iteration, use set/multiset (or a hand-rolled/policy-based heap) instead."
+  },
+  {
+   "topic": "C++ priority_queue max-heap vs Python heapq min-heap",
+   "strong_answer": "C++ default Compare is std::less → max-heap; Python heapq defaults to a min-heap—so the same ‘default PQ’ mental model does not transfer."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Calling pop() and expecting the removed value.",
+   "correction": "pop() returns void on stack, queue, and priority_queue; always read with top()/front() first, then pop()."
+  },
+  {
+   "trap": "Calling top/front/back/pop on an empty adaptor.",
+   "correction": "Those operations on an empty stack or queue are undefined behaviour; check empty() first."
+  },
+  {
+   "trap": "Mutating the element returned by priority_queue::top().",
+   "correction": "top() returns const T& only; mutating through the adaptor would break the heap invariant."
+  },
+  {
+   "trap": "Writing a comparator as return a.priority > b.priority expecting a max-heap of priority.",
+   "correction": "Return true when a has lower priority than b; std::less yields a max-heap, std::greater a min-heap—the intuition feels inverted."
+  },
+  {
+   "trap": "Declaring priority_queue<T, vector<T>, decltype(cmp)> pq; without pq(cmp) for a capturing lambda.",
+   "correction": "Pass the lambda to the constructor; default-constructing the comparator only works for a stateless lambda."
+  },
+  {
+   "trap": "Using std::vector as the underlying container for std::queue.",
+   "correction": "vector has no efficient pop_front; use deque (default) or list."
+  },
+  {
+   "trap": "Expecting to iterate a priority_queue in priority order or decrease a key in place.",
+   "correction": "No iterators and no decrease-key; walk by destructive top+pop, or use push-duplicates with lazy deletion / switch to set."
+  }
+ ]
+}

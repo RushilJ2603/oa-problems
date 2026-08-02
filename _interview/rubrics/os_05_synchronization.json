@@ -1,0 +1,241 @@
+{
+ "id": "os_05_synchronization",
+ "title": "Process synchronization",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs probe race conditions, critical sections, and classic semaphore problems to test whether candidates can reason about shared state and concurrency bugs.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that sharing creates synchronization problems, what a race condition is, and what a correct critical-section solution must guarantee.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Synchronization applies only to cooperative processes that share state; independent processes share no state and their interleaving does not matter.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts independent (no shared state) vs cooperative (share variables, memory, code, or resources) and states sharing is the prerequisite for a sync problem."
+    },
+    {
+     "id": "fund2",
+     "point": "A race condition is when concurrent access to shared data makes the final value depend on timing/order of execution, typically because read–modify–write is not atomic.",
+     "weight": "core",
+     "evidence_hint": "Candidate gives the definition and ties it to a non-atomic read–modify–write on shared data."
+    },
+    {
+     "id": "fund3",
+     "point": "In the shared-variable race example starting at shared = 5, both processes can read 5 before either writes, so the result is 6 or 4 instead of the expected 5.",
+     "weight": "extended",
+     "evidence_hint": "Candidate walks the interleaving: both read 5, then last writer leaves shared at 6 (P1 last) or 4 (P2 last), not 5."
+    },
+    {
+     "id": "fund4",
+     "point": "A critical section is the code that accesses shared resources; entry/exit sections must enforce mutual exclusion, progress (primary), plus bounded waiting and no hardware-speed assumptions (secondary).",
+     "weight": "core",
+     "evidence_hint": "Candidate names the four requirements and marks mutual exclusion and progress as primary."
+    }
+   ],
+   "probes": [
+    "What is a race condition, and why does sharing writable state make process interleaving matter?",
+    "What four requirements must a correct critical-section solution satisfy?"
+   ],
+   "hints": {
+    "1": "Think about what must be true for two processes' interleaving to affect a result.",
+    "2": "Start from cooperative vs independent, then define race and critical section with mutual exclusion and progress.",
+    "3": "Race: final shared value depends on uncontrolled order because RMW is not atomic. CS solution needs mutual exclusion, progress, bounded waiting, and no relative-speed assumptions."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how naive locks fail, how hardware and software solutions enforce mutual exclusion, and how semaphores block instead of busy-wait.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A plain lock variable fails mutual exclusion because the test (while LOCK == 1) and set (LOCK = 1) are separate non-atomic steps, so two processes can both see LOCK free and enter.",
+     "weight": "core",
+     "evidence_hint": "Candidate shows both processes pass the spin while LOCK is 0, both set LOCK = 1, and both enter the CS."
+    },
+    {
+     "id": "mech2",
+     "point": "test-and-set is an atomic read-then-write-TRUE; spinning until it returns FALSE guarantees mutual exclusion; compare-and-swap is the more general modern form.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes atomic test-and-set entry (spin while true) and unlock by setting lock FALSE, and may mention CAS."
+    },
+    {
+     "id": "mech3",
+     "point": "Strict turn alternation gives mutual exclusion but violates progress: a process that just finished cannot re-enter until the other takes a turn, even if the other is in its remainder and does not want the CS.",
+     "weight": "extended",
+     "evidence_hint": "Candidate states ME holds but progress fails under strict alternation, and may mention Peterson's flag[]+turn fix as the correct two-process software answer."
+    },
+    {
+     "id": "mech4",
+     "point": "A semaphore is an integer touched only by atomic down/up (P/V); a blocked process sleeps on a suspended list. Counting semaphores guard resource pools; binary semaphores hold only 0 or 1. A negative counting value equals how many waiters are asleep.",
+     "weight": "core",
+     "evidence_hint": "Candidate defines down/up, sleep vs busy-wait, counting vs binary, and negative value = waiter count."
+    },
+    {
+     "id": "mech5",
+     "point": "With mutex initialized to 1 around down/CS/up, at most one process is in the CS; if initialized to k, up to k processes may be inside simultaneously.",
+     "weight": "extended",
+     "evidence_hint": "Candidate answers 'at most one' for init 1, and 'up to k' for a counting init of k."
+    }
+   ],
+   "probes": [
+    "Why does a simple shared LOCK variable fail mutual exclusion?",
+    "How does test-and-set differ from a software lock variable, and what do down/up on a semaphore do?"
+   ],
+   "hints": {
+    "1": "Look at whether the check and the update of the lock happen as one step.",
+    "2": "Contrast non-atomic test-then-set, atomic test-and-set, turn alternation's progress bug, then semaphore sleep lists.",
+    "3": "LOCK fails because two can both see 0; TAS is atomic so only one sees FALSE; turn violates progress; semaphore down may sleep and negative value counts waiters."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Surface mutex vs spinlock, semaphore vs mutex ownership, and related production concurrency tradeoffs grounded in the lecture.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "A mutex sleeps a blocked waiter (no wasted CPU, but context-switch/wakeup latency of roughly a microsecond or more); a spinlock busy-waits with near-zero acquire latency but burns CPU every spin cycle.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts sleep vs spin and mentions mutex wakeup cost vs spin's burned cycles."
+    },
+    {
+     "id": "tr2",
+     "point": "Spin only when the critical section is shorter than a context switch (rule of thumb: a few microseconds) or when sleeping is impossible (e.g. interrupt handler); otherwise use a mutex. User-space spinlocks are dangerous if the holder is preempted.",
+     "weight": "core",
+     "evidence_hint": "Candidate states the short-CS / cannot-sleep rule and the preemption hazard for user-space spinning."
+    },
+    {
+     "id": "tr3",
+     "point": "A semaphore is a signalling device with no owner (any process may up it); a mutex is a lock with ownership (only the locker unlocks). A binary semaphore can act as a mutex, but a mutex cannot provide cross-process signalling.",
+     "weight": "extended",
+     "evidence_hint": "Candidate clearly separates ownership/signalling and states the one-way substitutability."
+    }
+   ],
+   "probes": [
+    "When would you choose a spinlock over a mutex, and what goes wrong if you spin in user space?",
+    "How is a semaphore different from a mutex?"
+   ],
+   "hints": {
+    "1": "Compare what a blocked waiter does: sleep or spin.",
+    "2": "Weigh acquire latency vs CPU waste, then ownership vs signalling.",
+    "3": "Spin for CS shorter than a context switch or in interrupt context; mutex otherwise. Semaphore: any process may signal; mutex: only owner unlocks."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply synchronization to bounded buffer, readers–writers, dining philosophers, and common coding-level concurrency traps.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "In the naive bounded buffer, count++ and count-- are each load/incr-or-decr/store; interleaved updates can leave count at 2 or 4 instead of 3 when both load count as 3 — that update is a critical section.",
+     "weight": "core",
+     "evidence_hint": "Candidate shows lost update on count and says producer/consumer count updates need mutual exclusion."
+    },
+    {
+     "id": "app2",
+     "point": "Correct semaphore PC uses empty=n, full=0, binary S=1; down(empty)/down(full) must precede down(S). Taking S first then blocking on full/empty holds the mutex while asleep — classic deadlock.",
+     "weight": "core",
+     "evidence_hint": "Candidate orders counting downs before the mutex and explains the deadlock if mutex is taken first."
+    },
+    {
+     "id": "app3",
+     "point": "Readers–writers: read–read is fine; read–write, write–read, write–write conflict. First reader down(db), last reader up(db); the readers-preference version can starve writers.",
+     "weight": "extended",
+     "evidence_hint": "Candidate states the conflict table, first/last reader protocol, and writer starvation under continuous readers."
+    },
+    {
+     "id": "app4",
+     "point": "Dining philosophers: five philosophers and five forks as semaphores; if all take left first, circular wait deadlocks. Fixes: at most four at the table, asymmetric left/right order, or pick up both only if both free under a mutex.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes the all-left deadlock and at least one of the three standard fixes."
+    },
+    {
+     "id": "app5",
+     "point": "Condition-variable wait must use while (!predicate), not if — spurious wakeups or another thread consuming the condition; wait atomically releases and re-acquires the mutex.",
+     "weight": "extended",
+     "evidence_hint": "Candidate insists on the while loop and mentions spurious wakeup / lost-wakeup closure."
+    }
+   ],
+   "probes": [
+    "Show how the bounded-buffer count update races, and how semaphores fix it without deadlock.",
+    "Why can the dining philosophers deadlock, and how do you prevent it?"
+   ],
+   "hints": {
+    "1": "Focus on one shared index or counter and who can sleep holding a lock.",
+    "2": "Walk count RMW race → empty/full/S ordering → philosophers' circular wait.",
+    "3": "Lost count update needs a CS; down counting before mutex; all-left fork grab deadlocks — limit to four, asymmetric order, or both-free under mutex."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Mutex vs spinlock",
+   "strong_answer": "Mutex puts waiters to sleep (saves CPU, ~microsecond+ wakeup cost); spinlock busy-waits (near-zero acquire latency, burns cycles). Spin only for CS shorter than a context switch (few microseconds) or contexts that cannot sleep; otherwise mutex. User-space spinning is dangerous if the holder is preempted."
+  },
+  {
+   "topic": "Semaphore vs mutex",
+   "strong_answer": "Semaphore is signalling with no owner — any process may up it. Mutex is an owned lock — only the locker unlocks. Binary semaphore can serve as a mutex; a mutex cannot provide semaphore-style cross-process signalling."
+  },
+  {
+   "topic": "Busy-waiting lock vs semaphore sleep",
+   "strong_answer": "Simple LOCK/TAS loops busy-wait; semaphores put blocked processes on a suspended list and sleep, avoiding spinning until up/wakeup."
+  },
+  {
+   "topic": "Readers-preference vs fair readers–writers",
+   "strong_answer": "First/last-reader locking of db allows concurrent readers but a continuous reader stream can starve writers; fair variants prioritize waiting writers."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating counter, printer-spooler, and buffer bugs as different problems.",
+   "correction": "They share the same defect: an unprotected read–modify–write on a shared index/counter."
+  },
+  {
+   "trap": "Assuming a shared LOCK variable provides mutual exclusion.",
+   "correction": "Test and set are non-atomic; two processes can both see LOCK free and both enter."
+  },
+  {
+   "trap": "Using strict turn alternation as a complete CS solution.",
+   "correction": "It gives ME but violates progress — a process is blocked by one that may not want to enter."
+  },
+  {
+   "trap": "Taking the buffer mutex S before down(empty)/down(full).",
+   "correction": "The process can sleep holding S, so the peer that could wake it never gets S — deadlock. Always down counting semaphores first."
+  },
+  {
+   "trap": "Confusing semaphore with mutex ownership.",
+   "correction": "Any process may up a semaphore; only the owner may unlock a mutex."
+  },
+  {
+   "trap": "Readers–writers protocol that never considers writers under continuous readers.",
+   "correction": "Readers-preference keeps db locked forever for a stream of readers, starving writers."
+  },
+  {
+   "trap": "All dining philosophers take the left fork first.",
+   "correction": "Circular wait deadlock; fix with at most four philosophers, asymmetric fork order, or acquire both only if both free."
+  },
+  {
+   "trap": "Waiting on a condition variable with if (!predicate) instead of while.",
+   "correction": "Spurious wakeups or another thread may invalidate the condition; always re-check in a while loop."
+  },
+  {
+   "trap": "Relying on volatile for cross-thread correctness in C/C++.",
+   "correction": "volatile stops compiler caching but gives no atomicity or cross-thread ordering — use std::atomic / proper barriers."
+  },
+  {
+   "trap": "CAS succeeding after A→B→A (ABA).",
+   "correction": "CAS checks value not history; fix with version tags, LL/SC, or deferred reclamation (hazard pointers)."
+  },
+  {
+   "trap": "False sharing of independent per-thread variables.",
+   "correction": "Variables on the same 64-byte cache line bounce between cores; pad/align hot data to its own line."
+  },
+  {
+   "trap": "Deadlock from circular lock order.",
+   "correction": "Enforce a global lock ordering so locks are always acquired in the same fixed order."
+  }
+ ]
+}

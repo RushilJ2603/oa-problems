@@ -1,0 +1,201 @@
+{
+ "id": "dsa_s14_geometry_mensuration",
+ "title": "Mensuration, Geometry & Coordinate Geometry",
+ "type": "FUND",
+ "relevance": "Campus OAs and aptitude rounds test formula recall, unit conversion, similar-figure scaling, and volume conservation under recasting.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Candidate recalls core 2D/3D mensuration formulas and basic coordinate-geometry identities.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Triangle area is (1/2)×b×h; Heron's formula uses s=(a+b+c)/2 and √[s(s-a)(s-b)(s-c)].",
+     "weight": "core",
+     "evidence_hint": "States both base-height and Heron forms with the semi-perimeter definition."
+    },
+    {
+     "id": "fund2",
+     "point": "Circle: area=πr² and circumference=2πr; rectangle=l×w, square=a², parallelogram=b×h, trapezium=(1/2)(a+b)h.",
+     "weight": "core",
+     "evidence_hint": "Lists circle and common quadrilateral area formulas correctly."
+    },
+    {
+     "id": "fund3",
+     "point": "3D: cube V=a³ and SA=6a²; cylinder V=πr²h with total SA=2πr(r+h); cone V=(1/3)πr²h with slant l=√(r²+h²); sphere V=(4/3)πr³ and SA=4πr².",
+     "weight": "core",
+     "evidence_hint": "Gives volume and surface-area formulas for cube, cylinder, cone, and sphere without mixing factors."
+    },
+    {
+     "id": "fund4",
+     "point": "Coordinate geometry: distance √[(x₂-x₁)²+(y₂-y₁)²], midpoint ((x₁+x₂)/2,(y₁+y₂)/2), slope (y₂-y₁)/(x₂-x₁), and point-slope line y-y₁=m(x-x₁).",
+     "weight": "extended",
+     "evidence_hint": "Recalls distance, midpoint, slope, and point-slope forms accurately."
+    }
+   ],
+   "probes": [
+    "Walk me through the standard area/volume formulas for a triangle, circle, cylinder, cone, and sphere, plus the distance and midpoint formulas."
+   ],
+   "hints": {
+    "1": "Start with plane figures, then solids, then coordinate identities.",
+    "2": "For solids, separate volume from curved/total surface area; for coordinates, name distance then midpoint then slope.",
+    "3": "Triangle (1/2)bh or Heron with s=(a+b+c)/2; circle πr² and 2πr; cube a³/6a²; cylinder πr²h and 2πr(r+h); cone (1/3)πr²h with l=√(r²+h²); sphere (4/3)πr³ and 4πr²; distance/midpoint/slope as above."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Candidate applies angle sums, Pythagorean checks, polygon exterior angles, tangent equality, and coordinate slope/section methods on concrete problems.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Angles in a triangle sum to 180°; for ratio 2:3:4, parts make 9x=180° so x=20° and the largest angle is 80°.",
+     "weight": "core",
+     "evidence_hint": "Sets 2x+3x+4x=180°, finds x=20°, reports 4x=80°."
+    },
+    {
+     "id": "mech2",
+     "point": "A 5-12-13 (or 7-24-25) triple is right-angled by Pythagoras, so area is (1/2)×leg₁×leg₂; altitude to the hypotenuse equates that area to (1/2)×hypotenuse×h.",
+     "weight": "core",
+     "evidence_hint": "Verifies a²+b²=c² then computes area from legs or solves for altitude to the longest side."
+    },
+    {
+     "id": "mech3",
+     "point": "For a regular polygon, exterior angle=180°-interior; number of sides n=360°/exterior (e.g. interior 144° ⇒ exterior 36° ⇒ n=10).",
+     "weight": "core",
+     "evidence_hint": "Uses 180°-144°=36° and 360°/36°=10."
+    },
+    {
+     "id": "mech4",
+     "point": "Tangents from an external point are equal; if ∠APB=60° and PA=PB, △APB is equilateral so chord AB equals the tangent length.",
+     "weight": "extended",
+     "evidence_hint": "Argues PA=PB, base angles 60°, equilateral, AB=PA."
+    },
+    {
+     "id": "mech5",
+     "point": "Collinearity can be checked by equal slopes between pairs; a line through a point perpendicular to slope m₁ uses slope -1/m₁ in point-slope form.",
+     "weight": "extended",
+     "evidence_hint": "Equates pairwise slopes for collinearity, or states m₂=-1/m₁ and substitutes into y-y₁=m(x-x₁)."
+    }
+   ],
+   "probes": [
+    "How do you find the largest angle from a 2:3:4 ratio, check if 5-12-13 is right-angled, find sides of a regular polygon with interior 144°, and test whether three points are collinear?"
+   ],
+   "hints": {
+    "1": "Use triangle angle sum, Pythagoras, exterior=180°-interior, and slope equality.",
+    "2": "Ratio angles → 9x=180°; verify 5²+12²=13²; n=360°/exterior; compare slopes of consecutive segments.",
+    "3": "2x+3x+4x=180° ⇒ x=20° ⇒ largest 80°; 5-12-13 right ⇒ area (1/2)×5×12; 144° ⇒ exterior 36° ⇒ 10 sides; equal slopes mean collinear."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Candidate explains scaling laws for similar figures, percentage compounding under squared dimensions, and cylinder-vs-cone volume with matched base.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "For similar figures, area ratio equals (linear-dimension ratio)² and volume ratio equals (linear-dimension ratio)³; thus similar-triangle medians scale with the square root of the area ratio.",
+     "weight": "core",
+     "evidence_hint": "States area~(linear)² and volume~(linear)³, and applies √(16/49)=4/7 to map median 6 to 10.5."
+    },
+    {
+     "id": "tr2",
+     "point": "When a linear measure changes by successive equal percentages, net change is a+b+(ab)/100; radius +20% yields area +44%, and cube edge +50% yields surface area +125%.",
+     "weight": "core",
+     "evidence_hint": "Uses a+b+ab/100 (or (1.2)²=1.44 / (1.5)²=2.25) to get 44% and 125%."
+    },
+    {
+     "id": "tr3",
+     "point": "A cylinder has exactly 3 times the volume of a cone with the same base and height; with equal base radii, a cone holding a cylinder’s volume must be 3 times taller.",
+     "weight": "extended",
+     "evidence_hint": "Compares πr²h vs (1/3)πr²h and concludes the factor of 3 for height when volumes match."
+    },
+    {
+     "id": "tr4",
+     "point": "For a square of side a, inscribed-circle radius is a/2 and circumscribed-circle radius is a√2/2 (or a/√2); circumscribed-to-inscribed area ratio is 2:1, independent of a.",
+     "weight": "extended",
+     "evidence_hint": "Derives (r_out/r_in)²=(√2)²=2 and states the 2:1 area ratio."
+    }
+   ],
+   "probes": [
+    "If similar triangles have areas 16 and 49 and the smaller median is 6, how do you find the larger median—and how does that relate to volume scaling? What happens to circle area if radius grows 20%, and how do inscribed vs circumscribed circles on the same square compare?"
+   ],
+   "hints": {
+    "1": "Areas scale with the square of lengths; volumes with the cube; percentage on r compounds when squared.",
+    "2": "√(16/49)=4/7 maps 6→10.5; (1.2)²→44%; for a square, r_in=a/2 vs r_out=a√2/2.",
+    "3": "Linear ratio 4:7 from areas; net % =20+20+(20×20)/100=44%; area ratio of outer to inner circle is 2:1."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Candidate solves OA-style path, recasting, painted-cube, tiling-cost, and pipe-flow mensuration problems with correct units and conservation.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "An outside path of width w around a rectangle adds 2w to both length and width; park 45×30 with path 2.5 gives outer 50×35 and path area 400.",
+     "weight": "core",
+     "evidence_hint": "Adds 2×2.5=5 to each side, computes 1750-1350=400."
+    },
+    {
+     "id": "app2",
+     "point": "Recasting conserves volume: a sphere of radius 10.5 melted into cones of radius 3.5 and height 3 yields 126 cones after canceling π.",
+     "weight": "core",
+     "evidence_hint": "Equates (4/3)πR³ to N×(1/3)πr²h and simplifies using 10.5/3.5=3 to get N=126."
+    },
+    {
+     "id": "app3",
+     "point": "A cube cut into 64=4³ unit cubes has 6×(4-2)²=24 small cubes with exactly one face painted.",
+     "weight": "extended",
+     "evidence_hint": "Identifies n=4 and counts face-interior cubes as 6(n-2)²=24."
+    },
+    {
+     "id": "app4",
+     "point": "Flow into a tank: pipe cross-section × fluid speed × time equals cylinder volume πR²h; with diameter 14, speed 2 km/hr, pipe 0.5×0.2, and 3 hours, rise is about 3.9 m (π=22/7).",
+     "weight": "extended",
+     "evidence_hint": "Converts 2 km/hr to 2000 m/hr, gets 600 m³ in 3 hours, sets (22/7)×7²×h=600, reports ~3.9 m."
+    }
+   ],
+   "probes": [
+    "A 45 m by 30 m park gets a 2.5 m outer path—find the path area. Then: sphere radius 10.5 recast into cones radius 3.5 height 3—how many cones? And how many one-face-painted cubes when a painted cube is cut into 64?"
+   ],
+   "hints": {
+    "1": "Path extends on both sides; melting conserves volume; face-only paint sits inward of edges.",
+    "2": "Outer size = original + 2×path width; N=V_sphere/V_cone; one-face count=6(n-2)² with n=4.",
+    "3": "50×35-45×30=400; N=126; 6×2×2=24 one-face cubes."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Similar linear dimensions vs area vs volume",
+   "strong_answer": "Area ratio of similar figures is the square of the corresponding linear ratio (sides, medians, altitudes); volume ratio is the cube of that linear ratio."
+  },
+  {
+   "topic": "Linear percentage change vs area/surface-area percentage change",
+   "strong_answer": "Because area/SA scale with the square of the linear measure, use net change a+b+(ab)/100 (or expand (1+f)²): radius +20% ⇒ area +44%; cube edge +50% ⇒ SA +125%."
+  },
+  {
+   "topic": "Cylinder volume vs cone volume (same base)",
+   "strong_answer": "With the same base and height, cylinder volume is exactly 3 times cone volume; if bases match and volumes are equal, the cone’s height must be 3 times the cylinder’s height."
+  },
+  {
+   "topic": "Inscribed circle vs circumscribed circle on the same square",
+   "strong_answer": "For side a, r_in=a/2 and r_out=a√2/2 (equivalently a/√2); area of the circumscribed circle is twice the inscribed circle’s area, independent of a."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Adding path width only once to length and width of a surrounded rectangle.",
+   "correction": "The path lies on both opposite sides, so add 2×path width to each dimension before subtracting inner area from outer area."
+  },
+  {
+   "trap": "Mixing metres and centimetres when counting tiles or computing paving cost.",
+   "correction": "Convert hall and tile dimensions to the same unit (e.g. 15 m→1500 cm, 12 m→1200 cm) before dividing areas."
+  },
+  {
+   "trap": "Treating fluid inflow as unrelated to mensuration or forgetting that supplied length per unit time equals flow speed.",
+   "correction": "Volume per time = pipe cross-sectional area × speed; equate cumulative volume to πR²h in the tank."
+  }
+ ]
+}

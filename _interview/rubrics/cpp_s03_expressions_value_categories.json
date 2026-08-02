@@ -1,0 +1,175 @@
+{
+ "id": "cpp_s03_expressions_value_categories",
+ "title": "Expressions, Types, and Value Categories",
+ "type": "FUND",
+ "relevance": "Interviewers use value categories to check whether candidates can explain assignment legality, where expressions may appear, and why pre- and post-increment differ.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what an expression produces and that every expression has both a type and a value category.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Every expression has two properties: a type and a value category.",
+     "weight": "core",
+     "evidence_hint": "States both properties and that they together decide how an expression may be evaluated and where it may appear."
+    },
+    {
+     "id": "fund2",
+     "point": "An expression is evaluated to produce a result, may have side effects, and can evaluate to objects or to functions.",
+     "weight": "core",
+     "evidence_hint": "Mentions result, side effects (e.g. ++x persists after evaluation), and that expressions can yield objects or functions."
+    },
+    {
+     "id": "fund3",
+     "point": "An lvalue evaluates to an identifiable object—something with a name and a fixed location that can be referred to again later; rvalues are not lvalues and evaluate to a value.",
+     "weight": "core",
+     "evidence_hint": "Contrasts identifiable named objects (lvalues) with non-identifiable values that must be used immediately (rvalues)."
+    },
+    {
+     "id": "fund4",
+     "point": "Lvalues are either modifiable or non-modifiable; non-modifiable lvalues cannot have their value changed because the object is const or constexpr.",
+     "weight": "extended",
+     "evidence_hint": "Gives both subtypes and ties non-modifiable to const or constexpr objects."
+    }
+   ],
+   "probes": [
+    "What two properties does every C++ expression have, and what does each one tell you?",
+    "What is the difference between an lvalue and an rvalue?"
+   ],
+   "hints": {
+    "1": "Think beyond the value the expression computes—C++ tags every expression with another property that controls where it may appear.",
+    "2": "Name the two properties, then define lvalue versus rvalue in terms of identifiable objects versus bare values.",
+    "3": "Every expression has a type and a value category; an lvalue is an identifiable object (modifiable or const/constexpr non-modifiable), and an rvalue is not an lvalue and evaluates to a value."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain assignment operand rules and lvalue-to-rvalue conversion.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "The assignment operator requires its left operand to be a modifiable lvalue expression and its right operand to be an rvalue expression.",
+     "weight": "core",
+     "evidence_hint": "States both sides of the rule and uses it to explain why x = 5 is valid and 5 = x is not."
+    },
+    {
+     "id": "mech2",
+     "point": "lvalue-to-rvalue conversion: when an rvalue is expected but an lvalue is supplied, the lvalue is evaluated to produce its value.",
+     "weight": "core",
+     "evidence_hint": "Explains why x = y compiles: y is an lvalue that converts to its value for the right-hand side."
+    },
+    {
+     "id": "mech3",
+     "point": "Unless stated otherwise, operators expect their operands to be rvalues; arithmetic on lvalues works because the lvalue is read for its value.",
+     "weight": "extended",
+     "evidence_hint": "Notes the default operand expectation (e.g. operator+) and that lvalues are usable there via their values."
+    }
+   ],
+   "probes": [
+    "Why is x = 5 legal but 5 = x illegal when both sides are int?",
+    "If assignment expects an rvalue on the right, how does x = y compile when y is an lvalue?"
+   ],
+   "hints": {
+    "1": "Type alone does not decide assignment legality—look at what each side’s value category must be.",
+    "2": "State the left/right assignment requirements, then name the conversion that lets an lvalue appear where an rvalue is expected.",
+    "3": "Left must be a modifiable lvalue and right an rvalue; for x = y, y undergoes lvalue-to-rvalue conversion so its value is assigned."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Establish the conversion asymmetry that is the heart of the value-category model.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "An lvalue will implicitly convert to an rvalue, so an lvalue can be used anywhere an rvalue is expected.",
+     "weight": "core",
+     "evidence_hint": "Says named objects can stand in wherever a value is needed because they are read for their value."
+    },
+    {
+     "id": "tr2",
+     "point": "An rvalue will not implicitly convert to an lvalue, so a bare value cannot stand in where an addressable, named object is required.",
+     "weight": "core",
+     "evidence_hint": "States the one-way nature of the conversion and that this asymmetry is central to the model."
+    }
+   ],
+   "probes": [
+    "Can an lvalue be used where an rvalue is expected? Can an rvalue be used where an lvalue is expected?",
+    "Why does the language allow reading a named object as a value but not treating a bare value as a named object?"
+   ],
+   "hints": {
+    "1": "Ask which direction of conversion is implicit and which is not.",
+    "2": "Frame it as asymmetry: values versus addressable named objects.",
+    "3": "Lvalues convert to rvalues implicitly; rvalues do not convert to lvalues—so a named object can supply a value, but a bare value cannot act as an addressable object."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Classify common expressions by value category, including string literals and the increment operators.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A named variable is an lvalue; a temporary like std::string(\"Hello\") constructed on the fly is an rvalue.",
+     "weight": "core",
+     "evidence_hint": "Classifies the named variable as identifiable/lvalue and the unnamed temporary std::string as rvalue."
+    },
+    {
+     "id": "app2",
+     "point": "A C-style string literal such as \"Hello\" is an lvalue because it is stored as an array of characters in a read-only section of the program’s memory and has a permanent memory address.",
+     "weight": "core",
+     "evidence_hint": "Calls out the quirk versus numeric literals and ties lvalue status to permanent address/storage."
+    },
+    {
+     "id": "app3",
+     "point": "Pre-increment ++x is an lvalue because it returns the actual modified variable x; post-increment x++ is an rvalue because it returns a temporary copy of the old value.",
+     "weight": "core",
+     "evidence_hint": "Contrasts returning the modified variable itself versus returning a temporary copy of the old value."
+    }
+   ],
+   "probes": [
+    "Is \"Hello\" an lvalue or an rvalue, and why might that surprise someone?",
+    "What is the value category of ++x versus x++, and why do they differ?"
+   ],
+   "hints": {
+    "1": "Do not assume every literal is an rvalue—string literals are a special case.",
+    "2": "For increments, ask what each operator actually returns: the variable itself or a copy of the old value.",
+    "3": "\"Hello\" is an lvalue (read-only character array with a permanent address); ++x returns the modified variable (lvalue); x++ returns a temporary copy of the old value (rvalue)."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "lvalue-to-rvalue conversion vs rvalue-to-lvalue",
+   "strong_answer": "An lvalue implicitly converts to an rvalue, so a named object can be used wherever a value is needed; an rvalue will not implicitly convert to an lvalue, so a bare value cannot stand in where an addressable, named object is required."
+  },
+  {
+   "topic": "pre-increment vs post-increment",
+   "strong_answer": "++x adds to x and returns the actual modified variable x, so the result is an lvalue; x++ must return the old value after updating x, so C++ creates a temporary copy of the old value and that temporary is an rvalue."
+  },
+  {
+   "topic": "numeric literals vs C-style string literals",
+   "strong_answer": "Numeric literals such as 5 are rvalues; C-style string literals are lvalues because they are stored as arrays of characters in read-only program memory and have a permanent memory address."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using type alone to explain why x = 5 is valid but 5 = x is not.",
+   "correction": "Both can be int; assignment requires a modifiable lvalue on the left and an rvalue on the right, so 5 = x fails because 5 is an rvalue."
+  },
+  {
+   "trap": "Treating C-style string literals like numeric literals as rvalues.",
+   "correction": "\"Hello\" is an lvalue: it is stored as a character array in read-only memory and has a permanent address."
+  },
+  {
+   "trap": "Assuming ++x and x++ have the same value category.",
+   "correction": "++x returns the modified variable itself (lvalue); x++ returns a temporary copy of the old value (rvalue)."
+  },
+  {
+   "trap": "Thinking x = y should fail because y is an lvalue where an rvalue is expected.",
+   "correction": "y undergoes lvalue-to-rvalue conversion, which evaluates y to produce its value for the assignment."
+  }
+ ]
+}

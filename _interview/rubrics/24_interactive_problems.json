@@ -1,0 +1,216 @@
+{
+ "id": "24_interactive_problems",
+ "title": "Interactive problems (query–response, binary-search interactive)",
+ "type": "CP",
+ "relevance": "Medium — almost never a literal OA template (no flush/interactor), but CF/AtCoder Div2 C–D interactives are common; the skill transfers to “limited oracle / ask ≤ Q questions” interview twists and to any BS-on-answer thinking under a query budget.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Interview twists: broken version / first bad commit with ≤ log n asks (git-bisect / Hidden Integer style); hidden array with range-sum or second-max oracles to find max / k-th zero; recover secret perm/password via compares or mod under a budget; two sorted lists behind APIs — global k-th with few fetches.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot interactive / limited-oracle problems from protocol wording and a hard query budget.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Recognize Interactive statements by “Interactive”, a `?`/`!` query–answer protocol, or “at most Q questions.”",
+     "weight": "core",
+     "evidence_hint": "Names those stems and says the judge holds a hidden object you probe with queries."
+    },
+    {
+     "id": "rec2",
+     "point": "The skill transfers to interview “limited oracle / ask ≤ Q questions” twists even when there is no flush/interactor OA template.",
+     "weight": "core",
+     "evidence_hint": "Maps OA-style ask-budget problems to the same interactive pattern."
+    },
+    {
+     "id": "rec3",
+     "point": "Classic disguise: find the broken version / first bad commit with ≤ log n asks (git-bisect style).",
+     "weight": "extended",
+     "evidence_hint": "Cites first-bad / bisect as interactive binary search under a log-budget."
+    }
+   ],
+   "probes": [
+    "What wording tells you this is interactive rather than offline I/O?",
+    "How does a “≤ Q questions” interview twist relate to CF interactive problems?"
+   ],
+   "hints": {
+    "1": "Look for protocol tokens, not only for CF’s Interactive tag.",
+    "2": "Scan for Interactive / `?`–`!` / at most Q questions, and a hidden object.",
+    "3": "Say: Interactive or ask-budget wording → print queries, read answers, finish under Q (often ≈ log N)."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Map the query limit to the right search/reconstruct strategy before designing queries.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Map the query limit to an algorithm: ≈log → binary/ternary search; ≈N → one pass / degree queries; N log N → sort/merge with comparisons; bit-width → recover each bit (often in parallel).",
+     "weight": "core",
+     "evidence_hint": "States that budget shape, not just “binary search,” chooses the method."
+    },
+    {
+     "id": "appr2",
+     "point": "Interactive BS keeps a feasible interval (or set) and asks a mid that halves remaining candidates given the oracle type (compare / count / second-max / distance).",
+     "weight": "core",
+     "evidence_hint": "Describes shrinking candidates with an oracle-aware mid, not a blind array mid."
+    },
+    {
+     "id": "appr3",
+     "point": "2·⌈log⌉ budgets suggest independent searches on two axes (e.g. missing row and column separately).",
+     "weight": "extended",
+     "evidence_hint": "Splits a 2D search into two independent log-budget searches."
+    }
+   ],
+   "probes": [
+    "Given a query limit, how do you choose between binary search, linear reconstruct, and sorting with comparisons?",
+    "What does a good mid query do to the remaining candidate set?"
+   ],
+   "hints": {
+    "1": "Read Q first—budget dictates the algorithm family.",
+    "2": "log → BS/ternary; ~N → linear/degree/cycles; N log N → comparator sort; bit-width → bits.",
+    "3": "Keep a feasible set; pick mid that halves it under the oracle (compare/count/second-max/distance); two axes may need two independent log searches."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Show flush I/O discipline and concrete interactive templates (BS, reconstruct, bit/XOR).",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Always flush after every query (`endl` / `fflush` / `sys.stdout.flush`); never read before the query is flushed; print the final `!` answer and exit.",
+     "weight": "core",
+     "evidence_hint": "Names flush + no-read-before-flush + terminate immediately after `!`."
+    },
+    {
+     "id": "impl2",
+     "point": "Second-max / argmax-on-range oracles: the max lies in the half that contains the global second-max’s side (Guessing the Greatest family).",
+     "weight": "core",
+     "evidence_hint": "Uses a range second-max answer to decide which half holds the maximum."
+    },
+    {
+     "id": "impl3",
+     "point": "Reconstruct permutations via comparator sort, `a%b` tricks (larger residue is larger), or following `p[i]` as a functional graph of cycles.",
+     "weight": "extended",
+     "evidence_hint": "Names at least one of those three reconstruct templates with the matching query type."
+    }
+   ],
+   "probes": [
+    "Walk through the flush/`!` I/O rules you use on every interactive problem.",
+    "With a range second-max oracle, how do you decide which half contains the maximum?"
+   ],
+   "hints": {
+    "1": "Interactive bugs are often I/O, not the search math.",
+    "2": "Flush every query; read only after flush; print `!` and stop.",
+    "3": "Template: flush mid-query → shrink by oracle; for second-max, keep the half on the second-max’s side; for perms use compares, `a%b`, or cycle-follow."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Treat the query limit as the complexity bound and match asks to information-theoretic cost.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Query-limit is the complexity: ≈log ⇒ binary/ternary search; ≈n ⇒ linear reconstruct / degree / cycle-follow; ≈n log n ⇒ sorting with comparisons; ≈bitwidth ⇒ recover each bit.",
+     "weight": "core",
+     "evidence_hint": "Equates allowed asks to the algorithm’s ask count, not wall-clock alone."
+    },
+    {
+     "id": "cx2",
+     "point": "Bit/XOR oracles pack information: chosen masks so each answer bit encodes one unknown, or two queries packing low/high halves.",
+     "weight": "core",
+     "evidence_hint": "Describes encoding many unknowns into few answers via masks or half-packing."
+    },
+    {
+     "id": "cx3",
+     "point": "Cycle-follow reconstruct of a hidden permutation can finish in ≤ n+1 asks; distance-from-root tree reconstruct can use O(n) asks.",
+     "weight": "extended",
+     "evidence_hint": "Cites ≤ n+1 cycle closes or O(n) distance queries as linear-budget reconstruct."
+    }
+   ],
+   "probes": [
+    "How do you justify that your strategy fits under the stated ask limit?",
+    "When is recovering bit-by-bit cheaper than searching the full domain?"
+   ],
+   "hints": {
+    "1": "Count asks the same way you’d count time complexity.",
+    "2": "Match ≈log / ≈n / ≈n log n / bitwidth to BS / linear / sort / bits.",
+    "3": "Say: budget ≈ that family; XOR/masks pack bits into few queries; cycles ≤ n+1 or tree distances O(n) when the limit is linear."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch flush mistakes, wrong budget mapping, and adaptive/lying interactors.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Forgetting to flush (or reading before flush) so the judge never sees the query; buffered output is not enough without flush.",
+     "weight": "core",
+     "evidence_hint": "Warns that missing flush hangs or wrong-answers interactive submissions."
+    },
+    {
+     "id": "pit2",
+     "point": "Failing to terminate immediately after printing `!`, or continuing to query after the answer.",
+     "weight": "core",
+     "evidence_hint": "Says print `!` then exit—no extra I/O."
+    },
+    {
+     "id": "pit3",
+     "point": "Lying / adaptive interactors: spend early queries to learn the lie schedule (Rocket) or keep the search range large enough versus expansion (Subway Pursuit).",
+     "weight": "extended",
+     "evidence_hint": "Plans either learn-lies-then-BS or maintain slack against a growing interval."
+    }
+   ],
+   "probes": [
+    "What is the most common way interactive solutions hang against the judge?",
+    "How do you adapt binary search when some answers may lie or the feasible range expands each turn?"
+   ],
+   "hints": {
+    "1": "Think I/O and adaptive oracles, not only off-by-one.",
+    "2": "Flush every query; stop after `!`; for liars/expanders, learn the schedule or keep slack.",
+    "3": "Local interactor checking flush + query count; Rocket learn-lies then BS; Subway Pursuit keep range large enough vs expansion."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Binary/ternary search vs linear reconstruct vs comparator sort",
+   "strong_answer": "Choose by query budget: ≈log → binary/ternary search; ≈N → one pass / degree / cycle-follow; N log N → sort/merge with comparisons; bit-width → recover each bit, often in parallel."
+  },
+  {
+   "topic": "Comparator sort vs mod queries vs cycle-follow for permutations",
+   "strong_answer": "Use less-than queries when the limit is ≈n log n; `i%j`/`j%i` when residues reveal order (larger residue is larger); follow next-pointer queries when you can close cycles in ≤ n+1 asks."
+  },
+  {
+   "topic": "Distance-from-root layers vs LCA-on-leaves prune for trees",
+   "strong_answer": "Distance queries from one node give layers/bipartition (Lost Tree); LCA queries on leaves prune toward the root (Kuroni)—pick the oracle the statement gives."
+  },
+  {
+   "topic": "Independent two-axis search vs joint 2D search",
+   "strong_answer": "When the budget is about 2·⌈log⌉, run independent binary searches on each axis (e.g. missing row and column with rectangle counts) instead of one coupled 2D search."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Printing a query then reading immediately without flushing.",
+   "correction": "Always flush (`endl` / `fflush` / `sys.stdout.flush`) after every query; never read before the query is flushed."
+  },
+  {
+   "trap": "Leaving the program running after printing the final `!` answer.",
+   "correction": "Print the final `!` answer and exit immediately."
+  },
+  {
+   "trap": "Picking binary search when the query limit is linear or n log n-shaped.",
+   "correction": "Map limit → algorithm: ≈log BS/ternary; ≈n linear/degree/cycles; ≈n log n comparator sort; bit-width bit recovery."
+  },
+  {
+   "trap": "Assuming buffered stdout reaches the judge without an explicit flush.",
+   "correction": "Local-test with an interactor that checks flush and query count; sync I/O off only if you still flush."
+  },
+  {
+   "trap": "Treating a lying or expanding interactor like a normal monotone binary search.",
+   "correction": "Learn the lie schedule first (Rocket) or keep the search range large enough against expansion (Subway Pursuit)."
+  }
+ ]
+}

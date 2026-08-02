@@ -1,0 +1,274 @@
+{
+ "id": "dsa_s22_graphs",
+ "title": "Graphs",
+ "type": "FUND",
+ "relevance": "Graph modeling, traversals, shortest paths, topo sort, MST, and DSU are staples of SDE OAs and interviews for connectivity, dependencies, and grid problems.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a graph is, how it is stored, and what BFS/DFS each provide.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A graph is vertices plus edges; edges may be directed or undirected, weighted or unweighted; a cycle is a loop of edges; a graph may have multiple connected components.",
+     "weight": "core",
+     "evidence_hint": "Defines vertices/edges, directed vs undirected, weighted vs unweighted, cycle, and disconnected components."
+    },
+    {
+     "id": "fund2",
+     "point": "Adjacency matrix uses O(V^2) space with O(1) edge lookup/insertion and O(V) neighbor iteration; adjacency list uses O(V + E) space with O(degree(u)) lookup and neighbor iteration and O(1) insertion.",
+     "weight": "core",
+     "evidence_hint": "Recites the matrix vs list complexity table from the notes without inventing other bounds."
+    },
+    {
+     "id": "fund3",
+     "point": "BFS uses a queue and finds shortest paths in unit-weight graphs; DFS uses a stack or recursion to explore deeply.",
+     "weight": "core",
+     "evidence_hint": "Pairs BFS with queue/unit-weight shortest path and DFS with stack or recursion."
+    },
+    {
+     "id": "fund4",
+     "point": "Because graphs can be disconnected, real code often loops over all vertices to launch traversals so every component is visited.",
+     "weight": "extended",
+     "evidence_hint": "Mentions an outer loop over vertices for disconnected components."
+    }
+   ],
+   "probes": [
+    "How do you represent a graph, and when would you pick an adjacency list over a matrix?",
+    "What does BFS guarantee that DFS does not, on unit-weight graphs?"
+   ],
+   "hints": {
+    "1": "Think about space and how fast you can check or walk edges.",
+    "2": "Compare matrix O(V^2) storage and O(1) edge checks with list O(V + E) storage and degree-bounded neighbor walks.",
+    "3": "List is usually preferred for sparse graphs; BFS with a queue gives shortest paths when every edge has unit weight."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Establish how core graph algorithms actually run and what they detect or compute.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "BFS needs a queue and a visited set; mark a node visited when it is pushed to the queue to avoid duplicate processing.",
+     "weight": "core",
+     "evidence_hint": "Describes enqueue-start, mark-on-push, dequeue, then enqueue unvisited neighbors."
+    },
+    {
+     "id": "mech2",
+     "point": "In an undirected graph, a cycle exists if traversal meets an already-visited neighbor that is not the immediate parent.",
+     "weight": "core",
+     "evidence_hint": "States the parent-exclusion rule for undirected cycle detection via BFS or DFS."
+    },
+    {
+     "id": "mech3",
+     "point": "In a directed graph, a cycle exists only if you reach a node that is currently active on the recursion path; a single visited array is not enough—you need globally visited and path-visited states.",
+     "weight": "core",
+     "evidence_hint": "Contrasts undirected visited+parent with directed visited plus pathVisited cleared on backtrack."
+    },
+    {
+     "id": "mech4",
+     "point": "A graph is bipartite iff it has no odd-length cycles; check by BFS/DFS 2-coloring so no adjacent vertices share a color.",
+     "weight": "extended",
+     "evidence_hint": "Links bipartiteness to odd cycles and to flipping colors 0/1 during traversal."
+    },
+    {
+     "id": "mech5",
+     "point": "Topological sort exists only for DAGs; DFS pushes a node after exploring descendants, or Kahn repeatedly removes indegree-0 nodes; if Kahn finishes with fewer than V nodes, a cycle exists.",
+     "weight": "core",
+     "evidence_hint": "States DAG-only topo, DFS finish-stack or Kahn indegree queue, and size < V implies cycle."
+    },
+    {
+     "id": "mech6",
+     "point": "Multi-source BFS enqueues all starting nodes at level 0 before the loop when several sources spread simultaneously level by level.",
+     "weight": "extended",
+     "evidence_hint": "Names multi-source BFS and initial enqueue of all sources together."
+    },
+    {
+     "id": "mech7",
+     "point": "Dijkstra finds single-source shortest paths with non-negative weights via a min-heap; Bellman-Ford relaxes all edges V-1 times and uses a V-th pass to detect a negative cycle; Floyd-Warshall computes all-pairs shortest paths in O(V^3).",
+     "weight": "core",
+     "evidence_hint": "Maps non-negative→Dijkstra, negative/cycle→Bellman-Ford with V-1 then V-th pass, all-pairs→Floyd-Warshall O(V^3)."
+    },
+    {
+     "id": "mech8",
+     "point": "An MST of a connected undirected weighted graph connects all vertices with no cycles and minimum total weight, and always has exactly V-1 edges; DSU find uses path compression and union attaches by rank or size for amortized O(α(V)) operations.",
+     "weight": "extended",
+     "evidence_hint": "Defines MST, V-1 edges, and DSU path compression plus union by rank/size with α(V)."
+    }
+   ],
+   "probes": [
+    "How do you detect a cycle in an undirected graph versus a directed graph?",
+    "Walk through Kahn's algorithm and how it doubles as cycle detection.",
+    "When do you use BFS, Dijkstra, Bellman-Ford, or Floyd-Warshall?"
+   ],
+   "hints": {
+    "1": "Separate undirected parent checks from directed path-stack state.",
+    "2": "For topo/Kahn, track indegrees and whether every vertex is emitted; for shortest paths, match weight assumptions to the algorithm.",
+    "3": "Undirected: visited non-parent neighbor; directed: pathVisited on the active stack; Kahn count != V means cycle; unit→BFS, non-negative→Dijkstra, negative→Bellman-Ford, all pairs→Floyd-Warshall."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Establish when to choose representations and algorithms, and what MST does not optimize.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer adjacency list for sparse graphs (O(V + E) space, neighbor walks O(degree(u))); prefer matrix when you need O(1) edge existence checks and can afford O(V^2) space.",
+     "weight": "core",
+     "evidence_hint": "Contrasts sparse list costs with dense/constant-lookup matrix costs from the representation table."
+    },
+    {
+     "id": "tr2",
+     "point": "Map shortest-path choice to the instance: unit/unweighted→BFS; DAG→topo + relaxation; non-negative single-source→Dijkstra; negative edges or negative-cycle detection→Bellman-Ford; all-pairs→Floyd-Warshall.",
+     "weight": "core",
+     "evidence_hint": "Repeats the mapping keypoint without swapping algorithms across weight assumptions."
+    },
+    {
+     "id": "tr3",
+     "point": "An MST minimizes global connection weight and is not a shortest-path tree: in the triangle with edges of weights 2, 2, and 3, the MST uses the two weight-2 edges (total 4) so the A–C path in the MST has length 4 while the graph has a direct edge of length 3.",
+     "weight": "core",
+     "evidence_hint": "States MST ≠ pairwise shortest paths and cites the 2/2/3 triangle with MST path 4 vs direct 3."
+    },
+    {
+     "id": "tr4",
+     "point": "Prim's and Kruskal's assume undirected graphs; the directed analogue is a minimum weight arborescence (Edmonds/Chu–Liu), which needs a chosen root and fails if solved by Kruskal-style greedy cycle avoidance alone.",
+     "weight": "extended",
+     "evidence_hint": "Names undirected Prim/Kruskal vs directed arborescence/Edmonds and that root choice matters."
+    },
+    {
+     "id": "tr5",
+     "point": "For Dijkstra, a C++ set can erase a worse distance entry so the structure stays ≤ V elements, while a priority_queue uses lazy skipping; both are O(E log V).",
+     "weight": "extended",
+     "evidence_hint": "Compares set erase-before-insert vs priority_queue lazy duplicates at the same O(E log V) bound."
+    }
+   ],
+   "probes": [
+    "Does an MST give shortest paths between pairs? Give a counterexample.",
+    "Why is Dijkstra the wrong first instinct for cheapest flights with at most K stops?"
+   ],
+   "hints": {
+    "1": "Separate global spanning cost from pairwise distance, and cost-greedy from stop-limited search.",
+    "2": "Use a tiny triangle for MST vs direct edge; for K-stops, a cheaper path may burn too many stops.",
+    "3": "MST may take 2+2 and drop the edge of weight 3, making the tree path longer; with stop limits, explore by increasing stops (queue BFS-style), not by min cost alone."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Establish how interview problems map onto components, multi-source BFS, topo/DSU, and algorithm choice.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Start by stating the model: nodes, edges, weights, directed vs undirected—then pick the algorithm from that model.",
+     "weight": "core",
+     "evidence_hint": "Explicitly frames modeling before coding, matching the interview checklist."
+    },
+    {
+     "id": "app2",
+     "point": "Number of provinces/islands counts how many times an outer loop starts a new BFS/DFS on an unvisited node or land cell; islands treat the grid as an implicit 4-neighbor graph.",
+     "weight": "core",
+     "evidence_hint": "Equates component counting with outer-loop launches and grid 4-adjacency."
+    },
+    {
+     "id": "app3",
+     "point": "Rotting oranges and distance-to-nearest-1 are multi-source BFS: enqueue all rotten oranges or all 1-cells first, then expand level by level.",
+     "weight": "core",
+     "evidence_hint": "Names simultaneous multi-source enqueue before the BFS loop for both problems."
+    },
+    {
+     "id": "app4",
+     "point": "Course Schedule is directed cycle detection / topo possibility on prerequisite edges; Alien Dictionary builds directed char-order edges from the first differing characters of adjacent dictionary words, then topo-sorts.",
+     "weight": "extended",
+     "evidence_hint": "Maps courses to DAG/cycle check and alien order to adjacent-word edges plus Kahn/topo."
+    },
+    {
+     "id": "app5",
+     "point": "Surrounded regions and number of enclaves run boundary DFS/BFS to mark border-reachable cells safe, then flip or count the remaining interior cells.",
+     "weight": "extended",
+     "evidence_hint": "Describes perimeter seeding then flip/count of non-boundary-connected cells."
+    },
+    {
+     "id": "app6",
+     "point": "Network delay time is Dijkstra from the source; the answer is the maximum shortest-time among nodes, or impossible if any node stays unreachable.",
+     "weight": "extended",
+     "evidence_hint": "States max over single-source Dijkstra distances, with unreachable → failure."
+    }
+   ],
+   "probes": [
+    "How would you solve rotting oranges, and why not run a separate BFS from each rotten cell independently for the answer?",
+    "Given prerequisites, how do you decide whether all courses can be finished and in what order?"
+   ],
+   "hints": {
+    "1": "Think about everything spreading at once versus one component or dependency chain.",
+    "2": "Multi-source BFS for simultaneous spread; directed edges + Kahn/topo for courses.",
+    "3": "Enqueue every rotten orange at minute 0; for courses, edge prereq→course and check whether Kahn processes all numCourses nodes (and emit that order for Course Schedule II)."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Adjacency matrix vs adjacency list",
+   "strong_answer": "Matrix costs O(V^2) space with O(1) edge lookup/insertion and O(V) neighbor scans; list costs O(V + E) space with O(degree(u)) lookup and neighbor iteration and O(1) insertion—prefer list for sparse graphs, matrix when constant edge checks matter and V^2 is acceptable."
+  },
+  {
+   "topic": "BFS vs DFS",
+   "strong_answer": "BFS (queue) explores level by level and yields shortest paths on unit-weight graphs; DFS (stack/recursion) plunges deep and fits path-shaped search, topo finish times, and many flood-fill/component markings—not unit-weight shortest paths by itself."
+  },
+  {
+   "topic": "Shortest-path algorithm choice",
+   "strong_answer": "Unit/unweighted→BFS; DAG→topo then relax; non-negative single-source→Dijkstra; negative weights or negative-cycle detection→Bellman-Ford (V-1 relaxations, V-th pass); all-pairs→Floyd-Warshall O(V^3)."
+  },
+  {
+   "topic": "Dijkstra priority_queue vs set",
+   "strong_answer": "Both run in O(E log V); a set can erase an obsolete worse (distance, node) so size stays ≤ V, while a priority_queue keeps duplicates and skips stale pops when d > dist[node]."
+  },
+  {
+   "topic": "MST vs shortest-path tree",
+   "strong_answer": "MST minimizes total spanning weight and has unique tree paths that need not be original-graph shortest paths; the 2/2/3 triangle MST path length 4 beats keeping the direct edge of weight 3. Pairwise shortest paths need Dijkstra/Bellman-Ford (or similar), not an MST."
+  },
+  {
+   "topic": "Prim's/Kruskal's vs directed arborescence",
+   "strong_answer": "Prim and Kruskal are for undirected MSTs; directed minimum spanning needs a root and Edmonds/Chu–Liu (min-weight arborescence). Kruskal-style “add if no cycle” or Prim-style grow-by-cheapest-out-edge can leave wrong in-degrees or unreachable vertices."
+  },
+  {
+   "topic": "Cost-Dijkstra vs stop-ordered BFS for K-stop cheapest flights",
+   "strong_answer": "Min-cost priority can finalize a cheap path that uses too many stops and miss a slightly costlier path within K stops; explore in increasing stops with a normal queue storing stops, node, and cost."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "In flood fill, if the new color equals the original color, naive DFS recurses forever.",
+   "correction": "Return early when initialColor == color before launching DFS."
+  },
+  {
+   "trap": "Using only a boolean visited array to detect cycles in a directed graph.",
+   "correction": "Track globally visited and currently path-visited; a cycle is a neighbor that is on the active path; clear pathVisited on backtrack."
+  },
+  {
+   "trap": "Assuming an MST contains shortest paths between arbitrary pairs.",
+   "correction": "MST optimizes global spanning weight only; cite the triangle with weights 2, 2, 3 where the MST A–C route has length 4 but the graph edge has length 3."
+  },
+  {
+   "trap": "Running Prim's or Kruskal's on a directed graph for a directed MST.",
+   "correction": "Those algorithms assume undirected edges; use a minimum weight arborescence (Edmonds/Chu–Liu) with an explicit root."
+  },
+  {
+   "trap": "Marking BFS nodes visited only when dequeued, allowing many duplicate enqueues.",
+   "correction": "Mark visited at the moment a node is pushed onto the queue."
+  },
+  {
+   "trap": "Treating DSU path compression as mutating the original graph’s edges.",
+   "correction": "parent[] is a sidecar for component identity; compression flattens bookkeeping only, not the adjacency-list traversal structure."
+  },
+  {
+   "trap": "Forgetting that topological sort is undefined on graphs with cycles.",
+   "correction": "Topo sort requires a DAG; with Kahn, if the emitted order has fewer than V vertices, a cycle exists and no valid ordering."
+  },
+  {
+   "trap": "In Alien Dictionary, accepting a longer word that comes before a shorter word that is its prefix.",
+   "correction": "That ordering is invalid; return no order (empty), same as when the derived char graph has a cycle."
+  }
+ ]
+}

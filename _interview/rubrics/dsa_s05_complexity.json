@@ -1,0 +1,234 @@
+{
+ "id": "dsa_s05_complexity",
+ "title": "Complexity Analysis and Asymptotics",
+ "type": "FUND",
+ "relevance": "Interviewers and OAs use asymptotic complexity to judge whether a solution will scale under constraints, independent of machine speed or language.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish why complexity analysis exists and how Big-O, Big-Omega, and Big-Theta formally bound growth.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Wall-clock timing is flawed because runtime depends on hardware, language, compiler optimizations, and system load.",
+     "weight": "core",
+     "evidence_hint": "Candidate rejects seconds-based timing and names machine/environment dependence as the reason."
+    },
+    {
+     "id": "fund2",
+     "point": "Complexity counts fundamental operations as a function of input size n, so performance can be compared as n grows toward infinity.",
+     "weight": "core",
+     "evidence_hint": "Candidate says we measure operation counts vs n, not seconds, to study scaling."
+    },
+    {
+     "id": "fund3",
+     "point": "Asymptotic notation keeps the dominant term and drops constants and lower-order terms for large n.",
+     "weight": "core",
+     "evidence_hint": "Candidate explains we ignore constants/lower-order terms and focus on the leading growth term."
+    },
+    {
+     "id": "fund4",
+     "point": "f(n) is O(g(n)) if positive constants c and n0 exist such that f(n) ≤ c·g(n) for all n ≥ n0 (upper/worst-case bound).",
+     "weight": "core",
+     "evidence_hint": "Candidate states the inequality form or clearly says asymptotic upper bound with c and n0."
+    },
+    {
+     "id": "fund5",
+     "point": "f(n) is Ω(g(n)) with f(n) ≥ c·g(n) for n ≥ n0; Θ means both O and Ω, sandwiching f between c1·g and c2·g.",
+     "weight": "extended",
+     "evidence_hint": "Candidate distinguishes lower bound Ω from tight Θ as both O and Ω."
+    },
+    {
+     "id": "fund6",
+     "point": "In interviews people often say O(n) when they mean Θ(n); standard interview convention still uses O for upper bounds.",
+     "weight": "extended",
+     "evidence_hint": "Candidate notes colloquial O vs mathematical Θ and that interviews stick to O as upper-bound convention."
+    }
+   ],
+   "probes": [
+    "Why don't we just time an algorithm in seconds to decide if it's efficient?",
+    "Formally, what does it mean for f(n) to be O(g(n))?",
+    "How do Big-Omega and Big-Theta relate to Big-O?"
+   ],
+   "hints": {
+    "1": "Think about what changes if you run the same code on different machines or languages.",
+    "2": "Complexity tracks operation count vs n; asymptotic notation keeps the dominant term and uses O/Ω/Θ bounds.",
+    "3": "O: f ≤ c·g past n0 (upper); Ω: f ≥ c·g (lower); Θ: both, so c1·g ≤ f ≤ c2·g; interviews still say O for upper bounds."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Apply case analysis, common classes, amortized cost, space (including recursion), and the Master Theorem.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Best/worst/average cases depend on input values: for linear search, best is O(1) (target first), worst O(n) (last or missing), average O(n) after dropping the 1/2 from about n/2 checks.",
+     "weight": "core",
+     "evidence_hint": "Candidate gives all three linear-search cases and notes average still O(n) after dropping the constant."
+    },
+    {
+     "id": "mech2",
+     "point": "QuickSort worst case is O(n²) with consistently bad pivots; average with a random pivot is O(n log n).",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts QuickSort O(n²) worst vs O(n log n) average under random pivot."
+    },
+    {
+     "id": "mech3",
+     "point": "Common classes from fastest to slowest include O(1), O(log n), O(n), O(n log n), O(n²), O(2ⁿ), O(n!); e.g. log₂(n)≈20 when n=10⁶, quadratic feasible for n≤5000, exponential unusable beyond n≈25, factorial beyond n≈12.",
+     "weight": "core",
+     "evidence_hint": "Candidate orders major classes and can cite at least one growth/feasibility fact from the hierarchy."
+    },
+    {
+     "id": "mech4",
+     "point": "Amortized analysis averages cost over a worst-case sequence: vector push_back is O(n) on reallocation but aggregate cost of n pushes is O(n), so amortized push_back is O(1).",
+     "weight": "core",
+     "evidence_hint": "Candidate explains rare doubling copies vs many cheap inserts and concludes amortized O(1) per push_back."
+    },
+    {
+     "id": "mech5",
+     "point": "Interview 'space complexity' almost always means auxiliary space (extra memory excluding input); recursion depth n for printDown means O(n) auxiliary space via the call stack.",
+     "weight": "core",
+     "evidence_hint": "Candidate separates total vs auxiliary space and counts recursive stack frames as memory."
+    },
+    {
+     "id": "mech6",
+     "point": "Master Theorem for T(n)=aT(n/b)+f(n) with f(n)=O(nᵈ): Case1 a>bᵈ → O(n^{log_b a}); Case2 a=bᵈ → O(nᵈ log n); Case3 a<bᵈ → O(nᵈ). Merge sort (a=2,b=2,d=1) and binary search (a=1,b=2,d=0) are both Case 2.",
+     "weight": "extended",
+     "evidence_hint": "Candidate states the three cases and correctly places merge sort as O(n log n) and binary search as O(log n) via Case 2."
+    }
+   ],
+   "probes": [
+    "For linear search, what are best, worst, and average-case complexities?",
+    "Why can std::vector::push_back be amortized O(1) if a single push can take O(n)?",
+    "Using the Master Theorem, what is the complexity of merge sort?"
+   ],
+   "hints": {
+    "1": "Walk a concrete example: searching an array, or pushing into a growing vector.",
+    "2": "Cases depend on input values; amortized averages a worst-case sequence; Master Theorem compares a to bᵈ.",
+    "3": "Linear search: O(1)/O(n)/O(n); n pushes cost O(n) total so amortized O(1); merge sort a=bᵈ=2 → O(n log n)."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Clarify when worst-case, amortized, auxiliary space, and tight vs loose bounds are the right lens.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Worst-case single-operation analysis can be too pessimistic for sequences; amortized analysis is appropriate when rare expensive ops are paid for by many cheap ones.",
+     "weight": "core",
+     "evidence_hint": "Candidate says when to prefer amortized over per-op worst case, citing dynamic array growth."
+    },
+    {
+     "id": "tr2",
+     "point": "Total space includes input plus extra; auxiliary space excludes input—interviews almost always want auxiliary.",
+     "weight": "core",
+     "evidence_hint": "Candidate clearly picks auxiliary when asked for space in an interview and explains why."
+    },
+    {
+     "id": "tr3",
+     "point": "Worst case gives a guarantee and is usually what we care about most; average case needs an assumed distribution (often uniform).",
+     "weight": "extended",
+     "evidence_hint": "Candidate explains worst-case as a guarantee and that average case assumes a probability model."
+    }
+   ],
+   "probes": [
+    "When would you report amortized complexity instead of worst-case per operation?",
+    "If an interviewer asks for space complexity, do they mean total or auxiliary space?"
+   ],
+   "hints": {
+    "1": "Think about data structures where most operations are cheap but occasional ones are costly.",
+    "2": "Compare a single expensive reallocation vs cost averaged over a long sequence; also total vs extra memory.",
+    "3": "Use amortized for sequence-average (e.g. vector growth); in interviews 'space' nearly always means auxiliary, not including the input."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Map constraints to feasible complexities and avoid hidden library costs when stating time and space.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Modern servers comfortably do around 10⁸ simple C++ ops per second; with a 1-second limit, reverse-engineer target complexity from max n.",
+     "weight": "core",
+     "evidence_hint": "Candidate cites ~10⁸ ops/sec and uses n's magnitude to pick a complexity class."
+    },
+    {
+     "id": "app2",
+     "point": "Constraint map: n≤10..12 → n!/2ⁿ; n≤20..25 → 2ⁿ; n≤500 → n³; n≤5000 → n²; n≤10⁵..10⁶ → n log n or n; n≥10⁷..10⁸ → n or log n.",
+     "weight": "core",
+     "evidence_hint": "Candidate maps at least two constraint bands to the matching target complexity/technique."
+    },
+    {
+     "id": "app3",
+     "point": "For n≤10⁵, an O(n²) nested-loop solution needs 10¹⁰ operations and will TLE; need O(n log n) or O(n).",
+     "weight": "core",
+     "evidence_hint": "Candidate flags O(n²) under n≤10⁵ as TLE and names the needed tighter bound."
+    },
+    {
+     "id": "app4",
+     "point": "Hidden costs: string concatenation s=s+\"a\" is O(k) in current length (loop → O(n²)); map ops are O(log n) so n lookups are O(n log n); substr copies in O(L).",
+     "weight": "extended",
+     "evidence_hint": "Candidate names at least one library pitfall and the resulting tighter/worse complexity."
+    },
+    {
+     "id": "app5",
+     "point": "When stating complexity, give both time and auxiliary space with a one-sentence justification each.",
+     "weight": "extended",
+     "evidence_hint": "Candidate pairs time and space with brief justifications (e.g. sort + hashmap frequencies)."
+    }
+   ],
+   "probes": [
+    "If an OA has n ≤ 10⁵, why is a nested O(n²) loop likely to fail?",
+    "What hidden complexity costs should you watch for with string concatenation or std::map inside a loop?",
+    "How should you present time and space complexity in an interview answer?"
+   ],
+   "hints": {
+    "1": "Estimate how many operations your approach performs at the maximum n.",
+    "2": "Use the ~10⁸ ops/sec rule and the constraint→complexity table; also cost library calls inside loops.",
+    "3": "n≤10⁵ forbids O(n²) (~10¹⁰ ops); map in a loop is O(n log n); state time and auxiliary space with a short why."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Wall-clock timing vs asymptotic complexity",
+   "strong_answer": "Timing in seconds mixes hardware, language, compiler, and load; complexity counts operations vs n so algorithms can be compared by growth as n → ∞."
+  },
+  {
+   "topic": "Worst-case per operation vs amortized analysis",
+   "strong_answer": "Per-op worst case for vector push_back is O(n) on resize, but over a worst-case sequence of n pushes aggregate cost is O(n), so amortized cost per push is O(1)."
+  },
+  {
+   "topic": "Total space vs auxiliary space",
+   "strong_answer": "Total space includes the input; auxiliary is extra temporary memory excluding input. Interview 'space complexity' almost always means auxiliary, including recursion stack frames."
+  },
+  {
+   "topic": "Colloquial Big-O vs tight Big-Theta",
+   "strong_answer": "Θ is the tight bound (both O and Ω). Industry/interviews often say O(n) when they mean Θ(n), but interview convention still uses O for upper bounds."
+  },
+  {
+   "topic": "Worst case vs average case",
+   "strong_answer": "Worst case is the maximum ops for size n and usually what we care about as a guarantee; average case is expected ops under an assumed distribution (often uniform)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Ignoring that recursion uses memory even with no dynamic allocation",
+   "correction": "Each call adds a stack frame; printDown recursing n times has maximum stack depth n, so auxiliary space is O(n)."
+  },
+  {
+   "trap": "Treating std::string concatenation, std::map operations, or .substr() as O(1) inside loops",
+   "correction": "s=s+\"a\" is O(k) in current length (n concatenations → O(n²)); map insert/lookup is O(log n) (n ops → O(n log n)); .substr() copies in O(L)."
+  },
+  {
+   "trap": "Submitting O(n²) for n ≤ 10⁵ because it 'looks simple'",
+   "correction": "That is about 10¹⁰ operations vs ~10⁸ per second in C++, so TLE; need O(n log n) or O(n)."
+  },
+  {
+   "trap": "Reporting only time complexity, or conflating amortized O(1) with every single operation being O(1)",
+   "correction": "State time and auxiliary space with a one-line justification; amortized O(1) means the average over a long sequence is bounded by a constant even if occasional ops are expensive."
+  }
+ ]
+}

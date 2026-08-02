@@ -1,0 +1,157 @@
+{
+ "id": "py_18_memory_and_object_references",
+ "title": "Memory and Object References",
+ "type": "FUND",
+ "relevance": "Interviewers use aliasing, mutability, and shallow vs deep copy to check whether candidates understand Python name-binding and avoid unintended shared-state bugs.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that Python variables are name bindings to objects, and that aliasing and mutability govern shared state.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Assigning a variable creates an object in memory and binds the name to that object's memory address.",
+     "weight": "core",
+     "evidence_hint": "Candidate says names point at objects (e.g. a = 5 creates integer 5 and a refers to it), not fixed storage buckets."
+    },
+    {
+     "id": "fund2",
+     "point": "Aliasing means multiple variable names refer to the exact same object in memory.",
+     "weight": "core",
+     "evidence_hint": "With a = [1, 2, 3]; b = a, they explain b is not a copy—both names point to one list."
+    },
+    {
+     "id": "fund3",
+     "point": "Mutability means whether an object's internal state can change after creation: lists and dictionaries are mutable; tuples, strings, and integers are immutable.",
+     "weight": "core",
+     "evidence_hint": "They correctly classify those types and tie mutability to whether in-place change is possible."
+    }
+   ],
+   "probes": [
+    "What happens in memory when you write a = 5, and what does it mean for two variables to be aliases?"
+   ],
+   "hints": {
+    "1": "Think about names pointing at objects rather than variables as boxes that hold values.",
+    "2": "Contrast creating an object and binding a name versus assigning a second name to the same object.",
+    "3": "a = 5 creates integer object 5 and binds a to it; a = [1, 2, 3]; b = a makes b an alias of the same list."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain reference-counting GC, shallow vs deep copy behavior, and how common types are laid out in memory.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Python uses reference counting; when an object's reference count drops to zero, the garbage collector reclaims that memory.",
+     "weight": "core",
+     "evidence_hint": "They define GC as freeing unreferenced objects and state reclaim happens when no variables point to the object."
+    },
+    {
+     "id": "mech2",
+     "point": "A shallow copy (a[:] or a.copy()) makes a new list whose elements are references to the same child objects as the original.",
+     "weight": "core",
+     "evidence_hint": "For [1, 2, 3] outer mutation is independent; for [1, 2, [3, 4]] the inner list remains shared."
+    },
+    {
+     "id": "mech3",
+     "point": "copy.deepcopy creates a fully independent clone of the object and all nested objects recursively.",
+     "weight": "core",
+     "evidence_hint": "They say nested structures in the deep copy can be changed without affecting the original."
+    },
+    {
+     "id": "mech4",
+     "point": "Lists are dynamic arrays that over-allocate for future appends; tuples are static arrays allocated exactly for their elements with zero over-allocation.",
+     "weight": "extended",
+     "evidence_hint": "They use the moving-box vs shrink-wrap idea or state over-allocation vs exact allocation as why tuples use less memory."
+    }
+   ],
+   "probes": [
+    "How does Python know when it can free an object, and what is the difference between a shallow copy and copy.deepcopy on a nested list?"
+   ],
+   "hints": {
+    "1": "Start from how many names still point at an object, then what copy vs deepcopy duplicates.",
+    "2": "Reference count to zero triggers reclaim; shallow copies share nested children; deepcopy clones recursively.",
+    "3": "Say reference counting GC, a[:] shares [3, 4] in [1, 2, [3, 4]], and copy.deepcopy(a) clones all nested objects."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare copy strategies and list vs tuple memory design when sharing or growing collections.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Shallow copy is enough for a flat list like [1, 2, 3], but for nested lists the inner list remains shared between original and copy.",
+     "weight": "core",
+     "evidence_hint": "They choose shallow for flat independence and deep when nested mutables must not be shared."
+    },
+    {
+     "id": "tr2",
+     "point": "Tuples are more memory-efficient than lists because immutability lets Python allocate exactly the needed space with no over-allocation, while lists reserve extra room for appends.",
+     "weight": "core",
+     "evidence_hint": "They contrast list over-allocation for efficient append with tuple exact static allocation."
+    }
+   ],
+   "probes": [
+    "When would you use a shallow copy versus deepcopy, and why might you prefer a tuple over a list for memory?"
+   ],
+   "hints": {
+    "1": "Ask whether the collection is flat or nested, and whether the size will grow.",
+    "2": "Shallow shares nested children; deepcopy isolates them; lists over-allocate, tuples do not.",
+    "3": "Use a[:] for [1, 2, 3]; deepcopy for [1, 2, [3, 4]] independence; tuples allocate exactly, lists over-allocate for append."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply aliasing and hashability rules to shared mutables and set/dict key constraints.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Aliasing mutables (including passing them into functions) can cause unintended side effects when one part of the program modifies the shared object.",
+     "weight": "core",
+     "evidence_hint": "They describe b.append(4) reflecting in a, or function mutation surprising the caller via the same reference."
+    },
+    {
+     "id": "app2",
+     "point": "Sets and dictionaries use hash tables for fast O(1) lookups, so only immutable (hashable) types are allowed as set elements or dict keys—mutable keys could change hash and land in the wrong bucket.",
+     "weight": "core",
+     "evidence_hint": "They link hash-based indexing to forbidding lists as keys because a content change would change the hash and break lookup."
+    }
+   ],
+   "probes": [
+    "Why can modifying a list through one alias surprise another variable, and why can't a list be used as a dictionary key?"
+   ],
+   "hints": {
+    "1": "Think about one object with two names, and about how dicts find keys.",
+    "2": "Shared mutable reference plus in-place change; hash depends on content that must not change after insert.",
+    "3": "b.append(4) changes the only list a also names; mutable keys could change hash and sit in the wrong hash-table bucket, so only immutable hashables are allowed."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Shallow copy vs deep copy",
+   "strong_answer": "Shallow copy (a[:] / a.copy()) creates a new outer list but reuses child references—fine for flat [1, 2, 3], unsafe for nested [1, 2, [3, 4]] where the inner list is still shared. deepcopy recursively clones all nested objects for full independence at greater cost and complexity."
+  },
+  {
+   "topic": "Lists vs tuples (memory)",
+   "strong_answer": "Lists are dynamic arrays that over-allocate spare capacity for efficient appends; tuples are immutable static arrays allocated exactly for their elements with zero over-allocation, so tuples are more memory-efficient."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming b = a copies a list",
+   "correction": "b = a only aliases; both names refer to the same list, so mutations like b.append(4) are visible through a."
+  },
+  {
+   "trap": "Assuming a shallow copy isolates nested structures",
+   "correction": "For [1, 2, [3, 4]], a[:] / a.copy() still shares the inner list [3, 4]; use copy.deepcopy for a fully independent nested clone."
+  },
+  {
+   "trap": "Thinking any object can be a set element or dict key",
+   "correction": "Hash tables need a stable hash; if a mutable key's content changed, its hash would change and it would be in the wrong bucket, so only immutable (hashable) types are allowed."
+  }
+ ]
+}

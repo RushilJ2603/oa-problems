@@ -1,0 +1,197 @@
+{
+ "id": "dsa_s24_advanced_dp",
+ "title": "Advanced Dynamic Programming",
+ "type": "FUND",
+ "relevance": "Hard SDE OAs use advanced DP to test whether candidates can reshape state for trees, subsets, digit ranges, and intervals beyond classic 1D/2D tables.",
+ "difficulty": "senior",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that advanced DP is still state + recurrence + memoization, with the state shape as the main change.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Every advanced DP still follows define the state, write the recurrence, and memoize.",
+     "weight": "core",
+     "evidence_hint": "Candidate says advanced paradigms do not change the core DP process—only how the state is shaped."
+    },
+    {
+     "id": "fund2",
+     "point": "Advanced state shapes include a bitmask of visited items, a boolean tight flag in digit DP, or multi-value returns from child subtrees in tree DP.",
+     "weight": "core",
+     "evidence_hint": "Mentions at least two concrete shapes (bitmask, tight, or tree child returns) as examples of state design."
+    },
+    {
+     "id": "fund3",
+     "point": "Tree DP often requires a node to return multiple pieces of information to its parent, typically as a pair or struct of states.",
+     "weight": "extended",
+     "evidence_hint": "Says returning a pair/struct cleanly encapsulates subproblem results for the parent."
+    }
+   ],
+   "probes": [
+    "What stays the same across advanced DP paradigms, and what actually changes?",
+    "Give examples of unusual DP state shapes beyond a simple index into an array."
+   ],
+   "hints": {
+    "1": "Start from ordinary DP: state, transition, memo—what part of that story changes here?",
+    "2": "Contrast a classic dp[i] with tree returns, subset masks, and digit construction flags.",
+    "3": "Answer: same define-state / recurrence / memoize loop; state may be a bitmask, tight boolean, or multi-field tree return."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Check how tree, bitmask, digit, and interval DP actually iterate and define transitions.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Tree DP typically runs post-order DFS: each node gets children's DP results, combines them into its own state, and returns that to its parent.",
+     "weight": "core",
+     "evidence_hint": "Describes children-first recursion, combine at node, return upward."
+    },
+    {
+     "id": "mech2",
+     "point": "In bitmask DP the i-th bit of mask is 1 iff the i-th item is in the subset, enabling memoization over all 2^n subsets; it is typically viable only when n ≤ 20.",
+     "weight": "core",
+     "evidence_hint": "Explains bit encoding of membership and the n ≤ 20 viability bound."
+    },
+    {
+     "id": "mech3",
+     "point": "Digit DP counts valid numbers in [L, R] via f(R) − f(L − 1); the tight flag means choices are constrained by X when true, and free digits 0–9 when false.",
+     "weight": "core",
+     "evidence_hint": "States the range reduction and correctly explains tight vs non-tight digit limits."
+    },
+    {
+     "id": "mech4",
+     "point": "Interval DP uses state dp[left][right] and almost always iterates by interval length from 2 to n.",
+     "weight": "extended",
+     "evidence_hint": "Names left/right state and length-increasing iteration order."
+    }
+   ],
+   "probes": [
+    "Walk through how a tree DP node obtains and returns its state.",
+    "How do you encode subsets in bitmask DP, and when is that approach viable?",
+    "What does the tight flag mean when building a number digit by digit?"
+   ],
+   "hints": {
+    "1": "Pick one paradigm and describe the loop or DFS order before naming formulas.",
+    "2": "Tree: post-order; bitmask: bits as membership; digit: left-to-right with a bound flag; interval: grow by length.",
+    "3": "Post-order combine-and-return; mask bit i means item i included, n ≤ 20; f(R)−f(L−1) with tight limiting the digit; dp[left][right] by length 2..n."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Judge when each advanced DP flavour is the right tool and what state-design choices buy you.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Bitmask DP fits when n ≤ 20 and the problem involves permutations, subsets, or assignments; digit DP is the tool for counting numbers in a range with property P; tree DP when aggregating over a rooted tree (paths or subset selections); interval DP when collapsing adjacent elements and operation order matters.",
+     "weight": "core",
+     "evidence_hint": "Maps each flavour to its trigger: small-n subsets, range digit properties, rooted-tree aggregation, adjacent collapse with order."
+    },
+    {
+     "id": "tr2",
+     "point": "For TSP, brute-force permutations are O(n!) while DP over dp[mask][u] is O(n^2 2^n) time and O(n 2^n) space.",
+     "weight": "core",
+     "evidence_hint": "Contrasts factorial enumeration with the mask×city DP complexities from the file."
+    },
+    {
+     "id": "tr3",
+     "point": "With n ≤ 10 people and hats ≤ 40, masking people (not hats) is vastly more efficient for hat-assignment counting.",
+     "weight": "extended",
+     "evidence_hint": "Chooses the smaller dimension for the bitmask and cites the people vs hats size contrast."
+    }
+   ],
+   "probes": [
+    "When would you reach for bitmask vs digit vs tree vs interval DP?",
+    "Why not mask over hats in the different-hats counting problem?"
+   ],
+   "hints": {
+    "1": "Ask what the input size and structure force: tiny n, digit ranges, trees, or adjacent merges.",
+    "2": "Recall the close guidance: n ≤ 20 subsets; count-in-range digits; rooted-tree aggregates; collapsing adjacent with order.",
+    "3": "Bitmask n ≤ 20; digit for range property counts; tree for rooted aggregation; interval for ordered adjacent collapse; hat problem masks people because n ≤ 10 vs hats ≤ 40."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply state design on concrete hard problems: path/tree choices, subset tours/assignments, digit counts, and last-burst intervals.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "In binary-tree maximum path sum, the arch through a node is node.val + max(0, left) + max(0, right), but the value returned to the parent may include at most one child path: node.val + max(0, max(left, right)).",
+     "weight": "core",
+     "evidence_hint": "Separates global arch update (both sides) from the single-branch return to the parent."
+    },
+    {
+     "id": "app2",
+     "point": "House Robber III state at a node is the pair {max if not robbed, max if robbed}; rob forces children not-robbed, skip takes max of each child's options.",
+     "weight": "core",
+     "evidence_hint": "States the two-valued return and the rob vs skip child constraints."
+    },
+    {
+     "id": "app3",
+     "point": "Binary Tree Cameras classifies nodes as 0 has camera, 1 covered, 2 needs cover; place a camera if any child is 2, become covered if any child is 0, else return 2; if the root returns 2, place one more camera.",
+     "weight": "extended",
+     "evidence_hint": "Lists the three states, the child-driven transitions, and the root edge case."
+    },
+    {
+     "id": "app4",
+     "point": "In Burst Balloons, decide the last balloon k burst in (left, right) so subproblems (left, k) and (k, right) are independent; first-burst thinking couples the sides.",
+     "weight": "extended",
+     "evidence_hint": "Explains last-burst independence versus first-burst dependence across the cut."
+    }
+   ],
+   "probes": [
+    "In maximum path sum, what do you update globally versus what do you return upward?",
+    "How do you encode rob/skip at a house in the tree, and what may children do in each case?",
+    "Why think about the last balloon to burst in an interval rather than the first?"
+   ],
+   "hints": {
+    "1": "Distinguish information needed for a path through the node from a valid continuation to the parent.",
+    "2": "Path sum: both children for the arch, one child on return; robber: pair of robbed/not; balloons: last k shields left and right.",
+    "3": "Arch = val+max(0,L)+max(0,R), return = val+max(0,max(L,R)); pair {not robbed, robbed}; last burst k makes (left,k) and (k,right) independent."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Brute permutations vs bitmask DP for TSP",
+   "strong_answer": "Enumerating city permutations is O(n!); DP with state dp[mask][u] (visited set plus current city) runs in O(n^2 2^n) time and O(n 2^n) space."
+  },
+  {
+   "topic": "Mask people vs mask hats for different-hat assignments",
+   "strong_answer": "With n ≤ 10 people and hats ≤ 40, a bitmask over people (iterating hats 1..40) is vastly cheaper than masking hats."
+  },
+  {
+   "topic": "First balloon vs last balloon as the interval split",
+   "strong_answer": "Choosing the first balloon to burst couples the two sides; choosing the last balloon k in (left, right) makes (left, k) and (k, right) independent until k bursts."
+  },
+  {
+   "topic": "Which advanced DP flavour to use",
+   "strong_answer": "Bitmask when n ≤ 20 with permutations/subsets/assignments; digit DP for counting numbers in a range with property P; tree DP to aggregate over a rooted tree (paths or subset selections); interval DP when collapsing adjacent elements and order of operations matters."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Returning both children's contributions from a node in maximum path sum as if that were a valid parent continuation.",
+   "correction": "The arch through the node may use both sides for the global answer, but the return to the parent may include at most one child path so it remains a single path."
+  },
+  {
+   "trap": "Storing which person is being assigned explicitly in the assignment-problem DP state.",
+   "correction": "The number of set bits in the assigned-task mask (__builtin_popcount) already identifies person k; only the task mask is needed."
+  },
+  {
+   "trap": "Placing cameras greedily on leaves, or forgetting the root when it still needs cover.",
+   "correction": "Prefer covering a leaf via its parent; after post-order, if the root returns needs-cover (2), place one more camera. Null children are treated as covered (1)."
+  },
+  {
+   "trap": "In digit DP, treating leading zeros as used digits for uniqueness, or forgetting the tight constraint.",
+   "correction": "Track isLeadingZero so leading zeros do not mark digits used; when tight is true the digit limit is the bound digit, otherwise 0–9."
+  },
+  {
+   "trap": "Ignoring negative downward paths in tree path problems by always adding child sums.",
+   "correction": "Take max(0, child_path) so a negative extension is dropped rather than forced into the path."
+  }
+ ]
+}

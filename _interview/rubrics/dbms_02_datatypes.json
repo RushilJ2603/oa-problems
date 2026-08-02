@@ -1,0 +1,235 @@
+{
+ "id": "dbms_02_datatypes",
+ "title": "SQL / PostgreSQL Data Types",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs probe whether you pick storage types that preserve correctness for money, IDs, text, and time rather than defaulting to floats or naive strings.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the core PostgreSQL type families and when each family is the default choice.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "PostgreSQL provides three integer sizes—SMALLINT (2 bytes), INTEGER (4 bytes), and BIGINT (8 bytes)—chosen by the maximum value you expect to store.",
+     "weight": "core",
+     "evidence_hint": "Lists SMALLINT/INTEGER/BIGINT with byte sizes and says INTEGER is the usual default for general numbers and identifiers."
+    },
+    {
+     "id": "fund2",
+     "point": "DECIMAL and NUMERIC are equivalent fixed-point types defined as NUMERIC(p, s), where p is total significant digits and s is digits after the decimal.",
+     "weight": "core",
+     "evidence_hint": "States DECIMAL ≡ NUMERIC, defines precision vs scale, and gives an example like NUMERIC(5, 2)."
+    },
+    {
+     "id": "fund3",
+     "point": "Character data is stored as UTF-8; CHAR(n) is fixed and space-padded, while VARCHAR(n) and TEXT are variable-length and not padded.",
+     "weight": "core",
+     "evidence_hint": "Contrasts CHAR padding with VARCHAR/TEXT and mentions UTF-8."
+    },
+    {
+     "id": "fund4",
+     "point": "Temporal types include DATE, TIME, TIMESTAMP (no timezone), TIMESTAMPTZ (timezone-aware), and INTERVAL (a span of time).",
+     "weight": "extended",
+     "evidence_hint": "Names each temporal type and distinguishes TIMESTAMP from TIMESTAMPTZ and INTERVAL."
+    },
+    {
+     "id": "fund5",
+     "point": "BOOLEAN is a native truth type accepting TRUE, FALSE, and NULL; BYTEA stores raw binary without UTF-8 interpretation.",
+     "weight": "extended",
+     "evidence_hint": "Says Postgres treats true/false as native concepts and uses BYTEA for images/hashes that TEXT would corrupt."
+    }
+   ],
+   "probes": [
+    "Walk through the main PostgreSQL numeric, string, temporal, boolean, and binary types and when you would reach for each."
+   ],
+   "hints": {
+    "1": "Start by grouping types: exact integers, fixed-point decimals, floats, strings, time, bool/binary.",
+    "2": "For each group, name the concrete Postgres types and one typical use (IDs, money, sensors, codes, events).",
+    "3": "Say INTEGER/BIGINT for IDs, NUMERIC/DECIMAL for money, TEXT/VARCHAR for most text, TIMESTAMPTZ for real-world events, BOOLEAN for flags, BYTEA for raw bytes."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how key types actually store and constrain values, including identity, precision, padding, and timezone conversion.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Auto-incrementing integer keys use GENERATED ALWAYS AS IDENTITY so the engine assigns the next unique integer without the application tracking the last value.",
+     "weight": "core",
+     "evidence_hint": "Mentions GENERATED ALWAYS AS IDENTITY on an INTEGER primary-key style column."
+    },
+    {
+     "id": "mech2",
+     "point": "NUMERIC(5, 2) can store any value from -999.99 to 999.99; REAL (~6 decimal digits, 4 bytes) and DOUBLE PRECISION (~15 decimal digits, 8 bytes) are approximate.",
+     "weight": "core",
+     "evidence_hint": "Gives the NUMERIC(5, 2) range and contrasts REAL/DOUBLE PRECISION byte sizes and digit precision."
+    },
+    {
+     "id": "mech3",
+     "point": "Storing 123456789.12 in a 4-byte REAL may read back as 123456792.00 because the value exceeds ~6 digits of guaranteed precision.",
+     "weight": "extended",
+     "evidence_hint": "Repeats the REAL failure example with those exact figures."
+    },
+    {
+     "id": "mech4",
+     "point": "CHAR(n) pads shorter values with spaces (e.g. 'CA' in CHAR(10) becomes ten characters); CHAR/VARCHAR max length is 10,485,760 bytes and TEXT is ~1 GB.",
+     "weight": "core",
+     "evidence_hint": "Explains space-padding with the CA/CHAR(10) case and cites the documented max lengths."
+    },
+    {
+     "id": "mech5",
+     "point": "TIMESTAMPTZ converts the input using its offset to UTC for storage and discards the original timezone label; queries translate that stored UTC back to the session’s local timezone.",
+     "weight": "core",
+     "evidence_hint": "Says it stores UTC, not the original timezone string, and converts on read."
+    }
+   ],
+   "probes": [
+    "Explain what NUMERIC(p,s), CHAR padding, and TIMESTAMPTZ actually do on insert and on read."
+   ],
+   "hints": {
+    "1": "Pick one exact decimal definition, one string-padding behavior, and one timezone behavior.",
+    "2": "For TIMESTAMPTZ, separate input offset → UTC storage from display conversion; for CHAR, talk about invisible trailing spaces.",
+    "3": "State NUMERIC(5,2) range, CHAR space-padding, and that TIMESTAMPTZ stores UTC and drops the original timezone label."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Force explicit comparison of competing type choices and what each sacrifices.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Fixed-point DECIMAL/NUMERIC trades speed and storage for exact fractional precision; floating-point trades precision for a wide range in little memory.",
+     "weight": "core",
+     "evidence_hint": "Uses the ledger-vs-spring-scale idea and says floats compound microscopic errors over many transactions."
+    },
+    {
+     "id": "tr2",
+     "point": "CHAR(n) keeps uniform row width but wastes space and forces trimming; VARCHAR/TEXT store only the characters provided (plus a length tag) and are the default unless length is globally fixed.",
+     "weight": "core",
+     "evidence_hint": "Rejects CHAR-for-everything because padding wastes disk and breaks naive equality searches."
+    },
+    {
+     "id": "tr3",
+     "point": "Plain TIMESTAMP loses absolute event time; Unix-epoch BIGINT avoids timezone bugs but makes calendar queries (e.g. all Tuesday events) expensive; TIMESTAMPTZ is preferred for real-world events.",
+     "weight": "core",
+     "evidence_hint": "Names the TIMESTAMP trap, the epoch alternative’s query cost, and TIMESTAMPTZ as the recommended event type."
+    },
+    {
+     "id": "tr4",
+     "point": "JSON preserves exact text (spaces, duplicate keys) but re-parses on every query; JSONB parses once into binary, supports GIN indexing, and is preferred unless exact whitespace must be preserved.",
+     "weight": "core",
+     "evidence_hint": "Contrasts filing-cabinet JSON with searchable JSONB and mentions GIN."
+    },
+    {
+     "id": "tr5",
+     "point": "Column arrays can outperform a join for simple tag-like lists but violate First Normal Form’s atomic-value rule.",
+     "weight": "extended",
+     "evidence_hint": "Acknowledges the normalization violation and the performance win for non-joined lists."
+    }
+   ],
+   "probes": [
+    "Compare DECIMAL vs FLOAT for money, CHAR vs TEXT for emails, TIMESTAMP vs TIMESTAMPTZ vs epoch, and JSON vs JSONB."
+   ],
+   "hints": {
+    "1": "Frame each as X vs Y: what you gain and what you lose.",
+    "2": "Tie money to exact cents, strings to padding, time to absolute moments, JSON to parse-once vs preserve-text.",
+    "3": "Conclude: NUMERIC for currency, TEXT/VARCHAR by default, TIMESTAMPTZ for events, JSONB unless legal exact-text requirements, arrays only for simple non-joined lists."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply type selection to concrete schema decisions and known failure modes.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Never store currency as REAL/DOUBLE PRECISION; use NUMERIC/DECIMAL so summing many transactions cannot drift by cents.",
+     "weight": "core",
+     "evidence_hint": "States the classic float-for-money trap and names DECIMAL/NUMERIC as the fix."
+    },
+    {
+     "id": "app2",
+     "point": "Do not use SMALLINT for growing identifiers: the 32,768th user overflows and blocks new registrations; default to INTEGER or BIGINT unless memory is extremely constrained.",
+     "weight": "core",
+     "evidence_hint": "Cites the 32,768 overflow failure and the INTEGER/BIGINT default."
+    },
+    {
+     "id": "app3",
+     "point": "Emails in CHAR(255) can fail equality searches because of invisible padded spaces (e.g. 239 spaces after a short address); prefer VARCHAR/TEXT, and reserve CHAR(2) for fixed codes like country/state.",
+     "weight": "core",
+     "evidence_hint": "Mentions CHAR(255) email padding failure and CHAR(2) for ISO-style codes."
+    },
+    {
+     "id": "app4",
+     "point": "Store unique IDs as UUID or BIGINT, not VARCHAR(36); use BOOLEAN for yes/no flags; use TEXT for article bodies instead of arbitrary VARCHAR caps; use INET for IPs instead of VARCHAR(45).",
+     "weight": "extended",
+     "evidence_hint": "Recites several cheat-sheet rows: UUID/BIGINT, BOOLEAN, TEXT for bodies, INET for IPs."
+    },
+    {
+     "id": "app5",
+     "point": "JSONB columns are queried with operators like ->> (extract as text) and @> (contains); arrays use ANY(); enums enforce a whitelist; TSTZRANGE models booking windows with containment checks.",
+     "weight": "extended",
+     "evidence_hint": "Names JSONB operators, ANY() on arrays, ENUM reject of invalid values, and TSTZRANGE @> for meetings."
+    }
+   ],
+   "probes": [
+    "Given currency, user IDs, emails, events, and a JSON API payload, which PostgreSQL types do you choose and why?"
+   ],
+   "hints": {
+    "1": "Map each field to the cheat-sheet row: money, ID, email, event, JSON.",
+    "2": "Call out the wrong type for each and the concrete failure (cents drift, overflow, padded spaces, lost timezone, re-parse).",
+    "3": "Answer: NUMERIC for money, INTEGER/BIGINT or UUID for IDs, TEXT/VARCHAR for email, TIMESTAMPTZ for events, JSONB for payloads unless exact whitespace is legally required."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "DECIMAL/NUMERIC vs REAL/DOUBLE PRECISION",
+   "strong_answer": "Use DECIMAL/NUMERIC for currency and exact measurements because floats store approximate binary values and summing many transactions can leave balances off by cents; floats only win when you need a huge range in little memory and can tolerate imprecision."
+  },
+  {
+   "topic": "CHAR(n) vs VARCHAR(n)/TEXT",
+   "strong_answer": "CHAR pads to fixed width, which wastes space for variable data like names/emails and breaks naive equality unless you trim; VARCHAR/TEXT store only the written characters and should be the default unless the value has a globally fixed length such as a 2-letter country code."
+  },
+  {
+   "topic": "TIMESTAMPTZ vs TIMESTAMP vs Unix-epoch BIGINT",
+   "strong_answer": "TIMESTAMP without timezone permanently loses the absolute moment of a real-world event; epoch integers avoid timezone bugs but make calendar queries expensive; TIMESTAMPTZ stores UTC and converts on read, which is the right default for events."
+  },
+  {
+   "topic": "JSON vs JSONB",
+   "strong_answer": "JSON keeps exact text including spaces and duplicate keys but must be re-parsed on every query; JSONB parses once into binary, drops redundant whitespace/keys, and supports GIN indexing—prefer JSONB unless you must preserve the exact incoming payload text."
+  },
+  {
+   "topic": "Arrays in a column vs normalized child table",
+   "strong_answer": "Arrays violate First Normal Form’s atomic-value rule but can be much faster for simple lists (like tags) you never join elsewhere; use a related table when those values need relational joins or independent constraints."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Storing money as FLOAT/REAL/DOUBLE PRECISION",
+   "correction": "Use DECIMAL or NUMERIC so every cent is stored exactly; float binary representation can make large sums off by a few cents."
+  },
+  {
+   "trap": "Using SMALLINT for a growing primary key or user id",
+   "correction": "At the 32,768th insert the column overflows and registrations halt; default identifiers to INTEGER or BIGINT unless you have a proven extreme memory constraint."
+  },
+  {
+   "trap": "Storing emails or other variable text in CHAR(n)",
+   "correction": "CHAR pads with invisible spaces, so equality searches for the unpadded string can fail; use TEXT or VARCHAR, and reserve CHAR for truly fixed codes like CHAR(2) state/country codes."
+  },
+  {
+   "trap": "Storing real-world events in plain TIMESTAMP (or assuming an application timezone forever)",
+   "correction": "Without timezone context you permanently lose the absolute point in time; use TIMESTAMPTZ, which stores UTC and converts on read."
+  },
+  {
+   "trap": "Putting raw JPEG/binary bytes into a TEXT column",
+   "correction": "TEXT validates UTF-8 and can reject or corrupt binary; store raw bytes in BYTEA."
+  },
+  {
+   "trap": "Storing a UUID as VARCHAR(36)",
+   "correction": "Use the UUID type (or BIGINT for central counters): text UUIDs waste space and slow index lookups."
+  }
+ ]
+}

@@ -1,0 +1,280 @@
+{
+ "id": "16_dsu_union_find_mst__deep",
+ "title": "DSU / Union-Find & MST (Depth Pass)",
+ "type": "CP",
+ "relevance": "High (second ladder after template Kruskal/Prim/component-size — CF Div2 C–E “rewrite as merges,” weighted DSU, Kruskal contribution, and MST variants that still show up as hard OA twists)",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Constraint satisfaction on equals/distances: assign values with given differences or check equation consistency — weighted DSU (People on a Line / Third Letter), same family as equality-equation DSU. Redeploy/recolor inside groups: friendship/swap/day-link components; minimize changes — Socks / New Year Permutation / K-Complete Word. Wire a network with a twist: connect all servers; fixed degree on one node / cheap hub / only 0-1 cable costs — Fixed Degree / Make It Connected / 0-1 MST. Score = f(component sizes over time): dangers / pair counts as chemicals mix or edges activate — DZY / Edgy Trees / Kruskal contribution (ABC214D).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot that merges, not a plain template DSU/MST, are the mutable state: constraint edges, offline size contributions, dual forests, complement graphs, or range-closures.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Recognize contest DSU when edges encode constraints (equality, relative distance, same color, allowed swaps) rather than plain undirected connectivity.",
+     "weight": "core",
+     "evidence_hint": "Names at least one constraint family and says merges track those relations, not only components."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognize Kruskal-offline contribution when the answer is a function of component sizes as edges are added light→heavy (or reverse), especially size_A·size_B on merges.",
+     "weight": "core",
+     "evidence_hint": "Says sort edges and accumulate a size-product contribution instead of querying paths live."
+    },
+    {
+     "id": "rec3",
+     "point": "Recognize dual forests, complement/0-1 MST, or range-union closure when ordinary single-forest Kruskal is not enough.",
+     "weight": "extended",
+     "evidence_hint": "Mentions two DSUs that must both accept an edge, unused-vertex set for the 0-graph, or forcing [min_id,max_id] connected."
+    },
+    {
+     "id": "rec4",
+     "point": "Recognize the ask when merges are the only mutable state or a threshold edge weight defines connectivity among specials.",
+     "weight": "extended",
+     "evidence_hint": "Ties the prompt to merge-only bookkeeping or Kruskal until k specials share a component."
+    }
+   ],
+   "probes": [
+    "What in the statement says this is constraint DSU, Kruskal size-contribution, dual forests, complement MST, or range closure rather than template find/union?",
+    "When would you process edges offline by weight instead of answering each path query with LCA?"
+   ],
+   "hints": {
+    "1": "Look past ‘run DSU’ — ask what the edges mean and what the score tracks as components change.",
+    "2": "Constraint relations, size products on merges, two forests, dense 0-edges, or interval closure are the depth signals.",
+    "3": "Say: equality/distance/color/swap edges → constraint DSU; answer = f(sizes) light→heavy → Kruskal contribution; dual/complement/range → specialized forest models."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Pick the right depth model: potential DSU, Kruskal contribution, equal-weight batching, complement components, range closure, dual forests, virtual star, or fixed-degree ST.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Weighted/potential DSU: store delta[v]=value(v)−value(parent); on find compress deltas; union(a,b,w) sets val[b]−val[a]=w and reject inconsistent relates.",
+     "weight": "core",
+     "evidence_hint": "Describes potential on parent links, path-compressed deltas, and inconsistency detection (People on a Line / Third Letter)."
+    },
+    {
+     "id": "appr2",
+     "point": "Kruskal contribution: sort edges ascending; merging A,B of weight w adds w·|A|·|B| toward sum of max-edge on path (ABC214D / Child and Zoo / Path Queries skeleton).",
+     "weight": "core",
+     "evidence_hint": "States the w·|A|·|B| merge contribution after sorting light→heavy."
+    },
+    {
+     "id": "appr3",
+     "point": "Same-weight batching: before unioning weight-w edges, count how many could still link different components; extras that fail after the batch force +1 ops to uniquify MST.",
+     "weight": "extended",
+     "evidence_hint": "Describes count-then-union per equal-weight batch (MST Unification)."
+    },
+    {
+     "id": "appr4",
+     "point": "0-1 MST: MST weight = (#components in the 0-edge graph)−1; build those components via a set of unused vertices — never enumerate K_n.",
+     "weight": "extended",
+     "evidence_hint": "Gives comps−1 and set-iteration over the complement of sparse 1-edges."
+    },
+    {
+     "id": "appr5",
+     "point": "Virtual star MST: connect every vertex to the global-min a_i with weight a_i+a_u, then Kruskal on given edges ∪ star (Make It Connected).",
+     "weight": "extended",
+     "evidence_hint": "Adds star edges from argmin a_i before sorting/Kruskal."
+    },
+    {
+     "id": "appr6",
+     "point": "Fixed-degree spanning tree: force exactly k edges incident to vertex 1 — DSU-partition the rest, then pick which 1-edges close components.",
+     "weight": "extended",
+     "evidence_hint": "Removes 1, components the remainder, then chooses exactly k bridges from 1."
+    }
+   ],
+   "probes": [
+    "Walk through potential DSU relate(a,b,w) and when you reject.",
+    "For sum of max-edge on path, what do you add on each Kruskal merge?"
+   ],
+   "hints": {
+    "1": "Match the ask to one of the eight depth tricks, not generic Kruskal.",
+    "2": "Potentials for differences; size products for path-max sums; batch equal weights; set for 0-1; star for cheap hub; k bridges from 1 for fixed degree.",
+    "3": "Relate via compressed deltas; on merge add w·|A|·|B|; batch same w before union; 0-1 cost = comps−1 via unused-vertex set; Kruskal given∪star; deg(1)=k via DSU then k bridges."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Encode potential-UFF, merge formulas, next-pointer range unions, complement set walks, dual-union gates, and letter/string node maps correctly.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Potential/weighted DSU API: find returns root and compresses delta; expose relate(a,b,w) / same / inconsistency detect.",
+     "weight": "core",
+     "evidence_hint": "Sketches find that rewrites deltas along the path and a relate that checks existing relative values."
+    },
+    {
+     "id": "impl2",
+     "point": "On merge of sizes A,B know cold: components−1, A·B (= binom(A+B,2)−binom(A,2)−binom(B,2)), and weight contribution w·A·B.",
+     "weight": "core",
+     "evidence_hint": "States those three merge formulas without deriving them on the spot."
+    },
+    {
+     "id": "impl3",
+     "point": "Range unions: maintain next[i] = first index not yet united with i (or DSU on next pointer) so [l,r] is O((r-l)α^{-1}) amortized total.",
+     "weight": "extended",
+     "evidence_hint": "Describes jumping via next[] while unioning the interval (Restructuring Company / Harmonious-style)."
+    },
+    {
+     "id": "impl4",
+     "point": "Complement / 0-1 MST: iterate neighbors of the sparse missing edges and erase from a global set — never build K_n.",
+     "weight": "extended",
+     "evidence_hint": "Keeps a set of unused vertices and erases reached ones during BFS/DSU."
+    },
+    {
+     "id": "impl5",
+     "point": "Letter/string DSU: map char→node or position→node; majority vote per component or spanning forest on 26 letters.",
+     "weight": "extended",
+     "evidence_hint": "Cites Socks/K-Complete majority or Love Rescue forest on 26 nodes."
+    }
+   ],
+   "probes": [
+    "How does find update deltas, and what are the three size-merge formulas you need cold?",
+    "How do you union a whole [l,r] without quadratic naive unions?"
+   ],
+   "hints": {
+    "1": "API and bookkeeping matter as much as the high-level trick.",
+    "2": "Compress deltas on find; keep size formulas; use next[] for ranges; set-erase for complement; 26-letter or position nodes for strings.",
+    "3": "find rewrites delta[v]; formulas: comps−1, A·B, w·A·B; next[i] jumps unmerged indices; complement walks a set; letters use 26 nodes or position majority."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Justify amortized range unions, avoiding K_n materialization, and Kruskal on given edges plus a linear star.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Range unions with next-pointer DSU make [l,r] O((r-l)α^{-1}) amortized total, not quadratic naive pairwise unions.",
+     "weight": "core",
+     "evidence_hint": "States the amortized bound and that each index is jumped past once."
+    },
+    {
+     "id": "cx2",
+     "point": "Complement / 0-1 MST must not enumerate K_n; set-iteration over unused vertices keeps work tied to the sparse 1-edges plus vertex erasures.",
+     "weight": "core",
+     "evidence_hint": "Refuses O(n^2) clique build and names set BFS/DSU instead."
+    },
+    {
+     "id": "cx3",
+     "point": "Virtual-star Make It Connected runs Kruskal on m+n edges (given edges ∪ star), not a rebuilt dense graph.",
+     "weight": "extended",
+     "evidence_hint": "Counts m+n candidate edges after attaching the star."
+    }
+   ],
+   "probes": [
+    "Why is range union with a next pointer amortized near-linear in the interval length?",
+    "Why can’t you build the complete 0-edge graph for 0-1 MST?"
+   ],
+   "hints": {
+    "1": "Complexity fails come from naive intervals or dense complements.",
+    "2": "next[] jumps; unused-vertex set replaces K_n; star adds only n edges.",
+    "3": "Cite O((r-l)α^{-1}) for [l,r]; comps via set not K_n; Kruskal on m+n after the star."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch depth-pass failure modes: LCA-per-pair, built K_n, uncompressed potentials, unbatched equal weights, and naive range unions.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "When the statement says max edge on path ≤ x or sum of max edges, sort edges and DSU offline — do not LCA every pair.",
+     "weight": "core",
+     "evidence_hint": "Rejects all-pairs LCA and commits to offline Kruskal/DSU."
+    },
+    {
+     "id": "pit2",
+     "point": "For 0-1 MST / complement connectivity, never build K_n; use a set of unused vertices and the sparse missing-edge adjacency.",
+     "weight": "core",
+     "evidence_hint": "Flags clique construction as wrong and names set-iteration."
+    },
+    {
+     "id": "pit3",
+     "point": "Weighted DSU that forgets to compress deltas on find (or skips inconsistency checks) silently accepts bad difference constraints.",
+     "weight": "extended",
+     "evidence_hint": "Requires path-compressed deltas and reject-on-conflict in relate."
+    },
+    {
+     "id": "pit4",
+     "point": "MST Unification: unioning same-weight edges one-by-one without a pre-batch count misses edges that could replace a tree edge (+1 ops).",
+     "weight": "extended",
+     "evidence_hint": "Counts cross-component candidates before applying the weight-w batch."
+    },
+    {
+     "id": "pit5",
+     "point": "Range [l,r] unions without a next-unmerged pointer degrade; Harmonious-style closure still must force each component to swallow [min_id,max_id].",
+     "weight": "extended",
+     "evidence_hint": "Mentions next-DSU and post-merge interval closure."
+    }
+   ],
+   "probes": [
+    "What’s wrong with answering sum-of-max-edge queries with LCA on every pair?",
+    "Where do candidates lose ops on unique-MST or blow up on 0-1 MST?"
+   ],
+   "hints": {
+    "1": "Depth bugs are modeling shortcuts that ignore the checklist.",
+    "2": "Offline Kruskal vs LCA; set vs K_n; compress deltas; batch equal weights; next[] + range closure.",
+    "3": "Sort+DSU for path-max sums; set for 0-1; find compresses delta; count then union per w; next-pointer [l,r] and force [min,max]."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Weighted/potential DSU vs plain equality DSU",
+   "strong_answer": "When constraints are relative distances (val[b]−val[a]=w), store and compress deltas on find and reject inconsistent relates; plain same-component DSU only handles equality/partition."
+  },
+  {
+   "topic": "Offline Kruskal size contribution vs LCA every pair",
+   "strong_answer": "For sum of max-edge on path (or max edge ≤ x offline), sort edges and add w·|A|·|B| on merges; do not LCA every pair."
+  },
+  {
+   "topic": "Virtual star ∪ given edges vs rebuilding a dense hub graph",
+   "strong_answer": "Connect every vertex to global-min a_i with weight a_i+a_u and Kruskal on given edges ∪ star (m+n edges) — Make It Connected — instead of materializing all pairwise hub options."
+  },
+  {
+   "topic": "Complement set-iteration vs building K_n",
+   "strong_answer": "0-1 MST cost is (#components in the 0-edge graph)−1; iterate a set of unused vertices against sparse 1-edges — never enumerate K_n."
+  },
+  {
+   "topic": "Dual forests vs single DSU",
+   "strong_answer": "When an edge is legal only if both forests would accept it (Graph Composition / Mocha-style), maintain two DSUs and count merges needed to equalize after removing contradictions."
+  },
+  {
+   "topic": "Equal-weight batching vs immediate per-edge union",
+   "strong_answer": "To uniquify an MST, before unioning weight-w edges count how many could still link different components; extras that fail after the batch cost +1 (MST Unification)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Answering “max edge on path ≤ x” / “sum of max edges” with LCA on every pair.",
+   "correction": "Sort edges and run DSU offline (Kruskal contribution / threshold connectivity)."
+  },
+  {
+   "trap": "Building K_n for 0-1 / complement MST.",
+   "correction": "MST weight = comps−1 in the 0-edge graph; iterate a set of unused vertices against sparse missing edges."
+  },
+  {
+   "trap": "Potential DSU without compressing deltas on find, or without inconsistency checks.",
+   "correction": "find returns root and rewrites deltas; relate(a,b,w) rejects when the implied difference conflicts."
+  },
+  {
+   "trap": "Unioning equal-weight edges immediately when the goal is a unique MST.",
+   "correction": "Per equal-weight batch, count cross-component candidates first; extras that fail after the batch need +1 ops."
+  },
+  {
+   "trap": "Naive pairwise unions on [l,r] or forgetting Harmonious range closure.",
+   "correction": "Maintain next[i] (first index not united with i) for amortized O((r-l)α^{-1}); after ordinary merges force each component to swallow [min_id,max_id]."
+  },
+  {
+   "trap": "Forgetting the three merge size formulas under contribution / clique / component-count asks.",
+   "correction": "Know cold: components−1, A·B (= binom(A+B,2)−binom(A,2)−binom(B,2)), and w·A·B."
+  },
+  {
+   "trap": "Dual-forest problems treated as one DSU.",
+   "correction": "Add an edge only if both unions succeed; count remaining merges to match components after removing contradictions."
+  }
+ ]
+}

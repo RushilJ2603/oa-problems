@@ -1,0 +1,219 @@
+{
+ "id": "os_01_fundamentals",
+ "title": "Operating system fundamentals and structure",
+ "type": "FUND",
+ "relevance": "SDE interviews probe whether candidates understand privilege boundaries, system calls, and kernel structure—concepts that underpin processes, memory, I/O, and debugging crashes.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what an OS and kernel are, and why dual-mode operation exists.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "An OS is both a resource manager (sharing CPU, memory, disk, network fairly and safely) and an abstraction layer (hiding hardware behind uniform interfaces).",
+     "weight": "core",
+     "evidence_hint": "Names both roles: allocating/sharing hardware among programs, and presenting clean interfaces so apps ignore disk/network hardware details."
+    },
+    {
+     "id": "fund2",
+     "point": "The kernel is the always-resident, fully privileged heart that does scheduling, memory management, and hardware communication; the OS also includes libraries, shells, and utilities.",
+     "weight": "core",
+     "evidence_hint": "Distinguishes kernel (privileged core) from the larger OS package of libraries/shells/utilities."
+    },
+    {
+     "id": "fund3",
+     "point": "Shells, compilers, ls, and libc are user-space programs or wrappers—not part of the kernel—and reach the kernel only via system calls.",
+     "weight": "extended",
+     "evidence_hint": "Says bash/ls/libc live in user space and ask the kernel for services through syscalls."
+    },
+    {
+     "id": "fund4",
+     "point": "Dual-mode operation uses a hardware mode bit: user mode is restricted; kernel mode (supervisor/ring 0) may execute any instruction and access any address.",
+     "weight": "core",
+     "evidence_hint": "Mentions mode bit, restricted user mode vs unrestricted kernel/supervisor/ring 0."
+    }
+   ],
+   "probes": [
+    "What is an operating system, and how does the kernel differ from the rest of the OS?",
+    "Why does the CPU enforce user mode versus kernel mode?"
+   ],
+   "hints": {
+    "1": "Think about what sits between hardware and apps, and what must always run privileged.",
+    "2": "Separate resource management and abstraction; then say what only the kernel may do.",
+    "3": "OS = resource manager + abstraction layer; kernel = always-resident privileged core; user mode cannot run privileged instructions or touch ungranted memory."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how user code enters the kernel and how the CPU handles unexpected events.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A system call is the guarded mechanism for a user-space program to request a kernel service, crossing user mode to kernel mode via a controlled trap.",
+     "weight": "core",
+     "evidence_hint": "Defines syscall as the single controlled gate from user space into the kernel."
+    },
+    {
+     "id": "mech2",
+     "point": "Syscall path: place args and a syscall number in registers (e.g. rax on x86-64), execute syscall/sysenter/int 0x80, hardware flips to kernel mode and jumps to a fixed entry, kernel indexes the system-call table, then returns with mode flipped back.",
+     "weight": "core",
+     "evidence_hint": "Walks register args + syscall number, trap instruction, mode flip, table dispatch, return."
+    },
+    {
+     "id": "mech3",
+     "point": "A mode switch crosses the user/kernel boundary within the same process; a context switch changes which process runs, saves/restores process state, and is far more expensive.",
+     "weight": "core",
+     "evidence_hint": "Clearly separates mode switch (same process) from context switch (different process, more work)."
+    },
+    {
+     "id": "mech4",
+     "point": "Interrupts are asynchronous hardware signals; traps are synchronous intentional exceptions (syscalls, breakpoints); faults are synchronous unintentional often-recoverable conditions (page fault, divide-by-zero) that may retry the faulting instruction.",
+     "weight": "core",
+     "evidence_hint": "Classifies interrupt/trap/fault by timing, intent, and examples; notes fault retry when recoverable."
+    },
+    {
+     "id": "mech5",
+     "point": "A page fault is the normal demand-paging signal that a referenced page is not in RAM; the OS fetches it and retries—not inherently an error.",
+     "weight": "extended",
+     "evidence_hint": "Says page fault drives demand paging: bring page in, retry the instruction."
+    }
+   ],
+   "probes": [
+    "Walk through what happens when a program makes a system call.",
+    "How do interrupt, trap, and fault differ?",
+    "Is a mode switch the same as a context switch?"
+   ],
+   "hints": {
+    "1": "Start from why a normal function call into the kernel is unsafe.",
+    "2": "Cover registers + trap instruction + syscall table; then classify events by sync vs async.",
+    "3": "Syscall: args/number in regs → trap → kernel mode → table dispatch → return; mode switch ≠ context switch; interrupt async, trap intentional sync, fault often recoverable sync."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare kernel structures along performance versus fault isolation.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Monolithic kernels put scheduling, memory, file systems, and drivers in one kernel address space—fast direct calls, but a bug (e.g. bad driver) can crash the whole system (Linux, classic Unix).",
+     "weight": "core",
+     "evidence_hint": "Large shared kernel address space, speed via function calls, weak isolation; cites Linux/Unix."
+    },
+    {
+     "id": "tr2",
+     "point": "Microkernels keep only bare minimum (IPC, basic scheduling, basic memory) in kernel mode; drivers and file systems are user-space servers—strong isolation/restartability but slower due to IPC and mode switches (QNX, MINIX, L4, Mach).",
+     "weight": "core",
+     "evidence_hint": "Minimal kernel, user-space servers, reliability vs IPC/mode-switch cost; names examples."
+    },
+    {
+     "id": "tr3",
+     "point": "Linux loadable kernel modules are logical modularity inside a monolithic design: once loaded they run with full kernel privilege, not microkernel isolation.",
+     "weight": "extended",
+     "evidence_hint": "Modules ≠ microkernel; loaded modules have full kernel privilege."
+    },
+    {
+     "id": "tr4",
+     "point": "Hybrid kernels are mostly monolithic for speed with some subsystems as separate modules (Windows NT; macOS XNU often described this way).",
+     "weight": "extended",
+     "evidence_hint": "Mostly monolithic with some separated subsystems; Windows NT / XNU."
+    }
+   ],
+   "probes": [
+    "Why is a microkernel typically slower than a monolithic kernel?",
+    "Do Linux loadable modules make Linux a microkernel?"
+   ],
+   "hints": {
+    "1": "Ask how a file system talks to a disk driver in each design.",
+    "2": "Monolithic: direct function call in kernel; microkernel: message passing across user/kernel boundary.",
+    "3": "Microkernel pays multiple mode switches and IPC copies per request; Linux modules still run fully privileged in kernel space."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Place services in kernel vs user space and apply the model to boot, PID 1, and crash behavior.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Kernel space holds the scheduler, memory manager, IPC primitives, file systems/VFS, network stack, and device drivers; user space holds windowing, libraries (glibc, pthreads), shells, daemons (sshd, cron, systemd), and applications.",
+     "weight": "core",
+     "evidence_hint": "Lists major kernel-space vs user-space components correctly."
+    },
+    {
+     "id": "app2",
+     "point": "Graphics-driver bugs have historically blue-screened machines because drivers usually run in kernel space for speed, so a stray pointer is a kernel fault.",
+     "weight": "core",
+     "evidence_hint": "Links kernel-resident drivers to system-wide crash, and notes microkernels trade speed for isolation."
+    },
+    {
+     "id": "app3",
+     "point": "Boot hand-off: POST via BIOS/UEFI → bootloader loads kernel → kernel init → init/systemd as PID 1 → services and login; PID 1 is the process-tree root that adopts/reaps orphans.",
+     "weight": "extended",
+     "evidence_hint": "Orders boot stages and defines PID 1 as first user process / orphan reaper."
+    },
+    {
+     "id": "app4",
+     "point": "BIOS is legacy 16-bit firmware booting from an MBR (~2 TB disk limit); UEFI is the modern replacement with GPT, faster boot, richer environment, and Secure Boot.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts BIOS/MBR/~2 TB vs UEFI/GPT/Secure Boot."
+    }
+   ],
+   "probes": [
+    "Why can a graphics-driver bug blue-screen a machine?",
+    "What is PID 1, and how does BIOS differ from UEFI?",
+    "Which of printf, malloc, read, and write are system calls versus library wrappers?"
+   ],
+   "hints": {
+    "1": "Ask where drivers and libraries actually execute.",
+    "2": "Kernel-space fault vs user-space crash; map boot stages to who runs next.",
+    "3": "Drivers in kernel → kernel panic/BSOD; PID 1 = init/systemd; printf/malloc wrap write/brk-or-mmap; BIOS MBR ~2 TB vs UEFI GPT/Secure Boot."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Monolithic kernel vs microkernel",
+   "strong_answer": "Monolithic runs scheduling, memory, file systems, and drivers in one kernel address space so components use fast direct calls, but one bug can crash the system (Linux, classic Unix). Microkernel keeps only IPC, basic scheduling, and basic memory in kernel mode; drivers and file systems are user-space servers that can restart, at the cost of IPC and multiple mode switches per request (QNX, MINIX, L4, Mach)."
+  },
+  {
+   "topic": "Library call vs system call",
+   "strong_answer": "Library calls run in user mode, are cheap, and are portable (e.g. POSIX C library: printf, strlen, malloc). System calls enter kernel mode via a trap/mode switch, are expensive (pipeline flush, cache pollution), and are kernel-specific (read, write, open, fork, brk). printf may later call write; malloc may later call brk/mmap."
+  },
+  {
+   "topic": "Performance vs fault isolation in kernel design",
+   "strong_answer": "Putting drivers and file systems in kernel space favors speed (direct calls, less copying) but a stray pointer can panic the machine. Microkernels move those services to user space for isolation/restartability and accept IPC and mode-switch overhead; hybrids (Windows NT, macOS XNU) stay mostly monolithic for speed with some separated subsystems."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating bash, a compiler, ls, or libc as part of the kernel.",
+   "correction": "They are ordinary user-space programs or libraries that request kernel services through system calls; libc wraps kernel calls, it is not inside the kernel."
+  },
+  {
+   "trap": "Equating a mode switch with a context switch.",
+   "correction": "A mode switch crosses user/kernel within the same process (e.g. for a syscall). A context switch changes which process runs, saves/restores full process state, and is far more expensive."
+  },
+  {
+   "trap": "Assuming every standard-library function is a system call.",
+   "correction": "printf formats in user space then may call write; malloc manages a user-space heap and only uses brk/mmap when it needs more pages."
+  },
+  {
+   "trap": "Treating a page fault as an error.",
+   "correction": "It is the normal signal that a page is not in RAM; the OS pages it in and retries—demand paging is built on this."
+  },
+  {
+   "trap": "Assuming an ISR can sleep or do heavy work freely.",
+   "correction": "An ISR runs in a restricted context, often with interrupts disabled; it should do the minimum and defer heavy work."
+  },
+  {
+   "trap": "Calling Linux a microkernel because it has loadable modules.",
+   "correction": "Modules are logical modularity inside a monolithic kernel; once loaded they run with full kernel privilege and lack microkernel isolation."
+  },
+  {
+   "trap": "Thinking a program can call kernel functions like ordinary functions.",
+   "correction": "A direct call does not raise privilege; entry must go through the trap handler so arguments are checked and the mode bit is flipped safely."
+  }
+ ]
+}

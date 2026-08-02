@@ -1,0 +1,231 @@
+{
+ "id": "dbms_04_dml_dql",
+ "title": "Data Manipulation & Querying (DML & DQL)",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs heavily grill SQL SELECT complexity—logical execution order, joins, aggregations, and NULL semantics—because day-to-day backend work depends on writing correct queries.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what DML vs DQL do and the basic surface of SELECT, WHERE, INSERT, UPDATE, and DELETE.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "DML modifies data inside the structure (INSERT, UPDATE, DELETE); DQL retrieves it (SELECT).",
+     "weight": "core",
+     "evidence_hint": "Candidate cleanly separates mutating statements from SELECT as the retrieve/query side."
+    },
+    {
+     "id": "fund2",
+     "point": "WHERE is a row-level sieve using comparison operators, inclusive BETWEEN, IN, LIKE patterns, and IS NULL / IS NOT NULL—not = NULL.",
+     "weight": "core",
+     "evidence_hint": "They list common operators and stress IS NULL for unknown values rather than equality to NULL."
+    },
+    {
+     "id": "fund3",
+     "point": "INSERT can be single-row, multi-row, INSERT…SELECT, or DEFAULT VALUES; omitted columns get their DEFAULT or NULL.",
+     "weight": "extended",
+     "evidence_hint": "They describe specifying columns/VALUES and what happens when a column is left out."
+    },
+    {
+     "id": "fund4",
+     "point": "DELETE removes entire rows; clearing one column requires UPDATE SET column = NULL, not DELETE of a column.",
+     "weight": "extended",
+     "evidence_hint": "They distinguish row removal from nulling a field via UPDATE."
+    }
+   ],
+   "probes": [
+    "What is the difference between DML and DQL, and what does a basic SELECT with WHERE look like?",
+    "How do INSERT, UPDATE, and DELETE differ in what they change?"
+   ],
+   "hints": {
+    "1": "Think about whether the statement changes stored rows or only reads them.",
+    "2": "Map INSERT/UPDATE/DELETE to mutation and SELECT to retrieval; WHERE decides which rows participate.",
+    "3": "DML = insert/update/delete data; DQL = SELECT; WHERE filters rows with operators like =, BETWEEN, IN, LIKE, IS NULL."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Establish logical clause execution order, join semantics, and how GROUP BY/HAVING and aggregates actually run.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Logical execution order is FROM/JOIN → WHERE → GROUP BY → HAVING → SELECT → DISTINCT → ORDER BY → LIMIT/OFFSET—not the typed syntax order.",
+     "weight": "core",
+     "evidence_hint": "They recite that pipeline and contrast it with how you write the query."
+    },
+    {
+     "id": "mech2",
+     "point": "A SELECT alias cannot be used in WHERE (or typically GROUP BY) because WHERE runs before SELECT creates the alias; repeat the expression in WHERE.",
+     "weight": "core",
+     "evidence_hint": "They explain why WHERE total_comp > 100000 fails when total_comp is only defined in SELECT."
+    },
+    {
+     "id": "mech3",
+     "point": "INNER JOIN keeps matches only; LEFT/RIGHT keep one side with NULLs on miss; FULL OUTER keeps both sides; CROSS JOIN is the Cartesian product; SELF JOIN joins a table to itself.",
+     "weight": "core",
+     "evidence_hint": "They can sketch each join outcome on employees/departments and mention self-join for manager hierarchies."
+    },
+    {
+     "id": "mech4",
+     "point": "WHERE filters raw rows before grouping; HAVING filters aggregated buckets after GROUP BY—so WHERE AVG(...) is invalid at that stage.",
+     "weight": "core",
+     "evidence_hint": "They place WHERE before buckets and HAVING after aggregates, with a correct dept average example shape."
+    },
+    {
+     "id": "mech5",
+     "point": "COUNT(*) counts all rows; COUNT(column) counts only non-NULL values in that column.",
+     "weight": "extended",
+     "evidence_hint": "They note a NULL salary is included by COUNT(*) but skipped by COUNT(salary)."
+    },
+    {
+     "id": "mech6",
+     "point": "LATERAL (Postgres) lets a FROM subquery reference prior tables so each outer row can drive a correlated subquery (e.g. top earners per department with ORDER BY salary DESC LIMIT 3).",
+     "weight": "extended",
+     "evidence_hint": "They say LATERAL re-runs the subquery per outer row, breaking the usual FROM-subquery reference rule."
+    }
+   ],
+   "probes": [
+    "Walk me through the logical execution order of a SELECT with WHERE, GROUP BY, HAVING, and ORDER BY.",
+    "What is the difference between INNER, LEFT, and CROSS JOIN, and when would you use HAVING instead of WHERE?"
+   ],
+   "hints": {
+    "1": "Ignore how you type the query; think about what the engine must compute first.",
+    "2": "Build the row set (FROM/JOIN), filter rows (WHERE), bucket (GROUP BY), filter buckets (HAVING), then project/sort/limit.",
+    "3": "Order is FROM/JOIN → WHERE → GROUP BY → HAVING → SELECT → DISTINCT → ORDER BY → LIMIT/OFFSET; aliases from SELECT are not visible in WHERE."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast UPSERT approaches, MERGE vs ON CONFLICT, and UNION vs UNION ALL on correctness and cost.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "INSERT…ON CONFLICT is one atomic UPSERT; SELECT-then-INSERT/UPDATE from app code races if another process inserts between the check and write.",
+     "weight": "core",
+     "evidence_hint": "They reject check-then-write and cite ON CONFLICT / EXCLUDED as thread-safe for unique conflicts."
+    },
+    {
+     "id": "tr2",
+     "point": "MERGE suits complex sync between tables (WHEN MATCHED / NOT MATCHED insert/update/delete); ON CONFLICT only reacts to unique-constraint violations on insert.",
+     "weight": "core",
+     "evidence_hint": "They say MERGE can sync on join match/non-match; ON CONFLICT is narrower insert conflict handling."
+    },
+    {
+     "id": "tr3",
+     "point": "UNION removes duplicates and forces a sort/dedup over the combined set; UNION ALL keeps duplicates and avoids that cost when sets are disjoint or duplicates are fine.",
+     "weight": "core",
+     "evidence_hint": "They prefer UNION ALL for performance when dedup is unnecessary."
+    },
+    {
+     "id": "tr4",
+     "point": "Naming columns explicitly instead of SELECT * cuts network traffic and memory versus shipping every column.",
+     "weight": "extended",
+     "evidence_hint": "They tie explicit projection to less data transferred and used."
+    }
+   ],
+   "probes": [
+    "When would you use INSERT…ON CONFLICT versus MERGE, and why prefer UNION ALL over UNION?",
+    "Why is SELECT-then-INSERT a bad UPSERT pattern under concurrency?"
+   ],
+   "hints": {
+    "1": "Separate 'handle one unique conflict on insert' from 'reconcile two whole tables'.",
+    "2": "Atomic conflict handling vs join-based MATCHED/NOT MATCHED; set ops differ on whether dedup is required.",
+    "3": "ON CONFLICT = atomic UPSERT on unique violation; MERGE = richer sync; UNION ALL skips UNION's dedup sort when duplicates don't matter."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply joins, NULL helpers, CASE, and safe DML patterns to typical interview query scenarios.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "LEFT JOIN is the tool for finding missing links (e.g. employees with no matching department, dept_name NULL).",
+     "weight": "core",
+     "evidence_hint": "They write or describe LEFT JOIN from employees to departments and filter on NULL right-side keys."
+    },
+    {
+     "id": "app2",
+     "point": "COALESCE picks the first non-NULL argument; NULLIF(a,b) returns NULL when equal—used as NULLIF(cost, 0) so division becomes NULL instead of dividing by zero.",
+     "weight": "core",
+     "evidence_hint": "They give COALESCE for contact fallback and NULLIF to neutralize a zero divisor."
+    },
+    {
+     "id": "app3",
+     "point": "CASE (simple or searched) returns a value from conditions; SUM(CASE WHEN…) enables conditional aggregation to pivot row categories into columns.",
+     "weight": "extended",
+     "evidence_hint": "They show banding salaries with CASE or counting high vs other earners via SUM(CASE WHEN…)."
+    },
+    {
+     "id": "app4",
+     "point": "For critical UPDATE/DELETE, write the WHERE first or run inside a transaction with ROLLBACK ready—omitting WHERE updates or deletes every row.",
+     "weight": "core",
+     "evidence_hint": "They warn that UPDATE without WHERE can set every salary and stress transactional safety."
+    }
+   ],
+   "probes": [
+    "How would you find all employees who have no department assigned?",
+    "How do you safely raise salaries for one department, and how would you avoid division-by-zero in a margin query?"
+   ],
+   "hints": {
+    "1": "Think about preserving every employee even when the department lookup fails.",
+    "2": "Outer join for missing departments; COALESCE/NULLIF for NULLs; always constrain mutating DML.",
+    "3": "LEFT JOIN employees to departments and filter NULL dept; COALESCE/NULLIF for defaults and zero divisors; never UPDATE/DELETE without WHERE unless intentional."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "INSERT…ON CONFLICT vs SELECT-then-INSERT/UPDATE",
+   "strong_answer": "ON CONFLICT does UPSERT in one atomic step using EXCLUDED for the proposed row; app-level SELECT then INSERT/UPDATE can race if another process inserts in between."
+  },
+  {
+   "topic": "MERGE vs ON CONFLICT",
+   "strong_answer": "ON CONFLICT handles unique violations during insert; MERGE joins target and source and can INSERT/UPDATE/DELETE on MATCHED vs NOT MATCHED for full table synchronization (supported from PostgreSQL 15)."
+  },
+  {
+   "topic": "UNION vs UNION ALL",
+   "strong_answer": "UNION appends and removes duplicates (sort/dedup cost); UNION ALL keeps duplicates and is preferred when sets are already disjoint or duplicates do not matter."
+  },
+  {
+   "topic": "WHERE vs HAVING",
+   "strong_answer": "WHERE filters raw rows before GROUP BY; HAVING filters aggregate buckets after grouping—aggregate predicates belong in HAVING, not WHERE."
+  },
+  {
+   "topic": "SELECT * vs explicit columns",
+   "strong_answer": "Explicit column lists reduce network traffic and memory versus SELECT *, which pulls every column."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Referencing a SELECT alias in WHERE or GROUP BY (e.g. WHERE total_comp > 100000 when total_comp is defined only in SELECT).",
+   "correction": "Logical order evaluates WHERE before SELECT; repeat the expression in WHERE instead of the alias."
+  },
+  {
+   "trap": "Using WHERE manager_id = NULL (or any = NULL comparison).",
+   "correction": "NULL means unknown; equality to NULL is unknown/never true in WHERE—use IS NULL / IS NOT NULL."
+  },
+  {
+   "trap": "NOT IN with a subquery (or list) that contains NULL, e.g. NOT IN (1, 2, NULL).",
+   "correction": "The predicate becomes unknown for every row and returns zero results; filter NULLs out of the subquery when using NOT IN."
+  },
+  {
+   "trap": "UPDATE or DELETE without a WHERE clause.",
+   "correction": "Every row is mutated or removed with no undo outside a transaction—write WHERE first or wrap in a transaction ready to ROLLBACK."
+  },
+  {
+   "trap": "SELECT * FROM A, B with no join predicate.",
+   "correction": "That is an implicit CROSS JOIN/Cartesian product that can explode into huge result sets; use explicit JOIN … ON …."
+  },
+  {
+   "trap": "Assuming COUNT(*) and COUNT(column) are the same.",
+   "correction": "COUNT(*) counts rows; COUNT(column) skips NULLs in that column."
+  },
+  {
+   "trap": "Putting aggregate conditions in WHERE, e.g. WHERE AVG(salary) > 70000.",
+   "correction": "Aggregates are not available until after grouping; filter buckets with HAVING after GROUP BY."
+  }
+ ]
+}

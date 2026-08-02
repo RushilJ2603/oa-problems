@@ -1,0 +1,181 @@
+{
+ "id": "dsa_s00_orientation",
+ "title": "How Aptitude Assessments Work",
+ "type": "FUND",
+ "relevance": "Campus and early SDE OAs filter on timed aptitude and quant MCQs where pattern recognition, mental agility, and speed matter more than deep theory.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Product-SDE OAs (Microsoft, Google, Uber): mostly DSA plus 10–15 logical/quant MCQs (combinatorics, probability, bitwise) at 1–2 mins/MCQ beside 45+ min coding. Service-firm OAs (TCS, Infosys, Wipro, Accenture): quant, logical, verbal, DI at 45–60 secs/question. Quant/prop-trading (De Shaw, Millennium, Jane St): advanced probability, EV, stats, mental math, game theory, brain teasers under brutal timed or live pressure. BA/analyst: statistics, guesstimates, DI, case reasoning.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what aptitude screens measure and how formats differ by hiring track.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Aptitude is not a test of deep theoretical mathematics; it tests pattern-recognition, mental agility, and speed.",
+     "weight": "core",
+     "evidence_hint": "States the three skills tested and explicitly rejects deep-theory framing."
+    },
+    {
+     "id": "fund2",
+     "point": "Product-SDE OAs (Microsoft, Google, Uber) are mostly DSA coding with 10–15 logical or quant MCQs on combinatorics, probability, and bitwise logic, timed at 1–2 mins/MCQ alongside 45+ min coding; service-firm OAs (TCS, Infosys, Wipro, Accenture) cover quantitative aptitude, logical reasoning, verbal ability, and DI at 45–60 secs/question; quant/prop-trading (De Shaw, Millennium, Jane St) emphasize advanced probability, expected value, statistics, mental math, game theory, and brain teasers.",
+     "weight": "core",
+     "evidence_hint": "Names the three tracks with matching format/focus and the timing figures from the landscape table."
+    },
+    {
+     "id": "fund3",
+     "point": "Match prep to the target track: Google-style focus on bitwise tricks and probability; Jane Street on live mental math and expected value; TCS NQT on speed across all standard arithmetic topics.",
+     "weight": "extended",
+     "evidence_hint": "Gives the three target-to-prep pairings from the keypoint, not a one-size-fits-all plan."
+    }
+   ],
+   "probes": [
+    "What do aptitude assessments actually measure, and how do Product-SDE, service-firm, and quant/prop-trading OAs differ in format and timing?",
+    "If you were targeting Google versus Jane Street versus the TCS NQT, how would your prep emphasis change?"
+   ],
+   "hints": {
+    "1": "Start from why companies run these tests, then contrast hiring tracks.",
+    "2": "Separate Product-SDE (DSA + short quant/logic MCQs), service-firm (full aptitude sections, speed-heavy), and quant/prop (advanced probability/EV/mental math), then map prep to each.",
+    "3": "Aptitude = pattern-recognition, agility, speed—not deep theory; Product-SDE: DSA + 10–15 MCQs at 1–2 mins with 45+ min coding; service firms: quant/logical/verbal/DI at 45–60 secs; quant shops: EV/mental math under brutal limits; prep Google→bitwise/probability, Jane Street→mental math/EV, TCS NQT→speed across arithmetic."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show the memorized tables, divisibility/cyclicity rules, and multiplication tricks that cut seconds under time pressure.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Memorize essential tables before the test: fractions to percentages (e.g. 1/9 = 11.11%, 1/8 = 12.5%), squares from 1 to 30, cubes from 1 to 15, and powers of 2 up to 2^12.",
+     "weight": "core",
+     "evidence_hint": "Lists the four table families and cites representative fraction↔% facts rather than calculating from scratch."
+    },
+    {
+     "id": "mech2",
+     "point": "Divisibility rules: 2/4/8 check the last 1/2/3 digits; 3/9 require the digit sum divisible by 3 or 9; 5 needs last digit 0 or 5; 6 needs both 2 and 3; 7 doubles the last digit and subtracts from the rest; 11 needs the alternating digit sum to be 0 or divisible by 11.",
+     "weight": "core",
+     "evidence_hint": "Recites each rule in the file’s form, including the 7 and 11 procedures."
+    },
+    {
+     "id": "mech3",
+     "point": "Unit-digit cyclicity: ends 0, 1, 5, 6 have cycle length 1 (stay the same); 4 and 9 have cycle length 2; 2, 3, 7, 8 have cycle length 4 (e.g. 7 → 7, 9, 3, 1)—reduce the exponent mod the cycle length to pick the matching cycle entry.",
+     "weight": "core",
+     "evidence_hint": "Groups endings by cycle length 1/2/4 and explains remainder-to-cycle-position lookup."
+    },
+    {
+     "id": "mech4",
+     "point": "Fast multiplication: ×11 splits the number and inserts the digit sum in the middle; ×25 appends two zeros then divides by 4; near-base (e.g. base 100) uses deficits or surpluses against the base; split-and-add breaks a factor into a sum.",
+     "weight": "extended",
+     "evidence_hint": "Names the four tricks with the ×11 / ×25 / near-base structure from the keypoint."
+    }
+   ],
+   "probes": [
+    "Which tables must you memorize, and what are the divisibility rules for 8, 9, 7, and 11?",
+    "How do you find the unit digit of a large power using cyclicity, and how do the ×11, ×25, and near-base multiplication tricks work?"
+   ],
+   "hints": {
+    "1": "Think about what you refuse to recompute under a 45–60 second clock.",
+    "2": "Cover fraction/%/squares/cubes/powers-of-2 tables, then divisibility, unit-digit cycles, then ×11/×25/near-base.",
+    "3": "Tables: 1/9=11.11%, squares to 30, cubes to 15, 2^12; 8→last 3 digits, 9→digit sum, 7→double-last subtract, 11→alternating sum; cycles 1/2/4 by ending digit; ×11 insert sum, ×25 → /4 after two zeros, near-base deficits/surpluses."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose when to compute exactly versus approximate aggressively under MCQ time pressure.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "When multiple-choice options are far apart, approximate aggressively—calculating the exact decimal is often a trap.",
+     "weight": "core",
+     "evidence_hint": "States the far-apart-options rule and names exact-decimal chasing as the trap."
+    },
+    {
+     "id": "tr2",
+     "point": "Percentage estimation builds from 10% (move the decimal once), 5% (half of 10%), and 1% (move the decimal twice), then sums the pieces needed.",
+     "weight": "core",
+     "evidence_hint": "Describes the 10%/5%/1% decomposition rather than a full precise percent calculation."
+    },
+    {
+     "id": "tr3",
+     "point": "Order-of-magnitude checks catch decimal errors: e.g. 4.1 × 213 must be slightly more than 4 × 200 = 800; a result like 87 or 8000 means a missed decimal place.",
+     "weight": "extended",
+     "evidence_hint": "Uses a rough product bound and flags wildly smaller/larger answers as decimal mistakes."
+    }
+   ],
+   "probes": [
+    "When should you stop chasing an exact decimal on an aptitude MCQ, and how do you estimate a percentage quickly?",
+    "How would you sanity-check a product like 4.1 × 213 before locking an answer?"
+   ],
+   "hints": {
+    "1": "Ask whether the options are close enough to reward precision.",
+    "2": "If options are spread out, use 10%/5%/1% percentage pieces and a rough magnitude bound on products.",
+    "3": "Far-apart options → approximate; build % from 10, half-of-10, and 1; 4.1×213 ≈ just over 800—87 or 8000 means a decimal slip."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply story-stripping on wrapped OAs and the structured think-aloud attack on live puzzle interviews.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Modern OA word problems wrap math in narrative or software context—strip the story immediately to expose the underlying model (e.g. relative speed, set theory, or bitwise arithmetic).",
+     "weight": "core",
+     "evidence_hint": "Says strip-the-story first and names example underlying models from the keypoint."
+    },
+    {
+     "id": "app2",
+     "point": "For quantitative, prop-trading, and analytical live interviews, grading is based on reasoning and structured approach, not just the final number; blurting a memorized answer hurts.",
+     "weight": "core",
+     "evidence_hint": "Contrasts think-aloud structured reasoning with blurting a memorized final answer."
+    },
+    {
+     "id": "app3",
+     "point": "The 5-step interview attack: restate the problem and constraints; simplify or try a small case; find an invariant or expected value; generalize to N; sanity-check edge cases (N=0, N=1, or probabilities of 0 or 1).",
+     "weight": "extended",
+     "evidence_hint": "Lists all five steps in order, including the small-case and edge-case checks."
+    }
+   ],
+   "probes": [
+    "You get a robot/track word problem in an OA—what do you do before computing?",
+    "Walk me through how you would attack a live probability or brain-teaser interview question out loud."
+   ],
+   "hints": {
+    "1": "Separate wrapped MCQs from live puzzle interviews.",
+    "2": "For OAs, name the hidden model after stripping story; for interviews, use the five-step think-aloud sequence.",
+    "3": "Strip narrative → relative speed / sets / bitwise; live rounds grade reasoning not the blurted number; steps = restate → small case → invariant/EV → generalize → sanity-check N=0/1 or prob 0/1."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Exact decimal vs aggressive approximation",
+   "strong_answer": "If MCQ options are far apart, approximate aggressively and skip exact decimals. Build percentages from 10%, 5%, and 1% pieces, and use order-of-magnitude product checks (e.g. 4.1×213 just over 800) to catch decimal-place errors."
+  },
+  {
+   "topic": "Broad aptitude drill vs target-track prep",
+   "strong_answer": "Match prep to the role: Google-style Product-SDE → bitwise tricks and probability; Jane Street-style quant → live mental math and expected value; TCS NQT-style service OA → speed across all standard arithmetic topics."
+  },
+  {
+   "topic": "Final number vs think-aloud structure",
+   "strong_answer": "In quant/prop/analytical interviews, graders score reasoning and structured approach; blurting a memorized answer hurts—restate, small-case, invariant/EV, generalize, then sanity-check."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Calculating every quantity from scratch under timed OA pressure.",
+   "correction": "Memorize fraction↔percentage, squares 1–30, cubes 1–15, and powers of 2 through 2^12, and apply divisibility, unit-digit cyclicity, and ×11/×25/near-base tricks to shave seconds."
+  },
+  {
+   "trap": "Chasing an exact decimal when the multiple-choice options are far apart.",
+   "correction": "Approximate aggressively with 10%/5%/1% percentage pieces and order-of-magnitude checks; exact decimals are often a trap."
+  },
+  {
+   "trap": "Solving the wrapped story instead of the underlying math model.",
+   "correction": "Strip the narrative immediately to expose relative speed, set theory, bitwise arithmetic, or similar."
+  },
+  {
+   "trap": "Blurting a memorized puzzle answer without showing work.",
+   "correction": "Think out loud with the 5-step attack: restate constraints, try a small case, find an invariant or EV, generalize to N, then sanity-check edge cases."
+  }
+ ]
+}

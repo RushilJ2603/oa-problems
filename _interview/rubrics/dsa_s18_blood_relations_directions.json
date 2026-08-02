@@ -1,0 +1,175 @@
+{
+ "id": "dsa_s18_blood_relations_directions",
+ "title": "Blood Relations & Direction Sense",
+ "type": "FUND",
+ "relevance": "Classic campus OA / aptitude questions that test careful reading, consistent modeling, and step-by-step deduction under time pressure.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the standard notations and compass/shadow rules used to model these puzzles.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Blood-relation diagrams use + for male, − for female; − for siblings, = for married couples, and | for parent–child.",
+     "weight": "core",
+     "evidence_hint": "Candidate states the gender marks and the three connection symbols for siblings, marriage, and parent–child."
+    },
+    {
+     "id": "fund2",
+     "point": "Direction-sense problems are drawn on standard N-E-S-W axes with North up, tracing each move as a vector relative to current facing.",
+     "weight": "core",
+     "evidence_hint": "Candidate sketches a compass with North up and explains left/right relative to facing, not absolute map sides alone."
+    },
+    {
+     "id": "fund3",
+     "point": "Morning: sun East, shadows West; evening: sun West, shadows East; left/right shadows imply facing North or South, front/back shadows imply East or West.",
+     "weight": "extended",
+     "evidence_hint": "Candidate recalls morning vs evening sun/shadow directions and links left/right vs front/back to axis facing."
+    }
+   ],
+   "probes": [
+    "How do you notate gender and family links when drawing a blood-relation tree?",
+    "What are the morning and evening shadow rules, and what do they tell you about facing?"
+   ],
+   "hints": {
+    "1": "Think about symbols for male/female and for sibling vs spouse vs parent.",
+    "2": "Separate diagram notation from direction/shadow rules: compass first, then sun position by time of day.",
+    "3": "Use +/− for gender; −/=/| for links; morning shadows West, evening East; left/right shadow ⇒ N/S facing."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to resolve pointing statements, coded relation chains, and turn-by-turn paths without losing facing or gender constraints.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "For pointing/statement puzzles, work backwards from the speaker’s stated relation to identify the person.",
+     "weight": "core",
+     "evidence_hint": "Candidate rewrites clauses inward (e.g., grandfather’s only son → father → that man’s daughter → sister)."
+    },
+    {
+     "id": "mech2",
+     "point": "In coded blood relations, decode each operator left-to-right and do not assume the last person’s gender unless a symbol defines it.",
+     "weight": "core",
+     "evidence_hint": "Candidate traces each symbol for gender/role and explicitly says undefined genders stay unknown."
+    },
+    {
+     "id": "mech3",
+     "point": "After each left/right turn, re-orient facing before the next move; a left turn while facing South moves East on the map.",
+     "weight": "core",
+     "evidence_hint": "Candidate updates facing after every turn and gives the South→left→East example."
+    },
+    {
+     "id": "mech4",
+     "point": "Shortest distance from start to end uses Pythagoras on net displacement (c² = a² + b²), not the sum of path segments.",
+     "weight": "extended",
+     "evidence_hint": "Candidate nets North/South and East/West first, then applies c² = a² + b² for straight-line distance."
+    }
+   ],
+   "probes": [
+    "Walk through: “She is the daughter of my grandfather’s only son.” Who is she to the speaker?",
+    "Why can “A is the brother of B” leave B’s gender unknown?",
+    "A walker faces South and turns left—which absolute direction do they go next?"
+   ],
+   "hints": {
+    "1": "Reduce nested phrases one clause at a time from the inside.",
+    "2": "For codes, list what each operator forces about gender; for paths, track facing after every turn.",
+    "3": "Grandfather’s only son = father → daughter = sister; brother-of leaves other gender open; South + left = East."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast modeling choices that change the answer: displacement vs path length, and defined vs assumed gender/relation.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer net displacement (and Pythagoras when needed) for “how far from start” over totaling the walked length.",
+     "weight": "core",
+     "evidence_hint": "Candidate distinguishes “distance from starting point” as resultant vector length, citing c² = a² + b² when axes are perpendicular."
+    },
+    {
+     "id": "tr2",
+     "point": "Prefer relations forced by symbols/statements over filling maternal/paternal or gender gaps the puzzle never states.",
+     "weight": "core",
+     "evidence_hint": "Candidate refuses to invent gender or maternal vs paternal when the chain does not specify it."
+    }
+   ],
+   "probes": [
+    "If a question asks how far someone is from the start after several legs, do you add the kilometers or compute displacement—and why?",
+    "When is it wrong to decide someone’s gender or whether an uncle is maternal vs paternal?"
+   ],
+   "hints": {
+    "1": "“How far from start” is usually about position, not odometer.",
+    "2": "Compare summing path length with netting coordinates, then check what each coded symbol actually asserts.",
+    "3": "Use net a,b then c² = a² + b²; leave gender/in-law side open unless a symbol or statement fixes it."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the methods to multi-generation counts, coded chains, and OA-style path/shadow problems with checkable answers.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "In the six-person family puzzle, C (wife of B, mother of F) is the mother of A once B–C’s children are A and F.",
+     "weight": "core",
+     "evidence_hint": "Candidate builds generations: D grandmother, E grandfather, B–C couple, A and F children ⇒ C mother of A."
+    },
+    {
+     "id": "app2",
+     "point": "Female count in the joint-family OA: wife (1) + three sons’ wives (3) + two unmarried daughters (2) + four granddaughters (2×2) = 10.",
+     "weight": "core",
+     "evidence_hint": "Candidate enumerates generations as 1 + 3 + 2 + 4 = 10 females."
+    },
+    {
+     "id": "app3",
+     "point": "Coded chain P @ Q $ M # T makes P the grandfather of T (P husband of Q, Q mother of M, M father of T).",
+     "weight": "extended",
+     "evidence_hint": "Candidate decodes each operator and concludes grandfather."
+    },
+    {
+     "id": "app4",
+     "point": "Path nets to (3, 4) after 10 km North, 6 km South, 3 km East ⇒ √(3² + 4²) = 5 km North-East of start.",
+     "weight": "extended",
+     "evidence_hint": "Candidate nets 4 km North and 3 km East, then states 5 km North-East."
+    }
+   ],
+   "probes": [
+    "How many female members are in the joint family with three married sons and the stated grandchildren?",
+    "Decode P @ Q $ M # T: how is P related to T?",
+    "After 10 km North, 6 km South, and 3 km East, how far and in which direction from the start?"
+   ],
+   "hints": {
+    "1": "Count females by generation; decode operators in order; net N/S then E/W.",
+    "2": "Joint family: 1 + 3 + 2 + (2×2); P is father of M who is father of T; nets are +4 North and +3 East.",
+    "3": "Females = 10; P is grandfather; distance = 5 km North-East."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Straight-line displacement vs total path length",
+   "strong_answer": "“How far from the starting point” means net displacement; net the N/S and E/W components, then use Pythagoras (c² = a² + b²) when needed—do not sum every leg unless asked for distance walked."
+  },
+  {
+   "topic": "Defined gender/relation vs assumed gender or maternal/paternal side",
+   "strong_answer": "Only take gender and maternal/paternal facts the statement or code symbol forces; e.g. “A is brother of B” does not fix B’s gender, and in-law chains should not invent maternal vs paternal when unspecified."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming the gender of the last person in a coded chain when the symbol only defines the first person’s role (e.g. A + B as A brother of B leaves B’s gender unknown).",
+   "correction": "Assign gender only when a symbol or explicit word requires it; leave the other person unspecified otherwise."
+  },
+  {
+   "trap": "Treating in-law or uncle/aunt chains as maternal or paternal when the puzzle never says which side.",
+   "correction": "State only what is forced (e.g. uncle) and avoid maternal vs paternal unless the wording establishes it."
+  },
+  {
+   "trap": "Forgetting current facing after a turn so left/right are applied on the wrong absolute axis (e.g. left while facing South should go East).",
+   "correction": "After every turn, update facing first, then move; always re-orient the mental compass before the next vector."
+  }
+ ]
+}

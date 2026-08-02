@@ -1,0 +1,194 @@
+{
+ "id": "l06_lld_framework",
+ "title": "LLD interview framework & UML basics",
+ "type": "CONCEPT",
+ "relevance": "High - the pacing/structure for every LLD / OOD / machine-coding round (campus + experienced); Flipkart, Uber, Swiggy, PhonePe, Atlassian, Amazon, Google, Meta all grade how you go requirements -> entities -> class diagram -> patterns -> code, not pattern name-dropping alone.",
+ "difficulty": "mid",
+ "prereqs": [
+  "L01",
+  "L02"
+ ],
+ "company_notes": "Common in India product company machine-coding rounds (Flipkart, Uber, Swiggy, PhonePe, Cred) as clarify -> design -> code -> demo, and in big-tech LLD/OOD rounds (Google, Amazon, Meta, Microsoft) as discussion + class structure + extensibility. This framework is foundational across recurring prompts like parking lot, Splitwise, elevator, Stack Overflow, games, and booking systems.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish scope and a repeatable interview flow before any class design.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Begins with requirements: functional operations, actors, rules/state transitions, errors, and explicit out-of-scope boundaries (UI, DB, network).",
+     "weight": "core",
+     "evidence_hint": "They ask clarifying questions first and explicitly state what is excluded."
+    },
+    {
+     "id": "fund2",
+     "point": "Writes 4-8 requirement bullets and marks MUST vs NICE before proposing entities.",
+     "weight": "core",
+     "evidence_hint": "They produce a short scoped list and get confirmation before moving on."
+    },
+    {
+     "id": "fund3",
+     "point": "States and follows the pipeline requirements -> entities -> class diagram -> patterns -> walkthrough, announcing phase transitions.",
+     "weight": "extended",
+     "evidence_hint": "They narrate where they are in the loop so interviewer pacing stays aligned."
+    }
+   ],
+   "probes": [
+    "Before you draw classes, what are your must-have operations and what is out of scope?",
+    "Can you outline your step-by-step flow for this LLD round?"
+   ],
+   "hints": {
+    "1": "Start by clarifying what the system must do, not which pattern to use.",
+    "2": "List actors, operations, state rules, failure cases, and explicit exclusions, then separate MUST from NICE.",
+    "3": "Use the standard flow: requirements, entities, class APIs/relationships, then patterns, then walkthrough."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Translate scoped requirements into a coherent class model and interview-appropriate UML.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Uses noun/verb extraction: nouns become candidate classes, verbs become methods; keeps ~4-7 core entities plus one orchestrator/Facade.",
+     "weight": "core",
+     "evidence_hint": "They filter out mere attributes as fields/enums and keep one coordinator class like ParkingLot/Game/StackOverflow."
+    },
+    {
+     "id": "mech2",
+     "point": "Defines each class as state + behavior tied to use cases, with rules owned by the state holder (encapsulation/tell-don't-ask).",
+     "weight": "core",
+     "evidence_hint": "Methods enforce domain rules inside owning objects instead of dumping logic externally."
+    },
+    {
+     "id": "mech3",
+     "point": "Uses UML basics correctly: class compartments, visibility (+ - # ~), relationship meanings, and multiplicity (1, 0..1, *, 1..*).",
+     "weight": "extended",
+     "evidence_hint": "Their arrows/labels distinguish association, aggregation, composition, inheritance/generalization, realization, and dependency."
+    }
+   ],
+   "probes": [
+    "From this requirement text, which nouns become classes and which stay as fields/enums?",
+    "Show one relationship where composition is correct and one where aggregation is correct."
+   ],
+   "hints": {
+    "1": "Map verbs to APIs and keep only nouns with real state/rules as classes.",
+    "2": "For each class, list fields that enforce constraints and methods that map to use cases.",
+    "3": "Pick one orchestrator, then connect entities with clear relationship and multiplicity choices."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Demonstrate judgment on notation depth, pattern usage, and round-style constraints.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Treats formal UML as optional by default and asks interviewer preference (boxes/arrows vs strict notation).",
+     "weight": "core",
+     "evidence_hint": "They prioritize clarity and switch notation depth if requested."
+    },
+    {
+     "id": "tr2",
+     "point": "Applies patterns after class design, choosing 0-2 patterns only when variation exists.",
+     "weight": "core",
+     "evidence_hint": "They describe the design problem first, then justify Strategy/Factory/Observer/State/Facade only if needed."
+    },
+    {
+     "id": "tr3",
+     "point": "Adapts approach to round type: OOD is discussion + diagram/stubs, while machine coding prioritizes working must-haves with design <=15-20% time.",
+     "weight": "extended",
+     "evidence_hint": "They explicitly rebalance depth vs coding speed based on interview format."
+    }
+   ],
+   "probes": [
+    "Why are you using this pattern here, and what would happen if you skipped it?",
+    "If I asked for formal UML now, how would your representation change?"
+   ],
+   "hints": {
+    "1": "Do not optimize for notation or pattern count before solving the stated problem.",
+    "2": "First identify what varies; then decide whether a pattern buys extensibility.",
+    "3": "For machine coding, cap design time and deliver mandatory behavior before optional abstractions."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Prove the design works end-to-end through concrete execution and edge-case reasoning.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Closes with a collaboration trace: one happy path and 2-3 edge cases.",
+     "weight": "core",
+     "evidence_hint": "They can narrate object interactions for scenarios like self-vote, full lot, or invalid move."
+    },
+    {
+     "id": "app2",
+     "point": "In machine coding, implements models -> services -> Main and demonstrates must-have behavior before nice-to-have additions.",
+     "weight": "core",
+     "evidence_hint": "Demo works for core use cases and optional features are explicitly deferred."
+    },
+    {
+     "id": "app3",
+     "point": "Maintains interview pacing checkpoints (e.g., 45-60 min OOD or 90 min machine coding) without skipping requirements lock-in.",
+     "weight": "extended",
+     "evidence_hint": "They time-box phases and still preserve clarify -> design -> code -> walkthrough order."
+    }
+   ],
+   "probes": [
+    "Walk me through one end-to-end use case and then an edge case that breaks naive designs.",
+    "If you had 10 more minutes, what would you add after mandatory features?"
+   ],
+   "hints": {
+    "1": "Show how objects collaborate on a concrete request, not just class lists.",
+    "2": "Trace call flow step-by-step and include one failure/constraint path.",
+    "3": "Run a happy path first, then edge paths, and state the next incremental extension."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Formal UML notation vs communication speed",
+   "strong_answer": "Communication quality is prioritized over strict UML ceremony; simplified boxes/arrows are acceptable unless interviewer asks for formal diamonds/arrows and multiplicities."
+  },
+  {
+   "topic": "Pattern usage vs requirement-driven simplicity",
+   "strong_answer": "Patterns are chosen after requirements/entities/APIs are clear; 1-2 justified patterns are stronger than naming many patterns without an actual variation point."
+  },
+  {
+   "topic": "Design depth vs implementation completeness (machine coding)",
+   "strong_answer": "Time-box design to <=15-20% and ship mandatory behavior first; extensibility and extras come after a working demo."
+  },
+  {
+   "topic": "Central orchestrator vs domain ownership",
+   "strong_answer": "An orchestrator coordinates flow, but rule enforcement belongs inside state-owning domain objects to avoid both god classes and anemic models."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Jumping to code before locking requirements and scope.",
+   "correction": "Start with clarifications, write scoped bullets, and confirm must-haves/out-of-scope first."
+  },
+  {
+   "trap": "Pattern name-dropping or forcing Singleton/Factory everywhere.",
+   "correction": "Introduce patterns only after class sketch and only for a clear variation point."
+  },
+  {
+   "trap": "Over-indexing on full UML or skipping UML expectations entirely.",
+   "correction": "Ask what notation the interviewer wants, then use the simplest representation that communicates design clearly."
+  },
+  {
+   "trap": "God Manager class handling all business logic.",
+   "correction": "Keep orchestrator for coordination and push domain rules into the objects that own state."
+  },
+  {
+   "trap": "Anemic models with getters only where behavior belongs in entities.",
+   "correction": "Attach behavior to data owners so invariants are enforced through methods, not external scripts."
+  },
+  {
+   "trap": "Ignoring mandatory vs optional features in machine coding.",
+   "correction": "Deliver a working must-have demo first, then explicitly call out optional next steps."
+  },
+  {
+   "trap": "No end-to-end collaboration proof.",
+   "correction": "Finish with a happy-path walkthrough plus edge cases (or a short sequence-style trace) to validate object interaction."
+  }
+ ]
+}

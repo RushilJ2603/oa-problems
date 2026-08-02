@@ -1,0 +1,176 @@
+{
+ "id": "py_17_functions",
+ "title": "Functions",
+ "type": "FUND",
+ "relevance": "Functions are a core Python building block for modularity and reuse, and interviews/OAs routinely probe def syntax, scope, *args/**kwargs, and higher-order patterns like map/filter/reduce.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a function is, how it is declared, and how arguments can be passed.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A function is a reusable block of organized code that performs a single, related action and improves modularity and reuse.",
+     "weight": "core",
+     "evidence_hint": "Candidate defines a function as a reusable task-specific code block and mentions modularity/reuse."
+    },
+    {
+     "id": "fund2",
+     "point": "Functions are declared with def, a name, parameters, an optional docstring, a body, and an optional return.",
+     "weight": "core",
+     "evidence_hint": "Candidate sketches def function_name(parameters): with docstring, body, and return."
+    },
+    {
+     "id": "fund3",
+     "point": "Call-site arguments can be default, positional, or keyword; keyword order does not matter.",
+     "weight": "extended",
+     "evidence_hint": "Candidate distinguishes power() defaults, power(2, 3) positional, and power(b=3, a=2) keyword."
+    }
+   ],
+   "probes": [
+    "What is a function in Python, and what are the parts of a def declaration?",
+    "How do default, positional, and keyword arguments differ when calling a function?"
+   ],
+   "hints": {
+    "1": "Think about why we wrap related logic under a name instead of copying it.",
+    "2": "Walk through def, parameters, docstring, body, return, then how you invoke it.",
+    "3": "Mention def name(params), docstring in triple quotes, and default vs positional vs keyword calls."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain call frames, return behavior, *args/**kwargs packing, and local vs global scope rules.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "On call, a local frame is created; after return, that local frame is destroyed and control returns to the global frame.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes global storage of the function, local frame for the call, then destruction after return."
+    },
+    {
+     "id": "mech2",
+     "point": "A function with no explicit return implicitly returns None; in-place mutators like list.append also return None.",
+     "weight": "core",
+     "evidence_hint": "Candidate says missing return yields None and cites print(L.append(4)) printing None while L grows."
+    },
+    {
+     "id": "mech3",
+     "point": "*args collects variable positional arguments into a tuple; **kwargs collects keyword arguments into a dictionary; order is normal then *args then **kwargs.",
+     "weight": "core",
+     "evidence_hint": "Candidate says *args -> tuple, **kwargs -> dict, and names the required parameter order."
+    },
+    {
+     "id": "mech4",
+     "point": "Assigning inside a function creates a local that shadows a global; modifying a global name needs global, but mutating a mutable global object in place does not.",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts x = 1 shadowing, UnboundLocalError on x += 1 without global, and inventory.append without global."
+    }
+   ],
+   "probes": [
+    "What happens in memory when you call a function and it returns?",
+    "What do *args and **kwargs collect, and what argument order is required?",
+    "When do you need the global keyword, and when can you mutate a global list without it?"
+   ],
+   "hints": {
+    "1": "Separate the function object living globally from the frame created for one call.",
+    "2": "Cover return/None, *args tuple/**kwargs dict order, then local assignment vs global/mutation.",
+    "3": "Local frame destroyed after return; no return means None; normal->*args->**kwargs; = needs global, in-place methods do not."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast named defs vs lambdas and when global rebinding is required versus in-place mutation.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "A named def is a reusable named recipe; a lambda is a single-expression anonymous throwaway, mainly for higher-order function arguments.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts permanent named defs with disposable single-expression lambdas used with HOFs."
+    },
+    {
+     "id": "tr2",
+     "point": "Use global only when rebinding a global name with =; do not use it when mutating an existing mutable object via methods.",
+     "weight": "core",
+     "evidence_hint": "Candidate states the golden rule: assignment needs global; append/mutate in place does not."
+    }
+   ],
+   "probes": [
+    "When would you choose a lambda over a named def, and what can't a lambda do?",
+    "How do you decide whether a function needs the global keyword?"
+   ],
+   "hints": {
+    "1": "Compare a named cookbook recipe with a one-use sticky note.",
+    "2": "Tie lambdas to single expressions for HOF args; tie global to name rebinding vs object mutation.",
+    "3": "Lambda = anonymous single expression for throwaway HOF use; global only for = rebinding, not inventory.append-style mutation."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply first-class function behavior and higher-order tools map, filter, and reduce.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Functions are first-class: they can be typed/id'd, rebound, deleted, stored in structures, passed as arguments, and returned from other functions.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists operations like assign to a variable, put in a list, pass in, and return a nested function."
+    },
+    {
+     "id": "app2",
+     "point": "map applies a function to every item; filter keeps items that are True under a predicate; reduce folds pairs into one aggregate via functools.reduce.",
+     "weight": "core",
+     "evidence_hint": "Candidate defines map/filter/reduce roles and notes reduce comes from functools in Python 3."
+    },
+    {
+     "id": "app3",
+     "point": "Lambdas supply the inline rule for HOFs, e.g. mapping squares or filtering values greater than a threshold.",
+     "weight": "extended",
+     "evidence_hint": "Candidate shows lambda with map or filter, such as x**2 over a list or x > 5 filtering."
+    }
+   ],
+   "probes": [
+    "What does it mean that functions are first-class citizens in Python?",
+    "How do map, filter, and reduce differ, and how would you use a lambda with them?"
+   ],
+   "hints": {
+    "1": "Treat a function like any other object you can pass around.",
+    "2": "Name the six first-class ops, then contrast transform vs keep-True vs fold-to-one.",
+    "3": "Pass/return/store functions; map transforms, filter selects Truthy predicate results, reduce aggregates with functools.reduce and often a lambda."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Named def vs lambda",
+   "strong_answer": "Use a named def for reusable, documented multi-statement logic; use a lambda as a single-expression anonymous throwaway, typically as an argument to a higher-order function. Lambdas cannot hold multi-line statements or an explicit return."
+  },
+  {
+   "topic": "global rebinding vs in-place mutation",
+   "strong_answer": "If you assign (=) a new object to a global name inside a function, declare global. If you only mutate an existing mutable global (list/dict/set) via methods like append, global is not needed because the name still points at the same object."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Expecting a value from a function that only prints or from list.append",
+   "correction": "No explicit return means the function returns None; print(is_even(7)) can print odd then None, and print(L.append(4)) prints None while L is mutated."
+  },
+  {
+   "trap": "Reading then assigning a global name inside a function without global",
+   "correction": "Python treats the name as local for the whole function, so x += 1 without a prior local assignment raises UnboundLocalError; declare global x to modify the global."
+  },
+  {
+   "trap": "Wrong parameter order with *args/**kwargs, or assuming the names are magical",
+   "correction": "Order must be normal -> *args -> **kwargs; args/kwargs are conventions—any names work if prefixed with * and **."
+  },
+  {
+   "trap": "Writing multi-line or statement-heavy logic in a lambda",
+   "correction": "A lambda is a single expression only; complex logic needs a named def."
+  },
+  {
+   "trap": "Calling reduce without importing functools in Python 3",
+   "correction": "Use functools.reduce(...); forgetting the import raises NameError."
+  }
+ ]
+}

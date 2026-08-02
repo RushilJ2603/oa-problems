@@ -1,0 +1,211 @@
+{
+ "id": "cpp_s53_memory_execution_model",
+ "title": "Stack, Heap, and Storage Duration",
+ "type": "FUND",
+ "relevance": "Interviews and OAs assume you know where data lives, how long it lives, and what breaks when stack or heap rules are violated.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the process address-space layout and how C++ storage durations map onto those segments.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A running process has distinct regions: text/code, initialised data, BSS, heap growing upward, stack growing downward, plus argv/env at the high end.",
+     "weight": "core",
+     "evidence_hint": "Walks high-to-low or low-to-high consistently and names one example of what lives in each region."
+    },
+    {
+     "id": "fund2",
+     "point": "BSS holds zero-initialised globals/statics so large zeroed arrays cost almost nothing in the executable; the OS maps zero-filled pages at load time.",
+     "weight": "core",
+     "evidence_hint": "Contrasts BSS with the data segment and mentions the binary-size motivation."
+    },
+    {
+     "id": "fund3",
+     "point": "C++ has four storage durations—automatic, static, dynamic, and thread—that decide when storage is obtained and released.",
+     "weight": "core",
+     "evidence_hint": "Lists all four and maps them: locals→stack, global/static→data or BSS, new/malloc→heap, thread_local→per-thread storage."
+    },
+    {
+     "id": "fund4",
+     "point": "Scope is name visibility; lifetime/storage duration is when the object exists in memory—a static local has narrow scope but program-long lifetime.",
+     "weight": "extended",
+     "evidence_hint": "Separates scope from lifetime and uses a static local as the contrasting example."
+    }
+   ],
+   "probes": [
+    "Describe the memory layout of a running C++ process.",
+    "What is the difference between scope and lifetime?"
+   ],
+   "hints": {
+    "1": "Think of the process image as labelled zones, not one shapeless blob of RAM.",
+    "2": "Name text, data, BSS, heap, and stack, then say which storage duration lands in each.",
+    "3": "Automatic→stack frame; static→data/BSS for the whole program; dynamic→heap until delete/free; thread_local→one copy per thread."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain call-stack frames, why locals vanish on return, and how heap allocation/deallocation works.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A stack frame holds return address, saved registers, parameters/arguments, locals, and optionally a frame pointer; the stack pointer tracks the current top.",
+     "weight": "core",
+     "evidence_hint": "Lists the main frame contents and notes layout is ABI-specific but the idea is shared."
+    },
+    {
+     "id": "mech2",
+     "point": "On return the callee frame is popped, automatic lifetime ends, and returning a pointer or reference to a local is undefined behaviour.",
+     "weight": "core",
+     "evidence_hint": "Says the frame is gone so the caller holds a dangling address; contrasts with return by value."
+    },
+    {
+     "id": "mech3",
+     "point": "Each recursive call gets its own frame, so recursion consumes stack space proportional to depth.",
+     "weight": "extended",
+     "evidence_hint": "Ties deep/infinite recursion to a tall tower of frames and stack exhaustion."
+    },
+    {
+     "id": "mech4",
+     "point": "new pairs with delete and new[] with delete[]; mixing them, or mixing new/malloc with the wrong deallocator, is undefined behaviour.",
+     "weight": "core",
+     "evidence_hint": "States the matching pairs and that free/delete must not be crossed with the wrong allocator."
+    }
+   ],
+   "probes": [
+    "Why does returning a local pointer break?",
+    "Walk through what happens to the stack when main calls a helper and that helper returns."
+   ],
+   "hints": {
+    "1": "Picture each call as placing a tray on a cafeteria stack.",
+    "2": "On call: push frame and move the stack pointer down; on return: pop frame and jump to the saved return address.",
+    "3": "After return, automatic storage is reusable stack space—the bits may linger, but the object's lifetime has ended, so any pointer into it dangles."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare stack and heap on speed, size budget, lifetime, management, and failure modes.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Stack allocation is essentially a stack-pointer adjust (few instructions, LIFO locality); heap allocation walks allocator metadata, may lock, and can involve syscalls when the arena grows.",
+     "weight": "core",
+     "evidence_hint": "Contrasts pointer-bump vs free-list/search overhead and mentions possible brk/mmap growth."
+    },
+    {
+     "id": "tr2",
+     "point": "The stack is fast but small—typical defaults are on the order of 1–8 MB per thread—while the heap is limited by available virtual memory/RAM.",
+     "weight": "core",
+     "evidence_hint": "Cites the 1–8 MB order of magnitude and notes Windows often 1 MB and many Linux setups 8 MB."
+    },
+    {
+     "id": "tr3",
+     "point": "Heap fragmentation can leave enough free bytes in aggregate with no contiguous block large enough; the stack's LIFO discipline makes fragmentation inapplicable.",
+     "weight": "extended",
+     "evidence_hint": "Names external vs internal fragmentation and contrasts with stack LIFO."
+    },
+    {
+     "id": "tr4",
+     "point": "Characteristic failure modes differ: stack overflow vs leaks, dangling pointers, double free, and bad_alloc/nullptr from heap allocation.",
+     "weight": "core",
+     "evidence_hint": "Pairs stack overflow with recursion/huge locals, and heap failures with leak/dangling/double-free/bad_alloc."
+    }
+   ],
+   "probes": [
+    "Stack vs heap — explain.",
+    "Why is heap allocation slower than stack allocation?"
+   ],
+   "hints": {
+    "1": "Lead with lifetime and who manages the memory, then size and speed.",
+    "2": "Use the decision criteria: speed, size budget, lifetime, manager, failure mode, fragmentation.",
+    "3": "Stack: automatic locals, pointer bump, ~1–8 MB, overflow; heap: new/malloc until free, allocator overhead, large budget, leaks/fragmentation."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply layout and lifetime rules to overflow avoidance, object placement, and safe ownership.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A huge automatic array (for example int a[10'000'000]) is a stack allocation and can overflow; prefer heap-backed std::vector, or a static/global buffer in BSS for large scratch arrays.",
+     "weight": "core",
+     "evidence_hint": "Identifies the local giant array as stack, not heap, and names vector or static/global as mitigations."
+    },
+    {
+     "id": "app2",
+     "point": "For MyClass* p = new MyClass(), members live inside the heap object; p itself is typically an automatic pointer on the stack.",
+     "weight": "core",
+     "evidence_hint": "Separates the pointer's storage from the object's contiguous heap block (members, padding, vptr if any)."
+    },
+    {
+     "id": "app3",
+     "point": "sizeof includes padding for alignment, so member order can change size; reordering by decreasing alignment often shrinks sizeof.",
+     "weight": "extended",
+     "evidence_hint": "Explains padding for alignment and that two structs with the same members can differ in size by order."
+    },
+    {
+     "id": "app4",
+     "point": "Prefer RAII and smart pointers (unique_ptr/shared_ptr) or vector over raw new/delete so cleanup survives early returns and exceptions.",
+     "weight": "extended",
+     "evidence_hint": "Ties acquire-in-ctor/release-in-dtor to automatic cleanup and names the modern tools."
+    }
+   ],
+   "probes": [
+    "What causes a stack overflow, and how do you fix it in competitive programming?",
+    "If I have MyClass* p = new MyClass();, where are the members?"
+   ],
+   "hints": {
+    "1": "Ask whether the big data is a local, a global/static, or a new/vector allocation.",
+    "2": "Overflow staples: deep recursion and enormous automatic objects; move bulk data off the stack.",
+    "3": "Rewrite recursion iteratively or raise stack if allowed; put large buffers in vector/new or BSS; remember members live with the enclosing object, not with the pointer variable."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Stack vs heap allocation",
+   "strong_answer": "Stack is a near-free pointer bump with LIFO locality but a small fixed budget and lifetime tied to the frame; heap supports large/long-lived data via the allocator but pays metadata, possible locks/syscalls, poorer locality, and fragmentation risk."
+  },
+  {
+   "topic": "Deep recursion vs iterative / heap-backed approach",
+   "strong_answer": "Call recursion uses stack proportional to depth and can overflow on deep graphs; an explicit std::stack/loop or heap/static buffers moves frames or bulk data off the limited stack. Do not rely on tail-call optimisation in C++—it is not guaranteed."
+  },
+  {
+   "topic": "Raw new/delete vs RAII smart pointers",
+   "strong_answer": "Manual pairing fails under early returns and exceptions; RAII ties release to destructors, and unique_ptr/shared_ptr (or vector for arrays) are preferred in application code while raw owning pointers remain mainly an interview topic."
+  },
+  {
+   "topic": "Giant local array vs vector vs static/global buffer",
+   "strong_answer": "A large automatic array competes for the few megabytes of stack; std::vector puts payload on the heap; a global/static array lands in data/BSS—three segment choices for the same logical scratch data."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Returning a pointer or reference to a function-local automatic variable.",
+   "correction": "The callee frame is popped and lifetime ends; return by value, or point to longer-lived storage (static, caller-owned, or heap via smart pointer)."
+  },
+  {
+   "trap": "Treating int a[10000000]; inside a function as a heap allocation.",
+   "correction": "It is automatic stack storage; use std::vector, new, or a static/global BSS buffer for huge sizes."
+  },
+  {
+   "trap": "Mixing new with delete[], new[] with delete, free with new, or delete with malloc.",
+   "correction": "Match new↔delete, new[]↔delete[], malloc↔free; mismatches are undefined behaviour."
+  },
+  {
+   "trap": "Double-deleting or leaving a non-null pointer after delete.",
+   "correction": "Deleting twice is UB and can corrupt allocator metadata; set the pointer to nullptr defensively after delete."
+  },
+  {
+   "trap": "Relying on initialisation order across different static objects in different translation units.",
+   "correction": "That is the static initialisation order fiasco; avoid subtle cross-TU static ordering dependencies."
+  },
+  {
+   "trap": "Assuming members accessed through a stack pointer live on the stack.",
+   "correction": "Members live wherever the enclosing object lives—inside the heap block for a new'd object, even if the pointer variable is automatic."
+  }
+ ]
+}

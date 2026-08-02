@@ -1,0 +1,255 @@
+{
+ "id": "22_advanced_techniques",
+ "title": "Advanced CP techniques: game theory, matrix expo, MITM, ternary search, sqrt / Mo",
+ "type": "CP",
+ "relevance": "Medium — rarely the literal OA template, but Nim-XOR / “nth term of recurrence” / “n≤40 subset sum” / unimodal optimization show up in harder screens; primarily Candidate Master rating-builders Striver never covers.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Two players take from piles / subtract a size set → who wins: Nim XOR or short Grundy (CSES Nim I/II). Compute the n-th Fibonacci / ways for length 10^18 → matrix expo (fib / tiling / graph walks). Array size ≤40, count subsets with sum = X → meet-in-the-middle (CSES MITM), not 2^n DP. Minimize the maximum of a unimodal cost over a real parameter → ternary search (Meeting Place / Motarack).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Map the prompt to game theory, matrix expo, MITM, ternary search, or Mo/sqrt from constraints and wording.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Impartial pile / subtract-a-set games → Nim XOR or short Grundy; multi-pile combines via XOR of Grundy/nimbers.",
+     "weight": "core",
+     "evidence_hint": "Names pile take/subtract who-wins and reaches for Nim XOR or Grundy rather than ad-hoc casework."
+    },
+    {
+     "id": "rec2",
+     "point": "Linear recurrence or fixed-size DP transition with huge n (nth Fib / ways for length 10^18 / graph walks of length k) → matrix exponentiation.",
+     "weight": "core",
+     "evidence_hint": "Ties huge index or path-count length to encoding a transition matrix and powering it."
+    },
+    {
+     "id": "rec3",
+     "point": "Array size n≤40 with subset-sum style ask → meet-in-the-middle; plain 2^n is too big.",
+     "weight": "core",
+     "evidence_hint": "Says split into halves and enum 2^{n/2} instead of full subset DP when n≤40."
+    },
+    {
+     "id": "rec4",
+     "point": "Unimodal cost on a continuous or discrete line → ternary (or BS on derivative); many offline range queries with add/remove-friendly state → Mo / sqrt.",
+     "weight": "extended",
+     "evidence_hint": "Separates unimodal optimize-a-parameter from offline Mo/block range queries."
+    }
+   ],
+   "probes": [
+    "What constraint or phrase makes you pick Nim/Grundy, matrix expo, MITM, ternary, or Mo instead of plain DP or binary search?"
+   ],
+   "hints": {
+    "1": "Look at n, whether the ask is who-wins / nth term / subset sum / unimodal min-max / offline ranges.",
+    "2": "Piles→game XOR; huge linear recurrence→matrix; n≤40 subsets→MITM; unimodal f→ternary; offline add/remove ranges→Mo.",
+    "3": "Say: pile/subtract who-wins→Nim/Grundy; Fib/tiling/walks at 10^18→matrix expo; n≤40 sum=X→MITM not 2^n; unimodal real parameter→ternary; offline [L,R] with add/remove→Mo."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "State the correct template for the chosen tool before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Impartial game: terminal = lose; win if any move to a lose; g(s)=mex{g(t): s→t}; sum of independent games = XOR of Grundies; g=0 is second-player win.",
+     "weight": "core",
+     "evidence_hint": "Defines mex Grundy, XOR composition, and g=0 ⇒ second player."
+    },
+    {
+     "id": "appr2",
+     "point": "Standard Nim: g(pile)=size so xor≠0 ⇒ first wins; subtraction-{1..k}: g(n)=n mod (k+1) then XOR piles.",
+     "weight": "core",
+     "evidence_hint": "Gives Nim size-grundy / xor≠0 first-win and subtraction mod (k+1)."
+    },
+    {
+     "id": "appr3",
+     "point": "Matrix expo: build transition M with state_{i+1}=M·state_i; answer from M^n · state_0 (always mod); path counts use adjacency / DP-transition matrix to power k.",
+     "weight": "core",
+     "evidence_hint": "Writes the state transition matrix story and mentions walks as A^k."
+    },
+    {
+     "id": "appr4",
+     "point": "MITM: split n in half, enumerate 2^{n/2} subset sums (or XORs), sort one side, binary-search / hash complements.",
+     "weight": "core",
+     "evidence_hint": "Describes half-split enum plus sort/hash combine."
+    },
+    {
+     "id": "appr5",
+     "point": "Ternary only on strictly unimodal f; Mo: block size ~√n (or n/√q), sort by (L/B, R), maintain add(i)/remove(i); if add/remove is unnatural prefer sqrt blocks / rebuild.",
+     "weight": "extended",
+     "evidence_hint": "States unimodal precondition for ternary and Mo block-sort vs plain sqrt blocks."
+    }
+   ],
+   "probes": [
+    "For this prompt, walk through the exact template: Grundy/XOR, M^n, half-enum MITM, ternary shrink, or Mo add/remove."
+   ],
+   "hints": {
+    "1": "Name the state you XOR, the matrix you power, or how you split / search the line / move pointers.",
+    "2": "Game→mex+XOR; recurrence→M then M^n; MITM→two halves + sort; ternary→compare mid neighbors; Mo→block sort + add/remove.",
+    "3": "Outline: g=mex and XOR (g=0 second); M with state_{i+1}=M·state_i; split n, enum 2^{n/2}, match complements; ternary only if strictly unimodal; Mo sort (L/B,R) with add/remove."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Show concrete coding steps for matrix power, MITM combine, ternary shrink, and Mo pointers.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Matrix template: multiply k×k matrices under mod and binary-exponentiate M to get M^n · state_0 (fib is the 2×2 case).",
+     "weight": "core",
+     "evidence_hint": "Mentions modular matrix mul + binary expo of the transition, citing fib 2×2."
+    },
+    {
+     "id": "impl2",
+     "point": "MITM coding: enumerate all subset sums on each half, sort one half, binary-search complements to count or optimize (e.g. max sum mod m).",
+     "weight": "core",
+     "evidence_hint": "Describes two-half enum, sort one side, then search/hash for the partner."
+    },
+    {
+     "id": "impl3",
+     "point": "Ternary: floats run ~100–200 iters; discrete compare f(m) vs f(m+1) and shrink the side that is worse.",
+     "weight": "core",
+     "evidence_hint": "Gives float iteration budget and discrete neighbor-compare shrink."
+    },
+    {
+     "id": "impl4",
+     "point": "Mo: choose block ~√n (or n/√q), sort queries by (L/B, R), move [L,R] with add(i)/remove(i) updating answer in O(1) or O(log).",
+     "weight": "extended",
+     "evidence_hint": "States block size, sort key, and pointer moves with add/remove."
+    }
+   ],
+   "probes": [
+    "How do you actually code the matrix power, the two-half MITM combine, discrete ternary, or Mo add/remove?"
+   ],
+   "hints": {
+    "1": "Pick one template and name the loops: matrix mul, half masks, mid vs mid+1, or L/R expands.",
+    "2": "Matrix: mul+binpow under mod; MITM: enum halves→sort→search; ternary: neighbor compare or ~100–200 float iters; Mo: sort (L/B,R) then add/remove.",
+    "3": "Say: power M with k×k mul mod; enum both halves’ 2^{n/2} sums and binary-search; shrink by f(m) vs f(m+1) (or ~100–200 float iters); Mo block-sort and move pointers with add/remove."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State the standard costs for matrix expo, MITM, and Mo.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Matrix exponentiation of a k×k transition costs O(k³ log n).",
+     "weight": "core",
+     "evidence_hint": "Quotes O(k³ log n) for powering the transition."
+    },
+    {
+     "id": "cx2",
+     "point": "Meet-in-the-middle subset enumeration is O(n·2^{n/2}).",
+     "weight": "core",
+     "evidence_hint": "States O(n·2^{n/2}) for the half-split enum."
+    },
+    {
+     "id": "cx3",
+     "point": "Mo’s algorithm moves [L,R] in O((n+q)√n) with block-sorted offline queries.",
+     "weight": "core",
+     "evidence_hint": "Gives O((n+q)√n) for Mo pointer movement."
+    },
+    {
+     "id": "cx4",
+     "point": "Sqrt blocking: full blocks O(√n) with edges brute after per-block precompute.",
+     "weight": "extended",
+     "evidence_hint": "Mentions per-block aggregates, full blocks O(√n), edges brute."
+    }
+   ],
+   "probes": [
+    "What are the complexities of matrix expo, MITM, and Mo, and why those formulas?"
+   ],
+   "hints": {
+    "1": "Relate cost to matrix size k, half-size n/2, or block size ~√n.",
+    "2": "k×k mul × log n; two halves of size n/2; Mo block sort yields (n+q)√n pointer moves.",
+    "3": "Say: matrix O(k³ log n); MITM O(n·2^{n/2}); Mo O((n+q)√n); sqrt blocks full-block O(√n) plus edge brute."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch misuse of ternary, MITM, Grundy polarity, and Mo vs blocks.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Ternary search only on strictly unimodal f; applying it to a non-unimodal cost is wrong.",
+     "weight": "core",
+     "evidence_hint": "Refuses ternary unless decrease-then-increase (strictly unimodal) is justified."
+    },
+    {
+     "id": "pit2",
+     "point": "On n≤40 subset-sum, do not ship 2^n DP—use meet-in-the-middle.",
+     "weight": "core",
+     "evidence_hint": "Rejects full subset enum at n≤40 in favor of MITM."
+    },
+    {
+     "id": "pit3",
+     "point": "g=0 is second-player win; xor≠0 ⇒ first wins in standard Nim—do not flip polarity.",
+     "weight": "core",
+     "evidence_hint": "Correctly maps g=0 / xor=0 to second player and xor≠0 to first."
+    },
+    {
+     "id": "pit4",
+     "point": "When Mo’s add/remove is not natural, prefer sqrt blocking / rebuild instead of forcing Mo.",
+     "weight": "extended",
+     "evidence_hint": "Chooses blocks/rebuild when the state is not add/remove-friendly."
+    }
+   ],
+   "probes": [
+    "Where do people mis-apply ternary, ship 2^n at n≤40, flip Nim win/lose, or force Mo incorrectly?"
+   ],
+   "hints": {
+    "1": "Check unimodality, the n≤40 branch, who wins when xor is 0, and whether add/remove exists.",
+    "2": "Ternary needs strict unimodal; n≤40→MITM; g=0/xor=0→second; Mo needs friendly add/remove else blocks.",
+    "3": "Strictly unimodal only for ternary; MITM not 2^n when n≤40; g=0 second / xor≠0 first; if add/remove unnatural use sqrt blocks/rebuild."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "meet-in-the-middle vs 2^n DP",
+   "strong_answer": "When n≤40 and 2^n is too big, split halves, enumerate 2^{n/2} subset sums/XORs, and combine with sort/hash; reserve full 2^n only for much smaller n."
+  },
+  {
+   "topic": "Mo’s algorithm vs sqrt blocking / rebuild",
+   "strong_answer": "Use Mo when queries are offline and the state has natural add(i)/remove(i); when add/remove is not natural, prefer per-block aggregates with full blocks O(√n) and edges brute, or rebuild."
+  },
+  {
+   "topic": "ternary search vs binary search on derivative",
+   "strong_answer": "Both target unimodal cost on a line; ternary (or discrete f(m) vs f(m+1) shrink) searches the parameter directly, while BS on derivative is the alternate when a monotone derivative check is cleaner."
+  },
+  {
+   "topic": "win/lose DP vs Grundy + XOR",
+   "strong_answer": "Single-position win/lose DP (W iff some move to L) is the first drill; multi-pile / independent sum games need Grundy nimbers and XOR (Nim I/II, Stair Game odd-index XOR)."
+  },
+  {
+   "topic": "iterate recurrence vs matrix expo",
+   "strong_answer": "For linear recurrence or fixed-size DP with huge n (Fib, tiling length 10^18, walks of length k), encode the transition as a k×k matrix and power in O(k³ log n) under mod instead of stepping one-by-one."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Running ternary search when f is not strictly unimodal.",
+   "correction": "Require decrease-then-increase (strictly unimodal); otherwise ternary can converge to a wrong local extremum—use another method."
+  },
+  {
+   "trap": "Treating xor=0 / g=0 as a first-player win.",
+   "correction": "g=0 is second-player win; in standard Nim xor≠0 ⇒ first wins."
+  },
+  {
+   "trap": "Solving n≤40 subset sum with plain 2^n DP.",
+   "correction": "Split into halves, enumerate 2^{n/2}, combine with sort/hash (CSES Meet in the Middle)."
+  },
+  {
+   "trap": "Forgetting modular arithmetic on matrix exponentiation.",
+   "correction": "Matrix expo answers are taken always mod (e.g. fib template mod 1e9+7)."
+  },
+  {
+   "trap": "Forcing Mo when the state has no natural add/remove.",
+   "correction": "Prefer sqrt blocking with per-block precompute (full blocks O(√n), edges brute) or rebuild."
+  },
+  {
+   "trap": "In Stair Game, XORing every pile like plain Nim.",
+   "correction": "XOR only the odd-indexed piles."
+  }
+ ]
+}

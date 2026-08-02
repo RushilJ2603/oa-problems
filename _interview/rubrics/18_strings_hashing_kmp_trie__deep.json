@@ -1,0 +1,316 @@
+{
+ "id": "18_strings_hashing_kmp_trie__deep",
+ "title": "Strings: Hashing, KMP / Z-function, Trie (Depth Pass)",
+ "type": "CP",
+ "relevance": "High — second wave after CSES String Matching / Borders / Periods, Password, Good Substrings, Compress Words, and binary-trie Vasiliy; these hide period constraints, hash-equality trees, trie DP, and KMP-on-compressed / KMP+DP rather than announcing the template.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Autocomplete / dictionary decode — Spy Syndrome / Color with Occurrences / A Lot of Games: trie over a word list, sometimes reversed or as a game on missing letters. Split / validate a serial with modular checks — Hacking Cypher / Check Transcription: rolling numeric or block hashes under format constraints (OA-flavoured). Count strings containing a password / virus — Required Substring / Obsessive String / Lucky Common Subsequence: DP on the KMP failure state. Nearly periodic / one typo — Nearly Shortest Repeating / Spelling Check / Watto: period or Hamming-1 membership, common timed-OA twist on plain matching.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot depth-pass string asks that hide π/period constraints, hash-equality trees, trie DP, KMP-on-compressed, or KMP+DP rather than announcing the template.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "After the famous set, contests stop saying “run KMP” and leave a border/period invariant, a dictionary of fragments to glue, a one-mismatch query, or a tiny automaton state.",
+     "weight": "core",
+     "evidence_hint": "Names at least one of those hidden asks instead of a plain “find pattern” cue."
+    },
+    {
+     "id": "rec2",
+     "point": "Spot it when n≤10^6 forces linear string tools, when “exactly one change / one deletion” appears, when answers are counts of strings containing a pattern, or when a dictionary is searched backwards.",
+     "weight": "core",
+     "evidence_hint": "Cites n≤10^6, one change/deletion, pattern-containing counts, or reverse dictionary search as the depth signal."
+    },
+    {
+     "id": "rec3",
+     "point": "Depth-pass states still look like “compare substrings”, “longest prefix that is also suffix”, or “walk a trie”, but the extra work is non-obvious (forced placements via π, reverse-trie decoding, even-split hash classes, run-length KMP, automaton DP, or binary-trie XOR counts).",
+     "weight": "extended",
+     "evidence_hint": "Separates the surface wording from one of those non-obvious extras."
+    },
+    {
+     "id": "rec4",
+     "point": "“Nearly periodic / one typo” OA twists (period with ≤1 mismatch per block, one deletion, Hamming distance 1 membership) are upgrades on plain matching, not full edit distance.",
+     "weight": "extended",
+     "evidence_hint": "Ties Nearly Shortest Repeating / Spelling Check / Watto-style asks to period or Hamming-1 tools."
+    }
+   ],
+   "probes": [
+    "What in the statement says this is forced placements, reverse-trie decode, even-split equivalence, KMP automaton DP, run-length KMP, or one-mismatch hashing rather than template KMP/trie?",
+    "When does n≤10^6 or “exactly one change / one deletion” force a linear string tool instead of nested compares?"
+   ],
+   "hints": {
+    "1": "Look past “run KMP / walk a trie” — ask what invariant or extra state is hidden.",
+    "2": "Border/period, glue dictionary fragments, one mismatch, reverse search, or count-containing-pattern are the depth signals.",
+    "3": "Say: n≤10^6 or one change/deletion → linear hash/Z/KMP; reverse dictionary → reverse trie; count strings with a pattern → KMP automaton DP; nearly periodic → period+hash."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Pick the right depth model from the must-internalize checklist: π overlaps, reverse trie, even-split hash, KMP DP, run-length KMP, one-mismatch probes, binary-trie counts, or Z reconstruct.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Forced placements + π: when several starts of p are required inside s, an overlap is legal iff p’s border chain / period divides the gap; free cells then contribute 26^cnt (Tavas and Malekas).",
+     "weight": "core",
+     "evidence_hint": "States π/period legality on gaps and 26^cnt on free cells."
+    },
+    {
+     "id": "appr2",
+     "point": "KMP automaton DP: state = current match length in π; transitions on alphabet; absorb / forbid / require a pattern (Required Substring, Lucky Common Subsequence, Obsessive String).",
+     "weight": "core",
+     "evidence_hint": "Keeps π-match length as DP state for require/forbid/count asks."
+    },
+    {
+     "id": "appr3",
+     "point": "Reverse trie decoding: store dictionary words reversed; DP from the end of the ciphertext, walking the trie forward = matching a word ending here (Spy Syndrome 2).",
+     "weight": "extended",
+     "evidence_hint": "Builds the trie on reversed words and DP-decodes from the end."
+    },
+    {
+     "id": "appr4",
+     "point": "Even-split equivalence: a∼b if a=b or both even-length and halves equivalent in either order — hash both half-orders, recurse (Equivalent Strings); do not expand into O(n) copies.",
+     "weight": "extended",
+     "evidence_hint": "Hashes both half-orders / recurses and refuses materializing all copies."
+    },
+    {
+     "id": "appr5",
+     "point": "Run-length KMP: compress (c,len) blocks; match the interior exactly, treat the first/last block as a prefix/suffix length constraint (Messenger).",
+     "weight": "extended",
+     "evidence_hint": "Matches compressed blocks with exact middle and end length constraints."
+    },
+    {
+     "id": "appr6",
+     "point": "One-mismatch / one-delete probes: fix the differing position (or branch once in a trie); compare the two surrounding segments with O(1) hashes (Spelling Check, Watto).",
+     "weight": "extended",
+     "evidence_hint": "Fixes one branch/position and O(1)-hash-compares the flanks."
+    },
+    {
+     "id": "appr7",
+     "point": "Binary trie counts, not only max: for “XOR ≥ k”, walk bit-by-bit and add whole subtrees when the bit choice already satisfies the threshold (Beautiful Subarrays).",
+     "weight": "extended",
+     "evidence_hint": "Counts qualifying subtrees on the XOR≥k walk, not only max XOR."
+    },
+    {
+     "id": "appr8",
+     "point": "Z for reconstruct / lex build: Z on A+B and B+A (ABCBAC) or Z from each index (Erase and Extend / Compress String) replaces nested string compares under n≤10^6.",
+     "weight": "extended",
+     "evidence_hint": "Uses Z (or hash) instead of nested compares at large n."
+    }
+   ],
+   "probes": [
+    "Given required starts of p inside s, how do you validate overlaps and count free cells?",
+    "When do you keep π-state in DP versus building a reverse trie or hashing even halves?"
+   ],
+   "hints": {
+    "1": "Match the ask to one checklist trick, not generic KMP/trie.",
+    "2": "π gaps + 26^cnt; reverse words + end DP; both half-orders; π DP state; (c,len) KMP; one branch + O(1) hash; XOR≥k subtree adds; Z/hash not O(n^2) compares.",
+    "3": "Say: forced starts → π legality then 26^cnt; require/forbid pattern → automaton DP; Spy Syndrome → reverse trie; Equivalent Strings → hash both half-orders; Messenger → run-length KMP; Spelling/Watto → one probe + O(1) hashes; Beautiful Subarrays → count path; ABCBAC/Erase → Z."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Encode π-overlap checks, reverse-trie DP, even-split hashes, automaton transitions, run-length matching, one-mismatch probes, and XOR≥k trie walks correctly.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Forced placements: check each required overlap of p via the border chain / period before filling; then raise 26^cnt over unmarked free cells.",
+     "weight": "core",
+     "evidence_hint": "Sketches π-based overlap reject then free-cell exponentiation."
+    },
+    {
+     "id": "impl2",
+     "point": "KMP automaton DP: state is current π match length; on each alphabet transition follow failure links; absorb when the pattern is completed (require/forbid/count variants).",
+     "weight": "core",
+     "evidence_hint": "Describes state = match length and transitions that can mark absorb/forbid."
+    },
+    {
+     "id": "impl3",
+     "point": "Reverse trie: insert reversed dictionary words; from ciphertext end, walk the trie forward to take a word ending at the current position (Spy Syndrome 2).",
+     "weight": "extended",
+     "evidence_hint": "Inserts reversed words and DP-walks from the end."
+    },
+    {
+     "id": "impl4",
+     "point": "Even-split: for even lengths, hash both orders of each half and recurse; never expand into O(n) concrete rearrangements.",
+     "weight": "extended",
+     "evidence_hint": "Compares hashes of both half-orders without materializing copies."
+    },
+    {
+     "id": "impl5",
+     "point": "One-mismatch / one-delete: branch once (or fix the dropped index) and verify left/right segments with O(1) prefix/suffix hashes — not full edit distance.",
+     "weight": "extended",
+     "evidence_hint": "Uses two surrounding hash equals after one branch/deletion."
+    },
+    {
+     "id": "impl6",
+     "point": "Binary trie XOR≥k: insert prefix XORs; on query walk bits and add whole subtree counts when the chosen bit already meets the threshold.",
+     "weight": "extended",
+     "evidence_hint": "Adds subtree sizes on the ≥k side, same structure as Vasiliy but a count query."
+    }
+   ],
+   "probes": [
+    "How do you implement the π overlap check and 26^cnt free cells for forced placements?",
+    "How does the KMP automaton state transition, and how does a one-delete probe use O(1) hashes?"
+   ],
+   "hints": {
+    "1": "Implementation is checklist bookkeeping: π, trie direction, hash orders, automaton state.",
+    "2": "Validate gaps with π; DP on match length; reverse inserts; hash both halves; one branch + flank hashes; XOR trie adds subtrees.",
+    "3": "π divides gap then 26^cnt; state=π length with absorb/forbid; reverse words + end DP; both half-order hashes; O(1) flank hashes after one fix; walk bits adding qualifying subtrees."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Justify linear string tools under n≤10^6 and refuse O(n^2) compares / O(n) even-split expansions.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Under n≤10^6, nested string compares are unacceptable; use Z or hashing (Message Transmission hard, Erase and Extend, Compress String, ABCBAC).",
+     "weight": "core",
+     "evidence_hint": "Rejects O(n^2) compares and names Z/hash as the linear tool."
+    },
+    {
+     "id": "cx2",
+     "point": "Even-split equivalence must hash both half-orders and recurse — do not expand into O(n) copies.",
+     "weight": "core",
+     "evidence_hint": "States the O(n)-copies blowup as forbidden."
+    },
+    {
+     "id": "cx3",
+     "point": "One-mismatch / one-delete checks compare surrounding segments with O(1) hashes after fixing the differing position or single trie branch.",
+     "weight": "extended",
+     "evidence_hint": "Cites O(1) hash segment compares, not rescanning whole strings naively each time."
+    }
+   ],
+   "probes": [
+    "Why does n≤10^6 rule out nested string compares here?",
+    "What goes wrong if you expand every even-split equivalence into concrete copies?"
+   ],
+   "hints": {
+    "1": "Complexity fails are O(n^2) compares or materializing rearrangements.",
+    "2": "Z/hash for large n; hash both half-orders; O(1) flank hashes after one probe.",
+    "3": "Cite n≤10^6 → Z/hash not O(n^2) compares; even-split → no O(n) copies; one delete/mismatch → O(1) hash flanks."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch depth-pass failure modes: edit-distance overkill, forward-only tries, max-only XOR tries, illegal forced overlaps, and char-level KMP on runs.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Treating Spelling Check / one-deletion as full edit distance instead of prefix/suffix hash equality after dropping one index.",
+     "weight": "core",
+     "evidence_hint": "Rejects edit DP and names one-index drop + hash equals."
+    },
+    {
+     "id": "pit2",
+     "point": "Accepting forced pattern placements that overlap illegally — must check via π / period before counting 26^cnt free cells.",
+     "weight": "core",
+     "evidence_hint": "Requires border-chain legality on gaps before the free-cell exponent."
+    },
+    {
+     "id": "pit3",
+     "point": "Building a forward dictionary trie for Spy Syndrome-style decode instead of reversed words with DP from the end.",
+     "weight": "extended",
+     "evidence_hint": "Flags wrong trie direction and missing end-based DP."
+    },
+    {
+     "id": "pit4",
+     "point": "Answering XOR ≥ k with a binary trie that only tracks max XOR — must count path / add qualifying subtrees (Beautiful Subarrays).",
+     "weight": "extended",
+     "evidence_hint": "Distinguishes count-on-threshold from Vasiliy-style max query."
+    },
+    {
+     "id": "pit5",
+     "point": "Running character-level KMP on Messenger instead of KMP on run-length (c,len) blocks with exact middle and prefix/suffix end constraints.",
+     "weight": "extended",
+     "evidence_hint": "Names compressed-block matching with end length constraints."
+    },
+    {
+     "id": "pit6",
+     "point": "Expanding Equivalent Strings even-splits into O(n) copies, or using O(n^2) string compares under n≤10^6.",
+     "weight": "extended",
+     "evidence_hint": "Flags both blowups and points to hash/Z."
+    }
+   ],
+   "probes": [
+    "What’s wrong with edit distance for one deletion, or max-only XOR for ≥ k counts?",
+    "Where do candidates fail forced placements or Messenger-style compressed matching?"
+   ],
+   "hints": {
+    "1": "Depth bugs ignore the checklist extras.",
+    "2": "One-index hash not edit DP; π before 26^cnt; reverse trie; count not only max; run-length KMP; no O(n)/O(n^2) expansions.",
+    "3": "Drop one index + O(1) hashes; π-legal gaps then 26^cnt; reverse words + end DP; XOR≥k subtree counts; (c,len) KMP; hash both halves / Z under n≤10^6."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "O(1) hash one-delete / one-mismatch probes vs full edit distance",
+   "strong_answer": "Fix the differing position (or branch once in a trie) and compare the two surrounding segments with O(1) hashes (Spelling Check, Watto) — not full edit distance."
+  },
+  {
+   "topic": "Hash both even half-orders vs expanding O(n) copies",
+   "strong_answer": "For Equivalent Strings, a∼b if equal or both even-length with halves equivalent in either order — hash both half-orders and recurse; do not expand into O(n) copies."
+  },
+  {
+   "topic": "Z/hash under n≤10^6 vs nested string compares",
+   "strong_answer": "Z on A+B and B+A or Z from each index (ABCBAC, Erase and Extend, Compress String) replaces nested string compares when n≤10^6."
+  },
+  {
+   "topic": "KMP automaton DP vs plain “run KMP”",
+   "strong_answer": "When counting/forbidding/requiring a pattern inside built strings, keep state = current π match length with alphabet transitions (Required Substring, Lucky Common Subsequence, Obsessive String)."
+  },
+  {
+   "topic": "Reverse trie + end DP vs forward dictionary scan",
+   "strong_answer": "For Spy Syndrome 2, store dictionary words reversed and DP from the ciphertext end so walking the trie forward matches a word ending here."
+  },
+  {
+   "topic": "Run-length block KMP vs character-level KMP",
+   "strong_answer": "On Messenger, compress (c,len) blocks; match interior blocks exactly and treat first/last as prefix/suffix length constraints."
+  },
+  {
+   "topic": "Binary trie XOR counts vs max-only XOR",
+   "strong_answer": "For XOR ≥ k subarray counts, walk bit-by-bit and add whole subtrees when the bit choice already satisfies the threshold — same structure as Vasiliy, different query."
+  },
+  {
+   "topic": "Dictionary DP-cover vs full Aho-Corasick",
+   "strong_answer": "Color with Occurrences can greedily / DP-cover t with given patterns as substrings — multi-pattern matching without needing full Aho."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Solving one-deletion / Hamming-1 membership with full edit distance.",
+   "correction": "Fix the dropped or mismatched position (or branch once in a trie) and verify flanks with O(1) prefix/suffix hashes."
+  },
+  {
+   "trap": "Accepting all forced starts of p without checking overlaps.",
+   "correction": "An overlap is legal iff p’s border chain / period divides the gap; then free cells contribute 26^cnt."
+  },
+  {
+   "trap": "Inserting dictionary words forward for reverse-decode tasks.",
+   "correction": "Store words reversed; DP from the end of the ciphertext while walking the trie forward."
+  },
+  {
+   "trap": "Expanding even-split equivalence into concrete rearrangements.",
+   "correction": "Hash both half-orders and recurse; do not expand into O(n) copies."
+  },
+  {
+   "trap": "Using a max-XOR binary trie for “XOR ≥ k” counts.",
+   "correction": "Walk bits and add whole subtree counts when the threshold is already satisfied (Beautiful Subarrays)."
+  },
+  {
+   "trap": "Character-level KMP on run-length compressed text/pattern.",
+   "correction": "KMP on (c,len) blocks: exact middle matches, ends as prefix/suffix length constraints (Messenger)."
+  },
+  {
+   "trap": "Nested string compares when n≤10^6.",
+   "correction": "Use Z or hashing (Message Transmission hard, Erase and Extend, Compress String, ABCBAC)."
+  },
+  {
+   "trap": "Reaching for full Aho when covering a string by dictionary substrings.",
+   "correction": "Greedy / DP-cover with the given patterns as substrings can suffice (Color with Occurrences)."
+  }
+ ]
+}

@@ -1,0 +1,167 @@
+{
+ "id": "py_09_control_flow_loops",
+ "title": "Control Flow: Loops",
+ "type": "FUND",
+ "relevance": "Loops and Python’s for/while-else with break are staple OA and campus SDE checks of basic control-flow fluency.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a loop is and how for with range or direct iteration over sequences works.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A loop repeats a block of code as long as a condition is met or for every item in a sequence.",
+     "weight": "core",
+     "evidence_hint": "Candidate defines a loop as repeated execution tied to a condition or walking a sequence."
+    },
+    {
+     "id": "fund2",
+     "point": "range(start, stop, step) yields integers from start up to but not including stop, advancing by step; a negative step counts downward.",
+     "weight": "core",
+     "evidence_hint": "They state stop is exclusive and mention negative step for countdown."
+    },
+    {
+     "id": "fund3",
+     "point": "for i in range(10, 0, -1) runs from 10 down to 1 because stop 0 is excluded.",
+     "weight": "extended",
+     "evidence_hint": "They walk the range(10, 0, -1) example and say 0 is not printed."
+    },
+    {
+     "id": "fund4",
+     "point": "A for loop can iterate an iterable directly—string (one character), list, or tuple—without an index.",
+     "weight": "core",
+     "evidence_hint": "They mention for over 'Delhi', a list, or a tuple yielding elements one by one."
+    }
+   ],
+   "probes": [
+    "What does range(start, stop, step) produce, and what happens with a negative step?",
+    "How does for iterate a string versus a list or tuple?"
+   ],
+   "hints": {
+    "1": "Think about what stop means in range and whether the endpoint is included.",
+    "2": "Separate range-based counting from walking elements of an iterable.",
+    "3": "range excludes stop; for x in 'Delhi' yields D, e, l, h, i one character at a time."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain for…else and while…else and how break decides whether else runs.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A loop else runs only if the for iterable is exhausted or the while condition becomes False.",
+     "weight": "core",
+     "evidence_hint": "They say else runs on natural completion, not on every exit."
+    },
+    {
+     "id": "mech2",
+     "point": "If the loop ends early via break, Python skips the else block entirely.",
+     "weight": "core",
+     "evidence_hint": "They link break to skipping else; many rename else to no_break."
+    },
+    {
+     "id": "mech3",
+     "point": "The same else rule applies to while: natural False runs else; break skips it.",
+     "weight": "extended",
+     "evidence_hint": "They give or describe a while countdown that finishes and then runs else."
+    }
+   ],
+   "probes": [
+    "When does a for…else or while…else block execute, and when is it skipped?",
+    "Walk through finding a value in a list with break and else."
+   ],
+   "hints": {
+    "1": "Compare finishing every iteration to exiting early.",
+    "2": "Map the dark-room search: break when found; else means the search never broke.",
+    "3": "else runs only on natural finish; break unconditionally skips else."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Judge when loop else is meaningful versus redundant after the loop.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Loop else pairs naturally with break; read it as “if the loop never broke, then…”.",
+     "weight": "core",
+     "evidence_hint": "They treat else as the no-break path paired with an in-loop break."
+    },
+    {
+     "id": "tr2",
+     "point": "Without a break inside, else is equivalent to code after the loop and adds nothing.",
+     "weight": "core",
+     "evidence_hint": "They say bare else with no break is redundant with post-loop code."
+    }
+   ],
+   "probes": [
+    "When would you attach else to a loop instead of putting code after it?",
+    "Why is for…else easy to misuse if you come from languages without it?"
+   ],
+   "hints": {
+    "1": "Ask whether the loop body can break.",
+    "2": "Useful when success is break and failure is completing without break.",
+    "3": "No break → else equals code after the loop; with break → else is the no-break failure path."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply break-plus-else to search and nested prime filtering.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Classic search: break when the target is found so else is skipped; if the loop completes, else reports the target was absent.",
+     "weight": "core",
+     "evidence_hint": "They describe found→break skips else; absent→else prints the not-found message."
+    },
+    {
+     "id": "app2",
+     "point": "In the primes pattern, the inner for tries divisors; a hit breaks; only when no divisor is found does the inner else run and print i.",
+     "weight": "core",
+     "evidence_hint": "They say else is on the inner for and prints primes that survived the divisor test."
+    },
+    {
+     "id": "app3",
+     "point": "In that primes example the inner divisor loop is for j in range(2, i).",
+     "weight": "extended",
+     "evidence_hint": "They name range(2, i) as the potential-divisor scan."
+    }
+   ],
+   "probes": [
+    "How would you use for…else to search a list and report not found without a flag?",
+    "Explain how nested for…else prints primes in a range."
+   ],
+   "hints": {
+    "1": "Search: break on hit; else means never broke.",
+    "2": "Primes: composite breaks the inner loop; prime lets inner else print.",
+    "3": "Inner else is attached to the divisor for; it fires once per i that never broke."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "loop else with break vs code after the loop",
+   "strong_answer": "Else is the no-break path and pairs with break for search-style control flow; without any break, else is the same as code after the loop and adds nothing."
+  },
+  {
+   "topic": "Python loop else vs if/else intuition from other languages",
+   "strong_answer": "Loop else is unique to Python and does not mean “condition was false” like if/else; it means the loop finished naturally without break, which many remember by renaming else to no_break."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Reading loop else like if/else—as running when the loop condition failed in the usual sense.",
+   "correction": "Else runs only if the for iterable is exhausted or while becomes False; break skips else entirely."
+  },
+  {
+   "trap": "Attaching else to a loop that never breaks and expecting special behavior.",
+   "correction": "Without a break, else is equivalent to code after the loop and adds nothing."
+  },
+  {
+   "trap": "In nested prime printing, attaching else to the outer for instead of the inner divisor for.",
+   "correction": "Else must be on the inner for so it fires once per i that survived the divisor test—the primes."
+  }
+ ]
+}

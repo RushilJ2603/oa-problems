@@ -1,0 +1,213 @@
+{
+ "id": "os_02_processes_ipc",
+ "title": "Processes and IPC",
+ "type": "FUND",
+ "relevance": "SDE interviews probe process lifecycle, fork/exec, and IPC choices because they underpin shells, servers, and concurrency bugs.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish program vs process, address-space layout, lifecycle states, and what the PCB holds.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A program is a passive executable on disk; a process is that program in execution and is the unit to which the OS allocates resources.",
+     "weight": "core",
+     "evidence_hint": "Says running the same program twice yields two distinct processes, each with its own memory and OS bookkeeping."
+    },
+    {
+     "id": "fund2",
+     "point": "Process memory has text (read-only, shareable), data, BSS (zero-filled before main), heap growing upward, memory-mapped region, stack growing downward, and args/env at the highest addresses.",
+     "weight": "core",
+     "evidence_hint": "Names the regions and that heap grows toward higher addresses while stack grows toward lower ones."
+    },
+    {
+     "id": "fund3",
+     "point": "The seven-state model is New, Ready, Running, Waiting/Blocked, Terminated, Suspend-Ready, and Suspend-Blocked; threads essentially only use Running, Ready, and Blocked because they do not independently own swappable memory.",
+     "weight": "extended",
+     "evidence_hint": "Lists the seven states and contrasts the simpler thread lifecycle."
+    },
+    {
+     "id": "fund4",
+     "point": "The PCB (Linux task_struct) lives in kernel memory and holds PID/parent PID, state, PC, registers, memory-management info, accounting, and I/O status including the open-file table.",
+     "weight": "core",
+     "evidence_hint": "Defines PCB as the kernel structure for a process and enumerates those fields."
+    }
+   ],
+   "probes": [
+    "What is the difference between a program and a process, and what regions make up a process address space?",
+    "What does a PCB store, and how does the seven-state model differ from a thread's lifecycle?"
+   ],
+   "hints": {
+    "1": "Start from passive file on disk versus an active execution entity.",
+    "2": "Walk text/data/BSS/heap/mmap/stack, then PCB fields and New→Ready→Running→Blocked→Terminated plus suspend variants.",
+    "3": "Program=ELF on disk; process=execution unit. Heap up, stack down. PCB in kernel: IDs, state, PC/registers, page tables, open files. Seven states include Suspend-Ready/Blocked; threads stay Running/Ready/Blocked."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain context switches, fork/exec/wait, copy-on-write, zombies/orphans, and the main IPC mechanisms.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A context switch saves the running process into its PCB and loads another; triggers include timer interrupt (preemption), blocking in a syscall, or a higher-priority process waking; it does no useful application work.",
+     "weight": "core",
+     "evidence_hint": "Defines the save/restore of registers and page tables and names those trigger cases plus pure-overhead framing."
+    },
+    {
+     "id": "mech2",
+     "point": "fork returns twice (child PID in parent, 0 in child, -1 on failure); exec replaces the image and on success never returns; wait/waitpid reaps a child and delivers exit status.",
+     "weight": "core",
+     "evidence_hint": "States the two return values, that exec keeps the same PID, and that wait frees remaining child resources."
+    },
+    {
+     "id": "mech3",
+     "point": "On fork, COW shares physical pages read-only with bumped reference counts; a write causes a protection page fault, then one page is copied and remapped read-write.",
+     "weight": "core",
+     "evidence_hint": "Explains no eager full copy and per-page copy only on first write."
+    },
+    {
+     "id": "mech4",
+     "point": "A zombie has terminated but is not yet waited on and holds only a PID (no memory or CPU); an orphan is reparented to init/systemd (PID 1), which waits and reaps.",
+     "weight": "core",
+     "evidence_hint": "Gives both definitions and the reparent-to-PID-1 cure path."
+    },
+    {
+     "id": "mech5",
+     "point": "IPC is message passing (kernel copies, implicit sync: pipes, queues, sockets) or shared memory (same physical region mapped; fastest after setup, but processes must synchronize themselves).",
+     "weight": "extended",
+     "evidence_hint": "Contrasts user→kernel→user copying versus direct RAM access with manual sync."
+    },
+    {
+     "id": "mech6",
+     "point": "Anonymous pipes are one-way between related processes (fd[0] read, fd[1] write); named FIFOs serve unrelated processes; message queues preserve boundaries and support types/priorities; signals are async notifications with essentially no payload.",
+     "weight": "extended",
+     "evidence_hint": "Distinguishes pipe vs FIFO, queue vs byte stream, and signal as notification-only."
+    }
+   ],
+   "probes": [
+    "Walk through fork, exec, and wait, and explain how copy-on-write makes fork cheap.",
+    "What is a zombie versus an orphan, and how do pipes, shared memory, and signals differ as IPC?"
+   ],
+   "hints": {
+    "1": "Think what must be saved on a switch, then the two-call create path.",
+    "2": "Cover PCB save/restore and TLB cost, then fork returns twice → optional rewiring → exec → parent wait; COW on write fault; zombie needs wait.",
+    "3": "Context switch: PCB registers + page tables; overhead includes TLB flush. fork: parent gets child PID, child 0. COW shares pages until write. Zombie=dead unwaited (PID only); orphan→PID 1. Message pass vs shared mem."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare process vs thread switch cost and message-passing versus shared-memory IPC.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "A thread switch within one process swaps only registers so the TLB is not flushed and caches stay warmer; a process switch changes address space and pays TLB/cache penalties.",
+     "weight": "core",
+     "evidence_hint": "Explicitly ties cheaper thread switches to unchanged page tables / no TLB flush."
+    },
+    {
+     "id": "tr2",
+     "point": "Message passing is simple and safe with kernel-moved data and implicit synchronization but copies each message user→kernel→user; shared memory is fastest (no kernel involvement after mapping) but requires programmer-managed sync.",
+     "weight": "core",
+     "evidence_hint": "States both sides: safety/copying versus zero-copy plus manual semaphores/mutexes."
+    },
+    {
+     "id": "tr3",
+     "point": "For producer–consumer, shared memory plus mutex/empty/full semaphores is fastest but sync is the programmer's job; a message queue blocks on full/empty in the kernel so no user-space synchronization is needed, at the cost of kernel copying.",
+     "weight": "extended",
+     "evidence_hint": "Mentions empty counting free slots and full counting filled slots versus msgsnd/msgrcv kernel blocking."
+    }
+   ],
+   "probes": [
+    "Why is a thread context switch cheaper than a process switch?",
+    "Why is shared memory the fastest IPC, and when would you still prefer a message queue?"
+   ],
+   "hints": {
+    "1": "Ask what changes in the MMU/TLB between the two kinds of switch.",
+    "2": "Same address space → no TLB flush; then compare copy path versus mapped RAM plus who does locking.",
+    "3": "Thread switch: registers only, TLB stays. Process switch: new page tables, TLB flush, cold caches. Shared mem: zero-copy after map, manual sync; queues: simpler, kernel copies."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply fork/exec gaps, descriptor inheritance, and IPC choice to real shell/server scenarios.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "The gap between fork and exec lets the child redirect stdin/stdout, set up pipes, drop privileges, or close descriptors before the new program runs—how a shell builds a pipeline like ls | grep foo.",
+     "weight": "core",
+     "evidence_hint": "Describes child rewiring still as a copy of the parent, then exec, matching shell pipeline construction."
+    },
+    {
+     "id": "app2",
+     "point": "Open descriptors survive fork and exec by default; mark sensitive ones FD_CLOEXEC so a forked helper does not inherit a listening socket.",
+     "weight": "core",
+     "evidence_hint": "Names the leak risk and close-on-exec as the fix."
+    },
+    {
+     "id": "app3",
+     "point": "You cannot kill -9 a zombie because it is already dead; the parent must wait, or killing the parent lets PID 1 adopt and reap; never-reaping children leaks PIDs until fork fails.",
+     "weight": "extended",
+     "evidence_hint": "Rejects signaling the zombie and points to wait or parent death → PID 1."
+    },
+    {
+     "id": "app4",
+     "point": "Signal handlers must be async-signal-safe; calling malloc or printf from a handler can corrupt state if the same function was interrupted mid-update.",
+     "weight": "extended",
+     "evidence_hint": "Treats signals as notification-only and warns against non-async-safe calls in handlers."
+    }
+   ],
+   "probes": [
+    "How does a shell implement ls | grep foo using fork, exec, and pipes?",
+    "A daemon forks helpers and eventually cannot create new processes—what went wrong, and how do you stop leaking a listening socket across exec?"
+   ],
+   "hints": {
+    "1": "Picture parent forking, child adjusting fds, then execing the new binary.",
+    "2": "Pipe ends inherited across fork; close unused ends; exec overlays the program; unreaped children become zombies.",
+    "3": "fork→dup2/pipe wiring→exec; FD_CLOEXEC on listen socket; zombies need wait/SIGCHLD; handlers stay async-signal-safe."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Process switch vs thread switch",
+   "strong_answer": "Thread switches in one process change only register state, so page tables stay put, the TLB is not flushed, and caches stay warmer; process switches change address space and pay full TLB/cache cold-start cost on top of register save/restore."
+  },
+  {
+   "topic": "Message passing vs shared memory",
+   "strong_answer": "Message passing (pipes, queues, sockets) is safer and simpler because the kernel copies data and provides implicit sync, at user→kernel→user cost; shared memory is highest speed after mapping with no syscalls or copies, but processes must place and use their own mutexes/semaphores."
+  },
+  {
+   "topic": "Shared memory + semaphores vs message queue (producer–consumer)",
+   "strong_answer": "Shared buffer with mutex plus empty (free slots) and full (filled slots) semaphores is fastest but every sync detail is manual; msgsnd/msgrcv lets the kernel block on full/empty so no user-space sync is needed, paying for kernel copying."
+  },
+  {
+   "topic": "Stack vs heap allocation",
+   "strong_answer": "Stack is fast (move the stack pointer) and auto-freed on return but small/fixed-limit and risks stack overflow; heap is large and flexible but slower, manually managed, and prone to fragmentation and leaks; they grow toward each other and colliding is fatal."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating stack and heap as interchangeable dynamic storage",
+   "correction": "Stack allocation is pointer-move fast and scoped to the call, but limited; heap is flexible and large but needs manual free and can fragment or leak."
+  },
+  {
+   "trap": "Assuming kill -9 cleans up a zombie",
+   "correction": "A zombie is already terminated; the signal has no process to act on. The parent must wait, or kill the parent so PID 1 adopts and reaps."
+  },
+  {
+   "trap": "Forgetting that open file descriptors survive both fork and exec",
+   "correction": "By default the child inherits them; mark sensitive fds (e.g. a listening socket) with FD_CLOEXEC."
+  },
+  {
+   "trap": "Using signals to transfer data, or calling malloc/printf in a handler",
+   "correction": "Signals carry essentially only the signal number—notification, not payload. Handlers must use only async-signal-safe operations."
+  },
+  {
+   "trap": "Mapping shared memory and assuming the kernel synchronizes readers/writers",
+   "correction": "After setup the kernel is out of the path; processes must synchronize themselves with mutexes/semaphores in the shared region."
+  }
+ ]
+}

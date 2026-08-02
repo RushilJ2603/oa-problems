@@ -1,0 +1,248 @@
+{
+ "id": "41_contest_strategy_speed",
+ "title": "Contest strategy & speed-solving meta",
+ "type": "CP",
+ "relevance": "Timed OAs are the same game as Div2: rank easy work first, ship correct code fast, and do not bleed attempts; CF/AtCoder rating is almost entirely this meta plus upsolving.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Timed OAs (HackerRank/HackerEarth 60–90 min, 2–4 tasks) mirror Div2 ranking—clear implementation/greedy first, leave the trick task last; campus finish-as-many-as-you-can assessments use ICPC-style ranking; take-homes reuse near-miss upsolves as follow-ups; live screens map stuck-timers and edge checks directly.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Candidate recognizes contest meta under time pressure, score/penalty rules, and constraint-driven tagging rather than letter order.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Contest skill is the loop skim → rank → solve → verify → submit → (later) upsolve under a clock and wrong-attempt tax.",
+     "weight": "core",
+     "evidence_hint": "Names the skim-rank-solve-verify-submit-upsolve loop and mentions time pressure or wrong-attempt cost."
+    },
+    {
+     "id": "rec2",
+     "point": "Open by tagging each problem as speed-impl / observation / known template / skip from statements and constraints—not because it is letter A.",
+     "weight": "core",
+     "evidence_hint": "Says do not dig into #1 only for being A; tags by type from skim of statements+constraints."
+    },
+    {
+     "id": "rec3",
+     "point": "Constraint bands map algorithm class: n≤20 brute/subsets, n≤400 O(n²)/O(n³), n≤2e5 O(n log n); letter order is a hint, constraints are the truth.",
+     "weight": "extended",
+     "evidence_hint": "Quotes those constraint cutoffs and says constraints beat letter ranking."
+    },
+    {
+     "id": "rec4",
+     "point": "Scoring meta differs: CF score decay favors early easy solves; ICPC/CF ICPC-mode maximizes solves first then minimizes penalty (time + 10×WA on solved only—unsolved WA is free).",
+     "weight": "extended",
+     "evidence_hint": "Contrasts score decay vs maximize-solves, and states the time + 10×WA / unsolved-WA-free rule."
+    }
+   ],
+   "probes": [
+    "How do you decide what to open first in a timed Div2 or OA when A looks hard and D has more solves?",
+    "What do CF score decay vs ICPC-style ranking change about your first 20 minutes?"
+   ],
+   "hints": {
+    "1": "Think about what the clock and the penalty system are actually taxing.",
+    "2": "Separate recognition into: skim tags, constraint→algo mapping, and scoring-rule implications.",
+    "3": "Skim → tag speed/observation/template/skip; use n≤20 / n≤400 / n≤2e5 bands; CF early easy vs ICPC more ACs then time+10×WA on solved only."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Candidate lays out a ranked workflow with skim budget, clear-easy-first order, stuck cut-timers, and a 24h upsolve rule.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Spend the first ~5–8 min (or about 2–4 min in the compressed workflow) skimming all statements+constraints and ranking before deep thinking on any one problem.",
+     "weight": "core",
+     "evidence_hint": "Gives a skim-all-first budget in the ~5–8 or 2–4 min range and ranks before digging."
+    },
+    {
+     "id": "appr2",
+     "point": "Clear A–B (and easy C) / aim A+B or ABC A–C in ~20–25 min with clean first AC before spending deep time on harder tasks.",
+     "weight": "core",
+     "evidence_hint": "Says bank easy points early; cites ~20–25 min speed band for A+B or ABC A–C."
+    },
+    {
+     "id": "appr3",
+     "point": "Stuck timers: ~5–8 min on A/B with no plan → reread (likely misread); ~12–15 min on C with no plan → park, open D/E, return later.",
+     "weight": "extended",
+     "evidence_hint": "States both cut-timers and the park-and-read-elsewhere move."
+    },
+    {
+     "id": "appr4",
+     "point": "Within 24h upsolve the easiest unsolved with a real solo attempt, then editorial + re-implement from scratch; virtual missed rated rounds.",
+     "weight": "extended",
+     "evidence_hint": "Mentions 24h, easiest unsolved, attempt-before-editorial, re-implement, virtuals."
+    }
+   ],
+   "probes": [
+    "Walk me through your first 25 minutes of a CF Div2 or a 60–90 min OA with 2–4 tasks.",
+    "When do you abandon a C and open D, and what do you do after the contest?"
+   ],
+   "hints": {
+    "1": "Start from the open routine, not from coding problem A.",
+    "2": "Include skim budget, easy-first clear, hard cut-timers, then post-contest upsolve.",
+    "3": "~5–8 min skim/tag; A+B in ~20–25 min; ~5–8 / ~12–15 stuck cuts; 24h easiest-unsolved then editorial+reimplement."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Candidate describes pre-submit verification and multi-test hygiene that prevents avoidable WA under a penalty tax.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Before every submit: re-trace samples by hand and check n=1 / empty / all-equal / MAX (and local-check samples + n=1 / empty / max).",
+     "weight": "core",
+     "evidence_hint": "Lists sample re-trace plus edge cases like n=1, empty, all-equal, MAX."
+    },
+    {
+     "id": "impl2",
+     "point": "Reset all multi-test state between cases—one avoided WA beats 5 minutes of clever coding.",
+     "weight": "core",
+     "evidence_hint": "Calls out clearing arrays/flags/sums between tests as penalty hygiene."
+    },
+    {
+     "id": "impl3",
+     "point": "When tagged as DP under pressure, code the tiny transition (e.g. 2-state who-kills-next) rather than redesigning mid-contest.",
+     "weight": "extended",
+     "evidence_hint": "Says ship the small tagged DP transition instead of re-architecting live."
+    },
+    {
+     "id": "impl4",
+     "point": "For constraint-ranked brutes like n≤10, implement try-all 2ⁿ rather than hunting a cleverer approach in-contest.",
+     "weight": "extended",
+     "evidence_hint": "Uses n≤10 ⇒ enumerate subsets/masks as the intended speed path."
+    }
+   ],
+   "probes": [
+    "What do you run locally in the last minute before submitting a multi-test greedy?",
+    "How does your submit checklist change when wrong attempts lock or burn score?"
+   ],
+   "hints": {
+    "1": "Focus on verification habits, not the algorithm itself.",
+    "2": "Samples by hand, extreme n, and multi-test reset are the three pillars.",
+    "3": "Re-trace samples; check n=1/empty/all-equal/MAX; wipe all multi-test state every case."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Candidate ties time budget and constraint size to which approach is contest-viable.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Use constraints to pick complexity class in-contest: n≤20 brute/subsets, n≤400 O(n²)/O(n³), n≤2e5 O(n log n).",
+     "weight": "core",
+     "evidence_hint": "Recites those three bands and picks algo class from n."
+    },
+    {
+     "id": "cx2",
+     "point": "Pattern-tag drills should fire fast once seen—e.g. classic BS-on-answer coded in ≤15 min, or Chat Ban-style monotonic BS in <5 min.",
+     "weight": "extended",
+     "evidence_hint": "Gives short coding-fire times for known templates under the clock."
+    },
+    {
+     "id": "cx3",
+     "point": "Observation that kills code beats starting O(n²) when a short check (too many ±, residue, a[1]<a[n]) fits—think briefly before heavy code.",
+     "weight": "core",
+     "evidence_hint": "Says think a few minutes / prefer observation over jumping to O(n²) or heavy DS."
+    }
+   ],
+   "probes": [
+    "Given only n and time left, how do you choose between brute, O(n²), and O(n log n)?",
+    "When is spending three minutes on an observation cheaper than coding?"
+   ],
+   "hints": {
+    "1": "Answer in terms of n cutoffs and template fire-time, not Big-O trivia.",
+    "2": "Map n≤20 / n≤400 / n≤2e5, then when observation short-circuits code.",
+    "3": "Those three constraint bands; BS templates in ≤15 or <5 min once recognized; don’t start O(n²) if a short observation fits."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Candidate names common contest failure modes: misreads, overthink, wrong ranking, and pretest-only ACs.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Anti-overthink: if a short observation (parity, a[1]<a[n], residue, too many ±) fits samples, code it—do not invent heavy DS on 1400s.",
+     "weight": "core",
+     "evidence_hint": "Gives examples like Element Extermination YES iff a[1]<a[n]; inventing stack/segtree fails the meta."
+    },
+    {
+     "id": "pit2",
+     "point": "Careful statement read: misread of 0/1-type reachability (Trouble Sort) is a free WA and pure penalty bleed.",
+     "weight": "core",
+     "evidence_hint": "Says WA from misreading conditions, not from hard algorithms."
+    },
+    {
+     "id": "pit3",
+     "point": "Pretest/order traps (e.g. AB-then-BA and BA-then-AB non-overlap): one sample can pass while systest fails.",
+     "weight": "extended",
+     "evidence_hint": "Mentions checking both orders / non-overlap; classic pretest-pass systest-fail lesson."
+    },
+    {
+     "id": "pit4",
+     "point": "Mis-ranking: starting digit-DP on a residue-trick math problem, or rush-submit without verifying both parts of a block-then-BFS construction, burns attempts.",
+     "weight": "extended",
+     "evidence_hint": "Names wrong-tool ranking or verifying only one half before submit."
+    }
+   ],
+   "probes": [
+    "What contest mistakes cost you a WA that a 30-second re-read would have prevented?",
+    "When have you over-engineered a 1400 and how should you have tagged it instead?"
+   ],
+   "hints": {
+    "1": "Think misread, overthink, and submit-too-soon—not obscure algorithms.",
+    "2": "Cover observation-vs-heavy-DS, statement traps, and pretest/order failures.",
+    "3": "Code short observations on 1400s; reread 0/1 conditions; check both AB/BA orders; don’t digit-DP a residue trick or half-verify block+BFS."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Speed vs elegance on B/C",
+   "strong_answer": "Enumerate candidate splits/patterns or ship a known template under the clock; hunting a clever closed form loses rank when speed beats elegance on B/C."
+  },
+  {
+   "topic": "Maximize solves vs polish penalty",
+   "strong_answer": "In ICPC-style / campus finish-as-many ranking, one more AC always beats polishing penalty on an already-solved easy; unsolved WA is free, so optimize time+10×WA only on problems you will solve."
+  },
+  {
+   "topic": "Implementation/greedy first vs trick task last",
+   "strong_answer": "In timed OAs and Div2, clear speed-impl/greedy tasks first and leave the observation/trick task for last—wrong attempts can lock or burn score on some platforms."
+  },
+  {
+   "topic": "Observation vs coding O(n²)",
+   "strong_answer": "If samples fit a short observation (too many ± → NO, residue trick, a[1]<a[n]), code that; starting O(n²) or digit-DP is a mis-rank that invites TLE and time bleed."
+  },
+  {
+   "topic": "In-contest C1 vs hard twin C2",
+   "strong_answer": "Bank the easy version’s points and idea in-contest; finish the hard twin (priority queue undo, point updates, stack construction) in the 24h upsolve after a real solo attempt."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Digging into letter A first because it is A, while D is the easy solve.",
+   "correction": "Skim all statements+constraints first; rank by speed/observation/template/skip and by solve counts—constraints and ranking beat letter order."
+  },
+  {
+   "trap": "Submitting after one sample passes without edge or multi-test checks.",
+   "correction": "Re-trace samples by hand, test n=1/empty/all-equal/MAX, and reset all multi-test state; one avoided WA beats five minutes of clever coding."
+  },
+  {
+   "trap": "Inventing stack/segment tree or digit-DP on a short-observation 1400.",
+   "correction": "If parity, a[1]<a[n], residue, or too-many-± fits, code the observation; heavy DS or digit-DP means you mis-ranked the problem."
+  },
+  {
+   "trap": "Staying on a C with no plan past ~12–15 min (or A/B past ~5–8 min).",
+   "correction": "Reread A/B on early stuck (likely misread); park C, open D/E, return later—ranking drill over sunk-cost coding."
+  },
+  {
+   "trap": "Treating all WA like CF score decay when in ICPC-mode.",
+   "correction": "ICPC-style: maximize solves first; penalty is time + 10×WA on solved only—unsolved WA is free, so don’t polish an easy while a solvable harder task sits open."
+  },
+  {
+   "trap": "Rush-submitting a two-part construction (block then BFS) after verifying only one part.",
+   "correction": "Verify both parts before submit—block G-adjacent and path check—or you farm WA under the attempt tax."
+  }
+ ]
+}

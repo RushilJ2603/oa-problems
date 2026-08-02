@@ -1,0 +1,171 @@
+{
+ "id": "py_20_file_handling",
+ "title": "File Handling",
+ "type": "FUND",
+ "relevance": "File I/O is a core Python skill for OAs and SDE interviews because persistence, modes, and safe resource cleanup show up in coding tasks and follow-ups.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that open() yields a file object, modes control intent, and close() releases the file.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "The built-in open() function accesses files and returns a file object.",
+     "weight": "core",
+     "evidence_hint": "Candidate says open() returns a file object used for subsequent reads/writes."
+    },
+    {
+     "id": "fund2",
+     "point": "close() flushes in-memory buffers and releases the file back to the operating system.",
+     "weight": "core",
+     "evidence_hint": "Mentions flushing buffers and releasing the OS resource on close()."
+    },
+    {
+     "id": "fund3",
+     "point": "Mode 'r' is read (default) and errors if the file does not exist; 'w' truncates then writes; 'x' is exclusive creation that fails if the file exists; 'a' appends; 'b' is binary; 't' is text (default).",
+     "weight": "extended",
+     "evidence_hint": "Can list the mode characters and their meanings without inventing extra modes."
+    }
+   ],
+   "probes": [
+    "What does open() return, and what do the common mode characters mean?"
+   ],
+   "hints": {
+    "1": "Think about how you get a handle to a file and what the second argument to open() controls.",
+    "2": "Map each mode character: read default, write-with-truncate, exclusive create, append, binary, text.",
+    "3": "open() returns a file object; close() flushes buffers and releases the file to the OS; 'r'/'w'/'x'/'a'/'b'/'t' match the mode table."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how read, readline, writelines, and the with context manager actually move data and close files.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "read() loads the entire file content into a single string; passing a count reads that many characters and later calls continue from where the previous left off.",
+     "weight": "core",
+     "evidence_hint": "Describes full-file read() and that a sized read advances the file position for subsequent calls."
+    },
+    {
+     "id": "mech2",
+     "point": "readline() returns the next line on each call; an empty string signals end when looping line by line.",
+     "weight": "core",
+     "evidence_hint": "Explains successive readline() calls and stopping when data == ''."
+    },
+    {
+     "id": "mech3",
+     "point": "writelines() writes a list of strings directly into a file.",
+     "weight": "extended",
+     "evidence_hint": "Says writelines() takes a list of strings and writes them without inventing extra APIs."
+    },
+    {
+     "id": "mech4",
+     "point": "A with open(...) as f block is a context manager that automatically and safely closes the file when the indented block finishes, including on error.",
+     "weight": "core",
+     "evidence_hint": "States that with closes the file automatically when the block ends, so manual close() is unnecessary."
+    }
+   ],
+   "probes": [
+    "How do read(), readline(), and with open(...) as f differ in what they return and when the file is closed?"
+   ],
+   "hints": {
+    "1": "Compare reading everything at once versus one line at a time, then how with changes cleanup.",
+    "2": "read() → one string (optional size continues later); readline() → next line until ''; with closes when the block exits.",
+    "3": "Full answer: read()/sized read with continuing position; readline() until ''; writelines() for a list; with auto-closes on normal exit or error."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast write vs append, manual close vs with, and loading a whole file vs reading in chunks.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "'w' erases existing contents before writing; 'a' adds new data without erasing existing content.",
+     "weight": "core",
+     "evidence_hint": "Clearly contrasts truncate-on-open write mode with append mode."
+    },
+    {
+     "id": "tr2",
+     "point": "Manual close() is error-prone because a crash before close() can leave the file open, causing resource leaks or corrupted data; with closes automatically.",
+     "weight": "core",
+     "evidence_hint": "Links crash-before-close risks to preferring the context manager."
+    },
+    {
+     "id": "tr3",
+     "point": "read() on a massive file tries to load the entire file into RAM and can crash the system; chunked reads keep only a manageable slice in memory.",
+     "weight": "extended",
+     "evidence_hint": "Warns that full read() can exhaust memory on huge files and recommends looping with a fixed chunk size."
+    }
+   ],
+   "probes": [
+    "When would you choose 'w' versus 'a', and why prefer with or chunked reads over manual close and a single read()?"
+   ],
+   "hints": {
+    "1": "Ask what happens to existing file contents under each write-related mode, then what fails if close never runs.",
+    "2": "'w' truncates; 'a' appends; with auto-closes; chunk loops avoid loading gigabyte-scale files wholesale.",
+    "3": "Prefer 'a' to keep old data, with for safe closure, and chunked read so only a small buffer stays in memory."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply chunked reading so only a fixed-size buffer stays in memory for large files.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "For large files, loop with read(chunk_size), continuing while the returned chunk has length greater than 0.",
+     "weight": "core",
+     "evidence_hint": "Describes a while loop that prints/processes each chunk and re-reads until an empty chunk."
+    },
+    {
+     "id": "app2",
+     "point": "Using chunk_size of 100 means only 100 characters are kept in memory at any given time, regardless of file size.",
+     "weight": "core",
+     "evidence_hint": "States that a chunk size of 100 caps in-memory content at 100 characters per read."
+    }
+   ],
+   "probes": [
+    "How would you read a multi-gigabyte text file without loading it all into RAM?"
+   ],
+   "hints": {
+    "1": "Avoid a single unbounded read(); think about repeatedly reading a fixed amount.",
+    "2": "with open(...), set chunk_size, read that many characters, loop while the chunk is non-empty.",
+    "3": "with open('big.txt','r') as f: chunk = f.read(100); while len(chunk) > 0: process; chunk = f.read(100)."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "'w' vs 'a'",
+   "strong_answer": "'w' truncates any existing file then writes; 'a' opens for writing at the end so new data is added without erasing prior content."
+  },
+  {
+   "topic": "Manual close() vs with context manager",
+   "strong_answer": "Manual close() can be skipped if the program crashes first, risking leaks or corruption; with automatically and safely closes when the block ends, even on error."
+  },
+  {
+   "topic": "Full read() vs chunked reading",
+   "strong_answer": "read() loads the whole file into RAM and can crash on massive files; looping with a fixed chunk size keeps only that chunk in memory."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Attempting to read or write after close()",
+   "correction": "That raises ValueError: I/O operation on closed file."
+  },
+  {
+   "trap": "Using 'w' when you meant to keep existing data",
+   "correction": "'w' erases the entire existing contents before writing; use 'a' to append."
+  },
+  {
+   "trap": "Calling read() on a gigabyte-scale file",
+   "correction": "It tries to load the entire file into RAM and can crash the system; read in chunks instead."
+  },
+  {
+   "trap": "Relying on a late f.close() after possible failures",
+   "correction": "If the program crashes before close(), the file may stay open; use with so closure always happens when the block finishes."
+  }
+ ]
+}

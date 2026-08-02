@@ -1,0 +1,256 @@
+{
+ "id": "10_dp_linear_1d__deep",
+ "title": "DP I: Linear / 1D (Depth Pass)",
+ "type": "CP",
+ "relevance": "High (second wave of CF-style 1D DP after frog/rob/coins/LIS/knapsack templates — Div2 C–D “state on index/value” contests)",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Decode / keyboard / broken keys: ways to type when nn is one or two presses → Constanze / Climbing Stairs family (Meta/Amazon OA clones). Adjacent constraint coloring: recolor minimum so neighbors differ → Diverse Garland / House-Robber-with-colors. Budgeted upgrades: each item needs ops[i] upgrades, total ops ≤ k, maximize value → Make Them Equal (BFS/metric + knapsack). Equal split / payroll: split array into 2 or 3 equal-sum parts → Number of Ways / Partition Equal Subset Sum contest form.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Confirm the candidate sees hidden-axis linear DP—same dp[i]/dp[sum]/dp[value] engine—when statements disguise the scan axis.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Same engine as the base ladder (dp[i] / dp[sum] / dp[value] with local transitions), but statements hide the axis: recolor neighbors, fall trees L/R, decode n/u runs, LIS along multiples, knapsack on BFS distances, ways with an “at least one long edge” constraint, or three equal-sum pieces.",
+     "weight": "core",
+     "evidence_hint": "Lists several hide-the-axis skins and still names 1D index/sum/value DP with local transitions."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognize it when a left-to-right (or value-sorted) scan has optimal substructure and n·(small state) or n√A fits.",
+     "weight": "core",
+     "evidence_hint": "States L→R or value-sorted scan plus that complexity fit as the membership test."
+    },
+    {
+     "id": "rec3",
+     "point": "OA skins: decode/keyboard ways (Constanze / Climbing Stairs; Meta/Amazon), adjacent recolor (Diverse Garland), budgeted upgrades via ops + knapsack (Make Them Equal), equal 2/3-part split (Number of Ways).",
+     "weight": "extended",
+     "evidence_hint": "Maps the prompt to one of those four Where-it-appears skins."
+    }
+   ],
+   "probes": [
+    "What makes this depth-pass linear DP rather than a plain frog/rob/coins/LIS template?",
+    "If the statement hides recolor, fall L/R, n/u decode, multiples-LIS, BFS+knapsack, or 3 equal sums, what family do you reach for?"
+   ],
+   "hints": {
+    "1": "Ask whether the axis is disguised even though transitions stay local on an index/sum/value.",
+    "2": "Cue: L→R or value-sorted optimal substructure with n·(small state) or n√A; skins include recolor, trees, decode runs, multiples, BFS knapsack, long-edge ways, 3-way partition.",
+    "3": "Say: same dp[i]/dp[sum]/dp[value] engine; hide-axis skins as listed; recognize when a scan has OSS and n·(small state) or n√A fits; OA maps are Constanze, Garland, Make Them Equal, Number of Ways."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Pick the right rewrite—value/bucket axis, Fibonacci runs, last-choice states, complement counting, or BFS+knapsack—before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Rewrite the axis: Boredom/Delete-and-Earn style DP on value, not index—also Orac (multiples of index; dp[i]=1+max dp[j] over j∣i) and Journey Planning (a_i−i buckets / map-sum, not full LIS).",
+     "weight": "core",
+     "evidence_hint": "Names value/index-multiples/a_i−i as the true DP axis instead of naive index LIS."
+    },
+    {
+     "id": "appr2",
+     "point": "Fibonacci on runs (Constanze / Decode Ways): a block of identical letters of length L has ways = F_{L+1}; multiply independent blocks; abort on forbidden letters (m/w).",
+     "weight": "core",
+     "evidence_hint": "States F_{L+1} per run, product over blocks, and abort on m/w."
+    },
+    {
+     "id": "appr3",
+     "point": "Two states beat full history: Hard problem / Fence / Garland / Basketball keep only last choice (reversed?, color, row, height-offset); never store the whole string.",
+     "weight": "core",
+     "evidence_hint": "Says keep last choice / small state per index, not the full string history."
+    },
+    {
+     "id": "appr4",
+     "point": "Complement counting (k-Tree): compute all paths of weight n with edges 1..k, then subtract (or parallel-DP) paths that never use an edge ≥ d.",
+     "weight": "extended",
+     "evidence_hint": "Describes all-ways then subtract/complement the no-edge-≥d case."
+    },
+    {
+     "id": "appr5",
+     "point": "Make Them Equal: BFS once from 1 for op-distances up to max b_i (via x+⌊x/y⌋), then one 0/1 knapsack under budget—not Dijkstra per test.",
+     "weight": "extended",
+     "evidence_hint": "States global BFS distances then one knapsack."
+    }
+   ],
+   "probes": [
+    "Before coding, is the axis index, value, multiples, or a_i−i—and do you need last-choice states, Fibonacci runs, or complement counting?",
+    "For Constanze vs Orac vs k-Tree vs Make Them Equal, which rewrite do you pick?"
+   ],
+   "hints": {
+    "1": "Classify value/bucket rewrite vs run-Fibonacci vs last-choice vs complement vs BFS+knapsack.",
+    "2": "Orac/Journey rewrite the axis; Constanze uses F_{L+1} and aborts on m/w; Hard/Fence/Garland/Basketball keep last choice; k-Tree subtracts weak paths; Make Them Equal is one BFS then knapsack.",
+    "3": "Say: DP on value / j∣i / a_i−i; ways=F_{L+1} per run; last color/row/reverse/offset only; all weight-n paths minus no edge ≥d; BFS once from 1 then 0/1 knapsack."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Verify prefix range transitions, pigeonhole gating, and local raise/collapse tricks that keep the DP small.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Prefix for range transitions (Candies / George and Job): dp[i][s] needs a sum of previous dp[i−1][s−x]; maintain prefix so each state is O(1); Candies range-sum transitions run in O(NK).",
+     "weight": "core",
+     "evidence_hint": "Mentions prefix over prior layer so each transition is O(1), and cites O(NK) for Candies."
+    },
+    {
+     "id": "impl2",
+     "point": "Pigeonhole before knapsack (Modulo Sum): if n≥m then some nonempty subset ≡0 (mod m); only run O(nm) residue DP when n<m.",
+     "weight": "core",
+     "evidence_hint": "Checks n≥m first, else 0/1 knapsack on residues in O(nm)."
+    },
+    {
+     "id": "impl3",
+     "point": "Local height/raise tricks (Fence Great Again): proving +0/+1/+2 suffices collapses infinite raise space to a 3-state rolling DP per post (adjacent ≠).",
+     "weight": "core",
+     "evidence_hint": "States only +0/+1/+2 per post and 3-state rolling DP."
+    },
+    {
+     "id": "impl4",
+     "point": "Number of Ways: prefix =S/3 then =2S/3 and count pairs of cuts; Array Description uses rolling dp[pos][val] under |x_i−x_{i+1}|≤1; Caesar’s Legions uses dp[n1][n2][last][run] with careful bounds.",
+     "weight": "extended",
+     "evidence_hint": "Names the S/3–2S/3 cut count and/or the rolling band / run-cap state shapes."
+    }
+   ],
+   "probes": [
+    "How do you implement range-sum transitions, Modulo Sum’s pigeonhole gate, and Fence’s raise collapse?",
+    "Sketch the DP state for Candies/George, Fence (+0/+1/+2), and Number of Ways (S/3, 2S/3)."
+   ],
+   "hints": {
+    "1": "Think prefix sums for prior-layer ranges, a cheap pigeonhole check, and shrinking raise choices.",
+    "2": "Candies/George: prefix → O(1) per state (O(NK) for Candies); Modulo Sum: n≥m done, else O(nm); Fence: only +0/+1/+2 → 3-state rolling.",
+    "3": "Say: maintain prefix of dp[i−1]; if n≥m answer yes else residue knapsack O(nm); Fence 3-state on +0/+1/+2; Number of Ways counts cut pairs at S/3 and 2S/3."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State when the fit is n·(small state) / n√A, when O(n log n) LIS is forced, and when prefix or pigeonhole changes the asymptotics.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Depth-pass linear DP is viable when n·(small state) or n√A fits the limits.",
+     "weight": "core",
+     "evidence_hint": "Quotes n·(small state) or n√A as the complexity fit check."
+    },
+    {
+     "id": "cx2",
+     "point": "Bubble Sort Graph forces O(n log n) LIS (longest path after one bubble pass = LIS); Candies range-sum DP is O(NK) with prefixes.",
+     "weight": "core",
+     "evidence_hint": "Cites O(n log n) for that LIS reduction and O(NK) for Candies."
+    },
+    {
+     "id": "cx3",
+     "point": "Modulo Sum: O(nm) residue DP only when n<m; n≥m is immediate via pigeonhole. Prefix maintenance makes each Candies/George state O(1).",
+     "weight": "extended",
+     "evidence_hint": "Separates the n≥m shortcut from O(nm), and O(1) per state via prefix."
+    }
+   ],
+   "probes": [
+    "What complexity fit do you quote before committing to this DP family?",
+    "When is O(n log n) forced, when is Candies O(NK), and when do you skip O(nm) Modulo Sum DP?"
+   ],
+   "hints": {
+    "1": "Separate the family fit check from the forced LIS / Candies / Modulo Sum costs.",
+    "2": "Fit: n·(small state) or n√A; Bubble Sort Graph → O(n log n); Candies → O(NK); Modulo Sum → O(nm) only if n<m.",
+    "3": "Say: n·(small state) or n√A; Bubble Sort Graph forces O(n log n) LIS; Candies O(NK) with O(1) prefix transitions; Modulo Sum pigeonhole when n≥m else O(nm)."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch axis mistakes, forbidden-letter aborts, per-test BFS, and missing pigeonhole/raise collapses.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Treating Orac as value-LIS or Journey Planning as full LIS: Orac is divisor-chain LIS (j∣i); Journey beauty is constant on a_i−i (map-sum).",
+     "weight": "core",
+     "evidence_hint": "Corrects to multiples/divisor chains and a_i−i buckets."
+    },
+    {
+     "id": "pit2",
+     "point": "Constanze: forgetting to abort on forbidden m/w, or wrong Fibonacci indexing on a run of length L (ways = F_{L+1}).",
+     "weight": "core",
+     "evidence_hint": "Mentions abort on m/w and F_{L+1} for run length L."
+    },
+    {
+     "id": "pit3",
+     "point": "Make Them Equal: Dijkstra (or BFS) per test instead of one BFS from 1 up to max b_i then one knapsack.",
+     "weight": "core",
+     "evidence_hint": "Insists on a single precomputed distance table plus one knapsack."
+    },
+    {
+     "id": "pit4",
+     "point": "Modulo Sum without pigeonhole (running O(nm) when n≥m), or Fence without proving +0/+1/+2 suffices (leaving an infinite raise space).",
+     "weight": "extended",
+     "evidence_hint": "Names n≥m shortcut and the +0/+1/+2 collapse."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you run value-LIS on Orac, skip the m/w abort on Constanze, or BFS per test on Make Them Equal?",
+    "How do Modulo Sum’s n≥m check and Fence’s +0/+1/+2 proof save you?"
+   ],
+   "hints": {
+    "1": "Check the true axis, forbidden letters, and whether costs were precomputed once.",
+    "2": "Orac=j∣i; Journey=a_i−i; Constanze abort m/w and F_{L+1}; one BFS then knapsack; n≥m pigeonhole; Fence only +0/+1/+2.",
+    "3": "List: not value-LIS on Orac; map a_i−i; abort m/w and use F_{L+1}; never Dijkstra/BFS per test; if n≥m done else O(nm); collapse raises to +0/+1/+2."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "DP on value / buckets vs DP on index",
+   "strong_answer": "Boredom/Delete-and-Earn, Orac (multiples of index), and Journey Planning (a_i−i) move the axis to value or a bucket key; index-LIS or full-array scans miss the constant-on-bucket structure."
+  },
+  {
+   "topic": "Complement counting vs direct constrained paths (k-Tree)",
+   "strong_answer": "Often easier to count all paths of weight n with edges 1..k, then subtract (or parallel-DP) paths that never use an edge ≥ d, instead of threading the threshold into every transition from the start."
+  },
+  {
+   "topic": "3-state DP vs greedy recolor (Diverse Garland)",
+   "strong_answer": "Min changes so no two neighbors match can be a 3-state DP or a greedy recolor; both target the same adjacent-constraint coloring family."
+  },
+  {
+   "topic": "DP reachability vs math cutoff (I Hate 1111)",
+   "strong_answer": "Unbounded coins of form (10^k−1)/9 can be solved with DP reachability or a math cutoff—same family, different proof load."
+  },
+  {
+   "topic": "Pigeonhole shortcut vs O(nm) residue knapsack (Modulo Sum)",
+   "strong_answer": "If n≥m some nonempty subset ≡0 (mod m); only when n<m do you run the O(nm) 0/1 knapsack on residues."
+  },
+  {
+   "topic": "Last-choice small state vs full history",
+   "strong_answer": "Hard problem / Fence / Garland / Basketball keep only last choice (reversed?, color, row, height-offset); storing the whole string is unnecessary."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Running value-LIS on Orac and Models.",
+   "correction": "Use divisor-chain LIS: dp[i]=1+max dp[j] over j∣i."
+  },
+  {
+   "trap": "Treating Journey Planning as a full LIS.",
+   "correction": "Beauty is constant on a_i−i; map-sum the buckets."
+  },
+  {
+   "trap": "Constanze Fibonacci decode without aborting on m/w, or wrong run formula.",
+   "correction": "Abort on forbidden m/w; a run of length L contributes F_{L+1} ways; multiply independent blocks."
+  },
+  {
+   "trap": "Make Them Equal: shortest-path / Dijkstra (or BFS) per testcase.",
+   "correction": "BFS once from 1 for all op-distances up to max b_i, then one 0/1 knapsack."
+  },
+  {
+   "trap": "Modulo Sum always running residue DP.",
+   "correction": "If n≥m, pigeonhole gives a nonempty subset ≡0 (mod m); else O(nm) residue knapsack."
+  },
+  {
+   "trap": "Fence Great Again allowing arbitrary height increases.",
+   "correction": "Prove +0/+1/+2 per post suffices; then 3-state rolling DP with adjacent ≠."
+  },
+  {
+   "trap": "Storing full string history for Hard problem / Garland / Basketball / Fence.",
+   "correction": "Keep only last choice (reversed?, color, row, height-offset)."
+  }
+ ]
+}

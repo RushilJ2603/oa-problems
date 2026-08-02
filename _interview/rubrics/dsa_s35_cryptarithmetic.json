@@ -1,0 +1,171 @@
+{
+ "id": "dsa_s35_cryptarithmetic",
+ "title": "Cryptarithmetic & Symbol Arithmetic",
+ "type": "FUND",
+ "relevance": "Tests systematic constraint reasoning under time pressure—carry logic, distinct-digit assignments, and leading-zero bans are staples of campus OAs and puzzle rounds.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Wrapped OA variants cite eLitmus (KEY + KEY = LOCK) and Amazon (even-digit passcode ABC × D = 1728).",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the encoding rules and carry bounds that every cryptarithm must obey.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Each letter represents a distinct digit from 0 to 9.",
+     "weight": "core",
+     "evidence_hint": "States letters are a one-to-one mapping onto digits 0–9 with no reuse."
+    },
+    {
+     "id": "fund2",
+     "point": "The leading digit of any number is never 0.",
+     "weight": "core",
+     "evidence_hint": "Explicitly bans leading zeros on every addend and the sum."
+    },
+    {
+     "id": "fund3",
+     "point": "Solve column by column from the right while tracking carry.",
+     "weight": "core",
+     "evidence_hint": "Describes right-to-left column processing with carry into the next column."
+    },
+    {
+     "id": "fund4",
+     "point": "In two-number addition the carry out is always 0 or 1 because the maximum column sum is 9 + 9 + 1 = 19.",
+     "weight": "extended",
+     "evidence_hint": "Gives the 0/1 carry bound and cites max sum 9+9+1=19."
+    }
+   ],
+   "probes": [
+    "What are the ground rules of a cryptarithmetic addition puzzle, including what carries are legal?"
+   ],
+   "hints": {
+    "1": "Think about what a letter stands for and what is illegal at the start of a number.",
+    "2": "Mention distinct digits, the leading-zero ban, and right-to-left columns with carry.",
+    "3": "State: distinct digits 0–9, no leading 0, column-by-column from the right; two-addend carry is 0 or 1 since 9+9+1=19."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how carry and length bounds force letter values column by column.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "In SEND + MORE = MONEY, M is the carry from the thousands column, so M = 1.",
+     "weight": "core",
+     "evidence_hint": "Identifies the leftmost M as a carry and concludes M=1 from the max carry of 1."
+    },
+    {
+     "id": "mech2",
+     "point": "In EAT + THAT = APPLE, EAT + THAT ≤ 999 + 9999 = 10998 < 11000, so the 5-digit sum lies in [10000, 10998], forcing A = 1 and P = 0.",
+     "weight": "core",
+     "evidence_hint": "Uses the size bound 10998 and interval [10000, 10998] to get A=1, P=0."
+    },
+    {
+     "id": "mech3",
+     "point": "In GO + TO = OUT, O is the carry from the tens column so O = 1, and units O + O = T gives T = 2.",
+     "weight": "extended",
+     "evidence_hint": "Sets O=1 from hundreds carry, then 1+1=2 for T."
+    },
+    {
+     "id": "mech4",
+     "point": "For find-the-digit sums with known constants, compute carries from those digits first to get a simple relation such as A + B = C + 9.",
+     "weight": "extended",
+     "evidence_hint": "Explains deriving A+B=C+9 (or similar) directly from fixed-digit carries."
+    }
+   ],
+   "probes": [
+    "Walk through how the leftmost columns force M in SEND+MORE=MONEY and A,P in EAT+THAT=APPLE."
+   ],
+   "hints": {
+    "1": "Start with length or carry into the leftmost digit—not with free search over all letters.",
+    "2": "For MONEY, M is only a carry; for APPLE, bound the sum below 11000.",
+    "3": "Conclude M=1; and from 999+9999=10998, sum in [10000,10998] so A=1 and P=0."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose which column to attack first when speed matters.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Under time pressure, start with the most-constrained column—usually the leftmost (dictates carries) or the rightmost (dictates parity).",
+     "weight": "core",
+     "evidence_hint": "Names leftmost-for-carries vs rightmost-for-parity as the first-move heuristic."
+    },
+    {
+     "id": "tr2",
+     "point": "Constraint-satisfaction cryptarithms are graded on speed, so the first move should shrink the search space ASAP.",
+     "weight": "extended",
+     "evidence_hint": "Links interview grading on speed to attacking the tightest constraint first."
+    }
+   ],
+   "probes": [
+    "When you open a cryptarithm under a clock, do you start left or right—and why?"
+   ],
+   "hints": {
+    "1": "Ask which column is most constrained before assigning free letters.",
+    "2": "Contrast leftmost carry/leading-digit force with rightmost parity/unit constraints.",
+    "3": "Say: start with the most-constrained column—leftmost for carries, rightmost for parity—because these CSPs are graded on speed."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the same carry and distinct-digit discipline to OA-style and symbol-substitution variants.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "With K = 8 and E = 3 in KEY + KEY = LOCK, the unique valid LOCK is 1678.",
+     "weight": "core",
+     "evidence_hint": "Recovers LOCK=1678 after rejecting the non-distinct Y=4 case."
+    },
+    {
+     "id": "app2",
+     "point": "For distinct even digits with ABC × D = 1728, the solution is 864 × 2, so A+B+C+D = 20.",
+     "weight": "core",
+     "evidence_hint": "Picks D=2, ABC=864 (all even, distinct) and sum 20."
+    },
+    {
+     "id": "app3",
+     "point": "In PQ × 3 = RQQ, Q × 3 ending in Q forces Q = 5 (Q = 0 is impossible), then P = 8 and R = 2.",
+     "weight": "extended",
+     "evidence_hint": "Eliminates Q=0, sets Q=5, derives P=8, R=2 from 85×3=255."
+    },
+    {
+     "id": "app4",
+     "point": "Under +→×, −→÷, ×→−, ÷→+, the expression 16 − 4 + 2 × 5 ÷ 3 translates and evaluates under BODMAS to 6.",
+     "weight": "extended",
+     "evidence_hint": "Translates to 16÷4×2−5+3 and gets 6."
+    }
+   ],
+   "probes": [
+    "Given K=8 and E=3, what is LOCK in KEY+KEY=LOCK, and how do you reject invalid digit assignments?"
+   ],
+   "hints": {
+    "1": "Double KEY and watch carries into LO, then check distinctness for Y.",
+    "2": "LO is 16 or 17; tens 3+3+c shows no carry to hundreds, so LO=16.",
+    "3": "Y=9 works: 839+839=1678 with all letters distinct; Y=4 collides O and C."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Leftmost column first vs rightmost column first",
+   "strong_answer": "Begin at the most-constrained column: leftmost usually fixes carries and leading digits; rightmost usually fixes parity or unit-digit relations. These CSPs are graded on speed, so the first move should cut the search space immediately."
+  },
+  {
+   "topic": "Carry-first algebra vs blind digit search on find-the-digit sums",
+   "strong_answer": "When constants are already written in the columns, compute the carries they force first; that turns the letters into a short equation such as A + B = C + 9 instead of trying free assignments."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assigning any free digit to a letter once a local column looks satisfied.",
+   "correction": "Every final assignment must satisfy the entire sum/product and keep all letters on distinct digits."
+  },
+  {
+   "trap": "Allowing 0 on leading letters while brute-forcing (e.g. K or L in KEY + KEY = LOCK).",
+   "correction": "Skip 0 for every leading letter; K ≠ 0 and L ≠ 0 are hard constraints."
+  }
+ ]
+}

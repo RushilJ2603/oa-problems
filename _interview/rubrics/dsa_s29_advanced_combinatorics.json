@@ -1,0 +1,179 @@
+{
+ "id": "dsa_s29_advanced_combinatorics",
+ "title": "Advanced Combinatorics",
+ "type": "FUND",
+ "relevance": "Advanced counting formulas, Catalan numbers, derangements, and pigeonhole arguments show up often in coding OAs and quant-style SDE interviews.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the core advanced counting formulas candidates must recall cold.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Stars and bars: n identical objects into k distinct bins has binom(n+k-1, k-1) ways; if each bin gets at least one, it is binom(n-1, k-1).",
+     "weight": "core",
+     "evidence_hint": "States both unrestricted and positive-integer forms with the correct binomial arguments."
+    },
+    {
+     "id": "fund2",
+     "point": "Inclusion-exclusion expands |A ∪ B ∪ …| by alternating sums of single, pairwise, triple, … intersections.",
+     "weight": "core",
+     "evidence_hint": "Writes the alternating PIE expansion rather than only pairwise union."
+    },
+    {
+     "id": "fund3",
+     "point": "Hockey-stick identity: sum from i=k to n of binom(i,k) equals binom(n+1, k+1).",
+     "weight": "core",
+     "evidence_hint": "Recalls the closed form binom(n+1, k+1) for that binomial sum."
+    },
+    {
+     "id": "fund4",
+     "point": "Catalan number Cn equals (1/(n+1)) binom(2n, n) and counts balanced parentheses, triangulations, valid stack sequences, and non-crossing lattice paths.",
+     "weight": "core",
+     "evidence_hint": "Gives the formula and names at least two of those Catalan objects."
+    },
+    {
+     "id": "fund5",
+     "point": "Derangements: Dn = n! times sum from k=0 to n of (-1)^k / k!; for large n, Dn is about n!/e.",
+     "weight": "extended",
+     "evidence_hint": "States the factorial-sum formula and the large-n n!/e approximation."
+    }
+   ],
+   "probes": [
+    "State the stars-and-bars formulas for unrestricted and at-least-one distributions, and give the Catalan and derangement formulas."
+   ],
+   "hints": {
+    "1": "Think about how bars partition identical items, and about the closed forms for Catalan and derangements.",
+    "2": "Unrestricted stars and bars uses binom(n+k-1, k-1); Catalan is (1/(n+1)) binom(2n,n); derangements involve the alternating 1/k! series.",
+    "3": "Say: binom(n+k-1,k-1) or binom(n-1,k-1) if nonempty; PIE alternating intersections; hockey-stick to binom(n+1,k+1); Cn=(1/(n+1))binom(2n,n); Dn=n!∑(-1)^k/k! ≈ n!/e."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to reduce constrained distributions, PIE complements, and labeled equal-size assignments to the right formula.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Lower bounds are handled by pre-allocating the minimums, then applying unrestricted stars and bars to the remainder.",
+     "weight": "core",
+     "evidence_hint": "For example, allocates minima then counts free distribution of leftover identical units."
+    },
+    {
+     "id": "mech2",
+     "point": "An upper bound like x1 ≤ 4 is handled by unrestricted stars-and-bars total minus the cases that violate the bound.",
+     "weight": "core",
+     "evidence_hint": "Subtracts the pre-allocated excess cases from the unrestricted count."
+    },
+    {
+     "id": "mech3",
+     "point": "Distinct items into equal-size labeled groups use successive combinations (multinomial), not stars and bars.",
+     "weight": "core",
+     "evidence_hint": "Chooses groups sequentially, e.g. binom(6,2)×binom(4,2)×binom(2,2) for six distinct requests onto three servers two each."
+    },
+    {
+     "id": "mech4",
+     "point": "Surjective-function counts and 'must include letters' password counts use total maps minus PIE over missed codomain elements or required letters.",
+     "weight": "extended",
+     "evidence_hint": "Starts from total functions or 26^5-style totals and applies PIE on missing images or missing required characters."
+    }
+   ],
+   "probes": [
+    "How do you count allocations with lower bounds, with an upper bound on one variable, and equal loads of distinct requests onto distinct servers?"
+   ],
+   "hints": {
+    "1": "Ask whether objects are identical or distinct, and whether constraints are floors, ceilings, or onto-ness.",
+    "2": "Pre-allocate minima; complement upper bounds; use multinomial for distinct equal groups; use PIE for onto or 'must contain' constraints.",
+    "3": "Walk an example: give minima then stars-and-bars on remainder; total minus x1≥threshold; binom choices for labeled equal piles; total^n minus PIE misses."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Distinguish when identical-item formulas, labeled multinomials, and unlabeled-group divisions apply.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Stars and bars applies to identical objects in distinct bins; distinct objects need combinations or multinomial coefficients instead.",
+     "weight": "core",
+     "evidence_hint": "Explicitly refuses stars and bars when requests/items are distinct."
+    },
+    {
+     "id": "tr2",
+     "point": "Divide by k! only when the k groups are identical or unlabeled; do not divide when the bins or servers are distinct.",
+     "weight": "core",
+     "evidence_hint": "Says labeled servers keep the multinomial product without a trailing /k!."
+    }
+   ],
+   "probes": [
+    "When distributing items, when do you use stars and bars versus a multinomial, and when if ever do you divide by k!?"
+   ],
+   "hints": {
+    "1": "The key fork is whether the items are identical and whether the groups are labeled.",
+    "2": "Identical→stars and bars; distinct equal labeled piles→product of binomials; /k! only for unlabeled groups.",
+    "3": "Candies to children: stars and bars; six distinct requests, two per distinct server: 15×6×1 with no /3!."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply Catalan, derangement, and pigeonhole patterns to classic interview settings.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Grid paths that never go above y=x, balanced parentheses, valid stack sequences, and structurally unique BSTs are Catalan counts Cn.",
+     "weight": "core",
+     "evidence_hint": "Recognizes those OA phrasings as thinly veiled Cn calculations."
+    },
+    {
+     "id": "app2",
+     "point": "Probability of a full derangement is Dn/n!; for large n it approaches 1/e, and Dn obeys Dn = n Dn-1 + (-1)^n.",
+     "weight": "core",
+     "evidence_hint": "Uses Dn/n! and either the 1/e limit or the recurrence with known small Dn values."
+    },
+    {
+     "id": "app3",
+     "point": "Pigeonhole proofs often hide the holes as odd parts, cumulative-sum offsets, or geometric cells such as quadrants of a square.",
+     "weight": "extended",
+     "evidence_hint": "Names odd-part bins, {ai} with {ai+offset}, or subdividing a region so two points share a cell."
+    }
+   ],
+   "probes": [
+    "A problem asks for valid bracket strings, Secret Santa with no self-matches, or a closest-pair guarantee among points in a square—what counting tool do you reach for?"
+   ],
+   "hints": {
+    "1": "Match the story to Catalan, derangements, or pigeonhole bins.",
+    "2": "Brackets/non-crossing/BST→Catalan; no fixed points→Dn or 1/e; existence of a close pair or divisor→pigeonhole.",
+    "3": "E.g. C5 for 5×5 diagonal-safe paths; D5/120 for five-person Secret Santa; four half-side squares force two of five points within diagonal √2/2."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Stars and bars vs multinomial",
+   "strong_answer": "Use stars and bars when objects are identical and bins are distinct; when objects are distinct and groups have prescribed sizes, use successive combinations (multinomial). Dividing by k! is only for unlabeled/identical groups, not for distinct servers or asset classes."
+  },
+  {
+   "topic": "Exact derangement count vs 1/e approximation",
+   "strong_answer": "Exact answers use Dn = n!∑(-1)^k/k! or the recurrence Dn = n Dn-1 + (-1)^n; for large n (e.g. a 52-card matching), Dn/n! is practically 1/e."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using k instead of k-1 when placing bars in stars and bars.",
+   "correction": "k distinct groups need only k-1 partitions/bars, so the binomial is binom(n+k-1, k-1) (or the positive form binom(n-1, k-1))."
+  },
+  {
+   "trap": "Dividing a multinomial assignment by k! when the bins are distinct.",
+   "correction": "Only divide by k! for unlabeled groups; distinct servers keep the raw product of combinations."
+  },
+  {
+   "trap": "Applying hockey-stick as if every sum starts at binom(k,k).",
+   "correction": "The identity always starts at binom(k,k); if the given sum starts higher, compute the full hockey-stick sum and subtract the missing early terms."
+  },
+  {
+   "trap": "Treating 'exactly r fixed points' as choose-r times a free permutation of the rest.",
+   "correction": "The remaining items must themselves be a derangement; otherwise fixed points sneak back in."
+  }
+ ]
+}

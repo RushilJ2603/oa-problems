@@ -1,0 +1,195 @@
+{
+ "id": "os_09_file_systems",
+ "title": "File systems",
+ "type": "FUND",
+ "relevance": "SDE interviews probe how OSes map files onto disk blocks—allocation, inodes, and free space—because it underpins storage performance and crash consistency.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a file is, its attributes, and the basic OS operations and directory model.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A file is a named collection of related information on secondary storage; the file system maps files/folders onto disk blocks and sectors.",
+     "weight": "core",
+     "evidence_hint": "Candidate defines a file as the OS abstraction over raw disk blocks, not as RAM or a process."
+    },
+    {
+     "id": "fund2",
+     "point": "File attributes in the directory entry/control block include name, extension/type, unique identifier, location, size, timestamps, and protection/permissions.",
+     "weight": "core",
+     "evidence_hint": "Lists several concrete attributes (name, size, location, permissions, timestamps), not just 'metadata'."
+    },
+    {
+     "id": "fund3",
+     "point": "OS file operations as system calls include create, read, write, delete, truncate, open/close, and reposition (seek).",
+     "weight": "extended",
+     "evidence_hint": "Names open/close and seek/reposition along with CRUD-style ops."
+    },
+    {
+     "id": "fund4",
+     "point": "Directories form a tree of folders; a directory is a special file mapping names to file control blocks.",
+     "weight": "extended",
+     "evidence_hint": "Says directories are special files that map names to control blocks in a tree."
+    }
+   ],
+   "probes": [
+    "What is a file from the OS perspective, and what attributes and operations does the OS expose?"
+   ],
+   "hints": {
+    "1": "Think about the abstraction users see versus raw disk blocks.",
+    "2": "Cover attributes in the control block, then the system-call operations and how directories fit.",
+    "3": "File = named collection on secondary storage; attributes include name, id, location, size, timestamps, permissions; ops include create/read/write/delete/truncate/open/close/seek; directory maps names to FCBs."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain contiguous, linked, and indexed allocation, then the Unix multilevel inode layout.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Contiguous allocation: file occupies consecutive blocks; directory stores start block and length; sequential reads need no seeks and random access to block i is start + i.",
+     "weight": "core",
+     "evidence_hint": "Mentions consecutive blocks, start+length in the directory, and direct computation for random access."
+    },
+    {
+     "id": "mech2",
+     "point": "Linked allocation: each block points to the next; directory holds only the first block; no external fragmentation and easy growth, but reaching block i follows i pointers.",
+     "weight": "core",
+     "evidence_hint": "Describes next-pointer chain, first-block directory entry, and sequential-only random access cost."
+    },
+    {
+     "id": "mech3",
+     "point": "Indexed allocation: an index block holds addresses of all data blocks; supports direct/random access and no external fragmentation; large files may need a multilevel index.",
+     "weight": "core",
+     "evidence_hint": "Names the index block, random access via the table, and multilevel indexes when one index block is not enough."
+    },
+    {
+     "id": "mech4",
+     "point": "Unix inode: attributes plus several direct pointers, one single-indirect, one double-indirect, and one triple-indirect pointer.",
+     "weight": "core",
+     "evidence_hint": "Lists direct, single-, double-, and triple-indirect levels as part of the inode."
+    },
+    {
+     "id": "mech5",
+     "point": "Pointers per block equals block size divided by address size.",
+     "weight": "extended",
+     "evidence_hint": "States the formula block size / address size for how many pointers fit in a block."
+    }
+   ],
+   "probes": [
+    "Walk through contiguous, linked, and indexed allocation, then how a Unix inode generalizes indexed allocation."
+   ],
+   "hints": {
+    "1": "Start with how data blocks are laid out, then add the inode's pointer levels.",
+    "2": "For each scheme: what the directory stores, fragmentation/growth, and random vs sequential access.",
+    "3": "Contiguous = start+length; linked = next pointers; indexed = index block; inode adds direct + single/double/triple indirect."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare allocation schemes and free-space/journaling choices using the file's stated pros and cons.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Contiguous offers excellent read performance but suffers external fragmentation and is hard to grow if following blocks are taken.",
+     "weight": "core",
+     "evidence_hint": "Pairs strong sequential/random-read performance with fragmentation and grow-by-move pain."
+    },
+    {
+     "id": "tr2",
+     "point": "Linked avoids external fragmentation and grows easily, but random access is slow, pointers consume space, and a corrupted pointer can lose the rest of the file.",
+     "weight": "core",
+     "evidence_hint": "Mentions both growth/no-fragmentation wins and sequential-access, pointer overhead, and corruption risk."
+    },
+    {
+     "id": "tr3",
+     "point": "Indexed supports random access without external fragmentation, but the index block is overhead for tiny files and may need multilevel indexes.",
+     "weight": "extended",
+     "evidence_hint": "Notes index overhead for small files and multilevel indexes for large ones."
+    },
+    {
+     "id": "tr4",
+     "point": "Free space is tracked with a bit vector (fast scan for a run of free blocks) or a linked list of free blocks; journaling logs intended changes before applying them so crashes can be replayed or rolled back.",
+     "weight": "extended",
+     "evidence_hint": "Names bit vector vs free-block list and journaling for crash consistency."
+    }
+   ],
+   "probes": [
+    "When would you prefer contiguous vs linked vs indexed allocation, and how do free-space structures and journaling help?"
+   ],
+   "hints": {
+    "1": "Contrast performance, fragmentation, and growth for the three layouts.",
+    "2": "Then add free-space tracking (bitmap vs list) and why journaling exists.",
+    "3": "Contiguous = fast but fragments/hard grow; linked = flexible but sequential; indexed = random access with index cost; bitmap vs free list; journal before apply."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the worked inode example: pointer fan-out, max blocks, and why the design favors small files.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Worked example: 8 direct addresses, one single-, one double-, one triple-indirect; disk block 128 B; block address 8 B → 16 pointers per block.",
+     "weight": "core",
+     "evidence_hint": "Recalls 8 direct, 128 B blocks, 8 B addresses, and 16 pointers per block."
+    },
+    {
+     "id": "app2",
+     "point": "Max data blocks addressable: 8 + 16 + 16^2 + 16^3 = 8 + 16 + 256 + 4096 = 4376 blocks.",
+     "weight": "core",
+     "evidence_hint": "Computes or states 4376 as 8+16+256+4096."
+    },
+    {
+     "id": "app3",
+     "point": "Maximum file size is 4376 × 128 B = 547 KB; the triple-indirect level dominates (4096 of the 4376 blocks), while a small file using only the 8 direct blocks pays no indirection cost.",
+     "weight": "core",
+     "evidence_hint": "States max size as 547 KB and explains cheap small files vs triple-indirect dominating capacity."
+    }
+   ],
+   "probes": [
+    "Given an inode with 8 direct pointers and 128 B blocks with 8 B addresses, what is the maximum file size, and why does the inode design still favor small files?"
+   ],
+   "hints": {
+    "1": "First find how many pointers fit in one block.",
+    "2": "Add direct + single + double + triple contributions, then multiply by block size.",
+    "3": "16 ptrs/block; 8+16+256+4096=4376 blocks; 4376×128 B = 547 KB; small files stay in the 8 directs."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Contiguous vs linked allocation",
+   "strong_answer": "Contiguous is simple with excellent sequential reads and O(1) random access via start+i, but causes external fragmentation and makes growth hard. Linked has no external fragmentation and grows by appending a block, but random access walks i pointers, pointers cost space, and one bad pointer can lose the rest of the file."
+  },
+  {
+   "topic": "Indexed allocation vs multilevel inode",
+   "strong_answer": "A single index block gives random access without external fragmentation but wastes space on tiny files and cannot cover huge files alone. The Unix inode keeps several direct pointers for fast small files, then single/double/triple indirect levels so large files remain reachable without always paying indirection."
+  },
+  {
+   "topic": "Bit vector vs linked list free space",
+   "strong_answer": "A bit vector uses one bit per block and is fast to scan for a contiguous run of free blocks; a linked list of free blocks is an alternative free-space representation. Journaling adds a log of intended changes before applying them so an interrupted write can be replayed or rolled back for consistency."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating linked allocation as good for random access because blocks can be anywhere on disk.",
+   "correction": "Blocks may be scattered, but reaching block i still requires following i next-pointers, so access is effectively sequential."
+  },
+  {
+   "trap": "Assuming every file pays the full multilevel-indirection cost of an inode.",
+   "correction": "Small files use only the direct pointers and incur no indirection; capacity is dominated by the triple-indirect level (4096 of 4376 blocks in the worked example)."
+  },
+  {
+   "trap": "Confusing external fragmentation with index-block overhead.",
+   "correction": "External fragmentation is free space broken into unusable gaps (contiguous allocation). Index overhead is wasted index space for tiny files under indexed/inode schemes, which otherwise avoid external fragmentation."
+  },
+  {
+   "trap": "Thinking journaling replaces free-space tracking.",
+   "correction": "Bit vectors or free-block lists track which blocks are free; journaling separately logs intended metadata/data changes so crashes mid-write can be replayed or rolled back."
+  }
+ ]
+}

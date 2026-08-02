@@ -1,0 +1,222 @@
+{
+ "id": "cpp_s51_data_types_ranges_literals",
+ "title": "Fundamental Data Types, Ranges, and Literals",
+ "type": "FUND",
+ "relevance": "C++ maps types to hardware with fixed-size, signed/unsigned, and literal pitfalls that cause silent OA and interview bugs around sizes, comparisons, and API types like size_t.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish C++ fundamental types and the standard's size guarantees versus Python-style unbounded ints.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Unlike Python's single unbounded int and one float, C++ has many hardware-mapped, fixed-size fundamental types.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts Python's one int/float with C++'s multiple sized integer and floating types."
+    },
+    {
+     "id": "fund2",
+     "point": "bool holds true/false; void means absence of a type (no return or void*); std::nullptr_t is the type of nullptr.",
+     "weight": "core",
+     "evidence_hint": "Names bool, void, and std::nullptr_t with those roles."
+    },
+    {
+     "id": "fund3",
+     "point": "Whether plain char is signed or unsigned is implementation-defined; signed char and unsigned char are explicit 1-byte integers.",
+     "weight": "core",
+     "evidence_hint": "Says char signedness is implementation-defined and names the explicit signed/unsigned char forms."
+    },
+    {
+     "id": "fund4",
+     "point": "Standard signed integers are short, int, long, and long long, each with an unsigned variant; floating types are float, double (default choice), and long double.",
+     "weight": "extended",
+     "evidence_hint": "Lists the four integer ranks and three floating types, noting double as the usual default."
+    },
+    {
+     "id": "fund5",
+     "point": "The standard does not fix exact absolute sizes for fundamental integers except char; it requires 1 == sizeof(char) <= sizeof(short) <= sizeof(int) <= sizeof(long) <= sizeof(long long), and sizeof(char) is exactly 1 byte.",
+     "weight": "core",
+     "evidence_hint": "States the relative sizeof chain starting with sizeof(char) == 1 and that exact sizes are not mandated."
+    },
+    {
+     "id": "fund6",
+     "point": "int's size is not fixed: the standard only guarantees int is at least 16 bits and at least as large as short; actual size depends on compiler and data model (e.g. LP64 vs LLP64).",
+     "weight": "core",
+     "evidence_hint": "Answers that int size is implementation-defined with the at-least-16-bits and >= short guarantees."
+    }
+   ],
+   "probes": [
+    "Is the size of int fixed in C++?",
+    "What does the standard guarantee about sizeof(char) versus sizeof(int)?"
+   ],
+   "hints": {
+    "1": "Think about what the standard mandates versus what your desktop compiler happens to use.",
+    "2": "Recall the relative sizeof ordering among char, short, int, long, and long long.",
+    "3": "sizeof(char) is 1; int is only guaranteed at least 16 bits and at least as large as short—not a fixed byte count."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain fixed-width aliases, size_t/ptrdiff_t, signed/unsigned conversion traps, promotions, and literal typing.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Exact bit-width needs (binary formats, cryptography, networking) use fixed-width types from <cstdint> such as int8_t, uint16_t, int32_t, uint64_t, plus least/fast and intptr_t/uintptr_t variants.",
+     "weight": "core",
+     "evidence_hint": "Mentions <cstdint> exact-width types and when they are required."
+    },
+    {
+     "id": "mech2",
+     "point": "std::size_t is the unsigned type returned by sizeof and large enough for any allocatable object's size in bytes; std::ptrdiff_t is the signed distance between pointers.",
+     "weight": "core",
+     "evidence_hint": "Defines size_t via sizeof and ptrdiff_t as signed pointer distance."
+    },
+    {
+     "id": "mech3",
+     "point": "Mixing signed and unsigned in a comparison promotes the signed value to unsigned, so a negative like -1 becomes a huge unsigned value and can invert the comparison.",
+     "weight": "core",
+     "evidence_hint": "Describes signed-to-unsigned conversion and the empty-vector index < size() failure mode."
+    },
+    {
+     "id": "mech4",
+     "point": "Unsigned integers never go negative: subtracting past zero wraps to the maximum value, which can create infinite loops such as while (count >= 0) on an unsigned counter.",
+     "weight": "core",
+     "evidence_hint": "States wraparound on underflow and cites the dangerous unsigned countdown loop."
+    },
+    {
+     "id": "mech5",
+     "point": "Types smaller than int (e.g. char, short) undergo integer promotion to int before arithmetic; mixed types then follow usual arithmetic conversions to a common type (e.g. int promoted to double).",
+     "weight": "extended",
+     "evidence_hint": "Names integer promotion and usual arithmetic conversions with a smaller-to-larger example."
+    },
+    {
+     "id": "mech6",
+     "point": "Integer literals may be decimal, octal (0), hex (0x), or binary (0b); C++14 digit separators use '; suffixes U/L/LL set unsigned/long/long long; floating literals default to double unless f/F or L is used.",
+     "weight": "extended",
+     "evidence_hint": "Covers bases, digit separators since C++14, and literal suffixes including float/long double."
+    }
+   ],
+   "probes": [
+    "What is size_t and when should you use it?",
+    "What goes wrong if you compare a signed int index of -1 to v.size()?",
+    "How do integer promotions and usual arithmetic conversions work?"
+   ],
+   "hints": {
+    "1": "Focus on what sizeof returns and what happens when signed meets unsigned in one expression.",
+    "2": "Walk through promoting -1 to unsigned, then separately how char/short become int before math.",
+    "3": "size_t is unsigned from sizeof; signed/unsigned compares convert the signed side; smaller-than-int types promote to int, then mixed operands share a common type."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose among standard vs fixed-width integers and signed vs unsigned based on safety and API needs.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer fixed-width <cstdint> types when exact bit width matters; otherwise the standard integer hierarchy only guarantees minima and relative ordering, not portable absolute sizes.",
+     "weight": "core",
+     "evidence_hint": "Says use cstdint for exact widths; standard ints are not fixed-size portably."
+    },
+    {
+     "id": "tr2",
+     "point": "Use unsigned mainly for bit manipulation, masks, or APIs that require it (e.g. container indices)—not merely to encode a must-be-positive domain, because wraparound makes arithmetic dangerous.",
+     "weight": "core",
+     "evidence_hint": "Gives the interview guidance: bits/APIs yes; positivity constraint alone no."
+    },
+    {
+     "id": "tr3",
+     "point": "double is the default floating choice; float is single precision and long double is extended—pick by needed precision rather than habit.",
+     "weight": "extended",
+     "evidence_hint": "Names float/double/long double and that floating literals and usual practice default to double."
+    }
+   ],
+   "probes": [
+    "When should you use unsigned integers?",
+    "When would you reach for int32_t instead of int?"
+   ],
+   "hints": {
+    "1": "Separate 'I need exact bits' from 'I want a normal counter'.",
+    "2": "Weigh portable exact width and API contracts against wraparound and mixed-sign bugs.",
+    "3": "cstdint for exact widths; unsigned for bits/masks/size APIs—not for positivity alone; double is the usual floating default."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply type and literal choices correctly in real C++ code: indices, null, strings, and auto.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Use size_t for object sizes, element counts, and indices into standard containers like std::vector rather than a plain int.",
+     "weight": "core",
+     "evidence_hint": "Recommends size_t for sizes/counts/container indices over int."
+    },
+    {
+     "id": "app2",
+     "point": "Prefer nullptr over NULL or 0 for pointers; nullptr has type std::nullptr_t.",
+     "weight": "core",
+     "evidence_hint": "States always prefer nullptr and names its type."
+    },
+    {
+     "id": "app3",
+     "point": "Raw string literals R\"( ... )\" ignore escape sequences and help with regexes, Windows paths, or multi-line strings.",
+     "weight": "extended",
+     "evidence_hint": "Explains raw strings and a path/regex use case."
+    },
+    {
+     "id": "app4",
+     "point": "With auto, the literal suffix drives deduction: 42 is int, 42U unsigned int, 3.14 double, 3.14f float, and \"Hello\" is const char*.",
+     "weight": "extended",
+     "evidence_hint": "Gives several auto+literal deduction examples matching those suffixes."
+    }
+   ],
+   "probes": [
+    "Should container indices be int or size_t, and why?",
+    "Why prefer nullptr, and what type does auto deduce for 3.14 versus 3.14f?"
+   ],
+   "hints": {
+    "1": "Look at what the standard library returns for size() and sizeof.",
+    "2": "Tie size_t to container APIs, nullptr to pointer initialization, and suffixes to auto.",
+    "3": "Use size_t for sizes/indices; prefer nullptr; auto follows the literal—unsuffixed floating is double, f makes float."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "signed vs unsigned integers",
+   "strong_answer": "Unsigned doubles the positive range by using the sign bit for magnitude, but mixed comparisons convert signed to unsigned and underflow wraps to the max value—so use unsigned for bit ops/masks and size APIs, not just to force positivity."
+  },
+  {
+   "topic": "standard int types vs <cstdint> fixed-width",
+   "strong_answer": "short/int/long/long long only guarantee minima and relative sizeof ordering; for exact widths in formats, crypto, or networking use intN_t/uintN_t (and least/fast/pointer-sized aliases) from <cstdint>."
+  },
+  {
+   "topic": "float vs double vs long double",
+   "strong_answer": "float is single precision, double double precision and the default literal/type choice, long double extended—choose by required precision rather than assuming one size everywhere."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming sizeof(int) is exactly 4 bytes (32 bits) everywhere.",
+   "correction": "That is common on modern desktops but implementation-defined; the standard only guarantees int is at least 16 bits and at least as large as short."
+  },
+  {
+   "trap": "Comparing a signed index like -1 with v.size() (size_t).",
+   "correction": "The signed value is converted to unsigned, so -1 becomes a huge value (e.g. 18446744073709551615) and the comparison can silently fail."
+  },
+  {
+   "trap": "Writing while (count >= 0) with an unsigned count that decrements.",
+   "correction": "Unsigned never goes negative; decrement past zero wraps to the maximum, so the loop condition stays true."
+  },
+  {
+   "trap": "Using unsigned only to enforce a 'must be positive' domain rule.",
+   "correction": "Prefer unsigned for bit manipulation, masks, or required APIs; wraparound makes ordinary arithmetic unsafe for that purpose."
+  },
+  {
+   "trap": "Treating a C++ byte as always exactly 8 bits in the abstract machine.",
+   "correction": "sizeof(char) is 1 byte by definition, and a byte is at least 8 bits; exotic hardware could use more, though modern desktops are universally 8 bits."
+  }
+ ]
+}

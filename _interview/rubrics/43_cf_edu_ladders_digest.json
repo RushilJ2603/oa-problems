@@ -1,0 +1,268 @@
+{
+ "id": "43_cf_edu_ladders_digest",
+ "title": "CF EDU + A2OJ / CP-31 ladders: what to grind, in order",
+ "type": "CP",
+ "relevance": "High — this is the post-Striver bridge: CF EDU installs the CP-native templates Striver under-teaches (segtree, lazy, Z, DSU polish, contest two-pointers / BS-on-answer), while CP-31 + A2OJ rating ladders train the observation/ad-hoc skill that OAs and Div2 share.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Timed OA (60–90 min, 2–4 tasks): Task 1–2 are CP-31 1300–1500 observation/greedy; Task 3 is often many queries on an array → Fenwick/segtree (EDU Pt1), not recomputing prefixes. Min days/machines/powder to produce k items → BS-on-answer with feasibility check (Factory Machines / Magic Powder / Hamburgers). Count pairs / longest subarray with at most k distinct / sum ≤ t → two pointers (Number of Pairs / Books), not nested loops—HackerRank/HackerEarth classics. Connectivity after merges/splits or process deletions offline → DSU (Learning Languages / Destroying Array); interviewers ask reverse-union more often than Kruskal MST.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Establish that this is a post-Striver two-track map (CF EDU templates + rating ladders) and how OA/Div2 prompts signal which track.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Do not grind randomly: run CF EDU modules for templates Striver under-teaches and CP-31 + A2OJ rating ladders for observation/ad-hoc skill in lockstep.",
+     "weight": "core",
+     "evidence_hint": "Names both tracks—EDU templates vs ladder observation—and says they run together, not as random problem grinding."
+    },
+    {
+     "id": "rec2",
+     "point": "On-map signal: a Div2 C/D is either “EDU template + twist” or “CP-31-style observation,” not “I need a brand-new algorithm.”",
+     "weight": "core",
+     "evidence_hint": "Uses those two phrases and rejects inventing a fresh algorithm as the default read."
+    },
+    {
+     "id": "rec3",
+     "point": "Timed OA Task 3 “many queries on an array” maps to Fenwick/segtree (EDU Pt1), not recomputing prefixes each time; Task 1–2 sit at CP-31 1300–1500 observation/greedy.",
+     "weight": "extended",
+     "evidence_hint": "Separates early OA tasks as ladder observation from the multi-query Fenwick/segtree task."
+    },
+    {
+     "id": "rec4",
+     "point": "“Minimum days / machines / powder to produce k items” → binary search on answer with a greedy/feasibility check; “count pairs / longest subarray …” → two pointers, not nested loops.",
+     "weight": "extended",
+     "evidence_hint": "Maps those OA wordings to BS-on-answer and two-pointers families by name."
+    }
+   ],
+   "probes": [
+    "After Striver, what two tracks do you run, and how do you know a Div2 C/D or OA task is on-map?",
+    "When an OA says many range queries, or min machines to finish by time T, or count pairs under a sum bound—what do you reach for?"
+   ],
+   "hints": {
+    "1": "Think curriculum map and prompt wording, not a random CF tag grind.",
+    "2": "Name EDU templates vs CP-31/A2OJ ladders, then map OA shapes to Fenwick/segtree, BS-on-answer, and two pointers.",
+    "3": "Lockstep EDU + ladders; on-map = EDU+twist or CP-31 observation; Task 3 multi-query → Fenwick/segtree; min days/machines/powder → can(mid); count pairs / longest under bound → two pointers."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Establish EDU grind order (not lesson-number order), CP-31/A2OJ ladder rules, and the transfer/unlock cadence.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "EDU grind order (not lesson number order): Two Pointers (lesson 9) → Binary Search (lesson 6) → DSU (lesson 7) → Segment Tree Pt1 (lesson 4) → Z-function (lesson 3) → Segment Tree Pt2 lazy (lesson 5, stretch) → Suffix Array (lesson 2, stretch).",
+     "weight": "core",
+     "evidence_hint": "Recites that module sequence and notes it is not lesson-number order; lazy and Suffix Array are stretch."
+    },
+    {
+     "id": "appr2",
+     "point": "Rating ladders: skip CP-31 800–1200 (skip ≤1200), clear CP-31 1300→1900 one rating block at a time; keep an A2OJ-style ladder matched to current rating, not random tags.",
+     "weight": "core",
+     "evidence_hint": "States the skip band, 1300→1900 clearing rule, and current-rating A2OJ parallel."
+    },
+    {
+     "id": "appr3",
+     "point": "Finish EDU practice for a module, then immediately transfer with contest problems at that band; climb one CP-31 rating block (~31 problems) before unlocking the next EDU-heavy DS module.",
+     "weight": "extended",
+     "evidence_hint": "Says practice→transfer immediately and ties ~31-problem blocks to unlocking the next heavy DS module."
+    },
+    {
+     "id": "appr4",
+     "point": "Weekly split: ~40% EDU practice + transfer problems, ~40% CP-31 current rating, ~20% virtual contest + 24h upsolve.",
+     "weight": "extended",
+     "evidence_hint": "Quotes the ~40/~40/~20 split including virtuals and 24h upsolve."
+    }
+   ],
+   "probes": [
+    "Walk the post-Striver EDU module order and the CP-31 / A2OJ ladder rules you would follow.",
+    "How do you interleave finishing an EDU module with climbing a CP-31 rating block week to week?"
+   ],
+   "hints": {
+    "1": "Separate template order from rating-volume rules.",
+    "2": "EDU TP→BS→DSU→Segtree Pt1→Z then stretch lazy/SA; skip ≤1200; clear 1300→1900 by blocks.",
+    "3": "Lesson order 9→6→7→4→3 then stretch 5/2; finish EDU then transfer; ~31-problem block before next heavy DS; weekly ~40% EDU+transfer / ~40% CP-31 / ~20% virtual+24h upsolve."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Establish the must-internalize templates: two pointers, BS-on-answer, DSU, Segtree Pt1, Z, and lazy compose.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Two-pointer template: sorted or sliding window where the second index only moves forward; count pairs / longest valid segment in O(n) after sort.",
+     "weight": "core",
+     "evidence_hint": "States forward-only second index and the count-pairs / longest-segment uses after sort."
+    },
+    {
+     "id": "impl2",
+     "point": "BS-on-answer: predicate can(mid) is monotonic; binary-search the answer space (time, count, median, distance); always prove monotonicity before coding.",
+     "weight": "core",
+     "evidence_hint": "Names can(mid), those answer-space kinds, and the prove-first rule."
+    },
+    {
+     "id": "impl3",
+     "point": "DSU toolkit: path compression + union by size/rank; reverse-offline (delete→add backwards) tracking component size/sum; “next surviving index” via DSU or set.",
+     "weight": "extended",
+     "evidence_hint": "Mentions reverse deletions→unions and next-alive / set erase alongside standard union heuristics."
+    },
+    {
+     "id": "impl4",
+     "point": "Segtree Pt1 from memory: build / point-update / range-query for associative op; tree-walk for first index with value ≥ x (Hotel Queries); Fenwick or EDU segtree once from memory for point update + range sum.",
+     "weight": "extended",
+     "evidence_hint": "Lists PURS ops, the ≥ x descent, and Fenwick-or-segtree for Dynamic Range Sum."
+    },
+    {
+     "id": "impl5",
+     "point": "Z-function: z[i] = LCP of s and s[i:]; derive prefix-border / period / pattern match without reaching for KMP first; Password is longest string that is prefix, suffix, and interior occurrence.",
+     "weight": "extended",
+     "evidence_hint": "Defines z[i] as that LCP and names the Password milestone without defaulting to KMP."
+    },
+    {
+     "id": "impl6",
+     "point": "Lazy Pt2 (stretch): store pending add/assign on node; push before touching children; compose tags correctly (assign kills prior add).",
+     "weight": "extended",
+     "evidence_hint": "Says push-before-children and that assign overwrites prior add."
+    }
+   ],
+   "probes": [
+    "From memory, what are the two-pointer, BS-on-answer, DSU reverse-offline, and Segtree Pt1 / Z templates?",
+    "How do you compose lazy add and assign, and when is Hotel Queries’ tree-walk the right pattern?"
+   ],
+   "hints": {
+    "1": "Pick the forward-window, can(mid), reverse-DSU, and PURS/walk pieces first.",
+    "2": "Second index only moves forward; prove monotonicity; delete→union backwards; walk for first ≥ x; z[i]=LCP.",
+    "3": "O(n) after sort TP; can(mid) on time/count/median/distance; reverse-offline max component sum; build/point-update/range-query + ≥ x walk; z[i]=LCP; push then assign-kills-add."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Establish the complexity reflexes the ladder trains: linear two-pointers after sort, rejecting O(n²) casework fails, and stretch mask/bit-segtree checks.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "After sort, two-pointer count pairs / longest valid segment runs in O(n); nested loops are the wrong OA reflex for those shapes.",
+     "weight": "core",
+     "evidence_hint": "States O(n) after sort and rejects nested loops for count-pairs / longest-under-bound prompts."
+    },
+    {
+     "id": "cx2",
+     "point": "3SUM Closure: 2-min casework kills O(n²)—the ladder observation skill Striver never trains.",
+     "weight": "core",
+     "evidence_hint": "Cites 2-min casework beating O(n²) rather than a heavy algorithmic construction."
+    },
+    {
+     "id": "cx3",
+     "point": "Stretch combos: Minimax Problem BS on min with a 2^m mask check; XOR on Segment via lazy or 20 bit-segtrees; Distinct Characters Queries via 26 BITs or OR-segtree.",
+     "weight": "extended",
+     "evidence_hint": "Names 2^m masks, 20 bit-segtrees, and 26 BITs/OR-segtree as the stated stretch implementations."
+    }
+   ],
+   "probes": [
+    "What complexity should two-pointers hit after sorting, and when is O(n²) the wrong read on a 1300 observation problem?",
+    "What mask or multi-BIT structures show up on the stretch end of this ladder?"
+   ],
+   "hints": {
+    "1": "Contrast linear window motion with quadratic casework failure.",
+    "2": "O(n) after sort for TP; 3SUM Closure is casework not DP/quadratic search.",
+    "3": "TP O(n) after sort; 2-min casework kills O(n²) on 3SUM Closure; stretch uses 2^m masks, 20 bit-segtrees, or 26 BITs/OR-segtree."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Surface map failures: wrong start order, inventing DP on observation problems, one-track stall modes, and lazy/BS discipline mistakes.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Never start at Suffix Array / lazy—finish EDU TP → BS → DSU → Segtree Pt1 → Z first; lazy and Suffix Array are stretch only.",
+     "weight": "core",
+     "evidence_hint": "Explicitly forbids opening on Suffix Array or lazy before the core EDU chain."
+    },
+    {
+     "id": "pit2",
+     "point": "On 3SUM Closure, inventing DP means you failed the map—the intended skill is fast casework, not a DP construction.",
+     "weight": "core",
+     "evidence_hint": "Says inventing DP here is a map failure, not a valid alternate solution path."
+    },
+    {
+     "id": "pit3",
+     "point": "Rating without EDU stalls on DS Div2 Ds; EDU without ladders stalls on ad-hoc Cs—both tracks are required.",
+     "weight": "extended",
+     "evidence_hint": "States both stall modes as the cost of running only one track."
+    },
+    {
+     "id": "pit4",
+     "point": "Lazy compose bug: assign must kill prior add; always push before touching children. Coding BS without proving monotonicity first is also a template failure.",
+     "weight": "extended",
+     "evidence_hint": "Mentions assign-kills-add / push discipline and the prove-monotonicity-before-code rule."
+    }
+   ],
+   "probes": [
+    "What happens if you start EDU at lazy or Suffix Array, or only climb rating without EDU?",
+    "Why is inventing DP on 3SUM Closure a red flag for this roadmap?"
+   ],
+   "hints": {
+    "1": "Wrong start module and one-track training are the big map breaks.",
+    "2": "Core order before stretch; observation≠DP; rating↔EDU stall pairing.",
+    "3": "Never start Suffix Array/lazy; inventing DP on 3SUM Closure fails the map; rating-only stalls on DS Div2 Ds and EDU-only on ad-hoc Cs; assign kills add and prove can(mid) first."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "CF EDU templates vs CP-31 / A2OJ rating ladders",
+   "strong_answer": "Run both in lockstep: EDU installs segtree/lazy/Z/DSU polish and contest TP/BS-on-answer Striver under-teaches; ladders train observation/ad-hoc. Rating without EDU stalls on DS Div2 Ds; EDU without ladders stalls on ad-hoc Cs."
+  },
+  {
+   "topic": "Weekly ~40% EDU+transfer vs ~40% CP-31 vs ~20% virtual+24h upsolve",
+   "strong_answer": "Split time across EDU practice plus transfer problems, CP-31 at current rating, and virtual contest with 24h upsolve so templates and observation volume advance together."
+  },
+  {
+   "topic": "Core EDU order vs stretch Segtree Pt2 / Suffix Array",
+   "strong_answer": "Clear TP → BS → DSU → Segtree Pt1 (+ CSES Range Queries) → Z before unlocking lazy Pt2 or Suffix Array; never start at Suffix Array / lazy."
+  },
+  {
+   "topic": "Fenwick vs EDU segtree for point update + range sum",
+   "strong_answer": "For Dynamic Range Sum Queries, implement Fenwick or EDU segtree once from memory; either proves the PURS template before CF twists."
+  },
+  {
+   "topic": "DSU “next alive” vs set erase on range paint",
+   "strong_answer": "Knight Tournament can paint survivors with DSU next-alive or set erase; both bridge into segtree thinking after EDU DSU."
+  },
+  {
+   "topic": "Lazy segtree vs 20 bit-segtrees for range XOR flip + range sum",
+   "strong_answer": "XOR on Segment (stretch) can be done with EDU Segtree Pt2 lazy or with 20 bit-segtrees."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Grinding randomly or opening CF EDU at Suffix Array / lazy.",
+   "correction": "Follow grind order EDU TP → BS → DSU → Segtree Pt1 → Z; treat Segtree Pt2 lazy and Suffix Array as stretch only."
+  },
+  {
+   "trap": "Inventing DP on 3SUM Closure.",
+   "correction": "Use fast casework that kills O(n²); inventing DP means you failed the map."
+  },
+  {
+   "trap": "Skipping CP-31 ≤1200 incorrectly by living in harder bands without clearing prior blocks, or picking random tags instead of current-rating A2OJ.",
+   "correction": "Skip 800–1200, clear each 1300→1900 block before the next, and keep an A2OJ-style ladder matched to current rating."
+  },
+  {
+   "trap": "Nested loops for count pairs / longest subarray with sum ≤ t or at most k distinct.",
+   "correction": "Use sorted/sliding two pointers where the second index only moves forward (Number of Pairs / Books family)."
+  },
+  {
+   "trap": "Recomputing prefixes on every array query in an OA Task 3.",
+   "correction": "Use Fenwick/segtree (EDU Pt1) for many queries on an array."
+  },
+  {
+   "trap": "Coding binary search on answer without proving monotonicity, or answering offline-deletion prompts with Kruskal MST code.",
+   "correction": "Prove can(mid) monotonic before coding; for deletions/offline connectivity prefer reverse-union DSU (Destroying Array / Learning Languages) over Kruskal-first answers."
+  },
+  {
+   "trap": "Composing lazy tags so add survives after assign.",
+   "correction": "Push before touching children; assign kills prior add."
+  }
+ ]
+}

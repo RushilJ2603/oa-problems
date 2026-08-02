@@ -1,0 +1,149 @@
+{
+ "id": "dbms_06_foreign_keys",
+ "title": "Foreign Keys and Referential Integrity",
+ "type": "FUND",
+ "relevance": "Campus OAs and SDE interviews use foreign keys to check whether candidates understand how relational constraints keep cross-table references valid.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a foreign key is and how referenced vs referencing relations enforce referential integrity.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A foreign key is an attribute or set of attributes that references the primary key of the same relation or another relation.",
+     "weight": "core",
+     "evidence_hint": "Candidate defines FK as a reference to a primary key, possibly including self-reference."
+    },
+    {
+     "id": "fund2",
+     "point": "Referential integrity guarantees that a reference always points at something that exists.",
+     "weight": "core",
+     "evidence_hint": "Candidate states the integrity goal as no dangling references to missing keys."
+    },
+    {
+     "id": "fund3",
+     "point": "The referenced relation is the parent/base table whose primary key is pointed at; the referencing relation is the child table that holds the foreign key.",
+     "weight": "core",
+     "evidence_hint": "Candidate correctly labels parent vs child roles for a Student/Course-style example."
+    }
+   ],
+   "probes": [
+    "What is a foreign key, and how does it relate to referential integrity?"
+   ],
+   "hints": {
+    "1": "Think about how one table’s column can point at another table’s key.",
+    "2": "Name the two roles: the table being pointed at versus the table holding the pointer.",
+    "3": "A foreign key references a primary key so every reference must point at an existing row."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Pin down which insert/delete/update operations can violate referential integrity and what ON DELETE actions do.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "On the referenced (parent) table, insert never violates; delete and update of the referenced key may violate.",
+     "weight": "core",
+     "evidence_hint": "Candidate says adding a parent is safe, but deleting or updating the parent key can orphan children."
+    },
+    {
+     "id": "mech2",
+     "point": "On the referencing (child) table, insert and update may violate; delete never violates.",
+     "weight": "core",
+     "evidence_hint": "Candidate says a bad child FK insert/update can dangle, while deleting a child cannot break the link."
+    },
+    {
+     "id": "mech3",
+     "point": "When a parent delete or key update would orphan children, the FK can specify ON DELETE CASCADE, ON DELETE SET NULL, or ON DELETE NO ACTION (the default, which rejects the operation).",
+     "weight": "core",
+     "evidence_hint": "Candidate lists cascade, set null, and no action/reject as the referential actions."
+    }
+   ],
+   "probes": [
+    "Which operations on the parent and child tables can violate referential integrity, and what happens on parent delete?"
+   ],
+   "hints": {
+    "1": "Ask which side of the link you are changing: parent key or child foreign key.",
+    "2": "Parent insert and child delete are always safe; the risky cases are child insert/update and parent delete/key update.",
+    "3": "Parent delete is handled by CASCADE (delete children), SET NULL (null the FK), or NO ACTION (reject)."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast the three referential actions when a parent delete would orphan child rows.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "ON DELETE CASCADE deletes the dependent child rows along with the parent.",
+     "weight": "core",
+     "evidence_hint": "Candidate says cascade removes matching children automatically."
+    },
+    {
+     "id": "tr2",
+     "point": "ON DELETE SET NULL sets the children’s foreign-key value to null instead of deleting them.",
+     "weight": "core",
+     "evidence_hint": "Candidate says children remain but their FK becomes null."
+    },
+    {
+     "id": "tr3",
+     "point": "ON DELETE NO ACTION rejects the parent operation and is the default behaviour.",
+     "weight": "extended",
+     "evidence_hint": "Candidate identifies reject/fail as the default when orphans would result."
+    }
+   ],
+   "probes": [
+    "If deleting a parent would orphan children, how do CASCADE, SET NULL, and NO ACTION differ?"
+   ],
+   "hints": {
+    "1": "Focus only on what happens to child rows when the parent is deleted.",
+    "2": "One option removes children, one nulls the FK, one blocks the delete.",
+    "3": "CASCADE deletes dependents; SET NULL nulls the FK; NO ACTION rejects (default)."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the asymmetry to the classic exam pattern and the SQL insert-into-child failure.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "If a is a foreign key in R1 referencing the primary key of R2, then insert into R1 and delete from R2 can violate referential integrity; insert into R2 and delete from R1 cannot.",
+     "weight": "core",
+     "evidence_hint": "Candidate maps R1=referencing and R2=referenced and answers insert into R1 plus delete from R2."
+    },
+    {
+     "id": "app2",
+     "point": "Inserting a child row whose foreign key has no matching parent is rejected (e.g., Oracle ORA-02291: parent key not found); ON DELETE CASCADE does not help that case.",
+     "weight": "core",
+     "evidence_hint": "Candidate explains child insert fails when parent is missing, and cascade only affects parent deletes."
+    }
+   ],
+   "probes": [
+    "Given R1 referencing R2, which of insert/delete on each relation can violate referential integrity?"
+   ],
+   "hints": {
+    "1": "Identify which relation holds the foreign key and which holds the primary key.",
+    "2": "Violations come from inserting into the referencing relation or deleting from the referenced relation.",
+    "3": "Answer is insert into R1 and delete from R2; child insert with a missing parent still fails even with ON DELETE CASCADE."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "ON DELETE CASCADE vs ON DELETE SET NULL vs ON DELETE NO ACTION",
+   "strong_answer": "CASCADE deletes dependent child rows with the parent; SET NULL keeps child rows but nulls their foreign key; NO ACTION rejects the parent operation and is the default."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming ON DELETE CASCADE also fixes inserting a child whose parent key is missing.",
+   "correction": "CASCADE only governs parent delete (or key update) by removing children; a child insert with no matching parent still violates referential integrity (e.g., ORA-02291)."
+  },
+  {
+   "trap": "Thinking every insert or delete on either table can violate referential integrity.",
+   "correction": "Inserting into the referenced (parent) table and deleting from the referencing (child) table never violate; danger is child insert/update and parent delete/key update."
+  }
+ ]
+}

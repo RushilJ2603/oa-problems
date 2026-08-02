@@ -1,0 +1,221 @@
+{
+ "id": "dsa_s17_sliding_window",
+ "title": "Sliding Window and Two Pointers",
+ "type": "FUND",
+ "relevance": "Sliding window and two pointers are the optimal patterns for many contiguous subarray/substring problems in SDE interviews and OAs, replacing naive enumeration with linear passes.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish why sliding window beats naive contiguous enumeration and name the four canonical patterns.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A naive approach considers all O(N^2) contiguous subarrays; a sliding window with left and right pointers reduces time to O(N).",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts all-subarrays enumeration with two-pointer tracking of a valid window and states the O(N^2) to O(N) drop."
+    },
+    {
+     "id": "fund2",
+     "point": "Every sliding window problem falls into one of four patterns: constant/fixed-size, longest/variable, shortest/variable, or counting subarrays.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists all four patterns by name without collapsing longest and shortest into one."
+    },
+    {
+     "id": "fund3",
+     "point": "Exactly-k counting uses the atMost trick: subarrays with exactly k equals atMost(k) minus atMost(k-1).",
+     "weight": "core",
+     "evidence_hint": "Candidate states exactly k as the difference of two at-most sliding-window counts."
+    },
+    {
+     "id": "fund4",
+     "point": "In an atMost sliding window, the number of valid subarrays ending at right is exactly right - left + 1.",
+     "weight": "extended",
+     "evidence_hint": "Candidate explains counting by adding the count of endings at the current right pointer as right - left + 1."
+    }
+   ],
+   "probes": [
+    "Why is sliding window preferred over checking every contiguous subarray, and what are the four canonical patterns?",
+    "How do you convert an exactly-k subarray count into sliding-window work?"
+   ],
+   "hints": {
+    "1": "Think about what left and right track versus enumerating every pair of endpoints.",
+    "2": "Name fixed-size, longest, shortest, and counting; for exactly k, relate atMost(k) to atMost(k-1).",
+    "3": "Naive is O(N^2) contiguous subarrays; window is O(N). Exactly k = atMost(k) - atMost(k-1), and valid endings at right contribute right - left + 1."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain expand/shrink rules for each pattern and the key bookkeeping tricks from the worked examples.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Longest/variable: expand right; while invalid, shrink left until valid again; track the maximum window size seen.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes expand-then-shrink-while-invalid and updating a max length."
+    },
+    {
+     "id": "mech2",
+     "point": "Shortest/variable: expand right until valid, then aggressively shrink left while still valid, tracking the minimum window; update the answer only while the window is valid (inside the shrink loop).",
+     "weight": "core",
+     "evidence_hint": "Candidate places the min-answer update inside the while-valid shrink loop, not after every right move."
+    },
+    {
+     "id": "mech3",
+     "point": "Fixed-size window slides by adding the rightmost element and removing the leftmost; Maximum Points from Cards minimizes a leftover middle window of size n - k so total sum minus that min leftover is maximized.",
+     "weight": "core",
+     "evidence_hint": "Candidate reframes picking k from ends as minimizing the contiguous leftover of length n - k."
+    },
+    {
+     "id": "mech4",
+     "point": "Longest substring without repeating characters can jump left to last_seen[c] + 1 when a duplicate lies inside the current window, using a last-seen array sized for 256 ASCII characters.",
+     "weight": "extended",
+     "evidence_hint": "Candidate mentions last-seen indices and jumping left past the prior occurrence rather than only stepping one by one."
+    },
+    {
+     "id": "mech5",
+     "point": "In longest repeating character replacement, replacements needed are window length minus max frequency; max_frequency need not be decremented on shrink because only a higher max_frequency can yield a strictly longer valid window later.",
+     "weight": "extended",
+     "evidence_hint": "Candidate states (window_length) - max_frequency <= k and justifies keeping historical max_freq."
+    },
+    {
+     "id": "mech6",
+     "point": "Minimum window subsequence is a two-pointer forward/back scan, not a standard window, because order matters for a subsequence; after matching s2 forward to right, scan backwards to find the shortest window ending at right, then resume from left + 1.",
+     "weight": "extended",
+     "evidence_hint": "Candidate distinguishes subsequence order from multiset containment and describes forward match then reverse shrink."
+    }
+   ],
+   "probes": [
+    "Walk through how left and right move for longest versus shortest variable windows.",
+    "How does Maximum Points from Cards become a fixed-size window problem?",
+    "Why can character-replacement skip decrementing max_freq when shrinking?"
+   ],
+   "hints": {
+    "1": "Separate expand/shrink goals: maximize length, minimize length, or slide a fixed width.",
+    "2": "For shortest, say when you write down the answer; for cards, what contiguous middle remains; for replacement, what only a larger max_freq could enable.",
+    "3": "Longest: shrink while invalid, track max. Shortest: shrink while valid and update min inside that loop. Cards: minimize sum of window size n - k. Replacement: keep max_freq without strict downgrade. Subsequence: forward then backward match, not a plain validity window."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast naive enumeration, shrink strategies, and when a standard window is the wrong model.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Trading O(N^2) enumeration of all contiguous subarrays for an O(N) two-pointer window is the core complexity win when the validity condition can be maintained incrementally.",
+     "weight": "core",
+     "evidence_hint": "Candidate ties incremental left/right maintenance to dropping from O(N^2) to O(N)."
+    },
+    {
+     "id": "tr2",
+     "point": "Shrinking left one step at a time versus jumping left via last-seen indices: jumping is valid when duplicates invalidate the window and the last occurrence marks the safe new left bound.",
+     "weight": "core",
+     "evidence_hint": "Candidate explains last-seen jump for no-repeat substrings versus while-loop shrink for count-based constraints like at most k zeros."
+    },
+    {
+     "id": "tr3",
+     "point": "Standard sliding window assumes a contiguous validity condition on a multiset of characters; minimum window subsequence needs forward/back two pointers because subsequence order constraints are not captured by a plain window count.",
+     "weight": "extended",
+     "evidence_hint": "Candidate says order matters so after a full forward match you reverse-match to tighten left."
+    },
+    {
+     "id": "tr4",
+     "point": "Fruit Into Baskets (at most 2 distinct) versus Longest Substring with At Most K Distinct Characters share the same longest-window map structure; the specialized case only hard-codes size greater than 2 versus greater than k.",
+     "weight": "extended",
+     "evidence_hint": "Candidate notes Fruit is Pattern 2 with <= 2 distinct and K-distinct is the same skeleton with parameter k."
+    }
+   ],
+   "probes": [
+    "When would you jump left with last-seen instead of decrementing a counter in a while loop?",
+    "Why is minimum window subsequence not solved like minimum window substring?"
+   ],
+   "hints": {
+    "1": "Compare what invalidates the window: a repeated character versus too many distinct types or unmet needs.",
+    "2": "Substring containment is about frequencies; subsequence adds order—say what extra scan that forces.",
+    "3": "No-repeat: jump left to last_seen[c]+1 if inside the window. Count/map constraints: while invalid, step left. Subsequence: forward match then backward tighten; not standard window validity."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Map interview keywords and classic prompts onto the correct pattern and shrink condition.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Recognize sliding window from keywords like contiguous subarray or substring plus longest/shortest/maximum optimization or a count requirement; the crux is defining the condition that makes the window invalid (the shrink condition).",
+     "weight": "core",
+     "evidence_hint": "Candidate cites contiguous/substring cues and insists on stating the shrink/invalid predicate first."
+    },
+    {
+     "id": "app2",
+     "point": "If asked for exactly K of something, immediately use atMost(K) - atMost(K - 1); Binary Subarrays With Sum, Nice Subarrays (odds as 1/evens as 0), and Subarrays with K Different Integers all follow this.",
+     "weight": "core",
+     "evidence_hint": "Candidate names the atMost difference and maps at least one of those problems onto it."
+    },
+    {
+     "id": "app3",
+     "point": "Max Consecutive Ones III reframes as longest subarray with at most k zeros (Pattern 2); expand right counting zeros and shrink left while zeros exceed k.",
+     "weight": "extended",
+     "evidence_hint": "Candidate restates flip-at-most-k-zeros as longest window with zeros <= k."
+    },
+    {
+     "id": "app4",
+     "point": "Number of Substrings Containing All Three Characters can count in one O(N) pass with a last-seen map: once all three of 'a','b','c' are seen, add 1 + min of the three last-seen indices for substrings ending at right.",
+     "weight": "extended",
+     "evidence_hint": "Candidate describes last-seen of a/b/c and adding 1 + min(last_seen) when all are non-sentinel."
+    }
+   ],
+   "probes": [
+    "How do you spot a sliding-window OA prompt, and what do you write down before coding?",
+    "Given exactly k odd numbers in a subarray, which pattern and formula do you use?",
+    "How would you rephrase Max Consecutive Ones III as a window validity condition?"
+   ],
+   "hints": {
+    "1": "Listen for contiguous/substring plus longest, shortest, or count.",
+    "2": "State the invalid/shrink rule; for exactly k, reach for two atMost calls.",
+    "3": "Keywords: contiguous subarray/substring + optimize or count; define shrink condition. Exactly K → atMost(K)-atMost(K-1). Ones III → longest window with at most k zeros."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Naive all contiguous subarrays vs sliding window",
+   "strong_answer": "Enumerating every contiguous subarray is O(N^2). When validity can be maintained by moving left and right, a sliding window processes each index a constant number of times for O(N) time."
+  },
+  {
+   "topic": "Stepwise left shrink vs last-seen jump",
+   "strong_answer": "Count- or map-based constraints (at most k zeros, at most k distinct) shrink left in a while loop. For no-repeat substrings, a last-seen index lets you jump left to last_seen[c]+1 when the duplicate is inside the current window."
+  },
+  {
+   "topic": "Minimum window substring vs minimum window subsequence",
+   "strong_answer": "Substring uses Pattern 3 shortest window with need counts and a formed counter. Subsequence needs forward match of s2 then backward scan to tighten left because order matters, then resume from left+1—not a standard multiset window."
+  },
+  {
+   "topic": "Strict max_freq maintenance vs historical max_freq",
+   "strong_answer": "In longest repeating character replacement, needed replacements are window length minus max frequency. You need not decrement max_freq on shrink; only a higher max_freq can produce a strictly longer valid window later."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Updating the answer for a shortest-window problem on every right expansion, including when the window is not yet valid.",
+   "correction": "For shortest windows, update the answer only while the window is valid, inside the while loop that shrinks left."
+  },
+  {
+   "trap": "Treating exactly-k counting as a single expand/shrink pass without the atMost difference.",
+   "correction": "Compute atMost(k) - atMost(k-1); in atMost, add right - left + 1 for subarrays ending at right, and guard negative goals (e.g., goal < 0 returns 0)."
+  },
+  {
+   "trap": "Decrementing max_freq when shrinking in character replacement and thinking the algorithm is wrong if you skip it.",
+   "correction": "Keeping the historical max_freq is intentional: only a larger max_freq can unlock a longer valid window."
+  },
+  {
+   "trap": "Applying a standard frequency sliding window to minimum window subsequence.",
+   "correction": "Subsequence order matters; use forward match to find right, then reverse match to find the tightest left, then restart from left + 1."
+  },
+  {
+   "trap": "Modeling Maximum Points from Cards as an open-ended two-end search without a fixed window.",
+   "correction": "Leave a contiguous middle of exactly n - k cards; minimize that fixed-size window sum and return total sum minus the minimum leftover."
+  }
+ ]
+}

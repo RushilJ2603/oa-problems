@@ -1,0 +1,161 @@
+{
+ "id": "py_08_operators",
+ "title": "Operators",
+ "type": "FUND",
+ "relevance": "SDE OAs and interviews routinely use arithmetic, comparison, logical, bitwise, assignment, and membership operators in expressions and conditionals.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that operators are symbols that compute on values/variables and fall into named families with known arithmetic and relational meanings.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Operators are special symbols that perform computations on values and variables, grouped into arithmetic, relational, logical, bitwise, assignment, and membership families.",
+     "weight": "core",
+     "evidence_hint": "Lists the six families and states operators act on values/variables."
+    },
+    {
+     "id": "fund2",
+     "point": "Arithmetic operators include +, -, *, / (true division), // (floor division), % (modulus/remainder), and ** (exponentiation), with examples such as 5 + 6 → 11 and 5 ** 2 → 25.",
+     "weight": "core",
+     "evidence_hint": "Names the seven arithmetic operators and can cite at least one table example result."
+    },
+    {
+     "id": "fund3",
+     "point": "Relational operators ==, !=, >, <, >=, <= compare two values and evaluate to a boolean.",
+     "weight": "extended",
+     "evidence_hint": "Lists the six comparison operators and says they yield True/False."
+    }
+   ],
+   "probes": [
+    "What families of operators does Python have, and what does each arithmetic operator do?"
+   ],
+   "hints": {
+    "1": "Think beyond + and - — Python groups several operator families.",
+    "2": "Name arithmetic, relational, logical, bitwise, assignment, and membership; then walk +, -, *, /, //, %, **.",
+    "3": "Operators compute on values/variables; arithmetic spans + through ** (e.g. 5 + 6 is 11, 5 ** 2 is 25); relational ops return booleans."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show exact evaluation rules for true vs floor division, logical and/or/not return values, and bitwise ops including ~ and shifts.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "/ always produces a float (5 / 2 is 2.5, never 2), while // floor-divides and keeps an integer result when both operands are integers; % is remainder and ** is power.",
+     "weight": "core",
+     "evidence_hint": "Contrasts 5 / 2 → 2.5 with 5 // 2 → 2 and states float vs integer-floor behavior."
+    },
+    {
+     "id": "mech2",
+     "point": "and returns the first falsy operand (or the last if all truthy); or returns the first truthy operand; not inverts truthiness to a boolean — e.g. 1 and 0 → 0, 1 or 0 → 1, not 1 → False.",
+     "weight": "core",
+     "evidence_hint": "Explains operand-return semantics and matches the 0 / 1 / False example."
+    },
+    {
+     "id": "mech3",
+     "point": "Bitwise &, |, ^, ~, >>, << act on integer binary forms; e.g. 2 & 3 → 2, 2 | 3 → 3, 2 ^ 3 → 1, ~3 → -4 via ~x = -(x + 1), 4 >> 2 → 1, 5 << 2 → 20; left shift by n multiplies by 2**n and right shift floor-divides by 2**n.",
+     "weight": "extended",
+     "evidence_hint": "Gives binary reasoning or the ~x = -(x + 1) rule and cites shift multiply/divide by 2**n."
+    }
+   ],
+   "probes": [
+    "What does 5 / 2 versus 5 // 2 return, and what do 1 and 0, 1 or 0, and ~3 evaluate to?"
+   ],
+   "hints": {
+    "1": "Watch types and return values — not every operator yields only True/False.",
+    "2": "Contrast / vs // first; then and/or operand returns; then bitwise including ~x = -(x + 1).",
+    "3": "5 / 2 → 2.5 (float), 5 // 2 → 2; 1 and 0 → 0, 1 or 0 → 1, not 1 → False; ~3 → -4; shifts scale by 2**n."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Clarify choosing true division versus floor division and understanding that logical operators return operands rather than only booleans.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer / when a float quotient is required (5 / 2 → 2.5); prefer // when truncating toward floor with an integer result for integer operands (5 // 2 → 2).",
+     "weight": "core",
+     "evidence_hint": "States the float-vs-floor choice with the 2.5 vs 2 examples."
+    },
+    {
+     "id": "tr2",
+     "point": "Logical and/or are useful when you want the actual operand value (first falsy / first truthy), whereas not always yields a boolean — so they are not interchangeable with always-True/False comparisons.",
+     "weight": "core",
+     "evidence_hint": "Says and/or can return 0 or 1 (as in the examples), not only True/False, while not yields False for not 1."
+    }
+   ],
+   "probes": [
+    "When would you use / instead of //, and why might and/or surprise someone expecting only booleans?"
+   ],
+   "hints": {
+    "1": "One choice is about numeric type/truncation; another is about what logical ops actually return.",
+    "2": "Compare 5 / 2 vs 5 // 2, then recall 1 and 0 / 1 or 0 return operands.",
+    "3": "Use / for 2.5-style float division, // for floor integer division; and/or return operands (0 or 1 here), not only booleans."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply assignment/augmented assignment, membership tests, and the correct increment idiom in Python.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "= binds a value to a name; augmented forms like a += 2 mean a = a + 2 (and similarly for -=, *=, /=, //=, %=, **=, and bitwise forms); starting from a = 2, a += 2 prints 4.",
+     "weight": "core",
+     "evidence_hint": "Defines augmented assignment and cites a = 2; a += 2 → 4."
+    },
+    {
+     "id": "app2",
+     "point": "in / not in test whether a value occurs in a sequence (string, list, tuple, etc.) and return a boolean — e.g. 'D' in 'Delhi' → True, 'D' not in 'Delhi' → False, 1 in [2, 3, 4, 5, 6] → False.",
+     "weight": "core",
+     "evidence_hint": "Explains membership on sequences and matches the Delhi/list examples."
+    },
+    {
+     "id": "app3",
+     "point": "Python has no ++ or --; C-style a++ / ++a are invalid — use a += 1 instead.",
+     "weight": "extended",
+     "evidence_hint": "Explicitly rejects ++/-- and recommends += 1."
+    }
+   ],
+   "probes": [
+    "How do you increment a variable in Python, and what do 'D' in 'Delhi' and 1 in [2, 3, 4, 5, 6] return?"
+   ],
+   "hints": {
+    "1": "Think about shorthand assignment and testing containment in a sequence.",
+    "2": "Cover += as a = a + ..., membership in/not in, and the missing ++/--.",
+    "3": "a += 2 after a = 2 yields 4; 'D' in 'Delhi' is True and 1 in that list is False; use a += 1, never ++."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "/ vs //",
+   "strong_answer": "/ is true division and always yields a float (5 / 2 → 2.5); // is floor division and keeps an integer result when both operands are integers (5 // 2 → 2)."
+  },
+  {
+   "topic": "logical and/or return values vs boolean-only expectation",
+   "strong_answer": "and returns the first falsy operand (or the last if all truthy) and or returns the first truthy operand, so 1 and 0 → 0 and 1 or 0 → 1; not alone inverts to a boolean (not 1 → False)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming / behaves like integer division and returns 2 for 5 / 2.",
+   "correction": "/ always produces a float; 5 / 2 is 2.5. Use // for floor division (5 // 2 → 2)."
+  },
+  {
+   "trap": "Expecting and/or to always return True or False.",
+   "correction": "They return operands: 1 and 0 yields 0, 1 or 0 yields 1; not converts truthiness to a boolean (not 1 → False)."
+  },
+  {
+   "trap": "Surprise that ~3 is -4, or misreading bitwise NOT.",
+   "correction": "Bitwise NOT follows ~x = -(x + 1), so ~3 is -4."
+  },
+  {
+   "trap": "Using a++ or ++a to increment, as in C-style languages.",
+   "correction": "Python has no ++ or --; write a += 1 instead."
+  }
+ ]
+}

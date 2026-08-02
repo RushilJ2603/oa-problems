@@ -1,0 +1,250 @@
+{
+ "id": "31_centroid_decomposition",
+ "title": "Centroid decomposition on trees",
+ "type": "CP",
+ "relevance": "Medium — almost never a literal OA template; shows up as “balanced root / subtree ≤ n/2” intuition and as a Candidate Master tree-path / offline-query weapon Striver never covers.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Placement OAs almost never ask for full CD; diluted forms are pick a capital/warehouse so no branch is too large, or minimize total client distance → single/weighted centroid (ABC348E). Manager/rank hierarchies map to 321C-style CD layers. Harder OA/ICPC screens: count path-property pairs (length, XOR, GCD) under n ≤ 1e5 (Fixed-Length Paths / 161D / 766E). Rare CM take-home/onsite: paint a node + query closest painted → Xenia-style centroid tree (342E).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Map balanced-root, path-count, rank-hierarchy, and paint/nearest-on-tree wording to centroid or full CD.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Signal words: count/sum paths with a property (length, XOR, GCD, palindrome mask); paint/update then query nearest/best path; assign ranks so same-rank peers go through a higher rank; “make the centroid unique”; construct a balanced rooted tree whose LCAs lie on original paths.",
+     "weight": "core",
+     "evidence_hint": "Lists those signals and ties them to centroid / CD rather than a generic rooted DFS."
+    },
+    {
+     "id": "rec2",
+     "point": "OA-diluted form: pick a capital/warehouse so no branch is too large, or minimize total distance to clients → single or weighted centroid, not full recurse.",
+     "weight": "core",
+     "evidence_hint": "Names balanced capital / min ∑ C_i·dist and stops at finding one (weighted) centroid."
+    },
+    {
+     "id": "rec3",
+     "point": "“Assign managers/ranks so peers communicate only through a superior” → same structure as 321C (balanced hierarchy = CD layers).",
+     "weight": "extended",
+     "evidence_hint": "Maps manager/rank wording to assigning the current centroid the next layer then recursing."
+    },
+    {
+     "id": "rec4",
+     "point": "Reach for CD on global paths with n ≤ 1e5 and no root-given structure; if fixed small k or subtree-only, tree DP / rerooting / DSU-on-tree may suffice.",
+     "weight": "core",
+     "evidence_hint": "Separates global path aggregates under large n from subtree-only or small-k DP."
+    }
+   ],
+   "probes": [
+    "What wording makes you reach for a single centroid versus full centroid decomposition?",
+    "When would tree DP or DSU-on-tree be enough instead of CD?"
+   ],
+   "hints": {
+    "1": "Listen for balanced root / no branch too large versus count/sum paths or paint+nearest.",
+    "2": "Capital/warehouse or min total distance → one (weighted) centroid; global path property under large n → full CD; ranks through a superior → CD layers.",
+    "3": "Say: signals are path properties (length/XOR/GCD/mask), paint+nearest, rank hierarchy, unique centroid, balanced rooted tree; OA form is single/weighted centroid; use CD for global paths with n ≤ 1e5, else consider tree DP/rerooting/DSU-on-tree."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Define a centroid, state the CD loop and path-coverage rule, and when to build an explicit centroid tree.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "A centroid is a node whose removal leaves every component of size ≤ ⌊n/2⌋; every tree has 1 or 2 adjacent centroids.",
+     "weight": "core",
+     "evidence_hint": "States the ≤ ⌊n/2⌋ component condition and the 1-or-2 adjacent fact."
+    },
+    {
+     "id": "appr2",
+     "point": "CD repeatedly finds a centroid, processes all paths through it, marks it removed, and recurses on remaining components.",
+     "weight": "core",
+     "evidence_hint": "Walks find → process-through-centroid → remove → recurse on live components."
+    },
+    {
+     "id": "appr3",
+     "point": "Every u–v path is processed exactly when the first centroid on that path in the decomposition is the current centroid — combine child bags, then add the child’s bag.",
+     "weight": "core",
+     "evidence_hint": "Explains first-centroid coverage and bag-combine-then-add to avoid double-counting."
+    },
+    {
+     "id": "appr4",
+     "point": "Build an explicit centroid tree (parent = previous centroid) when you need updates/queries: every original path is covered by some centroid ancestor.",
+     "weight": "extended",
+     "evidence_hint": "Names par_cd / parent links and path coverage by a centroid ancestor for update/query."
+    }
+   ],
+   "probes": [
+    "What is a centroid, and how many can a tree have?",
+    "How does CD guarantee every path is processed exactly once?",
+    "When do you build the centroid tree instead of only offline process-through-centroid?"
+   ],
+   "hints": {
+    "1": "Start from the removal-balance definition, then the find→process→remove→recurse loop.",
+    "2": "≤ ⌊n/2⌋ sides; process paths through the current centroid via child bags; parent link for online queries.",
+    "3": "Say: centroid ⇒ all components ≤ ⌊n/2⌋, 1 or 2 adjacent; CD = get centroid, process through it, remove, recurse; each path counted at its first CD centroid by combining then adding child bags; centroid tree parent = previous centroid for ancestor updates/queries."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Spell the O(n) centroid walk, the removed-aware CD template, and optional centroid-tree / rank construction.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Find a centroid in O(n): compute sz[], start anywhere, keep moving to a neighbor with sz[child] > n/2 (or parent-side n − sz[v]); stop when all sides ≤ n/2.",
+     "weight": "core",
+     "evidence_hint": "Describes sz DFS and walk-to-heavy-side until all sides ≤ n/2."
+    },
+    {
+     "id": "impl2",
+     "point": "CD loop: get_sz → get_centroid → process paths through it → removed[c]=true → recurse on each adjacent live component; never walk into removed nodes.",
+     "weight": "core",
+     "evidence_hint": "Orders the five steps and forbids traversing removed[]."
+    },
+    {
+     "id": "impl3",
+     "point": "Explicit centroid tree: par_cd[c] = previous centroid; store dist(node, centroid-ancestor) for O(log n) updates/queries (342E).",
+     "weight": "extended",
+     "evidence_hint": "Sets parent to previous centroid and uses precomputed distances along ancestors."
+    },
+    {
+     "id": "impl4",
+     "point": "Rank/construct pattern (321C, ABC291H): assign the current centroid the next layer/parent link, then recurse — layers ≤ log₂ n; 321C letter ranks prove depth ≤ 26.",
+     "weight": "extended",
+     "evidence_hint": "Assigns next letter/layer at the centroid then recurses, citing layer/depth bounds from the file."
+    }
+   ],
+   "probes": [
+    "How do you find one centroid with a single size DFS and a walk?",
+    "Walk me through the CD recursion with the removed array.",
+    "How do you wire the centroid tree for paint + nearest-red queries?"
+   ],
+   "hints": {
+    "1": "sz first, then move toward the oversized side; mark removed before recursing.",
+    "2": "Template: get_sz → get_centroid → process → removed[c]=true → recurse live neighbors only; optional par_cd and dist to ancestors.",
+    "3": "Say: walk while sz[child] > n/2 or parent-side n−sz[v] > n/2; CD never enters removed; par_cd[c]=previous centroid with precomputed dist for O(log n) ancestor updates/queries; ranks assign next layer at centroid then recurse (≤ log₂ n / depth ≤ 26 for A–Z)."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Justify O(log n) decomposition depth and O(n log n) total work, plus process clearing discipline.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Decomposition depth is O(log n) because each centroid splits components to size ≤ ⌊n/2⌋.",
+     "weight": "core",
+     "evidence_hint": "Ties the ⌊n/2⌋ split to logarithmic recursion depth / centroid-tree height."
+    },
+    {
+     "id": "cx2",
+     "point": "Each node lies in O(log n) live components ⇒ total work typically O(n log n) times the per-centroid scan.",
+     "weight": "core",
+     "evidence_hint": "States per-node O(log n) appearances and O(n log n)·(work per visit)."
+    },
+    {
+     "id": "cx3",
+     "point": "Keep process linear in component size: clear arrays only up to max_depth, not a full O(n) memset each time.",
+     "weight": "core",
+     "evidence_hint": "Warns against full-array memset and clears only up to the component’s max depth."
+    },
+    {
+     "id": "cx4",
+     "point": "Explicit centroid tree height is O(log n); updates/queries walk O(log n) centroid ancestors.",
+     "weight": "extended",
+     "evidence_hint": "States height O(log n) and O(log n) ancestor walk for 342E-style ops."
+    }
+   ],
+   "probes": [
+    "Why is CD depth logarithmic?",
+    "Where does the extra log factor in total time come from?",
+    "What clearing mistake turns the process into a hidden quadratic?"
+   ],
+   "hints": {
+    "1": "Each split caps components at half the current size.",
+    "2": "≤ ⌊n/2⌋ ⇒ O(log n) depth; each node in O(log n) components ⇒ O(n log n)·scan; clear only to max_depth.",
+    "3": "Say: size halves at each centroid ⇒ depth/height O(log n); each node in O(log n) live components ⇒ O(n log n)·(per-visit work); clear freq arrays only up to max_depth, never full O(n) memset per centroid."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch removed-walk bugs, bag-order mistakes, two-centroid handling, and overusing CD.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Never walk into removed nodes when sizing or scanning a live component.",
+     "weight": "core",
+     "evidence_hint": "Checks removed[] on every adjacency walk during get_sz / process / recurse."
+    },
+    {
+     "id": "pit2",
+     "point": "Path counting must combine child bags first, then add the child’s bag — wrong order double-counts same-subtree pairs.",
+     "weight": "core",
+     "evidence_hint": "States query-against-global then merge, not merge-then-query within one child."
+    },
+    {
+     "id": "pit3",
+     "point": "If two centroids exist they are adjacent (even n split); constructive drills like 1406C must find both and cut/relink so exactly one remains.",
+     "weight": "extended",
+     "evidence_hint": "Mentions adjacent pair and an edge move to leave a unique centroid."
+    },
+    {
+     "id": "pit4",
+     "point": "CD is overkill when pure tree DP / rerooting / DSU-on-tree suffice (fixed small k, or subtree-only queries).",
+     "weight": "core",
+     "evidence_hint": "Declines full CD when the query is local to a root/subtree or k is tiny."
+    }
+   ],
+   "probes": [
+    "What breaks if you forget the removed array during a size DFS?",
+    "How do you combine depth bags across children without double-counting?",
+    "When is CD the wrong hammer?"
+   ],
+   "hints": {
+    "1": "Check removed walks, bag merge order, and whether the query is really global-path.",
+    "2": "Skip removed neighbors; combine-then-add child bags; two centroids are adjacent; prefer DP/rerooting/sack when structure allows.",
+    "3": "Say: never enter removed[]; count by combining against other children then add the bag; two centroids adjacent (even n)—1406C cut/relink; skip CD for fixed small k or subtree-only (use tree DP/rerooting/DSU-on-tree)."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Single/weighted centroid vs full centroid decomposition",
+   "strong_answer": "OA-style “capital so no branch too large” or min total distance needs only one (weighted) centroid. Full find→process→remove→recurse is for counting/aggregating global paths or building a centroid tree for updates/queries."
+  },
+  {
+   "topic": "Offline process-through-centroid vs explicit centroid tree",
+   "strong_answer": "Offline path counts (Fixed-Length Paths, XOR/GCD path aggregates) process bags at each centroid then discard. Dynamic paint/nearest or updates need par_cd links and precomputed dist to O(log n) ancestors (342E)."
+  },
+  {
+   "topic": "Centroid decomposition vs tree DP / rerooting / DSU-on-tree",
+   "strong_answer": "Prefer tree DP, rerooting, or DSU-on-tree for fixed small k or subtree-only queries. Reach for CD when the constraint is global paths, n ≤ 1e5, and no root-given structure."
+  },
+  {
+   "topic": "Rank/layer construction vs path-aggregate CD",
+   "strong_answer": "321C / ABC291H only assign the next layer/parent at the current centroid and recurse (layers ≤ log₂ n). Path-property problems still need the bag/combine process (and often Fenwick/BIT) at each centroid."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Walking into already-removed nodes while recomputing sizes or scanning a component.",
+   "correction": "After processing a centroid set removed[c]=true and skip removed neighbors in every subsequent DFS."
+  },
+  {
+   "trap": "Merging a child’s depth bag into the global bag before querying it, double-counting pairs inside that child.",
+   "correction": "Every path is counted at its first decomposition centroid: combine against other children’s bags first, then add the child’s bag."
+  },
+  {
+   "trap": "Clearing frequency/depth arrays with a full O(n) memset at every centroid.",
+   "correction": "Keep process linear in component size—clear only up to max_depth for that component."
+  },
+  {
+   "trap": "Assuming every tree has a unique centroid, or ignoring the two-centroid adjacent case.",
+   "correction": "Every tree has one or two centroids; if two, they are adjacent (even n split)—handle both (e.g. 1406C cut/relink)."
+  },
+  {
+   "trap": "Reaching for full CD when the problem is subtree-only or fixed small k.",
+   "correction": "Use tree DP / rerooting / DSU-on-tree when that suffices; reserve CD for global paths under n ≤ 1e5 with no given root structure."
+  }
+ ]
+}

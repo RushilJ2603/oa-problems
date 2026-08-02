@@ -1,0 +1,182 @@
+{
+ "id": "dsa_s22_cubes_dice",
+ "title": "Cubes, Dice & Cutting",
+ "type": "FUND",
+ "relevance": "Campus OAs and aptitude rounds routinely test painted-cube counting, die opposite-face deduction, and planar-cut minima as quick spatial-reasoning filters.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish painted-cube face-count formulas and the standard-die opposite-face rule.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A solid cube painted on all sides and cut into n^3 identical smaller cubes always has exactly 8 corner cubes with 3 faces painted.",
+     "weight": "core",
+     "evidence_hint": "Names the 8 corners as the only 3-face-painted cubes, independent of n."
+    },
+    {
+     "id": "fund2",
+     "point": "With all faces painted: 2-face (edges) = 12(n-2), 1-face (face centres) = 6(n-2)^2, 0-face (inner core) = (n-2)^3; total smaller cubes = n^3.",
+     "weight": "core",
+     "evidence_hint": "Recites the four formulas and that they partition n^3."
+    },
+    {
+     "id": "fund3",
+     "point": "On a standard die, opposite faces always sum to 7 (e.g., 1 opposite 6).",
+     "weight": "core",
+     "evidence_hint": "States sum-to-7 and gives an opposite pair like 1 and 6."
+    }
+   ],
+   "probes": [
+    "A cube is painted on all sides and cut into n^3 identical smaller cubes. How many have 3, 2, 1, or 0 faces painted?",
+    "On a standard die, what is opposite 3, and what rule are you using?"
+   ],
+   "hints": {
+    "1": "Separate corners, edges, faces, and the hollowed-out interior.",
+    "2": "Corners are fixed; edges and faces shrink with (n-2); interior is a smaller cube of side (n-2).",
+    "3": "8 corners; 12(n-2) edges; 6(n-2)^2 face centres; (n-2)^3 unpainted; standard die opposites sum to 7."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Apply counting formulas under edge cases and deduce die opposites from shared faces or cuts.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Formulas using (n-2) for 1-face and 2-face painted cubes apply only when n >= 3; if n=2, (n-2)=0 so there are exactly 8 cubes with 3 painted faces and 0 with fewer.",
+     "weight": "core",
+     "evidence_hint": "Flags the n>=3 precondition and the all-corners n=2 case."
+    },
+    {
+     "id": "mech2",
+     "point": "If two views of a die share exactly one face, write faces clockwise from that common face; corresponding terms in the two sequences are opposite each other.",
+     "weight": "core",
+     "evidence_hint": "Describes the one-common-face clockwise pairing rule."
+    },
+    {
+     "id": "mech3",
+     "point": "If two views share two faces, the remaining unmatched face in each view is opposite the other.",
+     "weight": "extended",
+     "evidence_hint": "States the two-common-faces remaining-faces-are-opposite rule."
+    },
+    {
+     "id": "mech4",
+     "point": "Without restacking, cutting into n×n×n identical pieces needs n-1 straight planar cuts along each of three perpendicular axes.",
+     "weight": "core",
+     "evidence_hint": "Says n-1 cuts per axis, total 3(n-1)."
+    }
+   ],
+   "probes": [
+    "Why do the usual 1-face and 2-face painted counts break for a 2×2×2 dissection?",
+    "Two die views share exactly one face — how do you find which faces are opposite?",
+    "How many planar cuts (no restacking) turn a cube into 5×5×5 identical smaller cubes?"
+   ],
+   "hints": {
+    "1": "Watch the (n-2) term, and for dice compare what is shared between views.",
+    "2": "n=2 is all corners; for one shared face use clockwise sequences; for cuts use n-1 per axis.",
+    "3": "n>=3 for (n-2) formulas; n=2 → 8 three-face only; one shared face → clockwise pairing; two shared → unmatched faces opposite; 125=5^3 needs 4+4+4=12 cuts."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose cut distributions to maximize pieces or minimize cuts, with and without restacking.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "With a fixed total of cuts x+y+z along three axes, pieces equal (x+1)(y+1)(z+1); maximize by keeping x, y, z as close as possible.",
+     "weight": "core",
+     "evidence_hint": "States product form and even-split maximization (e.g., 10 cuts as 3,3,4 → 4×4×5=80)."
+    },
+    {
+     "id": "tr2",
+     "point": "For a target of identical grid pieces x·y·z with no restacking, cuts equal x+y+z-3; minimize by choosing three factors of the target that are as close as possible.",
+     "weight": "core",
+     "evidence_hint": "Gives cuts = x+y+z-3 and close-factor minimization (e.g., 60=3×4×5 → 9 cuts)."
+    },
+    {
+     "id": "tr3",
+     "point": "With restacking allowed, one cut can double the piece count; the theoretical minimum cuts to get N pieces is ceil(log2 N).",
+     "weight": "extended",
+     "evidence_hint": "Mentions doubling via restack and ceil(log2 N) (e.g., 64 pieces → 6 cuts)."
+    }
+   ],
+   "probes": [
+    "With exactly 10 straight cuts and no restacking, what is the maximum number of identical pieces you can get from a cube?",
+    "You need exactly 60 identical grid pieces with no restacking — how do you minimize cuts?",
+    "Minimum planar cuts to get 64 identical pieces if restacking between cuts is allowed?"
+   ],
+   "hints": {
+    "1": "Think how cuts are split across the three axes, and whether pieces can be stacked.",
+    "2": "Fixed cuts → maximize (x+1)(y+1)(z+1) with x+y+z fixed; fixed pieces → minimize x+y+z-3; restacking → doubling.",
+    "3": "10 → 3+3+4 → 80 pieces; 60 → 3×4×5 → 9 cuts; restack for 64 → log2 64 = 6."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Handle OA wrapping, partial painting, and net-to-cube opposite-face checks.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "OA stories that give large and small edge lengths in physical units require computing n = (large edge)/(small edge) before applying painted-cube formulas.",
+     "weight": "core",
+     "evidence_hint": "Extracts n from dimensions first (e.g., 15 cm / 3 cm = 5), then uses the usual counts."
+    },
+    {
+     "id": "app2",
+     "point": "In a standard cross-shaped net, faces that lie in a straight line and are separated by exactly one face are opposite when folded.",
+     "weight": "core",
+     "evidence_hint": "Uses the alternate-face / skip-one rule on a straight strip of the net."
+    },
+    {
+     "id": "app3",
+     "point": "In a stair-step (Z-shaped) net, the ends of any Z-shape made of four squares are opposite each other.",
+     "weight": "extended",
+     "evidence_hint": "Applies the Z-rule to name opposite pairs on a zigzag net."
+    },
+    {
+     "id": "app4",
+     "point": "A valid folded 3D view never shows two faces that are opposite on the net at the same time.",
+     "weight": "extended",
+     "evidence_hint": "Rejects any view that simultaneously displays a known opposite pair."
+    }
+   ],
+   "probes": [
+    "A 15 cm cube is painted and cut into 3 cm cubes; what is the probability a random small cube has exactly one face painted?",
+    "From a cross-shaped net, which face ends up opposite a given face?",
+    "Given opposite pairs from a net, how do you decide which 3D views are valid?"
+   ],
+   "hints": {
+    "1": "Recover n from the story, then fold or paint with the same geometry rules.",
+    "2": "n = large/small; opposites on a cross skip one square; Z ends of four squares are opposite; visible faces cannot be an opposite pair.",
+    "3": "15/3 → n=5 → 6(3)^2=54 of 125; cross skip-one opposites; Z-rule for zigzag nets; drop any view showing both of an opposite pair."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Even cut split vs close factors",
+   "strong_answer": "Fixed cut budget: split cuts across axes as evenly as possible to maximize (x+1)(y+1)(z+1). Fixed piece count on a grid: choose three close factors of the target and use x+y+z-3 cuts."
+  },
+  {
+   "topic": "No restacking vs restacking",
+   "strong_answer": "Without restacking, n×n×n needs 3(n-1) axis-aligned cuts. With restacking, each cut can double pieces, so the theoretical minimum for N pieces is ceil(log2 N) (e.g., 64 → 6)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Blindly plugging into 1-face and 2-face formulas when n < 3",
+   "correction": "Those formulas use (n-2) and require n >= 3. For n=2, (n-2)=0: only the 8 corner cubes exist, all with 3 faces painted."
+  },
+  {
+   "trap": "Assuming every die has opposite faces summing to 7",
+   "correction": "Use sum-to-7 only for a stated standard die or a single view. With multiple views, deduce opposites from shared-face rotation rules only."
+  },
+  {
+   "trap": "Applying painted-cube formulas before recovering n from an OA story with physical sizes",
+   "correction": "First compute n = (large edge)/(small edge), then apply 8, 12(n-2), 6(n-2)^2, and (n-2)^3."
+  }
+ ]
+}

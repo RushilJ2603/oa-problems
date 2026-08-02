@@ -1,0 +1,214 @@
+{
+ "id": "23_constructive_algorithms",
+ "title": "Constructive Algorithms",
+ "type": "CP",
+ "relevance": "High — Div2 B/C (often D) constantly ask “build any valid array/string/graph/ops”; OAs rephrase the same as “return one feasible configuration / -1”.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "OA/interview variants: return any length-n array with sum S and no subarray/subset equal to X (Game With Array / Make Good); rearrange/rebuild a binary string under run or transition constraints (Team / Binary String Constructing, common phone-screen); assign blocks to k workers with load gap ≤x (Phoenix and Towers — greedy to current minimum); output ops that transform/sort under a weird op with a proven O(n) bound (Replace by MEX / Fence Painting).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Establish that the task is to output any valid object (or -1), not only a yes/no decision.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Constructive problems require outputting an object (array, permutation, string, coloring, edge labels, or operation list) that meets the constraints, not merely deciding YES/NO.",
+     "weight": "core",
+     "evidence_hint": "Candidate says they must build/print one feasible configuration, not just check existence."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognize the pattern from phrasing like “construct any”, “print one example”, “find a sequence of ≤K ops”, or “impossible → -1”.",
+     "weight": "core",
+     "evidence_hint": "Candidate maps those stems to constructive output (and -1 when impossible)."
+    },
+    {
+     "id": "rec3",
+     "point": "OA rephrasings of the same skill ask to return one feasible configuration or -1.",
+     "weight": "extended",
+     "evidence_hint": "Mentions OA-style “return any valid array/string/ops or -1” as the same pattern."
+    }
+   ],
+   "probes": [
+    "How do you tell this is constructive rather than a pure decision problem?",
+    "What output does the judge actually accept when multiple answers are valid?"
+   ],
+   "hints": {
+    "1": "Look at whether the statement asks you to print an object or only YES/NO.",
+    "2": "Scan for “construct any”, “print one example”, ops under a bound, or impossible → -1.",
+    "3": "You must output an array/string/graph/ops (or -1); any valid object is enough."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Lock the workflow: existence condition, then simplest parametric construction, then edge-case casework.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Write the NO/-1 existence condition first (parity, sum bounds, degree, count of 1s even, n small) before inventing the object.",
+     "weight": "core",
+     "evidence_hint": "Candidate states impossibility checks before describing how to build the answer."
+    },
+    {
+     "id": "appr2",
+     "point": "Prefer a simple parametric family: periods, powers of two, all-1s + one big, SPF/prime labels, checkerboard, zigzag columns.",
+     "weight": "core",
+     "evidence_hint": "Names a fixed simple family instead of searching for a minimal or exotic object."
+    },
+    {
+     "id": "appr3",
+     "point": "Most Div2 constructive splits into 2–4 cases (n mod k / parity / has a high-degree vertex?), each with a fixed pattern.",
+     "weight": "extended",
+     "evidence_hint": "Plans short casework with one canned pattern per case."
+    }
+   ],
+   "probes": [
+    "What do you check before you start constructing?",
+    "If many objects work, what kind of answer family do you reach for first?"
+   ],
+   "hints": {
+    "1": "Don’t build first—decide when the answer is impossible.",
+    "2": "Workflow: existence → simplest family → hand-check edge cases.",
+    "3": "NO/-1 from parity/sum/degree/even count of 1s/small n; then periods, powers of two, checkerboard, SPF, or greedy heap."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Show concrete construction templates used on Div2/OA constructive staples.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Binary/run constructions: place the scarcer bit for exact transitions, or place the majority bit in blocks then inject the other (impossible-case first).",
+     "weight": "core",
+     "evidence_hint": "Describes block/scarce-bit placement and states impossibility before building."
+    },
+    {
+     "id": "impl2",
+     "point": "Load/segment constructions: always put the next block on the current shortest tower (heap), or fill zeros via a max-heap of longest-mid segments.",
+     "weight": "core",
+     "evidence_hint": "Mentions greedy-to-minimum heap or longest-segment priority heap."
+    },
+    {
+     "id": "impl3",
+     "point": "Invariant tricks: append ≤3 numbers so sum = 2·xor (Make Good), or build Game With Array as S−n+1 then 1s with YES iff S odd or S ≥ 2n.",
+     "weight": "extended",
+     "evidence_hint": "Recalls the XOR/sum append construction and/or the one-big-plus-ones array with that YES condition."
+    },
+    {
+     "id": "impl4",
+     "point": "Graph/tree defaults: extreme labels on a star/centroid/degree-≥3 vertex; paths and bipartite 2-colorings; e.g. alternate 2 and 3 on a path, or put 0,1,2 on three edges of a degree-≥3 vertex.",
+     "weight": "extended",
+     "evidence_hint": "Uses path/bipartite toolkit or concentrates special labels on a high-degree/centroid vertex."
+    }
+   ],
+   "probes": [
+    "Walk through one explicit construction you’d emit for a “any valid array” OA.",
+    "How would you assign blocks to m towers with height difference capped?"
+   ],
+   "hints": {
+    "1": "Pick a fixed pattern, not a search.",
+    "2": "Think heap-on-shortest, SPF labels, checkerboard, or path prime alternation.",
+    "3": "Example templates: S−n+1 plus 1s; ≤3 append for sum=2·xor; heap to current shortest tower; 0,1,2 on a degree-≥3 vertex’s edges."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Treat loose operation/length bounds as permission for a simple correct construction with a proven op count.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Do not minimize unless asked; loose length/ops bounds such as ≤2n or ≤1e4 invite a dumb correct construction.",
+     "weight": "core",
+     "evidence_hint": "Says any feasible object under the given bound is enough—no optimization chase."
+    },
+    {
+     "id": "cx2",
+     "point": "For operation constructions, prove an upper bound on ops, then emit a sequence that always stays under it (Prefix-Flip / MEX-sort / centroid-move style).",
+     "weight": "core",
+     "evidence_hint": "States a bound first, then describes a procedure guaranteed to respect it."
+    },
+    {
+     "id": "cx3",
+     "point": "OA operation-list constructive often targets a proven O(n) bound (Replace by MEX / Fence Painting style).",
+     "weight": "extended",
+     "evidence_hint": "Mentions building an explicit op list with an O(n)-style guarantee."
+    }
+   ],
+   "probes": [
+    "The statement allows ≤2n operations—how does that change your construction?",
+    "What do you prove before you start emitting the operation list?"
+   ],
+   "hints": {
+    "1": "Loose caps are not a request to minimize.",
+    "2": "Prove an ops upper bound, then implement a sequence under it.",
+    "3": "Use a simple construction that stays within ≤2n / ≤1e4 (or an O(n) op list), not the shortest possible."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch the usual constructive failure modes: skipped impossibility, over-optimizing, and missed edge cases.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Skipping the existence/NO/-1 check and inventing an object that fails parity, sum bounds, degree, even count of 1s, or small-n cases.",
+     "weight": "core",
+     "evidence_hint": "Warns that many WA come from building when the answer should be impossible."
+    },
+    {
+     "id": "pit2",
+     "point": "Trying to minimize length/ops or search for a clever object when the judge accepts any valid answer.",
+     "weight": "core",
+     "evidence_hint": "Says they would ship a simple parametric answer unless minimization is required."
+    },
+    {
+     "id": "pit3",
+     "point": "Constructive bugs are almost always missed edge cases—debug with a local checker for small n (brute all outputs vs your pattern).",
+     "weight": "extended",
+     "evidence_hint": "Proposes validating the pattern on small n against a brute checker."
+    }
+   ],
+   "probes": [
+    "Where do constructive submissions usually WA?",
+    "When is minimizing the construction the wrong instinct?"
+   ],
+   "hints": {
+    "1": "Think about what you forgot to rule out before building.",
+    "2": "Existence first; don’t minimize; hand-check edge cases.",
+    "3": "Write NO/-1 conditions up front; ship any valid simple family; brute-check small n for missed cases."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Any valid object vs minimized object",
+   "strong_answer": "Unless asked to minimize, prefer the simplest parametric family under the stated length/ops bound (≤2n, ≤1e4, etc.); optimizing wastes time and adds edge-case risk."
+  },
+  {
+   "topic": "Shape a fixed pattern vs search",
+   "strong_answer": "Shape the answer with a canned pattern (zigzag columns, checkerboard, SPF labels, greedy heap) rather than searching; Labs-style “shape the matrix, don’t search”."
+  },
+  {
+   "topic": "Existence casework vs one universal formula",
+   "strong_answer": "Most Div2 constructive work is 2–4 cases (parity / n mod k / high-degree vertex) each with a fixed pattern, not one formula that covers every n."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Building the object before writing the impossibility condition.",
+   "correction": "Existence first: parity, sum bounds, degree, even count of 1s, small n → print NO/-1, then construct."
+  },
+  {
+   "trap": "Overfitting to a minimal or “clever” answer when any feasible object works.",
+   "correction": "Judge accepts any valid object; use periods, powers of two, all-1s + one big, checkerboard, SPF, or greedy-to-shortest."
+  },
+  {
+   "trap": "Assuming a construction that works for large n also covers tiny n or pure special counts.",
+   "correction": "Casework on small n and pure cases (e.g. impossible for n≤3 on Special Permutation; handle pure n1 in Binary String Reconstruction); verify with a small-n checker."
+  },
+  {
+   "trap": "For tree/edge-label tasks, labeling arbitrarily instead of concentrating extremes.",
+   "correction": "Default toolkit: paths, bipartite 2-colorings, and extreme labels on a star/centroid/degree-≥3 vertex (e.g. 0,1,2 on three edges; alternate 2 and 3 on a path)."
+  }
+ ]
+}

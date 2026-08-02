@@ -1,0 +1,163 @@
+{
+ "id": "dsa_s05_averages_mixtures",
+ "title": "Averages, Mixtures & Alligation",
+ "type": "FUND",
+ "relevance": "Core quantitative aptitude for campus OAs and SDE screening; averages, mixtures, and alligation recur as direct and disguised word problems.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the core formulas for average, weighted average, alligation, and repeated replacement.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Average equals sum of observations divided by number of observations n; weighted average combines group sizes ni with averages Ai as (n1A1+n2A2+...)/(n1+n2+...).",
+     "weight": "core",
+     "evidence_hint": "States both the simple mean and the weighted-average formula with ni and Ai."
+    },
+    {
+     "id": "fund2",
+     "point": "Alligation rule: quantity of cheaper over quantity of dearer equals (d-m)/(m-c) for cheaper price c, dearer price d, and mean price m.",
+     "weight": "core",
+     "evidence_hint": "Writes the cheaper:dearer ratio as (d-m):(m-c) or (d-m)/(m-c)."
+    },
+    {
+     "id": "fund3",
+     "point": "Repeated replacement: if V units of pure liquid have r units replaced by water n times, final pure amount is V(1-r/V)^n.",
+     "weight": "extended",
+     "evidence_hint": "Recalls Final amount = V(1-r/V)^n with V, r, and n."
+    }
+   ],
+   "probes": [
+    "State the formulas for weighted average, the alligation cheaper-to-dearer ratio, and repeated replacement of r from V done n times."
+   ],
+   "hints": {
+    "1": "Start from mean as sum over count, then how two priced lots combine around a mean price.",
+    "2": "Weighted average uses ni and Ai in numerator and denominator; alligation uses distances of c and d from m; replacement compounds the retained fraction.",
+    "3": "Aw=(n1A1+n2A2+...)/(n1+n2+...); cheaper/dearer=(d-m)/(m-c); final=V(1-r/V)^n."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how averages move when adding, replacing, or correcting values, and how alligation finds mix ratios from fractions.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "The average of consecutive terms in an arithmetic progression is the middle term.",
+     "weight": "core",
+     "evidence_hint": "With average 27 of 5 consecutive odd numbers, middle is 27 so sequence 23,25,27,29,31 and first×last=713."
+    },
+    {
+     "id": "mech2",
+     "point": "New value = old average + (increase in average × new number of elements).",
+     "weight": "core",
+     "evidence_hint": "Class of 30 at average 14 rises by 1 when teacher is included: teacher age = 14+(1×31)=45."
+    },
+    {
+     "id": "mech3",
+     "point": "When one wrong value is corrected, apply the net sum change divided by n rather than rebuilding the full sum.",
+     "weight": "extended",
+     "evidence_hint": "83 misread as 43 gives net +40 over 40 students, so average rises from 65 to 66."
+    },
+    {
+     "id": "mech4",
+     "point": "For concentration mixes, alligate on one component's fraction in each vessel against the target fraction.",
+     "weight": "core",
+     "evidence_hint": "Milk fractions 3/5 and 4/9 toward target 1/2 give vessel ratio 5:9."
+    }
+   ],
+   "probes": [
+    "How do you find a new person's value when they raise the average, and how do you mix two milk-water vessels to get equal milk and water?"
+   ],
+   "hints": {
+    "1": "An added person must cover the average lift for everyone now in the set; for mixes, pick milk fraction first.",
+    "2": "Use new value = old avg + (delta × new count); alligation distances are |d-m| and |m-c| on those fractions.",
+    "3": "Teacher: 14+(1×31)=45. Fractions 3/5 and 4/9 vs 1/2 → distances 1/18 and 1/10 → 5:9."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Separate cases where arithmetic mean is wrong from cases where alligation must use cost, not selling price.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "For equal distances at speeds x and y, average speed is 2xy/(x+y), not the arithmetic mean of the speeds.",
+     "weight": "core",
+     "evidence_hint": "Rejects (40+60)/2=50 and computes 2(40)(60)/(40+60)=48 km/h."
+    },
+    {
+     "id": "tr2",
+     "point": "Never apply alligation on selling price when profit is involved; first find the mean cost price on the same basis.",
+     "weight": "core",
+     "evidence_hint": "From SP 68.20 with 10% gain, mean CP=68.20/1.1=62, then alligation yields cheaper:dearer 3:2."
+    }
+   ],
+   "probes": [
+    "Why is a round trip at 40 km/h and 60 km/h not average speed 50, and why is alligation on selling price wrong when there is profit?"
+   ],
+   "hints": {
+    "1": "Average speed is weighted by time; profit changes which price alligation may use.",
+    "2": "Equal distance → 2xy/(x+y); convert SP to mean CP before alligation.",
+    "3": "2(40)(60)/100=48; m=68.20/1.1=62, then (65-62):(62-60)=3:2."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply replacement and alligation to OA-style mixture, alloy, and fraudulent-blend word problems.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "After n replacements of r from volume V, remaining original liquid is V(1-r/V)^n.",
+     "weight": "core",
+     "evidence_hint": "V=50, r=5, n=3 → 50(9/10)^3=36.45 L milk left."
+    },
+    {
+     "id": "app2",
+     "point": "Alloy word problems reduce to alligation on gold fractions toward a 1/2 target.",
+     "weight": "core",
+     "evidence_hint": "Gold fractions 7/9 and 7/18 vs 1/2 give A:B=2:5; of 70 kg total, Alloy B is 50 kg."
+    },
+    {
+     "id": "app3",
+     "point": "Fraudulent blend: find the fair alligation ratio first, adjust after secret replacement of part of the dearer share, then recompute weighted cost.",
+     "weight": "extended",
+     "evidence_hint": "Fair blend of 12 and 28 around 20 is 1:1; after replacing 25% of the arabica share, actual CP is 18 /kg."
+    }
+   ],
+   "probes": [
+    "50 L milk with 5 L replaced by water three times—how much milk remains? How do you unwrap an alloy melt into alligation?"
+   ],
+   "hints": {
+    "1": "Use the compounded retained-fraction formula; for alloys, convert each alloy ratio to a gold fraction.",
+    "2": "Final=V(1-r/V)^n; alligate each alloy's gold fraction against 1/2, then scale parts to total mass.",
+    "3": "50(9/10)^3=36.45; A:B=2:5 so 5 of 7 parts of 70 kg is 50 kg Alloy B."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Arithmetic mean of speeds vs time-weighted average speed",
+   "strong_answer": "Average speed is weighted by time, not distance. For equal distances at x and y use 2xy/(x+y); (40+60)/2=50 is wrong and 48 km/h is correct."
+  },
+  {
+   "topic": "Alligation on selling price vs cost price",
+   "strong_answer": "Alligation needs values on the same basis. With profit, convert SP to mean CP first (e.g. SP 68.20 at 10% profit → CP 62), then alligate on costs."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating average speed as the arithmetic mean of the two speeds on a round trip.",
+   "correction": "Speed is weighted by time; for equal distances use 2xy/(x+y)."
+  },
+  {
+   "trap": "Applying alligation directly on selling price when a profit percentage is given.",
+   "correction": "Find the mean cost price from SP and profit first, then alligate on costs."
+  },
+  {
+   "trap": "Rebuilding the entire sum when one misread score is corrected.",
+   "correction": "Take the net change in sum and divide by n to get the change in average."
+  }
+ ]
+}

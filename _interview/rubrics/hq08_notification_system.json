@@ -1,0 +1,344 @@
+{
+ "id": "hq08_notification_system",
+ "title": "Design a notification / push system",
+ "type": "HLD",
+ "relevance": "High — classic 45-min HLD at FAANG + Indian product cos (Meta, Uber, Flipkart, PhonePe, Amazon, Microsoft); probes async queues, multi-channel delivery (APNs/FCM/SMS/email), preferences, idempotency, and priority isolation.",
+ "difficulty": "mid",
+ "prereqs": [
+  "h08_message_queues",
+  "h01_networking",
+  "h03_caching",
+  "h14_estimation",
+  "h09_rate_limiting",
+  "h06_consistency_cap",
+  "h02_load_balancing"
+ ],
+ "company_notes": "Common across campus/new-grad and experienced HLD loops; baseline expects channels + queue decoupling + preferences + retries, while experienced depth focuses on priority isolation, idempotency timing, provider limits, campaign pacing, webhook status, and burst-QPS estimation.",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock scope, reliability goals, and traffic-isolation expectations before drawing components.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "In-scope flow includes user or segment notifications over push/email/SMS, supports immediate and scheduled sends, and returns basic delivery status.",
+     "weight": "core",
+     "evidence_hint": "They name channels, immediate vs scheduled, and status tracking as explicit requirements."
+    },
+    {
+     "id": "req2",
+     "point": "Out-of-scope boundaries are stated: no custom APNs/FCM transport, no full template CMS/A-B UI, no ML ranking unless requested.",
+     "weight": "extended",
+     "evidence_hint": "They proactively cut non-core product analytics/CMS/ML work to protect interview time."
+    },
+    {
+     "id": "req3",
+     "point": "NFRs separate critical and bulk paths: OTP/security cannot be delayed by campaigns, and accepted requests must not be silently dropped.",
+     "weight": "core",
+     "evidence_hint": "They explicitly call out traffic isolation and durable acceptance semantics."
+    },
+    {
+     "id": "req4",
+     "point": "Clarifications include transactional vs promotional split, channels in scope, in-app inbox need, and retention horizon.",
+     "weight": "extended",
+     "evidence_hint": "They ask targeted scoping questions before proposing architecture."
+    }
+   ],
+   "probes": [
+    "What exact requirements would you lock in the first 5 minutes, and what would you declare out of scope?"
+   ],
+   "hints": {
+    "1": "Start by separating functional scope from non-functional guarantees.",
+    "2": "Force a decision on transactional vs marketing traffic and whether in-app is required.",
+    "3": "State durable accept + no silent drop + priority isolation as mandatory, then defer CMS/ML ranking."
+   }
+  },
+  {
+   "phase": "estimation",
+   "goal": "Convert average and burst traffic into capacity targets that drive queue and worker sizing.",
+   "must_hit": [
+    {
+     "id": "est1",
+     "point": "Candidate contrasts 10M notifs/day (~115/s average) with burst shape (1M campaign in 5 min, ~3.3K/s) and designs for ~5K/s surge.",
+     "weight": "core",
+     "evidence_hint": "They explain peak is the governing constraint, not daily average."
+    },
+    {
+     "id": "est2",
+     "point": "Channel mix assumes push highest volume, email lower, SMS lowest due to cost and provider constraints.",
+     "weight": "core",
+     "evidence_hint": "They reserve SMS for high-value use cases and avoid SMS-heavy defaults."
+    },
+    {
+     "id": "est3",
+     "point": "Worker parallelism is derived from desired send QPS and provider RPS per connection, with pooled HTTP/2 for APNs/FCM.",
+     "weight": "extended",
+     "evidence_hint": "They tie partition/consumer counts to provider throughput limits, not arbitrary worker counts."
+    }
+   ],
+   "probes": [
+    "If average load looks easy, what burst assumption changes your design and why?"
+   ],
+   "hints": {
+    "1": "Estimate both average and campaign spikes.",
+    "2": "Map burst QPS to queue partitions and independent worker pools.",
+    "3": "Use the 10M/day vs 1M-in-5-min contrast and design around ~5K/s surge."
+   }
+  },
+  {
+   "phase": "api",
+   "goal": "Define asynchronous intake, status visibility, and ownership boundaries for producers, users, and providers.",
+   "must_hit": [
+    {
+     "id": "api1",
+     "point": "Primary intake is POST /v1/notifications with idempotency_key and template-driven payload, returning 202 Accepted with notification_id.",
+     "weight": "core",
+     "evidence_hint": "They keep intake non-blocking and avoid waiting on APNs/FCM/SMS providers."
+    },
+    {
+     "id": "api2",
+     "point": "User/device surfaces include GET/PUT /v1/users/{id}/preferences and PUT /v1/devices for token registration/refresh.",
+     "weight": "core",
+     "evidence_hint": "They separate producer send APIs from user-owned preference/device APIs."
+    },
+    {
+     "id": "api3",
+     "point": "Status retrieval and provider callbacks are explicit (GET /v1/notifications/{id}, POST /internal/provider-callbacks/{channel}).",
+     "weight": "extended",
+     "evidence_hint": "They include asynchronous status updates from webhooks rather than only request-time state."
+    }
+   ],
+   "probes": [
+    "What request/response contract would you expose so producers never block on downstream providers?"
+   ],
+   "hints": {
+    "1": "Think intake + tracking + preferences/devices as separate API groups.",
+    "2": "Make send asynchronous and add status polling/callback ingestion.",
+    "3": "Use POST /v1/notifications -> 202, then status endpoint and internal provider callback endpoint."
+   }
+  },
+  {
+   "phase": "data_model",
+   "goal": "Capture entities needed for routing, dedupe, retries, and compliance-safe preference enforcement.",
+   "must_hit": [
+    {
+     "id": "dm1",
+     "point": "Model preferences per (user_id, notification_type, channel) with quiet_hours_start/end and timezone.",
+     "weight": "core",
+     "evidence_hint": "They enforce per-type/per-channel opt-in logic before delivery."
+    },
+    {
+     "id": "dm2",
+     "point": "Notification and DeliveryAttempt are separate: Notification stores intent/idempotency metadata; DeliveryAttempt stores channel target, status, provider_msg_id, attempts, and error.",
+     "weight": "core",
+     "evidence_hint": "They distinguish logical notification from per-channel/per-device attempts."
+    },
+    {
+     "id": "dm3",
+     "point": "Dedupe store uses Redis SETNX idempotency key with TTL, including example 24h transactional retention and longer campaign windows.",
+     "weight": "extended",
+     "evidence_hint": "They place dedupe in a fast key-value store and mention bounded TTL."
+    },
+    {
+     "id": "dm4",
+     "point": "Device token model stores user_id, device_id, platform, token, updated_at and supports pruning invalid/unregistered tokens.",
+     "weight": "core",
+     "evidence_hint": "They explicitly handle multi-device fan-out and token lifecycle cleanup."
+    }
+   ],
+   "probes": [
+    "Which tables/records are mandatory to avoid duplicate sends and to support multi-device delivery?"
+   ],
+   "hints": {
+    "1": "Split user intent from channel-level attempts.",
+    "2": "Add preference/timezone and device-token lifecycle state.",
+    "3": "Include Notification + DeliveryAttempt + Preference + Device + Redis dedupe key with TTL."
+   }
+  },
+  {
+   "phase": "architecture",
+   "goal": "Present a decoupled pipeline that isolates priorities and channels while remaining restart-safe.",
+   "must_hit": [
+    {
+     "id": "arch1",
+     "point": "Intake path performs validation/auth/idempotency, persists (row or outbox), then publishes to Kafka/SQS rather than calling providers inline.",
+     "weight": "core",
+     "evidence_hint": "They guarantee durable accept before enqueue-driven processing."
+    },
+    {
+     "id": "arch2",
+     "point": "Traffic is split by priority and/or channel into separate topics and worker pools so promo lag cannot block OTP.",
+     "weight": "core",
+     "evidence_hint": "They avoid shared consumer lag across critical and bulk flows."
+    },
+    {
+     "id": "arch3",
+     "point": "A scheduler handles schedule_at/digests and re-inserts due work into the same queueing pipeline.",
+     "weight": "extended",
+     "evidence_hint": "They avoid one-off special paths for delayed sends."
+    },
+    {
+     "id": "arch4",
+     "point": "Channel workers are independently scalable (APNs/FCM, email, SMS) with retries/DLQ, while tracking/webhook updates remain off the send critical path.",
+     "weight": "core",
+     "evidence_hint": "They isolate provider-specific failures and keep delivery state updates asynchronous."
+    }
+   ],
+   "probes": [
+    "Draw the end-to-end flow from producer request to provider send and status update."
+   ],
+   "hints": {
+    "1": "Start with producer -> API -> queue -> workers.",
+    "2": "Add scheduler, preference/template/device lookup, and per-channel workers.",
+    "3": "Use priority-separated topics/worker pools plus webhook-based status updates."
+   }
+  },
+  {
+   "phase": "deep_dives",
+   "goal": "Defend critical reliability and product tradeoffs under failure, scale, and compliance pressure.",
+   "must_hit": [
+    {
+     "id": "dd1",
+     "point": "Delivery semantics are at-least-once with dedupe before provider call; exactly-once claims are rejected as unrealistic across providers/networks.",
+     "weight": "core",
+     "evidence_hint": "They explain timeout-after-send duplicate risk and pre-send idempotency protection."
+    },
+    {
+     "id": "dd2",
+     "point": "Preference caching strategy includes fast reads plus invalidation on writes; quiet-hour bypass policy is explicit for critical security/payment cases.",
+     "weight": "core",
+     "evidence_hint": "They discuss correctness of preference changes, not only cache latency."
+    },
+    {
+     "id": "dd3",
+     "point": "Campaign fan-out is paced by generator/cursor workers and provider-aware throttling, never exploded inline in the API.",
+     "weight": "core",
+     "evidence_hint": "They separate campaign creation from paced message materialization."
+    },
+    {
+     "id": "dd4",
+     "point": "Provider outage handling uses circuit breaker and optional secondary provider, while preserving channel isolation.",
+     "weight": "extended",
+     "evidence_hint": "They describe failover behavior without cross-channel cascading failure."
+    }
+   ],
+   "probes": [
+    "How do you prevent duplicate SMS/OTP when provider timeouts make send outcome ambiguous?",
+    "How would you handle quiet hours and campaign pacing without breaking critical alerts?"
+   ],
+   "hints": {
+    "1": "Focus on one failure mode: timeout after provider may still have accepted.",
+    "2": "Explain ordering of dedupe, retries, and preference checks.",
+    "3": "Commit to at-least-once + pre-send idempotency key, then pace campaigns and define critical bypass rules."
+   }
+  },
+  {
+   "phase": "bottlenecks",
+   "goal": "Identify primary scaling and failure choke points and give concrete mitigations.",
+   "must_hit": [
+    {
+     "id": "bn1",
+     "point": "Bulk queue lag is controlled via more partitions/workers, with strict protection so bulk consumers cannot steal critical capacity.",
+     "weight": "core",
+     "evidence_hint": "They mention independent consumer groups or worker pools for critical vs bulk."
+    },
+    {
+     "id": "bn2",
+     "point": "Provider 429 and quota pressure is handled with token buckets, backoff, and campaign smoothing per provider and tenant.",
+     "weight": "core",
+     "evidence_hint": "They throttle proactively instead of only reacting to failures."
+    },
+    {
+     "id": "bn3",
+     "point": "Hot Redis preference/token paths are reduced through sharding by user_id and short-TTL local worker caches.",
+     "weight": "extended",
+     "evidence_hint": "They reduce repeated remote reads on the routing hot path."
+    },
+    {
+     "id": "bn4",
+     "point": "Tracking/webhook write amplification is reduced by batching and TTL/archival, and never blocks send execution.",
+     "weight": "extended",
+     "evidence_hint": "They keep analytics durability concerns from delaying outbound delivery."
+    },
+    {
+     "id": "bn5",
+     "point": "Failure safety requires durable accept before 202, restart-safe workers via idempotency, plus DLQ and replay tooling.",
+     "weight": "core",
+     "evidence_hint": "They can recover from crashes without silent loss or uncontrolled duplicate sends."
+    }
+   ],
+   "probes": [
+    "What are your top bottlenecks at surge time, and what exact controls keep OTP healthy during a bulk campaign?"
+   ],
+   "hints": {
+    "1": "Look at queue lag, provider limits, and hot cache keys first.",
+    "2": "Map each bottleneck to one concrete mitigation and isolation rule.",
+    "3": "Protect critical lanes, throttle bulk, shard/cache hot reads, and keep durable-accept + DLQ replay."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Shared queue simplicity vs priority-isolated topics/worker pools",
+   "strong_answer": "Choose separate priority lanes so overload stretches marketing latency but does not delay OTP/security traffic."
+  },
+  {
+   "topic": "Claimed exactly-once vs at-least-once with idempotency/dedupe",
+   "strong_answer": "Acknowledge exactly-once is not realistic across providers; use at-least-once, dedupe keys, and idempotent business identifiers before provider calls."
+  },
+  {
+   "topic": "Inline campaign fan-out vs paced generator/cursor workers",
+   "strong_answer": "Keep API lightweight and enqueue campaign creation, then pace fan-out to provider quotas to avoid burst collapse."
+  },
+  {
+   "topic": "Single provider simplicity vs multi-provider resilience",
+   "strong_answer": "Single provider is simpler initially, but circuit breaker and optional secondary provider reduce blast radius for provider outages."
+  },
+  {
+   "topic": "Push-only delivery vs push plus in-app path",
+   "strong_answer": "Use in-app/WS when users are online and APNs/FCM for offline delivery; optionally coalesce noisy social events before send."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Calling APNs/Twilio synchronously from order/payment request paths.",
+   "correction": "Return 202 after durable accept and process through async queues/workers."
+  },
+  {
+   "trap": "Using one topic/queue for OTP and marketing traffic.",
+   "correction": "Isolate priorities with separate topics and worker pools to avoid head-of-line blocking."
+  },
+  {
+   "trap": "Claiming exactly-once delivery without idempotency design.",
+   "correction": "State at-least-once semantics and implement dedupe/idempotency keys."
+  },
+  {
+   "trap": "Applying dedupe only after provider success.",
+   "correction": "Set dedupe before provider call to prevent timeout-induced duplicates."
+  },
+  {
+   "trap": "Ignoring preferences, quiet hours, or unsubscribe handling.",
+   "correction": "Gate sends through per-type/per-channel preferences with explicit bypass policy only for critical alerts."
+  },
+  {
+   "trap": "Forgetting multi-device token handling and invalid-token cleanup.",
+   "correction": "Store per-device tokens and aggressively prune unregistered/invalid tokens."
+  },
+  {
+   "trap": "No distinction between transient retries and permanent failures.",
+   "correction": "Use backoff+jitter for transient errors, drop/cleanup hard failures, and route unresolved cases to DLQ."
+  },
+  {
+   "trap": "Building custom persistent phone transport instead of using APNs/FCM.",
+   "correction": "Treat Apple/Google push infrastructure as transport and focus your system on routing, reliability, and tracking."
+  },
+  {
+   "trap": "Trying to fan out millions inline in campaign API calls.",
+   "correction": "Create campaign metadata first, then pace fan-out asynchronously with quota-aware workers."
+  },
+  {
+   "trap": "Designing only for average QPS without surge estimation.",
+   "correction": "Use burst assumptions to size partitions, workers, and provider throttling."
+  }
+ ]
+}

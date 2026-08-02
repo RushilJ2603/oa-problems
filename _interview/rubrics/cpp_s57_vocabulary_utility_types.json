@@ -1,0 +1,239 @@
+{
+ "id": "cpp_s57_vocabulary_utility_types",
+ "title": "Vocabulary and utility types (pair, tuple, optional, variant, any, string_view)",
+ "type": "FUND",
+ "relevance": "These STL vocabulary types appear constantly in DSA, competitive programming, and interviews for multi-value returns, optional results, tagged unions, and non-owning string APIs.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what each vocabulary type names and when it exists in the library.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "std::pair<T1,T2> is a class template with public members first and second, used for two values under one name (map entries, two-field returns, edges).",
+     "weight": "core",
+     "evidence_hint": "Names <utility>, .first/.second, and map<K,V>::value_type as pair<const K,V>."
+    },
+    {
+     "id": "fund2",
+     "point": "std::tuple generalises pair to N heterogeneous values accessed by compile-time index (or unique type) via std::get.",
+     "weight": "core",
+     "evidence_hint": "Says tuple is an N-element product with get/structured bindings, not a Part-V container."
+    },
+    {
+     "id": "fund3",
+     "point": "std::optional<T> is engaged (holds T) or disengaged (empty, spelled nullopt)—a maybe-value, not a pointer and not heap-allocated by default.",
+     "weight": "core",
+     "evidence_hint": "Contrasts optional with sentinel returns like -1, nullptr, or empty string."
+    },
+    {
+     "id": "fund4",
+     "point": "std::variant is a discriminated/tagged union: exactly one of a fixed list of alternatives plus an index for which is active.",
+     "weight": "core",
+     "evidence_hint": "Calls it the type-safe replacement for a C union plus a hand-rolled discriminator."
+    },
+    {
+     "id": "fund5",
+     "point": "std::any type-erases one copy-constructible value retrieved only via any_cast; std::string_view is a non-owning pointer+length over characters that does not allocate or own.",
+     "weight": "extended",
+     "evidence_hint": "States any is for truly unknown runtime type; string_view must not outlive its owner."
+    }
+   ],
+   "probes": [
+    "What are the Standard Library vocabulary types for two values, N values, maybe a value, one of fixed types, erased type, and a view of characters—and what problem does each name?"
+   ],
+   "hints": {
+    "1": "Think shared names the rest of the library assumes: products, absence, closed sum, erasure, non-owning text.",
+    "2": "pair/tuple are products; optional is zero-or-one T; variant is a closed tagged union; any erases one value; string_view is pointer+length.",
+    "3": "pair: first/second; tuple: get by index; optional: nullopt; variant: exactly one alternative + index; any: any_cast; string_view: non-owning, no NUL guarantee."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Check construction, access, comparison, and safe vs unsafe APIs for each type.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "pair/tuple comparison is lexicographic left-to-right; default sort on vector<pair> orders by first then second.",
+     "weight": "core",
+     "evidence_hint": "States p<q iff firsts differ or firsts equal and seconds differ; mentions sort without a custom comparator."
+    },
+    {
+     "id": "mech2",
+     "point": "Tuple/pair unpacking: std::get<I>, C++17 structured bindings, and std::tie (tuple of lvalue references, with std::ignore to skip fields).",
+     "weight": "core",
+     "evidence_hint": "Shows get by index/type, auto [..]=t, and tie(a, ignore, c)=t."
+    },
+    {
+     "id": "mech3",
+     "point": "optional access: has_value/operator bool; value() throws bad_optional_access if empty; operator*/-> are UB if empty; value_or returns a default by value.",
+     "weight": "core",
+     "evidence_hint": "Explicitly contrasts throw vs undefined behaviour and prefers check or value_or before bare *."
+    },
+    {
+     "id": "mech4",
+     "point": "variant access: get throws bad_variant_access on wrong alternative; get_if returns pointer or nullptr; visit dispatches on the active type; default construction activates the first alternative value-initialised.",
+     "weight": "core",
+     "evidence_hint": "Mentions holds_alternative, index, visit, and that empty needs monostate—default is not empty."
+    },
+    {
+     "id": "mech5",
+     "point": "any_cast throws bad_any_cast on mismatch (value/reference forms) or returns nullptr in the pointer form; string_view construct/substr/remove_prefix/remove_suffix are O(1), find/comparisons O(n).",
+     "weight": "extended",
+     "evidence_hint": "Cites the any API table and the string_view complexity table with O(1)/O(n)."
+    }
+   ],
+   "probes": [
+    "How do you safely read an optional and a variant, and how does default pair/tuple ordering affect sorting?"
+   ],
+   "hints": {
+    "1": "Separate checking the state from reading the payload for optional and variant.",
+    "2": "optional: if(opt)/value/value_or vs bare *; variant: holds_alternative/get_if/visit vs blind get; pairs sort lexicographically.",
+    "3": "Empty *opt is UB, empty value() throws; wrong get on variant throws; get_if gives nullptr; sort uses first then second."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose among pair/tuple, optional, variant/any/union, and string_view versus owning string.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer pair when N=2 and first/second are idiomatic; prefer tuple when N≥3 or you need tie/apply/tuple_cat.",
+     "weight": "core",
+     "evidence_hint": "States the N=2 vs N≥3 guidance and map/edge idioms for pair."
+    },
+    {
+     "id": "tr2",
+     "point": "Prefer variant when the alternative set is fixed and closed (faster/smaller intent, exhaustive visit); reach for any only when the type set is truly open; prefer inheritance/unique_ptr<Base> when the set is open/polymorphic.",
+     "weight": "core",
+     "evidence_hint": "Contrasts closed compile-time alternatives vs open type erasure vs polymorphic heap."
+    },
+    {
+     "id": "tr3",
+     "point": "Prefer string_view parameters for read-only text (accepts string, literals, substrings without allocating, O(1) slices); return/store string when ownership or long life is required.",
+     "weight": "core",
+     "evidence_hint": "Says callee that only reads should take string_view; dangling forces owning string."
+    },
+    {
+     "id": "tr4",
+     "point": "Prefer brace init/CTAD for exact pair types; use make_pair when you want decay and deduction together—make_pair decays arrays and functions to pointers.",
+     "weight": "extended",
+     "evidence_hint": "Warns make_pair decays like other deduction helpers."
+    }
+   ],
+   "probes": [
+    "When would you pick variant over any or a raw union, and when is string_view better than const string&?"
+   ],
+   "hints": {
+    "1": "Ask whether the type set is closed, open, or you only need to borrow characters.",
+    "2": "Closed set → variant; truly unknown → any; untagged union is unsafe; read-only borrow → string_view.",
+    "3": "variant tracks the active type and supports visit; any is runtime any_cast; string_view is O(1) non-owning view but must not outlive the owner."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply vocabulary types to common interview patterns and name the classic traps.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "map<K,V>::value_type is pair<const K,V>; the key is const so it cannot be mutated through an iterator and break tree order.",
+     "weight": "core",
+     "evidence_hint": "Answers the interview box on value_type and why const K."
+    },
+    {
+     "id": "app2",
+     "point": "Multi-key sort: put keys in a pair/tuple (lexicographic <) or compare with std::tie(a.f1,a.f2)<std::tie(b.f1,b.f2); optional replaces sentinel 'no result' from search/parse.",
+     "weight": "core",
+     "evidence_hint": "Cites the multi-key sort interview note and optional instead of magic numbers."
+    },
+    {
+     "id": "app3",
+     "point": "string_view must not outlive its owner (no return of local string view; no binding to a temporary string for later use), and data() is not guaranteed NUL-terminated for C APIs.",
+     "weight": "core",
+     "evidence_hint": "Names dangling and non-NUL .data() as the follow-up traps."
+    },
+    {
+     "id": "app4",
+     "point": "Know valueless_by_exception: after a throwing assign/emplace, variant may have no active alternative with index()==variant_npos.",
+     "weight": "extended",
+     "evidence_hint": "Says normal paths rarely see it but interviews may ask the name."
+    }
+   ],
+   "probes": [
+    "Rapid-fire: map value_type; sort by multiple keys; optional value vs *; variant vs union vs any; string_view dangling and NUL traps."
+   ],
+   "hints": {
+    "1": "Name one safe access pattern per type plus the map/sort idioms.",
+    "2": "pair<const K,V>; tie or tuple keys; value throws vs * UB; variant tagged vs any erased; views need live owners and may lack '\\0'.",
+    "3": "Complete answer: headers plus lexicographic sort, optional throw/UB, variant/union/any contrast, string_view lifetime and NUL."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "pair vs tuple",
+   "strong_answer": "Prefer pair when N=2 and .first/.second are idiomatic (map entries, edges); prefer tuple when N≥3 or you need tie, apply, or tuple_cat. A pair is roughly a two-element tuple with named members and interoperates via converting constructors."
+  },
+  {
+   "topic": "brace init / CTAD vs make_pair",
+   "strong_answer": "Prefer brace init or CTAD for exact types; use make_pair when you want decay and deduction in one call—make_pair decays arrays and functions to pointers."
+  },
+  {
+   "topic": "pair return vs named struct",
+   "strong_answer": "A pair is as cheap as its two members (no heap); prefer returning pair of scalars only when first/second names are clear enough—otherwise a small struct is often clearer in a large codebase."
+  },
+  {
+   "topic": "optional vs sentinel return",
+   "strong_answer": "optional replaces magic sentinels (-1, nullptr, empty string) with an explicit empty state (nullopt) for search/parse that may fail."
+  },
+  {
+   "topic": "variant vs raw union",
+   "strong_answer": "A raw union allows writing one member and reading another (UB for non-trivial types) and needs a separate tag; variant is that tag plus storage with typed accessors and visit."
+  },
+  {
+   "topic": "variant vs any",
+   "strong_answer": "variant alternatives are fixed at compile time, smaller in intent, and exhaustively visitable; any type-erases any single copy-constructible value with runtime any_cast and possible small-buffer/heap allocation—use any only for truly open type sets."
+  },
+  {
+   "topic": "string_view vs const string& / owning string",
+   "strong_answer": "string_view accepts string, literals, and substrings without allocating and gives O(1) slices for read-only APIs; if ownership or long life is required, return or store std::string."
+  },
+  {
+   "topic": "string_view vs span",
+   "strong_answer": "span (C++20) is the contiguous-range analogue of string_view for any contiguous buffer; use string_view specifically for character data, with the same dangling discipline."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Dereferencing an empty optional with * or ->",
+   "correction": "That is undefined behaviour (no throw). Check has_value()/if(opt), or use value() (throws bad_optional_access) / value_or deliberately."
+  },
+  {
+   "trap": "std::get<T>/get<I> on a variant when that alternative is not active",
+   "correction": "Throws bad_variant_access. Check holds_alternative/index, use get_if (nullptr on failure), or std::visit."
+  },
+  {
+   "trap": "Assuming default-constructed variant is empty",
+   "correction": "Default construction activates the first alternative, value-initialised (e.g. variant<int,string>{} holds 0). Include monostate if you need an empty state."
+  },
+  {
+   "trap": "Returning or storing a string_view that outlives its character data",
+   "correction": "Views do not extend lifetime—returning a view of a local string or binding to a temporary std::string dangles. Keep an owning string, or use a static literal."
+  },
+  {
+   "trap": "Passing string_view::data() to C APIs expecting a NUL-terminated const char*",
+   "correction": "data() is not guaranteed to be followed by '\\0'. Copy into std::string and use c_str(), or verify the owner provides a terminator within the view."
+  },
+  {
+   "trap": "Using any as a stand-in for optional or variant",
+   "correction": "any is type erasure for one value; variant is a closed tagged union; optional is zero or one T. Prefer variant/optional/concrete types whenever the set can be named."
+  },
+  {
+   "trap": "Blind reliance on make_pair for exact types",
+   "correction": "make_pair decays arrays and functions to pointers; prefer brace init/CTAD when you want exact types."
+  }
+ ]
+}

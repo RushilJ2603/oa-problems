@@ -1,0 +1,197 @@
+{
+ "id": "dsa_s02_stl_containers",
+ "title": "STL Containers",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs constantly test which STL container to pick, its complexity, and common traps like invalidation and hash collisions.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish STL container categories and the default which-container-when heuristics.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "STL containers split into sequence containers, container adaptors, ordered associative containers, unordered associative containers, and bitsets & strings.",
+     "weight": "core",
+     "evidence_hint": "Names the five groups and gives examples like vector/deque/list, stack/queue/priority_queue, set/map, unordered_set/unordered_map."
+    },
+    {
+     "id": "fund2",
+     "point": "Default to vector for sequence data; use stack/queue for LIFO/FIFO and priority_queue for priority retrieval; use unordered_map/unordered_set for fast unique lookups; switch to map/set only for sorted order or order-statistics like lower_bound.",
+     "weight": "core",
+     "evidence_hint": "States vector-first, then adaptors, then unordered for lookups, ordered only when sorting/bounds matter."
+    },
+    {
+     "id": "fund3",
+     "point": "std::array wraps a fixed-size contiguous C-style array; prefer it over raw C-arrays when you need a small stack-allocated fixed-size array with STL interfaces.",
+     "weight": "extended",
+     "evidence_hint": "Mentions fixed size, contiguous underlying array, .size()/iterators/.at(), and when to prefer it over raw arrays."
+    }
+   ],
+   "probes": [
+    "Walk me through the main STL container categories and how you decide which one to reach for first."
+   ],
+   "hints": {
+    "1": "Think about how data is stored: linear vs tree vs hash vs adaptor wrappers.",
+    "2": "Start from the keypoint decision list: vector first, then LIFO/FIFO/priority, then unordered lookups, then ordered only if needed.",
+    "3": "Sequence = vector/deque/list; adaptors = stack/queue/priority_queue; ordered = set/map (trees); unordered = hash tables; plus bitset/string."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Connect each major container to its underlying structure and operation complexities.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "vector is a dynamically allocated contiguous block; when capacity is exhausted it allocates a larger block (typically double), copies, and deletes the old block; access is O(1), push/pop back O(1) amortized, middle insert/erase O(n).",
+     "weight": "core",
+     "evidence_hint": "Describes contiguous dynamic array, doubling reallocation, and the three complexity classes."
+    },
+    {
+     "id": "mech2",
+     "point": "set and map are self-balancing Red-Black BSTs with height O(log n), so insert/erase/find/lower_bound are O(log n) worst-case; unordered_map/unordered_set are hash tables (buckets with chaining) with O(1) average and O(n) worst-case.",
+     "weight": "core",
+     "evidence_hint": "Names Red-Black tree vs hash table with chaining and contrasts O(log n) worst-case vs O(1) avg / O(n) worst."
+    },
+    {
+     "id": "mech3",
+     "point": "deque is a block-map (array of pointers to fixed-size chunks) with O(1) access and O(1) push/pop at both ends; list/forward_list are doubly/singly linked with O(n) access but O(1) insert/erase given an iterator and O(1) splice for list.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts block-map deque vs linked lists and cites end vs middle/splice costs."
+    },
+    {
+     "id": "mech4",
+     "point": "priority_queue is a binary-heap adaptor over a sequence (usually vector), max-heap by default; push/pop are O(log n) and top is O(1).",
+     "weight": "extended",
+     "evidence_hint": "Says heap laid out in a sequence, default max-heap, and the three operation complexities."
+    }
+   ],
+   "probes": [
+    "What is the underlying data structure of vector, deque, set/map, unordered_map, and priority_queue, and what are their key operation complexities?"
+   ],
+   "hints": {
+    "1": "Match each container to contiguous array, block-map, linked nodes, tree, hash table, or heap.",
+    "2": "Focus on reallocation for vector, RB-tree for set/map, buckets+chaining for unordered, and heap-order for priority_queue.",
+    "3": "vector=contiguous dynamic array; deque=block-map; set/map=Red-Black BST O(log n); unordered=hash O(1) avg O(n) worst; priority_queue=binary heap O(log n) push/pop, O(1) top."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Explain when similar containers beat each other and the costs of those choices.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer unordered_map/unordered_set for exact key lookups/frequencies; prefer map/set when you need sorted iteration or lower_bound/upper_bound, or when worst-case hash collisions matter despite O(log n) vs O(1).",
+     "weight": "core",
+     "evidence_hint": "Explicitly weighs average O(1) vs ordered keys, bounds ops, and collision/worst-case concerns."
+    },
+    {
+     "id": "tr2",
+     "point": "Use deque when you frequently push/pop both ends (e.g. sliding window); use list only when you need O(1) insert/erase anywhere given an iterator or O(1) splice; otherwise stick with vector.",
+     "weight": "core",
+     "evidence_hint": "Gives the sliding-window deque case and the narrow list splice/iterator-insert case versus vector default."
+    },
+    {
+     "id": "tr3",
+     "point": "memset sets bytes (0, -1, 0x3f are the common safe CP patterns); use std::fill for other values because memset(arr, 1, ...) yields 16843009 for 32-bit ints, not 1.",
+     "weight": "extended",
+     "evidence_hint": "Explains byte-wise memset vs fill and cites the 16843009 trap."
+    }
+   ],
+   "probes": [
+    "Why might you choose map over unordered_map even though lookups are slower on average? When would you pick deque or list over vector?"
+   ],
+   "hints": {
+    "1": "Separate 'need order/bounds' from 'need both-end ops' from 'need middle splice'.",
+    "2": "Interviewers often push on worst-case hashing and lower_bound as reasons for map.",
+    "3": "unordered for exact lookups; map/set for order/bounds or adversarial collisions; deque for both ends; list only for iterator insert/erase or splice; vector otherwise."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Map common algorithms and coding patterns to the right container and safe mutation habits.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "DFS uses a stack; BFS uses a queue; sliding-window style both-end work uses deque; top-k, Dijkstra, running median, or repeated min/max extraction uses priority_queue.",
+     "weight": "core",
+     "evidence_hint": "Pairs each algorithm/pattern with the adaptor or deque explicitly named in the file."
+    },
+    {
+     "id": "app2",
+     "point": "Decision list: vector default; deque for both-end push/pop; priority_queue for top-k/min/max tracking; unordered_set/map for distinct elements or O(1) key lookups; set/map when sorted order or lower_bound/upper_bound needed; bitset for bits/parallel DP; list for O(1) middle splicing.",
+     "weight": "core",
+     "evidence_hint": "Recites most of the seven-point which-container-when summary."
+    },
+    {
+     "id": "app3",
+     "point": "When erasing in a loop, use the iterator returned by erase (e.g. it = v.erase(it)) instead of incrementing a now-invalid iterator; vector reallocation when size == capacity invalidates all iterators, pointers, and references.",
+     "weight": "extended",
+     "evidence_hint": "Describes the erase-returns-next pattern and vector growth invalidation / prefer indices if the vector may grow."
+    }
+   ],
+   "probes": [
+    "Given DFS, BFS, sliding window, and top-k, which containers do you use, and how do you safely erase from a vector while iterating?"
+   ],
+   "hints": {
+    "1": "Match each algorithm to LIFO, FIFO, both ends, or heap extraction.",
+    "2": "Also mention the default-vs-specialized decision list and one invalidation rule.",
+    "3": "stack→DFS, queue→BFS, deque→sliding window, priority_queue→top-k/Dijkstra/median; erase with it = v.erase(it); vector realloc invalidates everything."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "map/set vs unordered_map/unordered_set",
+   "strong_answer": "Unordered variants win for exact key lookups and frequencies with O(1) average time, but map/set win when you need sorted iteration, lower_bound/upper_bound, or predictable O(log n) behavior under hash collisions."
+  },
+  {
+   "topic": "vector vs deque vs list",
+   "strong_answer": "vector is the default contiguous sequence; deque wins for frequent push/pop at both ends without large contiguous reallocations; list is only justified for O(1) insert/erase given an iterator or O(1) splice, since access is O(n)."
+  },
+  {
+   "topic": "memset vs std::fill",
+   "strong_answer": "memset is byte-wise and fine for 0, -1, or 0x3f CP tricks; std::fill works for any value/type and avoids the trap where memset(..., 1, ...) produces 16843009 instead of 1."
+  },
+  {
+   "topic": "priority_queue comparator vs sort comparator",
+   "strong_answer": "In sorting, a < b yields ascending order; in priority_queue the comparator returns true when a has lower priority than b, so a > b builds a min-heap."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Holding iterators/references into a vector that may reallocate when size == capacity.",
+   "correction": "Reallocation invalidates all iterators, pointers, and references; return indices instead if the vector might grow."
+  },
+  {
+   "trap": "Treating vector<bool>::operator[] like a normal bool&.",
+   "correction": "vector<bool> packs 1 bit per element and returns a proxy; prefer vector<char> or deque<bool> when you need real references."
+  },
+  {
+   "trap": "memset(arr, 1, sizeof(arr)) expecting every int to become 1.",
+   "correction": "memset sets bytes, producing 16843009 for 32-bit ints; use std::fill for values other than 0, -1, or 0x3f."
+  },
+  {
+   "trap": "Using a sorting-style comparator and expecting a max-heap or min-heap accordingly.",
+   "correction": "priority_queue treats true as 'a has lower priority than b'; so a > b yields a min-heap."
+  },
+  {
+   "trap": "multiset.erase(val) to remove one duplicate.",
+   "correction": "erase(val) removes all occurrences; erase(find(val)) removes a single copy."
+  },
+  {
+   "trap": "Using map operator[] only to check whether a key exists.",
+   "correction": "mp[key] default-inserts if missing; use find or count to test existence without polluting the map."
+  },
+  {
+   "trap": "Relying on unordered_map under adversarial hash tests (e.g. Codeforces TLE).",
+   "correction": "Worst-case access is O(n) under collisions; use a randomized custom hash or fall back to map."
+  },
+  {
+   "trap": "Incrementing an iterator after erase in a loop.",
+   "correction": "erase invalidates the erased iterator; assign it = container.erase(it) and only ++it when no erasure occurred."
+  }
+ ]
+}

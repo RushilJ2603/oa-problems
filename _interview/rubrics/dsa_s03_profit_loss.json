@@ -1,0 +1,185 @@
+{
+ "id": "dsa_s03_profit_loss",
+ "title": "Profit, Loss & Discount",
+ "type": "FUND",
+ "relevance": "Core quantitative aptitude for campus OAs; modern variants wrap the same CP/SP math in bulk cost, defect, and platform-fee stories.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Modern OAs at Uber or Amazon often wrap simple profit equations in operational story problems (bulk purchasing, defect rates, platform fees).",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish CP, SP, MP and where profit/loss vs discount percentages are taken.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Cost Price is purchase price, Selling Price is sale price, Marked Price is the listed/printed price.",
+     "weight": "core",
+     "evidence_hint": "Names CP, SP, and MP and distinguishes purchase, sale, and list price."
+    },
+    {
+     "id": "fund2",
+     "point": "Profit % and Loss % are always calculated on CP: (SP−CP)/CP×100 or (CP−SP)/CP×100.",
+     "weight": "core",
+     "evidence_hint": "States the base is CP and writes or paraphrases both percentage formulas."
+    },
+    {
+     "id": "fund3",
+     "point": "Discount is always calculated on MP, with SP = MP×(1−d/100).",
+     "weight": "core",
+     "evidence_hint": "Says discount base is MP and gives the SP-from-MP formula."
+    },
+    {
+     "id": "fund4",
+     "point": "SP from CP uses SP = CP×(1±p/100) with + for profit and − for loss.",
+     "weight": "extended",
+     "evidence_hint": "Recalls the one-step CP-to-SP scaling with signed percentage p."
+    }
+   ],
+   "probes": [
+    "Define CP, SP, and MP, and state what base profit/loss % and discount % use."
+   ],
+   "hints": {
+    "1": "Separate purchase, sale, and list price before writing any percentage.",
+    "2": "Profit/loss hang off CP; discount hangs off MP.",
+    "3": "Profit% = (SP−CP)/CP×100; Loss% = (CP−SP)/CP×100; SP = MP×(1−d/100)."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Apply successive discounts, SP scaling, MP/CP linkage, and false-weight gain formulas.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Successive discounts of a% and b% equal a single discount of (a+b−ab/100)%.",
+     "weight": "core",
+     "evidence_hint": "States the combined-discount formula and can plug a and b."
+    },
+    {
+     "id": "mech2",
+     "point": "Between two SPs of the same item at different profit/loss rates, SP2 = SP1×(100±p2)/(100±p1) without finding CP.",
+     "weight": "core",
+     "evidence_hint": "Uses the SP scaling ratio with both (100±p) factors."
+    },
+    {
+     "id": "mech3",
+     "point": "MP/CP = (100+Profit%)/(100−Discount%) links markup target and discount.",
+     "weight": "core",
+     "evidence_hint": "Writes the MP-to-CP ratio in terms of profit % and discount %."
+    },
+    {
+     "id": "mech4",
+     "point": "For sale-at-claimed-CP with false weight, Gain% = (Error/(True Value−Error))×100, denominator = actual weight given.",
+     "weight": "extended",
+     "evidence_hint": "States the error-over-actual-weight gain formula and names the denominator."
+    }
+   ],
+   "probes": [
+    "How do you combine two successive discounts, and how do you move between two selling prices without computing CP?"
+   ],
+   "hints": {
+    "1": "Successive % changes are not a plain sum.",
+    "2": "Combine with a+b−ab/100; scale SPs with (100±p) ratios.",
+    "3": "Equivalent discount (a+b−ab/100)%; SP2 = SP1×(100±p2)/(100±p1); MP/CP = (100+Profit%)/(100−Discount%)."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose ratio chaining vs explicit CP, and successive % vs adding percentages.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer SP scaling with (100±p) ratios over finding CP when only profit/loss rates change between two selling prices.",
+     "weight": "core",
+     "evidence_hint": "Says skip CP and multiply by the two (100±p) factors."
+    },
+    {
+     "id": "tr2",
+     "point": "Markup then discount (or claimed loss then false weight) should use successive/ratio chaining, not adding the percentages.",
+     "weight": "core",
+     "evidence_hint": "Rejects adding % and multiplies the step ratios instead."
+    },
+    {
+     "id": "tr3",
+     "point": "When cheating on both buy and sell weights, do not add the cheat percentages; bases change because more is acquired and less is delivered.",
+     "weight": "extended",
+     "evidence_hint": "Warns against summing buy/sell cheats and cites changing bases."
+    }
+   ],
+   "probes": [
+    "When would you scale selling prices directly instead of computing cost price, and when is adding percentage effects wrong?"
+   ],
+   "hints": {
+    "1": "Ask whether the cost base is fixed or each step changes the base.",
+    "2": "Same-item SP change → ratio scale; chained markup/discount/weight → multiply factors.",
+    "3": "Use SP2 = SP1×(100±p2)/(100±p1); never add successive or dual-cheat percentages—chain ratios."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Solve multi-article, promotion, equal±% SP, and OA story mappings to net CP/SP.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "If CP of 15 articles equals SP of 12, then SP/CP = 15/12 = 5/4, so profit is 25%.",
+     "weight": "core",
+     "evidence_hint": "Sets 15×CP = 12×SP, reduces to 5/4, concludes 25% profit."
+    },
+    {
+     "id": "app2",
+     "point": "Buy 3 Get 2 Free: pay for 3 of 5 items, so discount % = 2/5×100 = 40%.",
+     "weight": "core",
+     "evidence_hint": "Uses free/total items for discount and gets 40%."
+    },
+    {
+     "id": "app3",
+     "point": "Two items sold at the same SP with equal opposite profit/loss x% give net Loss% = x²/100, not break-even.",
+     "weight": "core",
+     "evidence_hint": "States the x²/100 net-loss rule and rejects no-profit-no-loss."
+    },
+    {
+     "id": "app4",
+     "point": "OA stories need all costs mapped to one net CP (and sellable units or net revenue after fees) before standard profit formulas.",
+     "weight": "extended",
+     "evidence_hint": "Mentions folding shipping, breakage, or commission into net CP/revenue first."
+    }
+   ],
+   "probes": [
+    "Two houses sell for the same price with +20% and −20%; is the deal break-even, and how do OA bulk/fee stories change the setup?"
+   ],
+   "hints": {
+    "1": "Equal opposite % on the same SP is a classic trap.",
+    "2": "Net loss is x²/100; promotions use free/total; story costs collapse to one CP.",
+    "3": "Loss% = x²/100; Buy 3 Get 2 Free → 40%; map shipping/defects/fees into net CP then apply SP formulas."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Explicit CP vs SP scaling ratio",
+   "strong_answer": "When the same item moves between two known profit/loss percentages, scale with SP2 = SP1×(100±p2)/(100±p1) instead of solving for CP first."
+  },
+  {
+   "topic": "Adding percentages vs successive/ratio chaining",
+   "strong_answer": "Successive discounts use a+b−ab/100; markup-plus-discount and false-weight stacks multiply ratios—adding the percentages misstates the net effect."
+  },
+  {
+   "topic": "Claimed break-even vs net loss on equal opposite %",
+   "strong_answer": "Same SP with +x% and −x% is never no profit no loss; percentages sit on different CPs, so net Loss% = x²/100."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Guessing no profit no loss when two items sell at the same price with equal opposite profit and loss percentages.",
+   "correction": "There is always a net loss; Loss% = x²/100 (e.g. x = 20 gives 4% loss)."
+  },
+  {
+   "trap": "Adding cheat percentages when a dealer falsifies weights on both buying and selling.",
+   "correction": "Bases change—more goods acquired, fewer delivered—so chain the buy and sell weight ratios instead of summing the percentages."
+  },
+  {
+   "trap": "Treating OA story extras (shipping, breakage, marketplace commission) as afterthoughts separate from CP/SP.",
+   "correction": "Fold them into a single net CP (and net revenue or sellable count) before applying standard profit formulas."
+  }
+ ]
+}

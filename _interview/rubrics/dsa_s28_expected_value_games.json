@@ -1,0 +1,195 @@
+{
+ "id": "dsa_s28_expected_value_games",
+ "title": "Expected Value & Fair Games",
+ "type": "FUND",
+ "relevance": "SDE and quant OAs/interviews use EV, linearity, optional stopping, and waiting-time problems to test probabilistic reasoning under dependence and decision rules.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Optiver is named on a fair-coin restart-on-tails fair-value game; trading interviews also ask market-making quotes centered on EV.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish EV, fair price, and linearity—including that independence is not required.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "For a discrete random variable X, E[X] equals the sum of each outcome times its probability; a game is fair when expected net profit is zero, so the fair price equals expected payoff.",
+     "weight": "core",
+     "evidence_hint": "States the sum x_i P(X=x_i) definition and equates fair price with expected payoff / zero expected net profit."
+    },
+    {
+     "id": "fund2",
+     "point": "Linearity of expectation holds for any random variables, even when they are dependent.",
+     "weight": "core",
+     "evidence_hint": "Explicitly says E[sum X_i] = sum E[X_i] without needing independence."
+    },
+    {
+     "id": "fund3",
+     "point": "For complex expected totals, decompose into indicator variables X_i in {0, 1} and sum the individual E[X_i].",
+     "weight": "core",
+     "evidence_hint": "Mentions breaking the total into 0-1 indicators and adding their expectations."
+    },
+    {
+     "id": "fund4",
+     "point": "The fair price to play a game that pays the face of a fair 6-sided die is 3.5.",
+     "weight": "extended",
+     "evidence_hint": "Computes (1+2+3+4+5+6)/6 = 3.5 as the fair price."
+    }
+   ],
+   "probes": [
+    "What is expected value, when is a game fair, and does linearity of expectation require independence?"
+   ],
+   "hints": {
+    "1": "Start from the discrete sum definition and what zero expected net profit means.",
+    "2": "State linearity for a sum, then say whether dependence breaks it.",
+    "3": "E[X]=sum x_i P(X=x_i); fair price = expected payoff; linearity holds even if variables are dependent—use indicators for totals."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to compute EV via conditioning, optional stopping thresholds, geometric waits, and coupon collecting.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "With one optional reroll on a fair 6-sided die, keep 4, 5, or 6 and reroll 1, 2, or 3; the game EV is 4.25.",
+     "weight": "core",
+     "evidence_hint": "Works backwards from second-roll EV 3.5, keeps faces above that threshold, and gets 4.25."
+    },
+    {
+     "id": "mech2",
+     "point": "Expected fair-coin flips until the first Heads is 2; until HH is 6; until HT is 4.",
+     "weight": "core",
+     "evidence_hint": "Gives geometric 1/p = 2 for first Heads, then state/recursion answers 6 for HH and 4 for HT."
+    },
+    {
+     "id": "mech3",
+     "point": "Coupon collector on a fair 6-sided die: expected rolls to see all faces is 14.7.",
+     "weight": "extended",
+     "evidence_hint": "Writes sum of geometrics E[T_k]=6/(7-k) and totals 14.7."
+    },
+    {
+     "id": "mech4",
+     "point": "For non-negative integer-valued X, E[X] equals the sum over k≥1 of P(X≥k); conditioning gives E[X] as a mixture of conditional expectations over states.",
+     "weight": "extended",
+     "evidence_hint": "Cites the tail-sum identity and the E[X]=sum P(state)·E[X|state] recursion form."
+    }
+   ],
+   "probes": [
+    "How do you find the EV of a die game with optional rerolls, and the expected flips to get HH versus HT?"
+   ],
+   "hints": {
+    "1": "For rerolls, decide keep vs reroll by comparing the face to the EV of rolling again.",
+    "2": "For patterns, set up states for the current streak and write equations by conditioning on the next flip.",
+    "3": "One reroll: keep ≥4 → EV 4.25; first Heads → 2; HH → 6; HT → 4; six faces → 14.7."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Separate EV pricing from variance, risk preference, streak-structure effects, and heavy-tailed means.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Two games can share expected return 100 while Var(A)=0 and Var(B)=10000, so risk-averse vs risk-seeking choices diverge even when EVs match.",
+     "weight": "core",
+     "evidence_hint": "Contrasts sure $100 with a coin flip $200/$0, cites variances 0 and 10000, and links preference to risk attitude."
+    },
+    {
+     "id": "tr2",
+     "point": "In quant interviews, games are priced on EV (risk-neutral) unless specified otherwise, but variance still matters for position sizing.",
+     "weight": "core",
+     "evidence_hint": "Says price on expected value by default, then notes variance for sizing."
+    },
+    {
+     "id": "tr3",
+     "point": "HH and HT each have probability 1/4 in two flips, but expected waiting times differ because failure modes leave different residual progress.",
+     "weight": "extended",
+     "evidence_hint": "Rejects equal-wait intuition; HT failure via HH still leaves an H, while HH failure via HT resets."
+    },
+    {
+     "id": "tr4",
+     "point": "St. Petersburg has infinite expected payout, yet people will not pay a large fee—EV alone is a poor guide for heavy-tailed payoffs.",
+     "weight": "extended",
+     "evidence_hint": "States divergent sum of 1s, then cites utility/bankroll reasons EV misleads."
+    }
+   ],
+   "probes": [
+    "If two games have the same EV, when would you still prefer one—and why can HH and HT waits differ?"
+   ],
+   "hints": {
+    "1": "Compare not just means but how payoffs are spread and how streaks reset.",
+    "2": "Name variance/risk preference for equal-EV games, and residual state for pattern waits.",
+    "3": "Game A variance 0 vs Game B 10000; risk-neutral EV pricing; HH wait 6 vs HT wait 4; St. Petersburg EV infinite."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply linearity, martingales, market-making, and classic stopping rules to interview-style problems.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "In the hat-check problem, expected fixed points is 1 for any N, via indicators each with probability 1/N.",
+     "weight": "core",
+     "evidence_hint": "Defines X_i for person i, gets N·(1/N)=1 independent of N."
+    },
+    {
+     "id": "app2",
+     "point": "Expected left-to-right records in a random permutation of N distinct numbers is the harmonic number H_N.",
+     "weight": "core",
+     "evidence_hint": "Uses P(record at i)=1/i and sums to H_N."
+    },
+    {
+     "id": "app3",
+     "point": "Fair gambler's ruin from A with barriers 0 and N: probability of hitting N is A/N; expected steps until absorption is A(N-A).",
+     "weight": "extended",
+     "evidence_hint": "Uses martingale/constant expected wealth for A/N and the parabola A(N-A) for duration."
+    },
+    {
+     "id": "app4",
+     "point": "Market on the sum of 100 fair 6-sided dice should center at 350; secretary look-then-leap skips about the first 37% and succeeds about 37% for large n.",
+     "weight": "extended",
+     "evidence_hint": "Quotes EV 100×3.5=350 as midpoint; states ≈n/e cutoff and 1/e≈37% success."
+    }
+   ],
+   "probes": [
+    "What is the expected number of fixed hats, and how would you make a market on the sum of 100 dice?"
+   ],
+   "hints": {
+    "1": "Reach for indicators or linearity before enumerating permutations.",
+    "2": "For ruin, equate starting wealth to expected terminal wealth; for markets, center on EV.",
+    "3": "Hats → 1; records → H_N; ruin → A/N and A(N-A); 100 dice → 350; secretary → ~37% skip and ~37% win."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Equal EV vs variance / risk preference",
+   "strong_answer": "Game A sure $100 and Game B coin-flip $200/$0 both have E[X]=100, but Var(A)=0 while Var(B)=10000; risk-averse prefers A, risk-seeking prefers B. Quant pricing defaults to risk-neutral EV, with variance used for position sizing."
+  },
+  {
+   "topic": "HH vs HT expected waiting time",
+   "strong_answer": "Both patterns have probability 1/4 in two flips, but waits are not equal: failing HH via HT fully resets, while failing HT via HH leaves an H in progress—so E[HH]=6 and E[HT]=4."
+  },
+  {
+   "topic": "EV pricing vs heavy-tailed / divergent expectations",
+   "strong_answer": "St. Petersburg has infinite EV because each term is 1, yet no one pays a huge fee; diminishing utility and finite bankrolls mean variance and ruin risk—not EV alone—should drive decisions when the mean is dominated by rare outcomes."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming HH and HT have the same expected waiting time because each has probability 1/4 in two flips.",
+   "correction": "Failure leaves different states: HT after aiming for HH resets completely; HH while aiming for HT still leaves an H—so expected waits are 6 vs 4."
+  },
+  {
+   "trap": "Treating a divergent or heavy-tailed expectation (e.g. St. Petersburg) as a practical fair price.",
+   "correction": "An infinite or rare-event-dominated mean is a warning: variance and ruin risk should drive the decision, not EV alone."
+  },
+  {
+   "trap": "Quoting a market whose midpoint is off the true EV (e.g. 340 @ 345 when the sum of 100 dice has EV 350).",
+   "correction": "Center the bid/ask on EV (350); a mispriced ask lets the interviewer buy and lock in positive EV against you."
+  },
+  {
+   "trap": "Thinking linearity of expectation requires independence.",
+   "correction": "Linearity always holds; dependence does not block summing E[X_i], which is why indicator decompositions work on dependent events like hat checks and adjacent aces."
+  }
+ ]
+}

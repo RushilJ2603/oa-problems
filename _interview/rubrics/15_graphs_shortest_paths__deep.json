@@ -1,0 +1,276 @@
+{
+ "id": "15_graphs_shortest_paths__deep",
+ "title": "Graphs II: Shortest Paths (0-1 BFS, Implicit Graphs)",
+ "type": "CP",
+ "relevance": "High — second ladder after the standard 0-1 / coupon / multi-source / state-Dijkstra sheet; harder CF-style modeling (sparse/implicit grids, company-switch 0-1, SPT surgery, lex objectives, tiled mazes)",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "OA/interview themes: multi-source infection/Wi-Fi (fires/routers/warehouses; farthest/nearest client — Fire Again / Fair); mode-switch travel (same line free, change line/company costs 1 — Snuke subway / Chamber mirrors); grid turn or stroke limits (bishop/rook rays, ≤2 turns, pond-skater strokes); repair / keep-k roads (Edge Deletion / Breaking Good).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Candidate spots hidden shortest-path graphs: two-cost moves, bounded switch/turn/repair, implicit sparse graphs, or multi-BFS/Dijkstra combo asks.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Recognize 0-1 shortest-path when moves cost only two values (same company / same direction / good road = 0 else 1), not general Dijkstra.",
+     "weight": "core",
+     "evidence_hint": "Names company-switch, direction-change, or good/bad-road edges and says deque 0-1 BFS, not a priority queue."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognize bounded turn/switch/repair resource or state (e.g. ≤2 turns, company enter, stroke direction) as a state-BFS / 0-1 state graph.",
+     "weight": "core",
+     "evidence_hint": "Mentions state like (r,c,dir,turns) or (cell,dir) / (station,company) rather than plain cell BFS."
+    },
+    {
+     "id": "rec3",
+     "point": "Recognize sparse/implicit or infinite tiled graphs that must not be materialized as a full dense grid.",
+     "weight": "extended",
+     "evidence_hint": "Says hash permitted cells, generate neighbors on the fly, or modular tile visit for Infinite Maze-style tiling."
+    },
+    {
+     "id": "rec4",
+     "point": "Recognize asks that are not one distance: edit the SPT, shortest cycle, farthest ignition, or lex min (length, repairs).",
+     "weight": "extended",
+     "evidence_hint": "Maps the prompt to SPT keep-k / parent surgery, girth BFS, multi-source farthest, or lex Dijkstra."
+    }
+   ],
+   "probes": [
+    "What signals that this is 0-1 BFS or an implicit shortest-path graph rather than plain BFS or general Dijkstra?",
+    "When would you combine several BFS/Dijkstras on the same skeleton instead of one search?"
+   ],
+   "hints": {
+    "1": "Look at edge costs and whether the graph is named explicitly.",
+    "2": "Two cost values, mode switches, sparse cells, or SPT/lex/cycle asks all hide shortest paths.",
+    "3": "If costs are only 0/1 use deque 0-1; if too big to build, hash/generate neighbors; if ask is tree/lex/cycle/farthest, plan multi-search or parents."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Candidate picks the right modeling: 0-1 deque, hubs, reverse multi-source, two-end distances, lex keys, SPT parents, or tiled/stroke graphs.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "0-1 BFS: push_front on weight 0, push_back on weight 1 so the deque stays sorted by distance.",
+     "weight": "core",
+     "evidence_hint": "States front for 0, back for 1, and that distances stay nondecreasing like Dial/0-1."
+    },
+    {
+     "id": "appr2",
+     "point": "Prefer hub/virtual nodes (portals, companies, letter teleports) with 0/1 edges over materializing all-pairs cliques.",
+     "weight": "core",
+     "evidence_hint": "Attaches real nodes to a company/portal hub instead of connecting every pair in the group."
+    },
+    {
+     "id": "appr3",
+     "point": "Nearest-special-to-every-node: reverse all edges and multi-source seed every special at dist 0.",
+     "weight": "core",
+     "evidence_hint": "Describes reverse graph + all specials pushed at distance 0 before the loop."
+    },
+    {
+     "id": "appr4",
+     "point": "Two-end distances ds[·], dt[·]; candidate added edge / meet uses ds[u]+w+dt[v]; Destroying Roads extends to two paths with overlap care.",
+     "weight": "extended",
+     "evidence_hint": "Keeps distances from both ends and combines with one added edge or shared middle segment."
+    },
+    {
+     "id": "appr5",
+     "point": "Lexicographic SP: optimize (path_length, secondary) in one Dijkstra via pair keys or packed cost (e.g. fewest bad roads among shortest).",
+     "weight": "extended",
+     "evidence_hint": "Uses pair comparison or equivalent packed key so length is primary and repairs secondary."
+    },
+    {
+     "id": "appr6",
+     "point": "SPT surgery: store parents while relaxing; on equal dist prefer smaller weight, or keep only k tree edges.",
+     "weight": "extended",
+     "evidence_hint": "Mentions parents during Dijkstra and tie-break on weight or outputting min(n−1,k) tree edges."
+    }
+   ],
+   "probes": [
+    "How do you model same-company rides that cost 0 after paying 1 to enter?",
+    "How do you get nearest special distance to every node efficiently?"
+   ],
+   "hints": {
+    "1": "Think about whether costs are 0/1 and whether groups share a mode.",
+    "2": "0-1 deque; hubs beat cliques; reverse multi-source for nearest specials; parents for SPT asks.",
+    "3": "push_front/back for 0/1; virtual (station,company); reverse edges seed specials at 0; store parents and lex pair keys when needed."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Candidate can code 0-1 BFS, multi-source seeding, sparse neighbors, parents, and tiled/stroke visitation correctly.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Implement 0-1 BFS with a deque and prove/explain why distances stay nondecreasing under front/back pushes.",
+     "weight": "core",
+     "evidence_hint": "Writes deque loop with 0→front and 1→back and argues order stays sorted by distance."
+    },
+    {
+     "id": "impl2",
+     "point": "Multi-source: push all sources with dist=0 before the loop; avoid k full separate BFS unless labels need separate layers (Fair).",
+     "weight": "core",
+     "evidence_hint": "Seeds every source first, then one BFS; calls out Fair-style per-type layers when needed."
+    },
+    {
+     "id": "impl3",
+     "point": "Sparse/implicit grids: hash permitted cells or generate neighbors on the fly; do not allocate N×M when only P cells exist.",
+     "weight": "core",
+     "evidence_hint": "Uses a set/map of allowed squares (King's Path style) and enumerates moves without a full matrix."
+    },
+    {
+     "id": "impl4",
+     "point": "Shortest-cycle BFS: skip the parent edge; update with back-edge using dist[u]+dist[v]+1.",
+     "weight": "extended",
+     "evidence_hint": "BFS from each start, ignore parent, take dist[u]+dist[v]+1 on non-tree back-edges."
+    },
+    {
+     "id": "impl5",
+     "point": "Infinite/tiled maze: visit key (r mod n, c mod m) but accept a second reach from a different tile copy/offset.",
+     "weight": "extended",
+     "evidence_hint": "Modular visit index plus absolute tile id / first-offset test for forever-reachable."
+    },
+    {
+     "id": "impl6",
+     "point": "Long-stroke grids: model one stroke of up to K as 0-1 BFS on cells with careful first-visit per ray, not O(K) naive edges per cell.",
+     "weight": "extended",
+     "evidence_hint": "Continues along a direction with 0-cost steps and direction-change 1, tracking ray visitation under large H·W."
+    }
+   ],
+   "probes": [
+    "Write the 0-1 BFS deque loop and justify the invariant.",
+    "How do you BFS on a sparse set of allowed king-move cells?"
+   ],
+   "hints": {
+    "1": "Start from deque pushes and what you store as state.",
+    "2": "Seed all sources first; hash cells; for cycles skip parent; for tiles store modular visit plus tile offset.",
+    "3": "0→push_front, 1→push_back; dist=0 multi-seed; set of permitted squares; girth with dist[u]+dist[v]+1; (r mod n,c mod m) plus second-tile test; stroke as 0-1 rays not O(K) edges."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Candidate justifies why sparse/0-1/stroke models stay feasible and why naive materialization fails.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Hubs replace dense group cliques so the explicit edge set stays sparse instead of all-pairs within a company/portal group.",
+     "weight": "core",
+     "evidence_hint": "Compares clique blow-up to attaching nodes to one virtual hub with 0/1 edges."
+    },
+    {
+     "id": "cx2",
+     "point": "Long-move strokes must avoid O(K) naive edges per cell; use 0-1 ray visitation so large grids (H·W≤1e6) remain workable.",
+     "weight": "core",
+     "evidence_hint": "Rejects per-cell K-edge expansion and cites careful ray/deque processing under H·W≤1e6."
+    },
+    {
+     "id": "cx3",
+     "point": "Implicit sparse graphs must not allocate a full N×M matrix when only a permitted subset of cells exists.",
+     "weight": "extended",
+     "evidence_hint": "Says memory/time follow the permitted cell count via hashing, not the full bounding box."
+    }
+   ],
+   "probes": [
+    "Why is a virtual company hub better than connecting every pair of stations on that company?",
+    "What goes wrong if each pond-skater stroke expands to K explicit edges per cell?"
+   ],
+   "hints": {
+    "1": "Compare materialized size to what you actually traverse.",
+    "2": "Cliques vs hubs; full grid vs hash set; K edges vs 0-1 along a ray.",
+    "3": "Hub keeps edges linear in incidences; hash only P cells; 0-1 strokes with first-visit per ray under H·W≤1e6."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Candidate avoids wrong algorithm choice, bad multi-source setup, missed parents/lex ties, and tiled false negatives.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Do not run general Dijkstra for pure 0-1 company/direction/good-bad edges — use deque 0-1 BFS.",
+     "weight": "core",
+     "evidence_hint": "Corrects PQ Dijkstra on 0/1 costs to push_front/push_back deque."
+    },
+    {
+     "id": "pit2",
+     "point": "Do not start multi-source by running separate full searches when one joint BFS with all sources at dist=0 suffices.",
+     "weight": "core",
+     "evidence_hint": "Pushes every source before the loop unless Fair-style per-label layers are required."
+    },
+    {
+     "id": "pit3",
+     "point": "For SPT / path / useful-edge asks, forgetting parents (or equal-dist smaller-weight tie-break) loses the tree or min-weight SPT.",
+     "weight": "extended",
+     "evidence_hint": "Stores predecessor edges while relaxing and on ==dist prefers smaller w when required."
+    },
+    {
+     "id": "pit4",
+     "point": "On infinite tilings, treating modular revisit as blocked misses the second-reach-from-different-tile acceptance condition.",
+     "weight": "extended",
+     "evidence_hint": "Allows the same modular cell if the tile offset differs from the first visit."
+    }
+   ],
+   "probes": [
+    "What breaks if you Dijkstra a graph whose only weights are 0 and 1?",
+    "When is revisiting a modular cell in an infinite maze still progress?"
+   ],
+   "hints": {
+    "1": "Check algorithm fit and what you mark visited.",
+    "2": "0-1 needs a deque; multi-source needs joint seeding; SPT needs parents; tiles need offset identity.",
+    "3": "Replace Dijkstra with 0-1 deque; seed all sources at 0; store parents and min-w ties; accept second tile offset on (r mod n, c mod m)."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "0-1 BFS deque vs general Dijkstra",
+   "strong_answer": "When every edge weight is only 0 or 1 (company switch, direction change, good/bad roads), deque push_front/push_back keeps distances sorted; priority-queue Dijkstra is the wrong default."
+  },
+  {
+   "topic": "Virtual hubs vs all-pairs cliques",
+   "strong_answer": "For portals, subway companies, or letter teleports, attach real nodes to a hub with 0/1 edges instead of connecting all pairs in the group."
+  },
+  {
+   "topic": "One joint multi-source BFS vs k separate BFS",
+   "strong_answer": "Push all sources with dist=0 for one joint search when that suffices; run separate layers only when labels need them (Fair: per good type, then take s nearest)."
+  },
+  {
+   "topic": "Sparse hash / on-the-fly neighbors vs full N×M grid",
+   "strong_answer": "If only a permitted subset of cells exists, hash them and generate neighbors; never allocate the full matrix."
+  },
+  {
+   "topic": "Lex pair / packed cost vs separate passes only",
+   "strong_answer": "For (path_length, secondary) goals like fewest bad roads among shortest paths, optimize with pair keys or packed cost in one Dijkstra (then edit off-path edges as in Breaking Good)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using general Dijkstra for company-switch / direction-change / good-bad 0-1 graphs.",
+   "correction": "Use 0-1 BFS: push_front on weight 0, push_back on weight 1."
+  },
+  {
+   "trap": "Materializing dense cliques for portals, companies, or teleports.",
+   "correction": "Add virtual hubs and attach real nodes with 0/1 edges."
+  },
+  {
+   "trap": "Computing nearest special via forward searches from every node.",
+   "correction": "Reverse all edges and multi-source BFS from every special at dist 0."
+  },
+  {
+   "trap": "Asking for a tree/path/useful edges but not storing parents during Dijkstra.",
+   "correction": "Store parents/predecessor edges while relaxing; for Paths and Trees, on equal dist prefer smaller weight; for Edge Deletion keep min(n−1,k) tree edges."
+  },
+  {
+   "trap": "Infinite Maze: marking a modular cell visited forever after first touch.",
+   "correction": "Index visits by (r mod n, c mod m) but accept a cell reached from a different tile copy than first seen."
+  },
+  {
+   "trap": "Pond-skater / long strokes expanded as O(K) edges per cell.",
+   "correction": "Model a stroke as 0-1 BFS along a ray with careful first-visit, fitting H·W≤1e6."
+  },
+  {
+   "trap": "Shortest-cycle BFS counting the parent edge as a cycle.",
+   "correction": "Ignore the parent; update with non-tree back-edges via dist[u]+dist[v]+1."
+  }
+ ]
+}

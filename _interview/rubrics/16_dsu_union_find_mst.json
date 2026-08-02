@@ -1,0 +1,256 @@
+{
+ "id": "16_dsu_union_find_mst",
+ "title": "DSU / Union-Find & MST (Kruskal, Prim)",
+ "type": "CP",
+ "relevance": "High — connectivity, cycle detection, “min cost to connect”, and offline merge queries dominate OAs; Kruskal+DSU is the standard MST interview package.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Provinces / friend circles / accounts: merge entities sharing a key (city, email, language) and count groups or sizes (LC 547 / 721, CF News Distribution). Cables & redundancy: min ops to connect all computers or which edge creates a cycle (LC 1319 / 684) — Amazon/Meta-style graph OAs. Min cost to wire sites: Manhattan points or city roads → MST (LC 1584, CSES Road Reparation); sometimes power-station OR wire → virtual node. Equality constraints: union on a==b then validate a!=b (LC 990); same pattern as same-gang / opposite-gang 2-SAT-lite with DSU.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Map the prompt to DSU connectivity, cycle/redundant edges, MST wiring, or offline merge tricks from signal wording.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Signal words like provinces/friends/network, redundant cable, connect all cities, max edge on path ≤ X, or repair roads with min cost point to DSU and/or MST.",
+     "weight": "core",
+     "evidence_hint": "Names those signal phrases and ties them to disjoint-set merges or spanning-tree cost."
+    },
+    {
+     "id": "rec2",
+     "point": "Use DSU when edges arrive over time, you need component sizes/counts, or you must detect a cycle while adding edges.",
+     "weight": "core",
+     "evidence_hint": "Says incremental edges / component bookkeeping / failed merge = cycle."
+    },
+    {
+     "id": "rec3",
+     "point": "Kruskal is sort edges by weight then add if endpoints differ (DSU); Prim grows one tree with a priority queue.",
+     "weight": "core",
+     "evidence_hint": "Contrasts sorted-edge Kruskal+DSU with PQ tree-growth Prim."
+    },
+    {
+     "id": "rec4",
+     "point": "Offline tricks include processing edges light→heavy or reversing deletions as unions.",
+     "weight": "extended",
+     "evidence_hint": "Mentions light-to-heavy offline merges or reverse-time unions for deletions/bridge collapse."
+    }
+   ],
+   "probes": [
+    "What wording makes this DSU connectivity, a redundant/cycle edge, MST wiring, or an offline reverse-merge problem?",
+    "Would you reach for Kruskal+DSU or Prim here, and why?"
+   ],
+   "hints": {
+    "1": "Look for shared keys, connect-all / min-cost wiring, or edges added/deleted over time.",
+    "2": "Shared key / group sizes → DSU; failed merge → cycle; sort+union → Kruskal; dense/implicit points → Prim; deletions → reverse unions.",
+    "3": "Say: provinces/friends/redundant cable/connect cities/repair roads → DSU/MST; edges over time, sizes/counts, or cycle-while-adding → DSU; Kruskal = sort by weight add if endpoints differ; Prim = PQ grow; offline light→heavy or reverse deletions as unions."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "State the DSU merge rule, Kruskal/Prim MST plan, and any reverse or offline-by-weight strategy before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Maintain disjoint sets so same-component queries and merges stay nearly O(1) amortized with path compression plus union by size/rank.",
+     "weight": "core",
+     "evidence_hint": "Names path compression and union by size/rank for nearly O(1) amortized merges/finds."
+    },
+    {
+     "id": "appr2",
+     "point": "Kruskal: sort edges ascending, add iff union succeeds, stop at n-1 edges, and detect if the graph stays disconnected.",
+     "weight": "core",
+     "evidence_hint": "Describes sort → successful unions only → n-1 edges or IMPOSSIBLE/disconnected."
+    },
+    {
+     "id": "appr3",
+     "point": "Prim: binary-heap grow from a source; prefer when E ≈ V^2 or distances are implicit (points).",
+     "weight": "core",
+     "evidence_hint": "Says heap Prim from a source for dense or implicit complete graphs like Manhattan points."
+    },
+    {
+     "id": "appr4",
+     "point": "Reverse technique: treat deletions or bridges-collapse by processing reverse as unions (Decayed Bridges / Destroying Array).",
+     "weight": "extended",
+     "evidence_hint": "Flips delete→add and unions in reverse time, tracking sizes or sums."
+    },
+    {
+     "id": "appr5",
+     "point": "Offline by weight: sort edges and queries together and maintain binom(sz,2)-style pair counts as components merge (Path Queries).",
+     "weight": "extended",
+     "evidence_hint": "Sorts edges+queries by weight and updates pairs-in-component while merging."
+    }
+   ],
+   "probes": [
+    "Walk through Kruskal versus Prim for this graph—when is each preferable?",
+    "If edges are deleted over time or queries are offline by weight, how do you rewrite the problem as unions?"
+   ],
+   "hints": {
+    "1": "Separate live same-component merges from MST construction and from reverse/offline rewrites.",
+    "2": "Kruskal = sort + union until n-1; Prim = heap grow when dense/implicit; deletions → reverse unions; weight queries → sort edges+queries.",
+    "3": "Say: path compression + union by size/rank; Kruskal sort ascending, union succeeds, stop at n-1, detect disconnected; Prim binary-heap when E ≈ V^2 or implicit points; reverse deletions as unions; offline sort edges+queries and track pair counts on merges."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Code the DSU template, component bookkeeping, Kruskal/Prim mechanics, and cycle/redundant-edge detection from memory.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "DSU template: parent, size/rank, recursive find with path compression, union by size/rank returning bool.",
+     "weight": "core",
+     "evidence_hint": "Sketches parent + size/rank arrays, compressing find, and bool-returning union."
+    },
+    {
+     "id": "impl2",
+     "point": "Component bookkeeping on roots: count of components, size of each root, optional sum/xor/min on the root.",
+     "weight": "core",
+     "evidence_hint": "Tracks component count and per-root size (and optional aggregates) as unions succeed."
+    },
+    {
+     "id": "impl3",
+     "point": "Cycle / redundant edge: a failed union means the edge closes a cycle (first failed union is the answer on Redundant Connection).",
+     "weight": "core",
+     "evidence_hint": "Says union returns false ⇒ redundant cycle edge."
+    },
+    {
+     "id": "impl4",
+     "point": "Network connect: need components-1 moves iff there are enough redundant edges.",
+     "weight": "extended",
+     "evidence_hint": "States answer components-1 only when spare same-component edges suffice."
+    },
+    {
+     "id": "impl5",
+     "point": "Equality equations: union on == first, then validate !=; accounts merge maps email→id, unions, then groups.",
+     "weight": "extended",
+     "evidence_hint": "Processes equalities before inequalities, or email→id union then group by root."
+    }
+   ],
+   "probes": [
+    "Write find/union from memory—what does a false union return mean?",
+    "How do you bookkeep component sizes, and how do you handle == then != equations?"
+   ],
+   "hints": {
+    "1": "Start from parent/size arrays and what union’s boolean means.",
+    "2": "Path-compress find; union by size/rank; failed union = cycle; keep count/size on roots; equalities before inequalities.",
+    "3": "Say: parent + size/rank, recursive find with path compression, union by size/rank returns bool; track component count/size (optional sum/xor/min); false union = cycle/redundant; components-1 moves iff enough redundants; == unions then check !=; email→id union then group."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State DSU’s amortized cost and when Prim’s dense/implicit setting beats Kruskal.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "With path compression and union by size/rank, find/union are nearly O(1) amortized.",
+     "weight": "core",
+     "evidence_hint": "Cites nearly O(1) amortized under those two optimizations."
+    },
+    {
+     "id": "cx2",
+     "point": "Prefer Prim’s binary-heap grow when E ≈ V^2 or distances are implicit (points), where materializing every edge for Kruskal is awkward.",
+     "weight": "core",
+     "evidence_hint": "Chooses Prim for dense or implicit complete graphs like Manhattan points."
+    },
+    {
+     "id": "cx3",
+     "point": "Kruskal still needs a spanning tree of n-1 edges; fewer successful unions means the graph is disconnected.",
+     "weight": "extended",
+     "evidence_hint": "Ties finishing with fewer than n-1 tree edges to disconnected / IMPOSSIBLE."
+    }
+   ],
+   "probes": [
+    "What is the amortized cost of find/union with path compression and union by size/rank?",
+    "When do you prefer Prim over Kruskal for points or dense graphs?"
+   ],
+   "hints": {
+    "1": "Name the two DSU optimizations and the dense/implicit Prim cue.",
+    "2": "Path compression + union by size/rank → nearly O(1); Prim when E ≈ V^2 or implicit distances; Kruskal needs n-1 edges.",
+    "3": "Say: nearly O(1) amortized with path compression + union by size/rank; Prim binary-heap when E ≈ V^2 or implicit points; Kruskal stops at n-1 edges or reports disconnected."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch reverse-time mistakes, equality order bugs, disconnected MST, and missed virtual-node / dual-forest variants.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Processing deletions forward instead of reverse-as-unions breaks Decayed Bridges / Destroying Array–style asks.",
+     "weight": "core",
+     "evidence_hint": "Insists delete→add reverse unions, e.g. inconvenient pairs via n(n-1)/2 minus size products."
+    },
+    {
+     "id": "pit2",
+     "point": "Validating != before unioning all == (or skipping the empty-language edge case) wrong-answers equality / shared-key DSU.",
+     "weight": "core",
+     "evidence_hint": "Does all == merges first, then checks !=; mentions empty shared-key cases when relevant."
+    },
+    {
+     "id": "pit3",
+     "point": "Reporting an MST cost without detecting disconnection (Road Reparation → IMPOSSIBLE) or without enough spare edges for components-1 reconnects.",
+     "weight": "extended",
+     "evidence_hint": "Checks spanning connectivity / IMPOSSIBLE and spare-edge budget before components-1."
+    },
+    {
+     "id": "pit4",
+     "point": "Missing MST variants: virtual node for build-facility-or-connect (Shichikuji), dual DSU forests that both stay acyclic, or bit-greedy connectivity checks (MinOr).",
+     "weight": "extended",
+     "evidence_hint": "Names virtual node 0, dual-forest edge adds, or drop high OR-bits while DSU stays connected."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you process bridge deletions in forward time?",
+    "How do you order == vs !=, and when is the MST answer IMPOSSIBLE?"
+   ],
+   "hints": {
+    "1": "Check time direction, equality order, and whether the forest actually spans.",
+    "2": "Deletions → reverse unions; == before !=; need n-1 tree edges or IMPOSSIBLE; spare edges for components-1; watch virtual-node / dual-DSU variants.",
+    "3": "Say: reverse deletions as unions (n(n-1)/2 minus size products); equalities first then !=; disconnected Kruskal → IMPOSSIBLE; components-1 iff enough redundants; virtual node / dual forests / bit-greedy DSU checks for variants."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Kruskal+DSU vs Prim",
+   "strong_answer": "Kruskal sorts edges by weight and adds iff endpoints differ (DSU), stopping at n-1 edges; Prim grows one tree with a binary-heap priority queue and is preferable when E ≈ V^2 or distances are implicit (e.g. Manhattan complete graphs, where Prim is often cleaner)."
+  },
+  {
+   "topic": "DSU vs DFS/BFS for components",
+   "strong_answer": "Both can count components or take a min per component (Rumor); prefer DSU when edges arrive over time, you need incremental sizes after each union, or you must detect cycles while adding edges."
+  },
+  {
+   "topic": "Online unions vs offline light→heavy / reverse deletions",
+   "strong_answer": "Live unions answer same-component and size queries as edges appear; when queries are by max edge weight or the timeline is deletions/bridge collapse, rewrite offline—sort edges light→heavy with queries, or process reverse time as unions."
+  },
+  {
+   "topic": "Plain MST vs virtual-node / bit-greedy MST",
+   "strong_answer": "Plain Kruskal/Prim wires sites with edge costs only; “build a facility or connect” adds a virtual node (station cost = edge to node 0); MinOr-style asks drop high OR-bits while DSU confirms the graph stays connected."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating every edge as tree-worthy without checking union’s return value.",
+   "correction": "A failed union means the edge closes a cycle; on Redundant Connection the first failed union is the answer."
+  },
+  {
+   "trap": "Answering reconnect cost as components-1 without checking spare edges.",
+   "correction": "You need components-1 moves iff there are enough redundant (same-component) edges."
+  },
+  {
+   "trap": "Checking != constraints before unioning all == equalities.",
+   "correction": "Process a==b unions first, then validate a!=b (LC 990)."
+  },
+  {
+   "trap": "Processing deletions or decaying bridges in forward chronological order.",
+   "correction": "Reverse the timeline and treat additions as unions; Decayed Bridges uses inconvenient pairs = n(n-1)/2 minus size products on merges."
+  },
+  {
+   "trap": "Printing an MST total when fewer than n-1 edges were successfully united.",
+   "correction": "Detect disconnection and output IMPOSSIBLE (Road Reparation) instead of a partial cost."
+  },
+  {
+   "trap": "Modeling “build power station or wire to another city” with only city–city edges.",
+   "correction": "Add a virtual node (station cost = edge to node 0) and run MST, then reconstruct edges."
+  }
+ ]
+}

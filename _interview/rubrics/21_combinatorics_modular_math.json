@@ -1,0 +1,209 @@
+{
+ "id": "21_combinatorics_modular_math",
+ "title": "Combinatorics & Modular Math",
+ "type": "CP",
+ "relevance": "OA “number of ways mod 10^9+7” is ubiquitous; stars-and-bars / nCr / expectation appear in Google/Meta/quant screens; CRT/φ are the rating climb",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "FAANG OA staple for ways/passwords/paths/teams mod 10^9+7 via precomputed nCr or multinomial; stars-and-bars as distribute identical items or nondecreasing arrays; expected-value via linearity or E[max] (quant shops); Catalan for valid brackets / binary trees under mod.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Candidate spots modular counting / expectation / CRT signal words and maps the ask to the right combinatorial object.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Constraints force answers modulo a prime (10^9+7 / 998244353), so division becomes multiply-by-modular-inverse",
+     "weight": "core",
+     "evidence_hint": "Names a common prime MOD and says you cannot divide under mod—use an inverse instead"
+    },
+    {
+     "id": "rec2",
+     "point": "Signal words include “ways modulo”, “expected value”, “coprime / remainder system”, “valid brackets / noncrossing”, “distribute identical items”",
+     "weight": "core",
+     "evidence_hint": "Lists several of these phrases and ties them to combo/modular patterns"
+    },
+    {
+     "id": "rec3",
+     "point": "Recurring move is rewrite the count as binomial / multinomial / stars-and-bars / Catalan / derangement",
+     "weight": "extended",
+     "evidence_hint": "Names the combinatorial closed form before talking implementation"
+    }
+   ],
+   "probes": [
+    "What phrases or constraints make you reach for modular combinatorics rather than plain DP or search?"
+   ],
+   "hints": {
+    "1": "Look at the output requirement and the nouns in the statement (ways, expected, brackets, identical items).",
+    "2": "If the answer is a count under a prime MOD, or an expectation, or a remainder system, you are in this family.",
+    "3": "Say: MOD is prime so invert via Fermat; rewrite as nCr / stars-and-bars / Catalan / derangement / IE / CRT as the wording suggests."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Candidate chooses the right identity (inverse, nCr precompute, stars-and-bars, Catalan, derangement, IE, expectation) before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Under prime MOD, a^{-1} ≡ a^{MOD-2} (mod MOD) via binary exponentiation (Fermat)",
+     "weight": "core",
+     "evidence_hint": "States Fermat inverse as pow(a, MOD-2) and never “divides” under mod"
+    },
+    {
+     "id": "appr2",
+     "point": "Stars-and-bars: x_i≥0 → C(n+k-1, k-1); x_i≥1 → C(n-1, k-1); nondecreasing sequences map to this",
+     "weight": "core",
+     "evidence_hint": "Gives both empty-allowed and positive variants and mentions the nondecreasing reduction"
+    },
+    {
+     "id": "appr3",
+     "point": "Expectation: linearity E[Σ X_i]=Σ E[X_i] (indicators), E[max] via CDF, else DP on remaining state",
+     "weight": "extended",
+     "evidence_hint": "Separates closed-form linearity / E[max] from probability DP when the process needs state"
+    },
+    {
+     "id": "appr4",
+     "point": "Inclusion-exclusion for unions; CRT when several moduli / remainder systems must be satisfied",
+     "weight": "extended",
+     "evidence_hint": "Mentions IE for overcounted unions and CRT/LCM for multi-modulus knowledge"
+    }
+   ],
+   "probes": [
+    "How do you turn “number of ways mod p” or “distribute identical items” into a formula you can evaluate quickly?"
+   ],
+   "hints": {
+    "1": "Ask whether items are identical/distinct and whether empty bins or order constraints appear.",
+    "2": "Prime MOD → Fermat inverse; identical-into-bins → stars-and-bars; brackets/noncrossing → Catalan; no fixed points → derangements.",
+    "3": "Outline: identify the combinatorial object, take inverses under prime MOD, and use IE/CRT/expectation only when the statement forces unions, moduli, or averages."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Candidate can state the fact/invFact template and the standard closed forms used under mod.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "fact[i]=fact[i-1]·i; invFact[N]=fact[N]^{-1}; invFact[i]=invFact[i+1]·(i+1); C(n,k)=fact[n]·invFact[k]·invFact[n-k]",
+     "weight": "core",
+     "evidence_hint": "Recites the forward fact and backward invFact build then O(1) nCr multiply"
+    },
+    {
+     "id": "impl2",
+     "point": "Multinomial / multiset permutations: n! / ∏ c_i! with inverse factorials",
+     "weight": "core",
+     "evidence_hint": "Says multiply fact[n] by invFact of each count, matching Creating Strings II style"
+    },
+    {
+     "id": "impl3",
+     "point": "Catalan: C_n = 1/(n+1) · C(2n, n) = C(2n, n) − C(2n, n−1), taken mod p via inverses",
+     "weight": "extended",
+     "evidence_hint": "Writes a Catalan formula and notes the 1/(n+1) is a modular inverse"
+    },
+    {
+     "id": "impl4",
+     "point": "Derangements: !n = n! Σ_{i=0}^n (−1)^i / i! or !n = (n−1)(!(n−1)+!(n−2))",
+     "weight": "extended",
+     "evidence_hint": "Gives IE sum or the (n−1) recurrence for !n"
+    }
+   ],
+   "probes": [
+    "Walk through how you precompute binomial coefficients modulo a prime and how Catalan or derangements plug into that."
+   ],
+   "hints": {
+    "1": "You need factorials and inverse factorials, not repeated per-query Fermat on every denominator.",
+    "2": "Build fact up to N, one inverse for fact[N], then back-propagate invFact; nCr is three multiplies.",
+    "3": "State the fact/invFact recurrence exactly, then Catalan as inv(n+1)·C(2n,n) and derangements via IE or the (n−1) DP."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Candidate states the standard precompute/query costs and when IE bitmasks stay feasible.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Answer binomial-style queries in O(1) after O(N) fact + invFact precompute",
+     "weight": "core",
+     "evidence_hint": "Says linear precompute once, then constant-time C(n,k) / multinomial pieces"
+    },
+    {
+     "id": "cx2",
+     "point": "Inclusion-exclusion bitmask over k≤20 sets when n is huge",
+     "weight": "core",
+     "evidence_hint": "Ties subset enumeration to small k (≤20) while n stays large"
+    }
+   ],
+   "probes": [
+    "What are the time costs of the nCr template, and when is inclusion-exclusion over primes/sets affordable?"
+   ],
+   "hints": {
+    "1": "Separate one-time setup from per-query work.",
+    "2": "Fact/invFact is linear in the max N; each binomial after that is constant multiplies.",
+    "3": "Say O(N) precompute then O(1) nCr; IE over k≤20 subsets when counting with a huge n."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Candidate avoids illegal division, tower-edge cases, stars-and-bars off-by-variant, and CRT misuse.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Never “divide” under mod—always multiply by a modular inverse",
+     "weight": "core",
+     "evidence_hint": "Explicitly rejects a/b mod p in integers and substitutes a·b^{-1}"
+    },
+    {
+     "id": "pit2",
+     "point": "Fermat/Euler towers: a^b mod p = a^{b mod (p−1)} mod p when gcd(a,p)=1; handle a≡0 and 0^0 carefully",
+     "weight": "core",
+     "evidence_hint": "Mentions φ(p)=p−1 reduction and calls out zero / 0^0 edge cases (Exponentiation II)"
+    },
+    {
+     "id": "pit3",
+     "point": "CRT: coprime moduli → unique solution mod product; non-coprime ⇒ consistency on gcd; LCM of moduli is the information you know",
+     "weight": "extended",
+     "evidence_hint": "Distinguishes coprime unique CRT from gcd-consistency and LCM as known modulus"
+    }
+   ],
+   "probes": [
+    "Where do people usually break modular towers, stars-and-bars bounds, or CRT on non-coprime moduli?"
+   ],
+   "hints": {
+    "1": "Think about division, zero bases, empty vs nonempty bins, and whether moduli share factors.",
+    "2": "Towers need exponent mod φ(MOD) only when invertible; stars-and-bars formula changes for x_i≥0 vs ≥1.",
+    "3": "Never divide under mod; reduce towers with care for a≡0/0^0; non-coprime CRT needs gcd consistency; known residues determine x mod LCM."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "closed-form expectation vs probability DP",
+   "strong_answer": "Use linearity of indicators or E[max] via CDF when the random variable decomposes cleanly; switch to DP on remaining counts/state when the process is draw-without-replacement or multi-type extinction (escalator / bag-of-mice / RPS island)."
+  },
+  {
+   "topic": "Catalan closed form vs Catalan-as-DP",
+   "strong_answer": "Prefer C_n under mod via nCr and inv(n+1) when asked for valid brackets / size-n trees directly; some game/path counts are Catalan-like but arrive as DP that equals Catalan—recognize either route."
+  },
+  {
+   "topic": "derangements via inclusion-exclusion vs recurrence",
+   "strong_answer": "IE !n = n! Σ (−1)^i/i! is the closed story; DP !n=(n−1)(!(n−1)+!(n−2)) is stabler for modular computation and partial derangement sums with C(n,i)·!i."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Writing a/b under a prime modulus as integer division",
+   "correction": "Replace division by multiply with Fermat inverse a^{MOD-2}, typically via precomputed invFact for nCr."
+  },
+  {
+   "trap": "Reducing a^{b^c} mod p with exponent mod (p−1) without checking invertibility / zero",
+   "correction": "Use a^{b^c mod (p−1)} only when gcd(a,p)=1; handle a≡0 and 0^0 as in Exponentiation II."
+  },
+  {
+   "trap": "Using the same stars-and-bars formula for allowing empties and forbidding empties",
+   "correction": "x_i≥0 → C(n+k−1, k−1); x_i≥1 → C(n−1, k−1); nondecreasing arrays reduce to the ≥0 case after a change of variables."
+  },
+  {
+   "trap": "Assuming CRT always gives a unique solution when moduli are not coprime",
+   "correction": "Non-coprime system needs consistency on gcd; the modulus you learn is governed by LCM of the c_i (prime-power wise), not always the product."
+  }
+ ]
+}

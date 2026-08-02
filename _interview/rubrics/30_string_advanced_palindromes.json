@@ -1,0 +1,242 @@
+{
+ "id": "30_string_advanced_palindromes",
+ "title": "Strings Advanced: Manacher, Z / Hashing, Palindromic Structures",
+ "type": "CP",
+ "relevance": "Medium (LPS / “is substring a palindrome?” show up in OAs via expand-around-center or hash; full Manacher, Z-period tricks, and k-palindrome DP are mainly CF rating builders toward ~2100)",
+ "difficulty": "mid",
+ "prereqs": [
+  "18_strings_hashing_kmp_trie"
+ ],
+ "company_notes": "Longest palindromic substring / count palindromic substrings — expand-around-center is the interview default; Manacher or hash+BS is the CP upgrade when n hits 10^6 (CSES / CF D2). Make-a-palindrome with fewest front inserts / prefix+suffix keep — Shortest Palindrome / Prefix-Suffix Palindrome in timed OAs; KMP on s#rev(s) or Manacher on the middle. Is this range a palindrome after edits — forward/reverse hash with updates (CSES Palindrome Queries). Contest Div. 2 D/E stretch: k-palindrome counts, Z-password borders, compress-on-overlap merges.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Map longest/count/query palindrome wording, prefix+suffix builds, and large-n period asks to Manacher, hash palindrome checks, or Z/π tools.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Longest / count / queries of palindromic substrings signal expand-around-center in interviews, or Manacher / hash+BS when n is too large for quadratic expand.",
+     "weight": "core",
+     "evidence_hint": "Names LPS/count/query-palindrome cues and upgrades from expand to Manacher or hash+BS under large n."
+    },
+    {
+     "id": "rec2",
+     "point": "Prefix+suffix palindrome builds (keep matching shell, extend the middle) signal Prefix-Suffix Palindrome / Shortest Palindrome style — KMP on s#rev(s) or Manacher/hash on the middle.",
+     "weight": "core",
+     "evidence_hint": "Describes peel matching prefix+suffix then longest palindromic middle extension."
+    },
+    {
+     "id": "rec3",
+     "point": "“Is s[l..r] a palindrome?” especially after point edits signals forward/reverse rolling hashes (plus Fenwick/seg for updates), not rebuild-from-scratch.",
+     "weight": "core",
+     "evidence_hint": "Maps range palindrome queries (± updates) to the forward/reverse hash black box."
+    },
+    {
+     "id": "rec4",
+     "point": "Longest border that is also an interior occurrence, glue-on-overlap merges, or (AB)^kA-style prefixes signal Z/π period tools (Password / Prefixes-and-Suffixes / necklace).",
+     "weight": "extended",
+     "evidence_hint": "Ties Password-style interior border, overlap merge, and necklace period forms to Z/π."
+    }
+   ],
+   "probes": [
+    "What wording pushes you from expand-around-center to Manacher, hash palindrome checks, or Z/π period tools?",
+    "Is this LPS/count, prefix+suffix keep, range palindrome after edits, or a border/period constraint?"
+   ],
+   "hints": {
+    "1": "Listen for palindromic substrings, prefix+suffix keep, range palindrome after edits, or border/period with large n.",
+    "2": "LPS/count/queries → expand or Manacher/hash; prefix+suffix shell → KMP/Manacher middle; range±edits → forward/reverse hash; interior border/overlap/(AB)^kA → Z/π.",
+    "3": "Say: longest/count/query pals → expand default, Manacher or hash+BS when n too large for O(n^2); prefix+suffix keep → peel shell then Manacher/hash middle (or KMP on s#rev(s)); range pal after edits → forward/reverse hash (+Fenwick); Password/overlap/necklace → Z/π."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "State the linear all-centers, hash palindrome black box, prefix–suffix peel, and Z/k-palindrome plans before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Under large n, replace O(n^2) expand with a linear all-centers tool: Manacher d_odd/d_even (or #-joined odd-only), or hash + binary search per center.",
+     "weight": "core",
+     "evidence_hint": "Rejects quadratic expand and names Manacher radii or hash+BS per center."
+    },
+    {
+     "id": "appr2",
+     "point": "Forward + reverse prefix hashes give an O(1) palindrome black box: s[l..r] is a palindrome iff hash(l,r) equals hash_rev of the mirrored reverse range.",
+     "weight": "core",
+     "evidence_hint": "States forward/reverse hash equality as the range-palindrome test."
+    },
+    {
+     "id": "appr3",
+     "point": "Prefix–suffix palindrome: peel the matching shell, then Manacher/hash the remaining middle from both ends (1326D1/D2).",
+     "weight": "core",
+     "evidence_hint": "Plans shell peel then linear palindrome tool on the middle."
+    },
+    {
+     "id": "appr4",
+     "point": "Higher structure: k-palindrome degree if a palindrome’s left half is (k−1)-pal (835D/7D); for n≤5000, isPal[l][r] from shorter lengths then 2D prefix sums (245H).",
+     "weight": "extended",
+     "evidence_hint": "States k-pal recurrence and the n≤5000 isPal+2D-prefix count plan."
+    }
+   ],
+   "probes": [
+    "How do you get all centers or O(1) range-palindrome checks without O(n^2) expand?",
+    "For prefix+suffix keep vs k-palindrome counts vs Password borders, what is the plan?"
+   ],
+   "hints": {
+    "1": "Pick all-centers, hash black box, shell-peel, or Z/k-pal from the ask.",
+    "2": "Large n → Manacher or hash+BS; range pal → forward/reverse hash; 1326 → peel then middle; k-pal / 245H → degree DP or isPal+prefix.",
+    "3": "Say: Manacher d_odd/d_even (or hash+BS per center) instead of O(n^2) expand; forward/reverse hash for O(1) is-pal; peel matching shell then Manacher/hash middle; k-pal if half is (k−1)-pal; n≤5000 → isPal then 2D prefix."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Build Manacher radii, forward/reverse hash (with Fenwick updates), prefix–suffix peel, and the core Z/k-palindrome checks.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Manacher template: compute d_odd[i] / d_even[i] (or #-joined odd-only) in O(n); recover LPS and longest palindrome centered at i.",
+     "weight": "core",
+     "evidence_hint": "Sketches odd/even (or joined) radii and reads LPS / per-center length from them."
+    },
+    {
+     "id": "impl2",
+     "point": "Palindrome black box: s[l..r] is a palindrome iff hash(l,r) = hash_rev(n−r+1, n−l+1) in O(1) after forward and reverse prefix hashes.",
+     "weight": "core",
+     "evidence_hint": "Writes the mirrored reverse-index equality exactly."
+    },
+    {
+     "id": "impl3",
+     "point": "For point updates + range palindrome queries, maintain hashes in a Fenwick/segtree; never rebuild O(n) hashes per query (CSES Palindrome Queries).",
+     "weight": "core",
+     "evidence_hint": "Puts forward/reverse hash under Fenwick/seg and rejects per-query full rebuild."
+    },
+    {
+     "id": "impl4",
+     "point": "Z/π Password pattern: longest string that is prefix, suffix, and occurs strictly inside; period i holds iff hash-blocks of length i match.",
+     "weight": "extended",
+     "evidence_hint": "Requires interior occurrence beyond a plain border, and block-hash period checks."
+    }
+   ],
+   "probes": [
+    "Walk through Manacher radii and the forward/reverse hash palindrome test.",
+    "How do you handle hash updates, the 1326 middle, or the Password interior-border condition?"
+   ],
+   "hints": {
+    "1": "Start from d_odd/d_even and the reverse-hash index formula.",
+    "2": "Manacher O(n) radii → LPS; hash(l,r)=hash_rev(n−r+1,n−l+1); Fenwick for updates; Password needs interior Z hit; periods via equal blocks.",
+    "3": "Spell: d_odd/d_even (or # join) in O(n); is-pal iff forward hash equals reverse mirrored range; Fenwick/seg hash updates; peel shell then Manacher/hash middle; longest border with strict interior occurrence; period iff length-i blocks match."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Confirm when O(n)/O(1) palindrome tools beat O(n^2) expand and when n≤5000 DP is allowed.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Manacher runs in O(n); forward/reverse hashes answer “is s[l..r] a palindrome?” in O(1) after precompute — required when n hits 10^6 instead of O(n^2) expand.",
+     "weight": "core",
+     "evidence_hint": "Contrasts O(n) Manacher and O(1) hash checks with quadratic expand at n≤10^6."
+    },
+    {
+     "id": "cx2",
+     "point": "Dynamic palindrome queries must not rebuild O(n) hashes per query; use Fenwick/seg hash updates.",
+     "weight": "core",
+     "evidence_hint": "States per-query rebuild is wrong and names Fenwick/seg maintenance."
+    },
+    {
+     "id": "cx3",
+     "point": "Range palindrome-count DP with isPal[l][r] + 2D prefix fits when n≤5000; n≤5·10^6 pal-degree forces pure hash (7D).",
+     "weight": "extended",
+     "evidence_hint": "Separates the n≤5000 DP regime from the pure-hash large-n regime."
+    }
+   ],
+   "probes": [
+    "What is the cost of Manacher vs expand, and of a hash palindrome check after precompute?",
+    "When is isPal DP acceptable, and when must you refuse O(n) rebuilds per query?"
+   ],
+   "hints": {
+    "1": "Separate precompute cost from per-check cost, and DP-sized n from 10^6-scale n.",
+    "2": "Manacher O(n); hash is-pal O(1); no O(n) rebuild per query; isPal OK at n≤5000; 7D needs pure hash.",
+    "3": "Say: Manacher O(n) and O(1) forward/reverse is-pal when n hits 10^6, not O(n^2) expand; Fenwick/seg instead of rebuilding O(n) hashes; isPal+2D prefix at n≤5000; n≤5·10^6 pal-degree → pure hash."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch quadratic expand on large n, hash rebuilds, missing reverse indices, and Password borders without interior hits.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Using O(n^2) expand-around-center when n≤10^6 (CSES Longest Palindrome / CF 1326D2) instead of Manacher or hash+BS.",
+     "weight": "core",
+     "evidence_hint": "Flags quadratic expand as failing the linear-n palindrome milestones."
+    },
+    {
+     "id": "pit2",
+     "point": "Rebuilding O(n) forward/reverse hashes after each point update instead of Fenwick/seg maintenance.",
+     "weight": "core",
+     "evidence_hint": "Requires dynamic hash structure, not full recomputation per update/query."
+    },
+    {
+     "id": "pit3",
+     "point": "Checking only that a candidate is a border (prefix=suffix) for Password without requiring a strict interior occurrence.",
+     "weight": "core",
+     "evidence_hint": "Insists on prefix+suffix+inside, not border alone."
+    },
+    {
+     "id": "pit4",
+     "point": "Forgetting the mirrored reverse indices in the hash palindrome test (must compare hash(l,r) to hash_rev(n−r+1, n−l+1)).",
+     "weight": "extended",
+     "evidence_hint": "Corrects off-by-index reverse-range hashing."
+    }
+   ],
+   "probes": [
+    "What fails at n≤10^6 if you only expand around centers?",
+    "Where do Password and dynamic palindrome-query solutions usually go wrong?"
+   ],
+   "hints": {
+    "1": "Check expand vs linear tools, hash rebuilds, reverse indices, and interior borders.",
+    "2": "Large n needs Manacher/hash+BS; updates need Fenwick; Password needs inside occurrence; is-pal needs mirrored rev hash.",
+    "3": "Say: no O(n^2) expand at n≤10^6; Fenwick/seg not O(n) rebuild; Password = longest prefix=suffix that occurs strictly inside; is-pal iff hash(l,r)=hash_rev(n−r+1,n−l+1)."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Expand-around-center vs Manacher / hash+BS",
+   "strong_answer": "Expand-around-center is the interview default for LPS / count palindromic substrings; when n hits 10^6 (CSES / CF D2), upgrade to Manacher d_odd/d_even or hash + binary search per center instead of O(n^2) expand."
+  },
+  {
+   "topic": "Manacher radii vs forward/reverse hash black box",
+   "strong_answer": "Manacher computes all center radii in O(n) for LPS and per-center lengths; forward+reverse hashes answer arbitrary “is s[l..r] a palindrome?” in O(1), and with Fenwick/seg support point updates (CSES Palindrome Queries)."
+  },
+  {
+   "topic": "isPal DP (n≤5000) vs linear tools (n≤10^6)",
+   "strong_answer": "When n≤5000, precompute isPal[l][r] from shorter lengths then 2D prefix sums for range palindrome counts (245H). When n≤10^6, use Manacher or hash; n≤5·10^6 pal-degree (7D) forces pure hash."
+  },
+  {
+   "topic": "KMP on s#rev(s) vs Manacher/hash on the middle",
+   "strong_answer": "Prefix+suffix keep / Shortest Palindrome: peel the matching shell, then either KMP on s#rev(s) or Manacher/hash the remaining middle from both ends (1326D1/D2); hard version forces a linear palindrome tool."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Expanding around every center in O(n^2) when constraints are n≤10^6.",
+   "correction": "Use Manacher (d_odd/d_even or #-joined) or hash + binary search per center — the linear all-centers tool required by CSES Longest Palindrome / CF 1326D2."
+  },
+  {
+   "trap": "Rebuilding the whole forward/reverse hash arrays after each edit.",
+   "correction": "Maintain hashes in a Fenwick or segment tree so point updates stay cheap and range palindrome checks stay O(1) black-box style (CSES Palindrome Queries)."
+  },
+  {
+   "trap": "Answering Password with the longest border alone.",
+   "correction": "The string must be a prefix, a suffix, and occur strictly inside; use Z/π (or hash+BS) for that interior occurrence."
+  },
+  {
+   "trap": "Testing palindrome ranges with only a forward hash.",
+   "correction": "Compare hash(l,r) to hash_rev(n−r+1, n−l+1) after building both forward and reverse prefix hashes."
+  },
+  {
+   "trap": "Treating Manacher output as only an LPS length when the task reconstructs the string.",
+   "correction": "Radii are equality constraints between mirrored positions — build the lex-smallest S (or prove impossible) from the given odd radii (ABC349 G stretch)."
+  }
+ ]
+}

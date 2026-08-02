@@ -1,0 +1,227 @@
+{
+ "id": "22_advanced_techniques__deep",
+ "title": "Advanced CP techniques: game / matrix / MITM / ternary / sqrt·Mo",
+ "type": "CP",
+ "relevance": "Medium — second ladder after CSES Nim/Fib/MITM/Mo and the Meeting-Place / Magic-Gems classics; these are the Div2 C–E drills that hide Grundy formulas, min-plus matrices, half-enumeration with extras, discrete unimodal costs, and block/residue sqrt rather than announcing the template.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "OA/interview prompts hide the template: two-player divisor/1..k/leaf games (want the win pattern, not a game tree); ways/shortest with huge step counts on a tiny graph or digit machine (matrix expo as 'huge n DP'); n≤40 best subset under budget or with limited special ops (say meet-in-the-middle, not 2^n); offline range even-frequency or stride jump-sums (Mo or sqrt blocks once n,q∼1e5).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot when a Div2 C–E statement hides Grundy, min-plus matrix expo, MITM-with-extras, discrete unimodal search, or Mo/block-residue sqrt without naming the tool.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "After Stick/Nim/Fib/MITM classics, contests stop naming the tool: games become delete-a-divisor / take leaves / XOR of segment piles / only care about the MSB with odd count.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists those disguised game shapes instead of saying 'this is Nim' or proposing a game-tree search."
+    },
+    {
+     "id": "rec2",
+     "point": "Linear-recurrence / path-count prompts become digit automata, forbidden-pair string graphs, or min-plus path products when steps are huge on a tiny state space.",
+     "weight": "core",
+     "evidence_hint": "Mentions matrix expo (or min-plus twin) for 'exactly k steps' / digit-machine DP rather than iterating the recurrence."
+    },
+    {
+     "id": "rec3",
+     "point": "Trigger cues: n≤40, k≤10^18, who-wins-with-optimal-play, unimodal cost, or q·√n offline range work.",
+     "weight": "extended",
+     "evidence_hint": "Names those concrete red flags and maps each to MITM, matrix expo, pattern/Grundy, ternary/BS-on-derivative, or Mo/sqrt."
+    }
+   ],
+   "probes": [
+    "When a problem never says 'Nim', 'matrix expo', or 'meet-in-the-middle', what statement cues still tell you which advanced template to reach for?"
+   ],
+   "hints": {
+    "1": "Think about size bounds and phrasing like 'who wins' or 'exactly this many steps'.",
+    "2": "Group cues: small n vs huge k vs unimodal cost vs offline ranges.",
+    "3": "Map n≤40→MITM, k≤10^18 on tiny graph→matrix, optimal-play games→pattern/Grundy, unimodal→ternary/BS, q·√n→Mo or residue sqrt."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Choose the right formulation: period/bit Grundy rule, (+,*) or (min,+) matrix power, MITM with extra half-state, discrete unimodal shrink, or Mo vs parameter-sqrt.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Many CF games yield O(1) or O(log) winners once you compute small grundies and spot a period or bit rule, rather than full DP.",
+     "weight": "core",
+     "evidence_hint": "Describes compute-small-g → spot cycle/bit pattern (e.g. 1-2-K period-3 unless k%3==0; GameGame MSB with odd popcount)."
+    },
+    {
+     "id": "appr2",
+     "point": "Min-plus matrix expo uses the same binary-expo skeleton with (A⊗B)[i][j]=min_k A[i][k]+B[k][j] and identity 0 on the diagonal / +∞ elsewhere.",
+     "weight": "core",
+     "evidence_hint": "States the (min,+) product and the 0/+∞ identity, tied to shortest walk with exactly k edges."
+    },
+    {
+     "id": "appr3",
+     "point": "MITM extras: split halves and track extra state (factorial uses, balanced base-w digits in {−1,0,1}), then sort/map complements under a budget—not plain subset-sum.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts Anya-and-Cubes factorial counts and Vanya-and-Scales base-w digits against vanilla CSES MITM."
+    },
+    {
+     "id": "appr4",
+     "point": "Discrete unimodal: prefer binary search on the derivative—compare f(m) vs f(m+1) and shrink; float ternary only when the domain is continuous.",
+     "weight": "core",
+     "evidence_hint": "Says compare neighbors / BS on slope for integer heights; reserves float ternary for continuous domains like Freefall."
+    }
+   ],
+   "probes": [
+    "For Graph Paths II versus a discrete cost like Devu/Restorer, how do you decide between min-plus matrix expo and binary search comparing f(m) to f(m+1)?"
+   ],
+   "hints": {
+    "1": "Ask what is discrete (integer height) versus exact-k walks on a graph.",
+    "2": "Exact-k shortest walks → (min,+) power; unimodal cost in a threshold → neighbor comparison search.",
+    "3": "State (min,+) product with 0/+∞ identity for Graph Paths II; for Devu/Restorer use BS f(m)?f(m+1) after convexity, not float ternary."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Implement the closed forms, matrix fills, MITM half-enums, Mo aggregates, and small-k vs large-k sqrt splits without falling back to naive loops.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "XOR of a contiguous range of pile sizes uses pref(r)⊕pref(l−1) where pref(n)=⊕_{i=1}^n i has an O(1) closed form from n mod 4—never loop to 10^18.",
+     "weight": "core",
+     "evidence_hint": "Gives the prefix-XOR reduction and the n mod 4 closed form for Industrial Nim–style intervals."
+    },
+    {
+     "id": "impl2",
+     "point": "Digit/string automata → matrix: state = last digit or last character; one step multiplies by a fixed transition matrix, then power M^n (or sum of M^{n-1} over alphabet states).",
+     "weight": "core",
+     "evidence_hint": "Ties Add One / Decoding Genome to filling a transition matrix from states a DP column remembers, then matrix power."
+    },
+    {
+     "id": "impl3",
+     "point": "Sqrt by parameter for jumps i→i+k+a[i]: if k≥√n simulate; if k<√n precompute per residue class / rebuild blocks; Mo sorts (L/B,R) and maintains odd_count or freq→answer in O(1).",
+     "weight": "extended",
+     "evidence_hint": "Describes Array Queries / Cowavans small-k residue DP vs large-k simulate, and Robin Hood–style Mo on odd_count."
+    }
+   ],
+   "probes": [
+    "Walk through how you would evaluate XOR of many contiguous pile intervals up to 10^18 without iterating each pile.",
+    "How do you wire Mo for 'range is a tie iff every value appears even times'?"
+   ],
+   "hints": {
+    "1": "Reduce an interval XOR to two prefix XORs of 1..n.",
+    "2": "Those prefixes have a closed form from n mod 4; for Mo, track how many values currently have odd frequency.",
+    "3": "Industrial Nim: each factory is pref(r)⊕pref(l−1) with O(1) ⊕_{i=1}^n i; Robin Hood: Mo add/del updates odd_count in O(1) after value compression."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Justify why the chosen template is fast enough under the stated limits (huge XOR ranges, m ops on digit machines, n,q∼1e5 offline).",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Segment / Industrial-Nim XOR must stay O(1) per interval via the closed form—looping pile sizes up to 10^18 is unacceptable.",
+     "weight": "core",
+     "evidence_hint": "Explicitly rejects O(length) XOR and cites the O(1) n mod 4 form."
+    },
+    {
+     "id": "cx2",
+     "point": "Offline Mo or sqrt-block solutions target n,q∼1e5 with the q·√n feel; MITM is for n≤40 rather than 2^n on the full set.",
+     "weight": "core",
+     "evidence_hint": "Pairs n,q∼1e5 with Mo/sqrt and n≤40 with half-enumeration, rejecting full exponential."
+    },
+    {
+     "id": "cx3",
+     "point": "Digit-automaton style precompute/matrix handles m≤10^5 ops by powering a fixed transition machine instead of simulating each increment naively per query path alone when the machine idea applies.",
+     "weight": "extended",
+     "evidence_hint": "Mentions Add One–style 10-state transitions with precompute/matrix for large m."
+    }
+   ],
+   "probes": [
+    "Why is meet-in-the-middle the right complexity story when n≤40, and when would you instead quote a Mo/sqrt bound?"
+   ],
+   "hints": {
+    "1": "Compare the n bound to the n,q bound.",
+    "2": "n≤40 suggests splitting halves; n,q∼1e5 offline ranges suggest Mo or residue blocks.",
+    "3": "Say MITM beats 2^n at n≤40; for Robin Hood/Cowavans/Array Queries cite Mo or sqrt with q·√n once n,q∼1e5."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Avoid mis-applying Sprague–Grundy, looping huge XORs, using float ternary on integers, or treating every MITM as subset-sum.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Removing one coin from each of several nonempty heaps is not Nim: first wins iff some heap has size >1—multi-select breaks single-pile Sprague–Grundy.",
+     "weight": "core",
+     "evidence_hint": "States Another Game rule max(a_i)>1 and explains why independent-heap XOR may not apply when one move touches several heaps."
+    },
+    {
+     "id": "pit2",
+     "point": "Closed-form ⊕_{i=1}^n i cycles every 4; treating Industrial-Nim segment XORs as a loop to 10^18 is a hard fail.",
+     "weight": "core",
+     "evidence_hint": "Recalls the every-4 cycle / n mod 4 form and refuses linear scan of the interval."
+    },
+    {
+     "id": "pit3",
+     "point": "Float ternary only when the domain is continuous; on integer heights prove convexity then BS f(m) vs f(m+1)—and Vanya-and-Scales is balanced base-w digits in {−1,0,1}, not subset-sum MITM.",
+     "weight": "extended",
+     "evidence_hint": "Separates Freefall-style continuous ternary from Devu/Maximize!/Restorer discrete search, and corrects scales to base-w digits {−1,0,1}."
+    }
+   ],
+   "probes": [
+    "Why does Another Game not reduce to XOR of Nimbers on each heap?",
+    "When is ternary the wrong tool for a unimodal cost?"
+   ],
+   "hints": {
+    "1": "Look at whether one move can touch multiple heaps at once.",
+    "2": "Multi-heap multi-select breaks the usual SG sum; also ask if the search domain is integer or continuous.",
+    "3": "Another Game: first wins iff max(a_i)>1; discrete unimodal → compare f(m),f(m+1), float ternary only for continuous domains."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Float ternary vs binary search on f(m) vs f(m+1)",
+   "strong_answer": "Use float ternary only for continuous domains (e.g. Freefall’s convex A/√(x+1)+Bx). On integer heights/thresholds (Devu, Maximize!, Restorer), prefer binary search that compares f(m) and f(m+1) after proving convexity (sum of convex / second difference ≥0)."
+  },
+  {
+   "topic": "Mo on [L,R] vs block/residue sqrt by stride or k",
+   "strong_answer": "Mo (block-sort, add/del maintaining odd_count or similar) fits offline arbitrary ranges. When the query is a fixed stride/parameter (jumps i→i+k+a[i], or sums a,a+b,a+2b,…), split on √n: large k/b simulate; small k/b precompute per residue class or rebuild blocks."
+  },
+  {
+   "topic": "(+,*) matrix expo vs (min,+) matrix expo",
+   "strong_answer": "Same binary-expo skeleton: ordinary path/string/digit counts use +,* with states = what a DP column remembers; shortest walk with exactly k edges switches to (min,+) with identity 0 on the diagonal and +∞ elsewhere (Graph Paths II)."
+  },
+  {
+   "topic": "Plain subset-sum MITM vs MITM with extra half-state",
+   "strong_answer": "CSES/Programming Contest style max sum ≤T is split + sort/two-pointers. Harder variants track extras on each half (factorial uses in Anya-and-Cubes) or use balanced base-w digits in {−1,0,1} (Vanya-and-Scales) instead of vanilla subset-sum."
+  },
+  {
+   "topic": "Independent-heap XOR vs multi-select impartial games",
+   "strong_answer": "Independent components → XOR of grundies. If a move can touch several heaps at once (Another Game: remove one from each nonempty heap), single-pile Sprague–Grundy may not apply—use the direct rule (first wins iff max(a_i)>1)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Looping to XOR pile sizes up to 10^18 for Industrial Nim–style contiguous ranges.",
+   "correction": "Each interval is pref(r)⊕pref(l−1); pref(n)=⊕_{i=1}^n i has an O(1) closed form from n mod 4 (values cycle every 4)."
+  },
+  {
+   "trap": "Treating 'remove one coin from each nonempty heap' as standard Nim and XORing heap sizes/grundies.",
+   "correction": "Multi-select changes the decomposition: first wins iff some heap has size >1 (CSES Another Game)."
+  },
+  {
+   "trap": "Running float ternary on discrete unimodal integer costs.",
+   "correction": "Prefer binary search on the derivative—compare f(m) vs f(m+1) and shrink; float ternary only when the domain is continuous."
+  },
+  {
+   "trap": "Calling every n≤40 split 'subset-sum MITM' (e.g. Vanya-and-Scales).",
+   "correction": "Vanya-and-Scales is balanced base-w with digits in {−1,0,1}; Anya-and-Cubes halves also track how many factorials were used—enum the extra state, then map complements."
+  },
+  {
+   "trap": "Assuming Sprague–Grundy on single piles always applies to any impartial sum.",
+   "correction": "Independent components XOR; if one move touches several heaps at once, single-pile SG may not apply—derive the direct win rule or a different decomposition."
+  },
+  {
+   "trap": "Bit-greedy games: looking at all bits or total XOR instead of the critical bit.",
+   "correction": "In GameGame-style play, only the highest bit where the count of 1s is odd matters; lower bits are forced replies."
+  }
+ ]
+}

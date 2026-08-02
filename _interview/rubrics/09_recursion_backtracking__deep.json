@@ -1,0 +1,270 @@
+{
+ "id": "09_recursion_backtracking__deep",
+ "title": "Recursion & Backtracking — Depth Pass",
+ "type": "CP",
+ "relevance": "Medium–High (Second ladder: CF-style exhaustive search, digit DFS, and meet-in-the-middle — the post-Striver skill of turning “N≤40 / tiny grid” into a pruned search, not an LC template).",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Split into K groups with conflict pairs → Peaceful Teams / Matchsticks-style partition with adjacency bans (Amazon/Meta scheduling flavors). Tile / place shapes on a small board → Tiling / Polyomino; interviewers care about first-empty-cell + undo, not fancy DS. Largest subset sum under mod / closest to target with n∼40 → MITM (Maximum Subsequence); classic hard phone-screen once 2^{40} is clearly impossible. Smallest number ≥ n with ≤ k distinct digits → Nearest Beautiful Number digit DFS; common “don’t use DP, just recurse on digits” follow-up.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot depth-pass recursion where constraints force MITM, digit DFS, ternary reformulation, or canonical pruned search—not a Subsets/N-Queens/Word Search template.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "After Subsets / N-Queens / Word Search, contest problems hide the same recursion behind constraints, pruning, and half-space tricks: split the search (meet-in-the-middle), canonicalize order (largest tile / lexicographically smallest unused index first), or reformulate into base-k / ternary digits so each choice is a digit, not a raw 2^n branch.",
+     "weight": "core",
+     "evidence_hint": "Names MITM split, canonical order, or base-k/ternary digit reformulation as the win over a plain LC template."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognize them when n≤40 with a sum/XOR target, “nearest number with ≤ k distinct digits”, small tiling / team-partition constraints, or a grid path too long for one-sided DFS.",
+     "weight": "core",
+     "evidence_hint": "Cites n≤40 sum/XOR, ≤k distinct digits, small tiling/teams, or too-long grid path as the cue."
+    },
+    {
+     "id": "rec3",
+     "point": "OA/interview skins include K-group partition with conflict pairs (Peaceful Teams / Matchsticks; Amazon/Meta), small-board tiling/placement (Tiling / Polyomino), subset sum under mod with n∼40 (Maximum Subsequence MITM once 2^{40} is impossible), and smallest ≥ n with ≤ k distinct digits (Nearest Beautiful Number digit DFS).",
+     "weight": "extended",
+     "evidence_hint": "Maps the prompt to one of those four Where-it-appears skins."
+    }
+   ],
+   "probes": [
+    "What constraint or ask says this is depth-pass pruned search / MITM / digit DFS rather than a Subsets or Word Search template?",
+    "If you see n≤40 with a sum/XOR target, ≤k distinct digits, small tiling/teams, or a long grid path, what do you reach for?"
+   ],
+   "hints": {
+    "1": "Ask whether the statement hides half-space tricks, digit reformulation, or canonical prune order instead of naming Subsets/N-Queens/Word Search.",
+    "2": "Cue band: n≤40 sum/XOR; nearest with ≤k distinct digits; small tiling/team-partition; grid path too long for one-sided DFS.",
+    "3": "Say: MITM / canonicalize largest-or-lex-first / base-k or ternary digits; skins are K-group conflicts, small-board tiling, mod subset with n∼40 (2^{40} impossible), and digit DFS for ≥n with ≤k distinct digits."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Pick the right search rewrite—MITM halves, digit/ternary recursion, canonical partition/tiling, signed-subset certificate, or reverse Euclidean search—before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "n≤40 subset-sum / max under mod: split into two halves of n/2, enumerate 2^{n/2}, sort + two-pointer / binary search the complement (Maximum Subsequence); factorial-boosted MITM uses states {skip, take, take·k!} at ~3^{n/2} per half (Anya and Cubes).",
+     "weight": "core",
+     "evidence_hint": "States half-split, 2^{n/2} (or ~3^{n/2} with factorial states), and sort/query complements."
+    },
+    {
+     "id": "appr2",
+     "point": "Digit / ternary reformulation: Good Numbers bump the first ternary 2-digit and clear below (digits only 0/1, not 3^{40} brute); Vanya and Scales recurse on weight digits in {-1,0,1} or residue mod w; Nearest Beautiful Number fills prefix equal to n, then first free position, then greedy min/max with used-digit mask and already-smaller/larger flag.",
+     "weight": "core",
+     "evidence_hint": "Describes digit-position recursion (ternary 0/1, balance {-1,0,1}, or nearest-valid prefix DFS) instead of item-subset branching."
+    },
+    {
+     "id": "appr3",
+     "point": "Partition / tiling / tour: always place into the lexicographically first empty cell / unused person; try pieces largest-first (Tiling / Peaceful Teams); Knight’s Tour uses Warnsdorff lowest-degree move order so pure BT finishes on 8×8.",
+     "weight": "core",
+     "evidence_hint": "Names first-hole / first-unassigned canonical placement and largest-first or Warnsdorff prune order."
+    },
+    {
+     "id": "appr4",
+     "point": "Signed-subset certificate: a is reachable as ∑ ε_i a_i with ε_i∈{-1,0,1} (or subset difference 0) iff a non-trivial combination hits 0 (Array Differentiation); when forward branching is huge, reverse the recurrence (Pairs of Numbers: Euclidean-style cuts from (a,b) steps (a+b,b)/(a,a+b)).",
+     "weight": "extended",
+     "evidence_hint": "States the {-1,0,1}→0 existence rewrite and/or reverse Euclidean search when forward explodes."
+    },
+    {
+     "id": "appr5",
+     "point": "Grid XOR/path MITM: walk from start to mid-diagonal and from end to mid; match on cell + XOR (Xor-Paths). Kayaking-style: search the discrete choice (which two sit alone, O(n^2)), then greed the rest.",
+     "weight": "extended",
+     "evidence_hint": "Mentions meet-on-mid-diagonal by (cell, xor) and/or choose-then-greedy discrete search."
+    }
+   ],
+   "probes": [
+    "How do you rewrite this before coding—MITM halves, digit/ternary DFS, first-hole tiling, signed-subset 0, or reverse search?",
+    "For n≤40 mod subset-sum vs ≤k-distinct nearest vs Peaceful Teams tiling, which approach do you pick and why?"
+   ],
+   "hints": {
+    "1": "Ask whether the win is splitting the space, digit reformulation, or canonical first-hole placement.",
+    "2": "n≤40 sum/mod → half-enumerate + sort complements; nearest/good/scales → digit recursion; teams/tiles → first unassigned/empty + largest-first.",
+    "3": "Also: Array Differentiation → non-empty {-1,0,1} sum to 0; long XOR grid → meet mid-diagonal; huge forward tree → reverse Euclidean (Pairs of Numbers); Kayaking → O(n^2) discrete choice then greed."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Write MITM, digit DFS, and partition/tiling skeletons with canonical labeling and undo discipline.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Meet-in-the-middle from memory: split, enumerate, sort one half, query complements in O(2^{n/2}n).",
+     "weight": "core",
+     "evidence_hint": "Recites split → enumerate both halves → sort one → query complements with that complexity."
+    },
+    {
+     "id": "impl2",
+     "point": "Digit DFS skeleton: pos, tight/started, used-mask / distinct-count; generate or find nearest (Undoubtedly Lucky / Nearest Beautiful Number).",
+     "weight": "core",
+     "evidence_hint": "Lists those state parameters and says generate-all or nearest-valid with the same skeleton."
+    },
+    {
+     "id": "impl3",
+     "point": "Partition/tiling skeleton: find first hole → try all legal pieces/rotations → recurse → undo; canonical labeling assigns person i only to teams 1..used(+1) so team sets are unordered.",
+     "weight": "core",
+     "evidence_hint": "Describes first-hole place/undo and the used(+1) team labeling to avoid unordered overcount."
+    },
+    {
+     "id": "impl4",
+     "point": "Undo discipline: mutate board/mask/sum, recurse, restore—same habit as Word Search / Sudoku; when n≤20 Hamilton / constrained perms, memoize on mask (+ aux) so BT becomes bitmask DP (Hamiltonian Flights / ABC199 E with N≤18).",
+     "weight": "extended",
+     "evidence_hint": "States mutate/recurse/restore and memo on mask when n≤20 (or N≤18 constrained perms)."
+    }
+   ],
+   "probes": [
+    "Walk through your MITM and digit-DFS skeletons—what state do you carry?",
+    "How do you canonicalize team assignment or tiling placement, and when do you memoize the BT into bitmask DP?"
+   ],
+   "hints": {
+    "1": "Name the three skeletons: MITM halves, digit DFS state, first-hole tiling with undo.",
+    "2": "MITM → sort one half and query; digit → pos/tight/used-mask; tiling → first hole + undo; teams → only 1..used(+1).",
+    "3": "Say: O(2^{n/2}n) MITM; digit DFS with pos/tight/started/used-mask; first-hole → try → undo; canonicalize teams; n≤20 / N≤18 → memoize on mask."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State when full enumeration is impossible and which pruned/MITM/digit bound replaces it.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Full subset search at 2^{40} is impossible; for n≤40 / Maximum Subsequence n≤35, MITM half-enumerate + sort complements runs in O(2^{n/2}n).",
+     "weight": "core",
+     "evidence_hint": "Rejects 2^{40} brute and states the MITM O(2^{n/2}n) rewrite under n≤40 / n≤35."
+    },
+    {
+     "id": "cx2",
+     "point": "Good Numbers must not be 3^{40} brute—recursive ternary digit rewrite (bump first 2, clear below); factorial MITM is still ~3^{n/2} per half for n≤25 (Anya and Cubes).",
+     "weight": "core",
+     "evidence_hint": "Contrasts 3^{40} item brute with digit rewrite / ~3^{n/2} half-enumeration."
+    },
+    {
+     "id": "cx3",
+     "point": "When BT becomes bitmask DP: n≤20 Hamilton / constrained perms memoize on mask (+ aux); ABC199 E builds left-to-right with N≤18 bitmask + prefix constraints.",
+     "weight": "extended",
+     "evidence_hint": "States n≤20 / N≤18 as the memoized-mask regime."
+    },
+    {
+     "id": "cx4",
+     "point": "Tiny combinatorial spaces finish by brute with prune: Chessboard tries all 4^4 orientation sets of four n×n boards on a 2n×2n assembly; Polyomino packs three shapes into 4×4; Kayaking’s discrete choice is O(n^2) then greedy pairing.",
+     "weight": "extended",
+     "evidence_hint": "Names 4^4 / 4×4 / O(n^2) as the finishing bound when the discrete space is tiny."
+    }
+   ],
+   "probes": [
+    "Why is 2^{40} (or 3^{40}) the wrong plan here, and what complexity do you claim instead?",
+    "When does MITM O(2^{n/2}n) beat full search, and when does n≤20 turn BT into bitmask DP?"
+   ],
+   "hints": {
+    "1": "Compare full exponential to the half-space or digit rewrite the constraints invite.",
+    "2": "2^{40} impossible → MITM O(2^{n/2}n) for n≤40/n≤35; Good Numbers → not 3^{40}; n≤20 → mask DP.",
+    "3": "Also: Anya ~3^{n/2} on n≤25 halves; Chessboard 4^4; Polyomino 4×4; Kayaking O(n^2) choice then greed."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch overcounting, missing prune order, one-sided long paths, and forgetting undo or memo.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Skipping canonical labeling overcounts unordered partitions—assign person i only to teams 1..used(+1); always fill the lexicographically first empty cell / unused person.",
+     "weight": "core",
+     "evidence_hint": "States used(+1) team labeling and first-hole / first-unassigned placement to avoid overcount."
+    },
+    {
+     "id": "pit2",
+     "point": "Wrong prune order fails to finish: try largest tile / descending a_i first, or lowest Warnsdorff degree on 8×8 Knight’s Tour—fail fast.",
+     "weight": "core",
+     "evidence_hint": "Names largest-first / descending / Warnsdorff as the prune that makes BT finish."
+    },
+    {
+     "id": "pit3",
+     "point": "One-sided DFS on a grid path that is too long misses Xor-Paths-style MITM (meet on mid anti-diagonal, hash by cell + xor); Good Numbers treated as item subset search becomes 3^{40} instead of ternary digit rewrite.",
+     "weight": "core",
+     "evidence_hint": "Rejects one-sided long-path DFS and 3^{40} Good Numbers brute; names mid-diagonal MITM / digit rewrite."
+    },
+    {
+     "id": "pit4",
+     "point": "Forgetting undo (mutate board/mask/sum without restore) corrupts later branches; forgetting memo when n≤20 Hamilton / constrained perms leaves pure BT too slow.",
+     "weight": "extended",
+     "evidence_hint": "Calls out mutate/recurse/restore discipline and mask memo at n≤20."
+    }
+   ],
+   "probes": [
+    "What overcount or TLE happens if you skip canonical first-unassigned labeling or Warnsdorff/largest-first order?",
+    "Where do people wrongly one-sided-DFS a long XOR path or 3^{40}-brute Good Numbers?"
+   ],
+   "hints": {
+    "1": "Check labeling, prune order, undo, and whether the search should be split or digit-rewritten.",
+    "2": "Teams → 1..used(+1); tiles/tour → largest-first / Warnsdorff; long XOR path → mid-diagonal MITM; Good Numbers → not 3^{40}.",
+    "3": "Also: always undo board/mask/sum; n≤20 Hamilton/perms → memoize on mask."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Meet-in-the-middle vs full 2^n / 2^{40} subset search",
+   "strong_answer": "For n≤40 subset-sum / max under mod (Maximum Subsequence n≤35), split into n/2 halves, enumerate 2^{n/2}, sort + two-pointer/binary-search complements in O(2^{n/2}n)—2^{40} full search is impossible."
+  },
+  {
+   "topic": "Digit / ternary recursion vs item-subset branching",
+   "strong_answer": "Good Numbers / Vanya and Scales / Nearest Beautiful Number recurse on digit position (ternary 0/1, weight digits {-1,0,1}, or used-mask + tight for ≤k distinct)—not raw 2^n or 3^{40} item branches."
+  },
+  {
+   "topic": "Pure backtracking vs bitmask DP at n≤20",
+   "strong_answer": "When n≤20 Hamilton / constrained perms (Hamiltonian Flights; ABC199 E with N≤18), memoize on mask (+ aux)—BT becomes bitmask DP rather than bare recursion."
+  },
+  {
+   "topic": "Canonical first-hole / first-unassigned vs unordered team/tile search",
+   "strong_answer": "Always place into the lexicographically first empty cell / unused person and assign teams only to 1..used(+1); try largest-first so failures prune early (Tiling / Peaceful Teams)."
+  },
+  {
+   "topic": "Forward branching vs reverse Euclidean search",
+   "strong_answer": "When forward branching is huge (Pairs of Numbers), invert the recurrence and search backward from the target with Euclidean-style cuts instead of stepping (a+b,b)/(a,a+b) forward from (1,1)."
+  },
+  {
+   "topic": "One-sided grid DFS vs path MITM on mid-diagonal",
+   "strong_answer": "If the grid path is too long for one-sided DFS (Xor-Paths), walk start→mid and end→mid and match on cell + XOR rather than full one-direction search."
+  },
+  {
+   "topic": "Search the discrete choice then greed the rest vs full combinatorial BT",
+   "strong_answer": "Kayaking: pick which two sit alone in O(n^2), sort the rest and pair adjacent—search only the discrete choice, greed the remainder."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Attempting full subset search when 2^{40} is clearly impossible.",
+   "correction": "Use MITM: split n≤40 into halves of n/2, enumerate 2^{n/2}, sort and query complements in O(2^{n/2}n) (Maximum Subsequence)."
+  },
+  {
+   "trap": "Brute-forcing Good Numbers as 3^{40} over ternary digits / items.",
+   "correction": "Numbers with ternary digits only 0/1: bump the first 2-digit and clear below—recursive digit rewrite."
+  },
+  {
+   "trap": "Assigning people to any team label and overcounting unordered partitions.",
+   "correction": "Canonical labeling: first unassigned person only tries teams 1..used(+1) so team sets are unordered (Peaceful Teams)."
+  },
+  {
+   "trap": "Trying tiles/moves in arbitrary order so BT does not finish.",
+   "correction": "Prune order: largest tile / descending a_i first, or lowest Warnsdorff degree on 8×8 Knight’s Tour—fail fast."
+  },
+  {
+   "trap": "One-sided DFS on a grid path that is too long.",
+   "correction": "Xor-Paths MITM: meet on the mid anti-diagonal and hash by (cell, xor)."
+  },
+  {
+   "trap": "Mutating board/mask/sum without restoring after recursion.",
+   "correction": "Undo discipline: mutate, recurse, restore—same habit as Word Search / Sudoku."
+  },
+  {
+   "trap": "Leaving constrained Hamilton / perm search as pure BT when n≤20.",
+   "correction": "Memoize on mask (+ aux); N≤18 constrained perms are memoized recursion ≡ bitmask DP."
+  },
+  {
+   "trap": "Reaching for DP on “smallest ≥ n with ≤ k distinct digits”.",
+   "correction": "Nearest Beautiful Number: digit DFS with used-mask and already-smaller/larger—don’t use DP, just recurse on digits."
+  }
+ ]
+}

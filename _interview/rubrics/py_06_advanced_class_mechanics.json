@@ -1,0 +1,193 @@
+{
+ "id": "py_06_advanced_class_mechanics",
+ "title": "@classmethod, @staticmethod, and Dataclasses",
+ "type": "FUND",
+ "relevance": "Interviewers probe whether candidates know when to use class/static methods and can cut boilerplate with dataclasses instead of hand-rolling __init__/__repr__/__eq__.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what instance, class, and static methods are, and what a dataclass automatically provides.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "An instance method takes self as its first parameter and can modify the specific object it was called on.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts instance methods with self vs alternatives that do not bind to one instance."
+    },
+    {
+     "id": "fund2",
+     "point": "A class method takes the class itself as its first parameter (by convention cls) and can read/modify class-level state but not instance-level state.",
+     "weight": "core",
+     "evidence_hint": "Candidate names cls and says it operates on the class, not a single instance."
+    },
+    {
+     "id": "fund3",
+     "point": "A static method takes neither self nor cls as an implicit first argument; it behaves like a normal function living in the class namespace.",
+     "weight": "core",
+     "evidence_hint": "Candidate says no implicit self/cls and treats it as a namespaced utility."
+    },
+    {
+     "id": "fund4",
+     "point": "A dataclass (@dataclass) automatically generates boilerplate such as __init__, __repr__, and __eq__.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists generated methods and mentions the @dataclass decorator."
+    },
+    {
+     "id": "fund5",
+     "point": "Python 3.7 introduced dataclasses for classes that primarily store data.",
+     "weight": "extended",
+     "evidence_hint": "Candidate cites Python 3.7 as when dataclasses arrived for data-holding classes."
+    }
+   ],
+   "probes": [
+    "What is the difference between an instance method, a @classmethod, and a @staticmethod?",
+    "What does @dataclass generate for you that you would otherwise write by hand?"
+   ],
+   "hints": {
+    "1": "Think about what each method type receives as its first argument—or whether it receives one at all.",
+    "2": "Instance → self; classmethod → cls and class state; staticmethod → neither; dataclass → auto __init__/__repr__/__eq__.",
+    "3": "Say: instance methods bind to an object via self; @classmethod gets cls for class-level work; @staticmethod is a plain function in the class; @dataclass auto-builds __init__, __repr__, and __eq__."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how classmethods act as alternative constructors with cls, and how dataclasses use type hints and optional post-init setup.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "@classmethod binds the method to the class and passes the class (cls) as the implicit first argument.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes the decorator binding and the implicit cls argument."
+    },
+    {
+     "id": "mech2",
+     "point": "Alternative constructors often use @classmethod and return cls(...) so subclasses get subclass instances instead of a hardcoded parent type.",
+     "weight": "core",
+     "evidence_hint": "Candidate explains from_string-style constructors and why cls() beats hardcoding Date()."
+    },
+    {
+     "id": "mech3",
+     "point": "Dataclasses require type hints (e.g. : str) even though Python does not strictly enforce them at runtime.",
+     "weight": "core",
+     "evidence_hint": "Candidate notes annotated fields on the class body and that hints are not runtime-enforced."
+    },
+    {
+     "id": "mech4",
+     "point": "Custom setup right after dataclass construction is done via __post_init__ (e.g. derived fields).",
+     "weight": "extended",
+     "evidence_hint": "Candidate names __post_init__ for logic that should run after the generated __init__."
+    }
+   ],
+   "probes": [
+    "Why use cls() inside a classmethod constructor instead of hardcoding the class name?",
+    "If a dataclass generates __init__, how do you run custom setup right after creation?"
+   ],
+   "hints": {
+    "1": "Subclassing and 'what happens after fields are set' are the two mechanics to nail.",
+    "2": "Alternative constructors return cls(...); post-construction dataclass logic goes in __post_init__.",
+    "3": "Say: cls() preserves subclass type for alternative constructors; use __post_init__ for derived fields after dataclass __init__."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Decide when class/static methods and dataclasses help versus when a plain function or hand-written class is better.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer a module-level function over @staticmethod when the function does not need the class—do not force functions into classes just to mimic Java.",
+     "weight": "core",
+     "evidence_hint": "Candidate says staticmethod is optional namespacing and module-level is often preferred."
+    },
+    {
+     "id": "tr2",
+     "point": "Use @staticmethod for utilities that need no class/instance data but conceptually belong with the class.",
+     "weight": "core",
+     "evidence_hint": "Candidate gives a belonging-with-the-class rationale without claiming access to self/cls."
+    },
+    {
+     "id": "tr3",
+     "point": "Dataclasses fit data-heavy models; they are inappropriate when the class is primarily logic-heavy or needs complex validation during initialization.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts data containers with logic-heavy or heavily validated types."
+    }
+   ],
+   "probes": [
+    "When would you put a utility on the class with @staticmethod versus defining it at module level?",
+    "When is a dataclass a bad fit compared to a normal class?"
+   ],
+   "hints": {
+    "1": "Ask whether the function needs the class at all, and whether the type is mostly data or mostly behavior/validation.",
+    "2": "No class coupling → module function; conceptual grouping only → staticmethod; data-heavy → dataclass; logic-heavy/complex init validation → plain class.",
+    "3": "Say: avoid overusing @staticmethod—module-level is fine; dataclasses shine for data models and break down for logic-heavy classes or complex init validation."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply alternative constructors and dataclass field declarations to concrete examples.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "An alternative constructor like Date.from_string can parse a date string and return a new instance via cls(year, month, day).",
+     "weight": "core",
+     "evidence_hint": "Candidate sketches parsing and returning cls(...) from a classmethod."
+    },
+    {
+     "id": "app2",
+     "point": "A Product dataclass is declared with @dataclass and typed fields such as name: str and price (with a type annotation).",
+     "weight": "core",
+     "evidence_hint": "Candidate writes @dataclass class Product with annotated name and price fields."
+    },
+    {
+     "id": "app3",
+     "point": "Calling a static utility via the class (e.g. MathUtils.add) works without constructing an instance.",
+     "weight": "extended",
+     "evidence_hint": "Candidate invokes the static method on the class name with no instance."
+    }
+   ],
+   "probes": [
+    "Write a @classmethod alternative constructor that builds an instance from a string.",
+    "Sketch a Product dataclass with name and price fields."
+   ],
+   "hints": {
+    "1": "Reuse the Date.from_string and Product dataclass patterns from the material.",
+    "2": "Classmethod: parse, then return cls(...). Dataclass: from dataclasses import dataclass, annotate fields.",
+    "3": "Say: @classmethod def from_string(cls, s): parse and return cls(...); @dataclass class Product: name: str; price: <annotated type>."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "@staticmethod vs module-level function",
+   "strong_answer": "@staticmethod is fine when a utility conceptually belongs on the class but needs neither self nor cls; if it does not need the class at all, a standalone module-level function is acceptable and often preferred—do not nest functions in classes just to mimic Java."
+  },
+  {
+   "topic": "Dataclass vs hand-written class",
+   "strong_answer": "Dataclasses cut boilerplate (__init__, __repr__, __eq__) for data-heavy models with type-hinted fields; prefer a normal class when the type is primarily logic-heavy or needs complex validation during initialization."
+  },
+  {
+   "topic": "@classmethod vs hardcoding the class in a factory",
+   "strong_answer": "Alternative constructors should call cls(...) so subclasses get subclass instances; hardcoding the parent class name (e.g. Date(...)) breaks that inheritance-friendly pattern."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Overusing @staticmethod and stuffing unrelated utilities into a class to look like Java.",
+   "correction": "If the function does not need the class, define it at module level; use @staticmethod only when namespacing with the class is genuinely useful."
+  },
+  {
+   "trap": "Hardcoding the class name inside an alternative constructor (e.g. return Date(...)).",
+   "correction": "Return cls(...) so subclassing still constructs the subclass, not always the parent."
+  },
+  {
+   "trap": "Reaching for a dataclass on a logic-heavy type or one that needs complex init-time validation.",
+   "correction": "Dataclasses suit data-heavy models; use a normal class when behavior or complex validation dominates initialization."
+  },
+  {
+   "trap": "Assuming dataclass type hints are enforced at runtime.",
+   "correction": "Dataclasses require type hints in the declaration, but Python does not strictly enforce them at runtime."
+  }
+ ]
+}

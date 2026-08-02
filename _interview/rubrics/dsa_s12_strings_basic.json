@@ -1,0 +1,253 @@
+{
+ "id": "dsa_s12_strings_basic",
+ "title": "Strings — Basic and Medium",
+ "type": "FUND",
+ "relevance": "String manipulation is a staple of SDE interviews and OAs, probing memory cost of copies, frequency counting, two pointers, and ASCII arithmetic.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish how C++ strings and characters behave, including append cost and ASCII arithmetic.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "std::string is a mutable dynamic array of char with fast random access and APIs like substr, find, and +=.",
+     "weight": "core",
+     "evidence_hint": "Describes string as a mutable char array and names common APIs such as substr, find, or +=."
+    },
+    {
+     "id": "fund2",
+     "point": "Building a string with s = s + c in a loop copies all characters each time and is O(n^2); use s += c or s.push_back(c) for amortized O(1) appends.",
+     "weight": "core",
+     "evidence_hint": "Contrasts quadratic reallocation/copy from + with amortized constant append via += or push_back."
+    },
+    {
+     "id": "fund3",
+     "point": "Characters are ASCII integers, so s[i] - 'a' maps lowercase letters to a 0-based alphabet index from 0 to 25.",
+     "weight": "core",
+     "evidence_hint": "Explains subtracting 'a' (or similar) to get alphabet indices in the 0..25 range."
+    },
+    {
+     "id": "fund4",
+     "point": "<cctype> provides utilities such as isalpha, isdigit, isalnum, tolower, and toupper.",
+     "weight": "extended",
+     "evidence_hint": "Names several of these character classification/case functions from <cctype>."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you build a string in a loop with s = s + c instead of s += c?",
+    "How do you map a lowercase letter to its alphabet index without a lookup table?"
+   ],
+   "hints": {
+    "1": "Think about whether each append reuses the same buffer or builds a new string.",
+    "2": "Contrast full-string copy on every + with amortized append via += or push_back, and recall ASCII order of letters.",
+    "3": "s = s + c is O(n^2) because each step allocates and copies; s += c / push_back is amortized O(1); s[i] - 'a' gives indices 0 to 25."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Walk through core string algorithms: depth counters, two pointers, frequency maps, rotations, and center expansion.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Remove outermost parentheses by tracking depth: append '(' only when depth > 0 before incrementing, and append ')' only when depth > 0 after decrementing.",
+     "weight": "core",
+     "evidence_hint": "Describes a depth counter and skipping parentheses that open at depth 0 or close back to 0."
+    },
+    {
+     "id": "mech2",
+     "point": "Largest odd number in a digit string: scan from the right for the first odd digit; the prefix through that digit is the answer (parity depends only on the last digit).",
+     "weight": "core",
+     "evidence_hint": "Says scan right-to-left for an odd digit and return the prefix ending there."
+    },
+    {
+     "id": "mech3",
+     "point": "Longest common prefix: scan column by column across strings until a mismatch or the shortest string ends.",
+     "weight": "core",
+     "evidence_hint": "Describes vertical/index-aligned comparison across all strings stopping at first mismatch."
+    },
+    {
+     "id": "mech4",
+     "point": "Isomorphic strings need a bijection; track last-seen indices (e.g. size-256 arrays) and fail if current pair was last seen at different indices.",
+     "weight": "core",
+     "evidence_hint": "Mentions one-to-one mapping and comparing last-seen positions for both strings' characters."
+    },
+    {
+     "id": "mech5",
+     "point": "s is a rotation of goal iff lengths match and goal is a substring of s + s.",
+     "weight": "core",
+     "evidence_hint": "States the doubled-string contains-all-rotations check with equal lengths."
+    },
+    {
+     "id": "mech6",
+     "point": "Anagrams: count frequencies in s and decrement for t (or equivalent); all counts must end at 0; sorting both is O(n log n) vs linear counting.",
+     "weight": "core",
+     "evidence_hint": "Contrasts sort-based check with a frequency count that resolves to zeros."
+    },
+    {
+     "id": "mech7",
+     "point": "atoi: skip spaces, read optional sign, accumulate digits; check overflow before result * 10 + digit using INT_MAX / 10 (and digit vs INT_MAX % 10), without relying on a wider type.",
+     "weight": "core",
+     "evidence_hint": "Describes staged parsing and pre-multiply overflow guards against INT_MAX bounds."
+    },
+    {
+     "id": "mech8",
+     "point": "Longest palindromic substring via expand-around-center: try all 2n - 1 centers (odd and even) for O(n^2) time; brute force is O(n^3).",
+     "weight": "extended",
+     "evidence_hint": "Mentions expanding from odd and even centers totaling 2n - 1, beating cubic brute force."
+    },
+    {
+     "id": "mech9",
+     "point": "Roman to integer: add each value, but subtract when a smaller numeral precedes a larger one (e.g. IX is 9).",
+     "weight": "extended",
+     "evidence_hint": "States the subtractive rule by comparing a numeral to the next one."
+    }
+   ],
+   "probes": [
+    "How would you check whether one string is a rotation of another without generating every shift?",
+    "Walk through how you prevent overflow in atoi without using a type wider than 32-bit.",
+    "How does expand-around-center find the longest palindromic substring?"
+   ],
+   "hints": {
+    "1": "For rotations, think about what substrings appear if you concatenate the string with itself.",
+    "2": "For atoi, compare the running total to INT_MAX / 10 before multiplying; for palindromes, expand from both character and between-character centers.",
+    "3": "Equal length and goal in s+s; overflow check before *10; 2n - 1 centers give O(n^2) vs O(n^3) brute force."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Surface when to prefer in-place updates, fixed alphabet arrays, and algorithm complexity choices on strings.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "For limited alphabets (e.g. lowercase), a fixed array like int freq[26] is faster and uses less memory than std::unordered_map.",
+     "weight": "core",
+     "evidence_hint": "Prefers a size-26 (or constant alphabet) array over a hash map for frequency problems."
+    },
+    {
+     "id": "tr2",
+     "point": "Interviewers weigh memory efficiency: copying strings in loops versus O(1) in-place modifications via references or pointer-style edits.",
+     "weight": "core",
+     "evidence_hint": "Discusses avoiding repeated string copies in favor of in-place or constant-extra-space edits."
+    },
+    {
+     "id": "tr3",
+     "point": "Rotate-string find on s+s is O(n^2) with standard library find, or O(n) with KMP; reverse-words optimal path is O(n) time and O(1) space in place.",
+     "weight": "extended",
+     "evidence_hint": "Mentions find vs KMP cost and/or in-place reverse-words complexity."
+    },
+    {
+     "id": "tr4",
+     "point": "Palindromic substring: O(n^3) brute, O(n^2) expand-around-center, O(n) Manacher (advanced); beauty-of-substrings needs O(n^2) enumeration with a 26-slot freq window.",
+     "weight": "extended",
+     "evidence_hint": "Orders palindrome approaches by complexity and notes O(n^2) beauty enumeration with fixed freq size."
+    }
+   ],
+   "probes": [
+    "When would you use int freq[26] instead of an unordered_map in a string problem?",
+    "What complexity tradeoffs exist between brute force, expand-around-center, and Manacher for longest palindromic substring?"
+   ],
+   "hints": {
+    "1": "Consider alphabet size and constant overhead of hashing.",
+    "2": "Fixed small alphabets favor arrays; palindrome search can escalate from checking all substrings to center expansion to Manacher.",
+    "3": "freq[26] beats unordered_map for lowercase; palindrome is O(n^3) brute, O(n^2) centers, O(n) Manacher."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply string patterns to representative problems: parentheses depth, word reversal, frequency sort, and related OA staples.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Maximum nesting depth of parentheses: increment on '(', decrement on ')', track the maximum current depth in one O(n) pass with O(1) space.",
+     "weight": "core",
+     "evidence_hint": "Describes a running depth counter and taking its maximum over the scan."
+    },
+    {
+     "id": "app2",
+     "point": "Reverse words in a string (order of words): reverse the whole string, then reverse each word token; complexity O(n) time, O(1) space when done in place.",
+     "weight": "core",
+     "evidence_hint": "States whole-string reverse then per-word reverse, emphasizing in-place linear work."
+    },
+    {
+     "id": "app3",
+     "point": "Reverse every word in place while preserving word order: scan for spaces as boundaries and reverse each word window.",
+     "weight": "core",
+     "evidence_hint": "Explains finding word boundaries and reversing characters within each word only."
+    },
+    {
+     "id": "app4",
+     "point": "Sort characters by frequency: count occurrences, then sort unique characters by count (or bucket/priority queue); time O(n log k) with k unique characters (k ≤ 256).",
+     "weight": "extended",
+     "evidence_hint": "Describes frequency count then sorting/bucketing by frequency, citing O(n log k) with bounded k."
+    },
+    {
+     "id": "app5",
+     "point": "Sum of beauty of all substrings: for each start, extend end while maintaining a frequency array and add max_freq - min_nonzero_freq each step.",
+     "weight": "extended",
+     "evidence_hint": "Describes nested start/end loops with a running freq map and beauty as max minus nonzero min."
+    }
+   ],
+   "probes": [
+    "How do you compute maximum nesting depth of a valid parentheses string in linear time?",
+    "Explain an in-place approach to reverse the order of words in a string.",
+    "How would you sum the beauty of all substrings efficiently enough for an OA?"
+   ],
+   "hints": {
+    "1": "Parentheses depth is just a counter; word-order reversal often uses multiple reverse passes.",
+    "2": "Reverse the entire string then each word; for beauty, fix start and grow end with a frequency window.",
+    "3": "Track max depth on '('; reverse-all then reverse-tokens for word order; O(n^2) start/end with freq[26] for beauty."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "s = s + c vs s += c / push_back",
+   "strong_answer": "s = s + c rebuilds and copies the whole string each iteration (O(n^2)); s += c or push_back appends in amortized O(1)."
+  },
+  {
+   "topic": "int freq[26] vs std::unordered_map",
+   "strong_answer": "For limited alphabets like lowercase letters, a fixed array is dramatically faster and uses less memory than a hash map."
+  },
+  {
+   "topic": "Anagram via sorting vs frequency counting",
+   "strong_answer": "Sorting both strings is O(n log n); counting frequencies and checking all counts reach 0 is linear time with O(1) space for a constant alphabet."
+  },
+  {
+   "topic": "Reverse words: word array vs in-place reverses",
+   "strong_answer": "Extracting words into an array then reversing is simple but uses extra space; trimming, reversing the whole string, then reversing each token achieves O(n) time and O(1) space in place."
+  },
+  {
+   "topic": "Rotate check: library find vs KMP",
+   "strong_answer": "Checking if goal is in s+s via standard find is O(n^2); KMP can make the substring search O(n), with O(n) space for the concatenated string."
+  },
+  {
+   "topic": "Longest palindromic substring: brute vs expand vs Manacher",
+   "strong_answer": "Brute checking all substrings is O(n^3); expand-around-center over 2n - 1 centers is O(n^2); Manacher is O(n) but advanced."
+  },
+  {
+   "topic": "atoi overflow: long long clamp vs pre-check on 32-bit int",
+   "strong_answer": "Accumulating in long long then clamping is often disallowed; check against INT_MAX / 10 (and the last digit bound) before multiplying and adding on a 32-bit result."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Building a result with s = s + c inside a loop.",
+   "correction": "Use s += c or s.push_back(c) so each append is amortized O(1), not O(n^2) full copies."
+  },
+  {
+   "trap": "Implementing atoi by accumulating into a long long and clamping only at the end.",
+   "correction": "Interviewers often forbid wider-than-32-bit types; detect overflow before result * 10 + digit using INT_MAX / 10 (and INT_MAX % 10 for the edge digit)."
+  },
+  {
+   "trap": "Using std::unordered_map for lowercase-only frequency problems by default.",
+   "correction": "Prefer a fixed int freq[26] (or similar constant alphabet array) for better time and memory constants."
+  },
+  {
+   "trap": "Treating isomorphic strings as only a one-way map from s to t.",
+   "correction": "A bijection is required; last-seen index arrays (size 256) on both sides catch when two characters would map inconsistently."
+  }
+ ]
+}

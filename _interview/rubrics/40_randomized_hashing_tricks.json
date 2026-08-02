@@ -1,0 +1,242 @@
+{
+ "id": "40_randomized_hashing_tricks",
+ "title": "Randomized algorithms & hashing tricks",
+ "type": "CP",
+ "relevance": "Medium — custom/`unordered_map` safety and pair-sum / set-hash tricks show up in OAs; random-sample & Zobrist are CF/AtCoder rating skills Striver never covers.",
+ "difficulty": "mid",
+ "prereqs": [
+  "18_strings_hashing_kmp_trie"
+ ],
+ "company_notes": "Complementary power-of-two / target pair lookup → hash set in O(n), not O(n²) (1005C-style). Running D:K / reduced-fraction splits → hash pairs (a/g,b/g) (Diluc / Zero-Quantity family). Same multiset on two windows → sort+compare is the safe interview answer; Zobrist/sum-hash is the CF speed trick (ABC367F / Prefix Equality). Interactive with too few queries to scan → random sample then binary-search / walk from the best sample (LowerBound / AP / Subway Pursuit) — more CF-style company contests than classic phone screens.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot birthday collisions, random sample/pivot, and Zobrist/set-hash signals instead of a full deterministic scan.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Signals: “≥ half / third of the range”, interactive query limits too small for full scans, “are these two sets/multisets equal?”, “is every frequency even / a multiple of 3?”, “find any collision among pairs”.",
+     "weight": "core",
+     "evidence_hint": "Lists those wording cues and reaches for randomness or fingerprint hashing rather than a full scan."
+    },
+    {
+     "id": "rec2",
+     "point": "Birthday / pigeonhole: after ~√M samples into a space of size M you expect a collision — pair-sum equals, anti-hash sizing, “have I seen this fingerprint?”.",
+     "weight": "core",
+     "evidence_hint": "Names the √M-into-M collision intuition and ties it to pair-sum / fingerprint collision asks."
+    },
+    {
+     "id": "rec3",
+     "point": "“For each element, is there another that sums with it to a power of two / target?” → hash set with complementary lookup; interviewers expect O(n) with a set, not O(n²).",
+     "weight": "core",
+     "evidence_hint": "Maps complementary target/power-of-two lookup to an O(n) hash set, rejecting O(n²)."
+    },
+    {
+     "id": "rec4",
+     "point": "Same-window multiset equality: sort+compare is the safe interview answer; Zobrist/sum-hash is the CF speed trick (ABC367F / Prefix Equality).",
+     "weight": "extended",
+     "evidence_hint": "Separates interview-safe sort+compare from CF Zobrist/sum-hash for multiset equality."
+    }
+   ],
+   "probes": [
+    "What wording makes you inject randomness or a set fingerprint instead of scanning everything?",
+    "Is this complementary pair lookup, reduced-ratio hashing, multiset equality, or an interactive sample/pivot?"
+   ],
+   "hints": {
+    "1": "Listen for half/third density, too-few interactive queries, set/multiset equality, even/triple frequencies, or pair collisions.",
+    "2": "Map to birthday collision, random sample when a target is ≥1/k, Zobrist XOR/sum fingerprints, or complementary hash-set lookup.",
+    "3": "Say: signals are ≥ half/third, interactive caps, set/multiset equality, even/×3 frequencies, pair collisions; birthday ~√M into M; OA complement lookup is O(n) set not O(n²); multiset equality → sort+compare interview-safe, Zobrist/sum-hash for CF."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "State birthday collision, random-sample/pivot verification, and Zobrist set vs multiset fingerprint plans.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "If a good object occupies ≥1/k of the space, pick O(k log(1/ε)) random candidates and verify (majority queries, interactive lower_bound, geometry).",
+     "weight": "core",
+     "evidence_hint": "States the ≥1/k density → O(k log(1/ε)) sample-and-verify plan."
+    },
+    {
+     "id": "appr2",
+     "point": "Zobrist / XOR hashing: assign each value a random 64-bit id; XOR (or mod-P sum) fingerprints a set / parity-multiset — equal fingerprints ⇒ equal sets w.h.p.",
+     "weight": "core",
+     "evidence_hint": "Describes random 64-bit ids and XOR or mod-P sum as set/parity-multiset fingerprints with w.h.p. equality."
+    },
+    {
+     "id": "appr3",
+     "point": "Random pivot (Las Vegas): sample candidates, pick the best feasible pivot, finish with a short deterministic walk / recurse — Interactive LowerBound samples ~√n nodes then jumps from the best ≤x predecessor.",
+     "weight": "core",
+     "evidence_hint": "Outlines sample → best feasible pivot → short deterministic finish, citing the ~√n LowerBound shape."
+    },
+    {
+     "id": "appr4",
+     "point": "Sets use XOR of member ids (toggle add/remove with another XOR); multisets use + mod a big prime (or 128-bit) instead of XOR — Rearrange Query prefix sums, not XOR.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts XOR for sets with sum-mod for multisets and names the prefix-sum multiset template."
+    }
+   ],
+   "probes": [
+    "How do you choose how many random candidates to try when a good object is ≥1/k of the space?",
+    "When is the fingerprint XOR versus a modular sum?"
+   ],
+   "hints": {
+    "1": "Ask whether the target is dense enough to sample, or whether you need a set/multiset fingerprint.",
+    "2": "≥1/k → O(k log(1/ε)) samples then verify; sets XOR; multisets +; pivots sample then walk from the best.",
+    "3": "Say: sample O(k log(1/ε)) when density ≥1/k and verify; Zobrist random 64-bit ids with XOR or mod-P sum; LowerBound-style pivot samples ~√n then walks from best ≤x; XOR toggles sets, + mod (or 128-bit) for multisets."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Code clock-seeded RNG, anti-hash maps, Zobrist fingerprints, and interactive flush hygiene.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "RNG: mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count()); + uniform_int_distribution; never fixed seeds on CF open-hacking; avoid raw rand() / RAND_MAX.",
+     "weight": "core",
+     "evidence_hint": "Writes clock-seeded mt19937_64 + uniform_int_distribution and rejects fixed seeds and raw rand()."
+    },
+    {
+     "id": "impl2",
+     "point": "Anti-hash: custom hash for unordered_map / gp_hash_table (e.g. splitmix64 xor’d with a random salt); or just use map when TL allows.",
+     "weight": "core",
+     "evidence_hint": "Names splitmix64+salt custom hash or falling back to map under TL."
+    },
+    {
+     "id": "impl3",
+     "point": "Zobrist template: h[v] = rng(); set hash = XOR of h[v] for members; toggle add/remove with another XOR; for multisets use + mod big prime (or 128-bit) instead of XOR.",
+     "weight": "core",
+     "evidence_hint": "Codes or narrates h[v]=rng(), XOR aggregate with toggle, and sum-mod for multisets."
+    },
+    {
+     "id": "impl4",
+     "point": "Interactive hygiene: flush (endl / cout.flush()), respect query caps, treat -1 as immediate exit.",
+     "weight": "extended",
+     "evidence_hint": "Mentions flush, query caps, and exiting on -1."
+    }
+   ],
+   "probes": [
+    "How do you seed the RNG and protect unordered_map on CF?",
+    "Walk through the Zobrist set-hash template and the multiset variant."
+   ],
+   "hints": {
+    "1": "Clock-seed the 64-bit engine; don’t leave unordered_map on its default hash.",
+    "2": "mt19937_64 from chrono; splitmix64+salt or map; h[v]=rng() then XOR or +; flush and handle -1.",
+    "3": "Say: mt19937_64 rng(chrono::steady_clock::now()...); uniform_int_distribution; never fixed seeds / raw rand(); splitmix64 xor salt or map; h[v]=rng(), XOR toggle for sets, + mod for multisets; endl/flush, exit on -1."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State birthday collision probability, sample-trial fail bounds, and expected pivot/query costs from the file.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Birthday rule of thumb: collision among m hashes into modulus M has prob ~m²/M; for string/set fingerprints prefer 64-bit (2^61−1 or unsigned overflow) or two independent hashes.",
+     "weight": "core",
+     "evidence_hint": "States ~m²/M and the 64-bit / double-hash safety preference."
+    },
+    {
+     "id": "cx2",
+     "point": "Random sample when a target occupies ≥1/k of positions: T ≈ k·ln(1/ε) trials ⇒ fail prob ≤ε; verify each candidate in O(log n) (position lists) or O(len).",
+     "weight": "core",
+     "evidence_hint": "Gives T ≈ k·ln(1/ε) with fail ≤ε and O(log n) or O(len) verify."
+    },
+    {
+     "id": "cx3",
+     "point": "Random pivot expected cost is O(√n) or O(n) depending on the problem (843B / Quickselect intuition); Tournament Countdown crowns a winner in expected O(n) queries.",
+     "weight": "extended",
+     "evidence_hint": "Cites expected O(√n) or O(n) for pivots and expected O(n) for the tournament elimination."
+    }
+   ],
+   "probes": [
+    "What collision probability do you budget for m fingerprints into modulus M?",
+    "How many trials do you need when a good object is ≥1/k of the space?"
+   ],
+   "hints": {
+    "1": "Birthday is quadratic in the number of samples; density sampling is logarithmic in 1/ε.",
+    "2": "~m²/M for collisions; T ≈ k·ln(1/ε) for ≥1/k hits; pivots expected O(√n) or O(n).",
+    "3": "Say: collision prob ~m²/M so prefer 64-bit (2^61−1 / unsigned) or two hashes; T ≈ k·ln(1/ε) ⇒ fail ≤ε with O(log n)/O(len) verify; pivots expected O(√n) or O(n); tournament expected O(n)."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Avoid fixed seeds, weak hashes, XOR-on-multisets, and Monte Carlo/Las Vegas mix-ups.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Never fixed seeds on CF open-hacking; avoid raw rand() / RAND_MAX — seed mt19937_64 from the clock so open hacks fail.",
+     "weight": "core",
+     "evidence_hint": "Rejects fixed seeds and raw rand(); insists on clock-seeded mt19937_64."
+    },
+    {
+     "id": "pit2",
+     "point": "Using XOR as a multiset fingerprint — XOR only tracks parity/set membership; multisets need + mod a big prime (or 128-bit), as in Rearrange Query prefix sums.",
+     "weight": "core",
+     "evidence_hint": "Flags XOR-for-multiset and switches to sum-mod / 128-bit."
+    },
+    {
+     "id": "pit3",
+     "point": "Know Monte Carlo (tiny error OK, e.g. Zobrist) vs Las Vegas (always correct, runtime random) — do not treat a Zobrist equality as absolute certainty.",
+     "weight": "extended",
+     "evidence_hint": "Separates Monte Carlo fingerprint error from Las Vegas always-correct random runtime."
+    },
+    {
+     "id": "pit4",
+     "point": "Default unordered_map without a custom/splitmix64 anti-hash can TLE under CF hacks; use a salted custom hash or map when TL allows.",
+     "weight": "extended",
+     "evidence_hint": "Names anti-hash / map as the fix for hackable unordered_map."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you XOR random ids to compare multisets?",
+    "How do Monte Carlo Zobrist checks differ from Las Vegas random pivots?"
+   ],
+   "hints": {
+    "1": "Think about seed hacks, multiset vs set fingerprints, and whether error is allowed.",
+    "2": "Clock-seed; XOR≠multiset; Zobrist is Monte Carlo; salt unordered_map or use map.",
+    "3": "Say: never fixed seeds / raw rand(); multisets need + not XOR; Zobrist is Monte Carlo (tiny error OK) vs Las Vegas always-correct; splitmix64+salt or map against unordered_map hacks."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "sort+compare vs Zobrist/sum-hash for multiset equality",
+   "strong_answer": "Sort+compare is the safe interview answer for “same multiset on two windows.” Zobrist/sum-hash (ABC367F / Prefix Equality) is the CF speed trick: random ids with XOR for sets or prefix sums for multisets, equal fingerprints ⇒ equal structures w.h.p."
+  },
+  {
+   "topic": "Monte Carlo vs Las Vegas",
+   "strong_answer": "Monte Carlo allows tiny error (e.g. Zobrist fingerprint collisions) with usually fixed-ish runtime. Las Vegas is always correct with random runtime (random pivots / samples then verify), as in Interactive LowerBound or Quickselect intuition."
+  },
+  {
+   "topic": "custom-hash unordered_map vs map",
+   "strong_answer": "On CF, protect unordered_map/gp_hash_table with a custom hash (splitmix64 xor’d with a random salt) against open hacks/TLE. If TL allows, map is the simpler correct choice."
+  },
+  {
+   "topic": "XOR set hash vs modular-sum multiset hash",
+   "strong_answer": "XOR of random 64-bit ids fingerprints sets / parity-multisets and toggles add/remove. Multisets need + mod a big prime (or 128-bit) instead of XOR so counts above 1 matter (Rearrange Query)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Fixed RNG seeds or raw rand()/RAND_MAX on CF.",
+   "correction": "Use mt19937_64 seeded from chrono::steady_clock::now().time_since_epoch().count() with uniform_int_distribution so open hacks fail."
+  },
+  {
+   "trap": "Using XOR of random ids to compare general multisets.",
+   "correction": "XOR is for sets / parity; for multisets use + mod a big prime (or 128-bit), e.g. prefix sums in Rearrange Query."
+  },
+  {
+   "trap": "Treating equal Zobrist fingerprints as absolute proof.",
+   "correction": "Zobrist is Monte Carlo: equal fingerprints ⇒ equal sets w.h.p., not certainty; prefer 64-bit or two independent hashes to keep birthday risk ~m²/M tiny."
+  },
+  {
+   "trap": "Default unordered_map without an anti-hash on CF.",
+   "correction": "Custom hash (splitmix64 xor’d with a random salt) or use map when TL allows — otherwise TLE hacks (1005C-style)."
+  },
+  {
+   "trap": "Interactive solution without flush or ignoring judge -1.",
+   "correction": "Flush with endl / cout.flush(), respect query caps, and treat -1 as immediate exit."
+  }
+ ]
+}

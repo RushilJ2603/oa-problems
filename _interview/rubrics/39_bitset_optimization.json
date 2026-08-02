@@ -1,0 +1,234 @@
+{
+ "id": "39_bitset_optimization",
+ "title": "Bitset optimization tricks",
+ "type": "CP",
+ "relevance": "Medium — rarely named “bitset” in OAs, but the *packed boolean / subset-sum reachability* idea (Partition Equal Subset Sum, “can you make sum S?”) shows up constantly; dense AND/OR / DAG reachability is a Candidate Master rating-builder Striver never covers.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Partition Equal Subset Sum / subset with sum S — bool knapsack; bitset is the CP-speed version. Team sizes after merging friend groups — DSU component sizes + subset-sum (School Excursion). n≤2000 bitstrings/rows counting pairs on columns — packed AND/XOR + popcount (Corner Subgrid / Oddly Similar). Can u reach v in a large digraph / many queries — SCC + bitset reachability (CSES Reachability Queries), not Floyd on n=1e5.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot when boolean reachability/adjacency at large dimension calls for packed bitset ops rather than plain bool arrays or bitmask DP.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "When DP/state is boolean (reachable / adjacent / exists) and the dimension is thousands, pack bits into machine words (std::bitset / uint64_t[]) so AND/OR/XOR/shift run ~64× faster.",
+     "weight": "core",
+     "evidence_hint": "Names boolean state at large dimension and packed words for word-parallel AND/OR/XOR/shift."
+    },
+    {
+     "id": "rec2",
+     "point": "Classic tells: subset-sum with n·W too big but n·W/64 OK → dp |= dp << w; pairwise row/column overlaps → AND then .count(); DAG/SCC reachability → OR bitsets along topo; complement-graph BFS → _Find_next over an unvisited bitset.",
+     "weight": "core",
+     "evidence_hint": "Lists at least two of: knapsack shift, pairwise AND+count, topo OR, complement _Find_next."
+    },
+    {
+     "id": "rec3",
+     "point": "Recognize constraints like n≤2e3–5e3 with an n² or n·W bool loop that needs a /64 constant.",
+     "weight": "extended",
+     "evidence_hint": "Cites n≤2e3–5e3-scale n² or n·W bool work and the /64 speedup cue."
+    }
+   ],
+   "probes": [
+    "When do you reach for bitset packing instead of a plain bool array or bitmask DP?",
+    "What constraint shapes scream n·W/64 or n²/64 rather than naive boolean DP?"
+   ],
+   "hints": {
+    "1": "Ask whether the state is only reachable/exists and the dimension is in the thousands.",
+    "2": "Map the ask to subset-sum shift, pairwise AND+count, topo OR, or complement _Find_next.",
+    "3": "Say: boolean state at large dimension → pack into words (~64×); tells are dp |= dp << w, (A&B).count(), topo OR, unvisited _Find_next; watch n≤2e3–5e3 with n² or n·W needing /64."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "State the core bitset templates: knapsack shift, pairwise AND/XOR, DAG/SCC OR, and complement traversal.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Subset-sum reachability: dp[0]=1; for w in a: dp |= dp << w (0/1); for bounded counts, binary-split multiplicities then shift.",
+     "weight": "core",
+     "evidence_hint": "Writes the shift-OR 0/1 update and mentions binary-split for bounded multiplicities."
+    },
+    {
+     "id": "appr2",
+     "point": "Pairwise overlap: store each row/set as a bitset; answer = (A & B).count() (or XOR for parity-of-matches).",
+     "weight": "core",
+     "evidence_hint": "Stores rows/sets as bitsets and uses AND+count or XOR for parity."
+    },
+    {
+     "id": "appr3",
+     "point": "DAG reachability: reach[u][u]=1; for u in topo: for v in adj[u]: reach[u] |= reach[v] (direction depends on edge meaning); SCC queries: Kosaraju/Tarjan → DAG on components → same bitset OR on the condensation.",
+     "weight": "core",
+     "evidence_hint": "Describes topo OR of reach bitsets and SCC condensation before the same trick."
+    },
+    {
+     "id": "appr4",
+     "point": "Complement-graph traversal: keep unvisited vertices in a bitset/set; iterate with _Find_first / _Find_next, skip real neighbors.",
+     "weight": "extended",
+     "evidence_hint": "Keeps an unvisited bitset and walks with _Find_first/_Find_next while skipping adj neighbors."
+    }
+   ],
+   "probes": [
+    "How do you encode 0/1 subset-sum reachability with a bitset?",
+    "How do DAG reachability and complement-graph BFS use bitsets differently?"
+   ],
+   "hints": {
+    "1": "One template shifts a reachability bitset; another ORs along a topo order.",
+    "2": "0/1: dp |= dp << w; pairs: (A&B).count(); DAG: OR children’s reach on topo; complement: _Find_next on unvisited.",
+    "3": "State dp[0]=1 then dp |= dp << w (binary-split if bounded counts); pairs AND/XOR+count; reach[u]|=reach[v] on topo after setting reach[u][u]; SCC first then same OR; unvisited bitset with _Find_first/_Find_next skipping real neighbors."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Show how to write the bitset ops and the standard shift / AND / topo-OR / _Find_next loops.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "bitset<N> ops (AND/OR/XOR/shift/.count()/.test()/.set()) cost O(N/64); prefer compile-time N or your own uint64_t blocks when N is dynamic.",
+     "weight": "core",
+     "evidence_hint": "Names the ops and prefers fixed N or manual uint64_t blocks for dynamic length."
+    },
+    {
+     "id": "impl2",
+     "point": "Money Sums / partition style: mark reachable sums with dp |= dp << w; Partition Equal Subset Sum family is the same bool knapsack with bitset speedup.",
+     "weight": "core",
+     "evidence_hint": "Codes or narrates the shift-OR knapsack and ties it to equal-sum / sum-S checks."
+    },
+    {
+     "id": "impl3",
+     "point": "Corner Subgrid Count shape: pair-rows AND + C(k,2) — the O(n²·n/64) bitset AND classic (n≤3000); Oddly Similar uses column-value XOR bitsets for odd #matches.",
+     "weight": "extended",
+     "evidence_hint": "Describes row-pair AND then popcount (and C(k,2) or XOR-parity variant)."
+    },
+    {
+     "id": "impl4",
+     "point": "0-1 MST / Connected Components?: BFS the complement via unvisited set / bitset _Find_next; weight-0 edges inside components.",
+     "weight": "extended",
+     "evidence_hint": "Implements complement BFS with _Find_next and treats intra-component edges as weight 0."
+    }
+   ],
+   "probes": [
+    "Walk through coding dp |= dp << w for reachable sums.",
+    "How do you implement complement BFS with an unvisited bitset?"
+   ],
+   "hints": {
+    "1": "Start from a single set bit for sum 0, then shift-OR each weight.",
+    "2": "For complement search, pop the next unvisited index and clear neighbors that actually exist.",
+    "3": "dp[0]=1; for each w: dp |= dp << w; row pairs: (row[i]&row[j]).count(); complement: _Find_next on unvisited, skip real adj; prefer bitset<N> or uint64_t[] when N varies."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State the /64 word-parallel cost model and the memory pressure of n bitsets of length n.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "bitset ops run in O(N/64) per AND/OR/XOR/shift/count — the packed-boolean ~64× speedup over a bool loop.",
+     "weight": "core",
+     "evidence_hint": "States O(N/64) per word-parallel op and the ~64× intuition."
+    },
+    {
+     "id": "cx2",
+     "point": "Pairwise row AND classic is O(n²·n/64) and fits at n≤3000 (Corner Subgrid Count).",
+     "weight": "core",
+     "evidence_hint": "Cites O(n²·n/64) with n≤3000 as the AND-count sweet spot."
+    },
+    {
+     "id": "cx3",
+     "point": "Memory: n bitsets of length n ≈ n²/8 bytes; if MLE, process in blocks of 64 sources, or only materialize bitsets for high-degree nodes (Mediator).",
+     "weight": "extended",
+     "evidence_hint": "Gives n²/8 memory and the block-of-64 or high-degree-only mitigation."
+    }
+   ],
+   "probes": [
+    "What is the cost of one bitset AND/OR/shift of length N?",
+    "How do you cut memory when n bitsets of length n MLEs?"
+   ],
+   "hints": {
+    "1": "Think in machine words, not individual bools.",
+    "2": "Each op touches N/64 words; n×n bitsets cost about n²/8 bytes.",
+    "3": "Say O(N/64) per op (~64×); Corner Subgrid O(n²·n/64) at n≤3000; memory ≈ n²/8, fix with blocks of 64 sources or high-degree-only bitsets."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Separate bitset optimization from bitmask DP and avoid memory / OR-direction / Floyd mistakes.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Don’t confuse with bitmask DP (n≤20, state = mask): bitset opt is the /64 speedup on large boolean arrays, not 2^n DP.",
+     "weight": "core",
+     "evidence_hint": "Contrasts n≤20 mask DP with /64 packing on large bool arrays."
+    },
+    {
+     "id": "pit2",
+     "point": "Allocating n bitsets of length n without a plan for ≈ n²/8 bytes — MLE unless you block sources by 64 or bitset only high-degree vertices.",
+     "weight": "core",
+     "evidence_hint": "Flags full n×n materialization and names the block/high-degree fixes."
+    },
+    {
+     "id": "pit3",
+     "point": "OR-ing reach bitsets in the wrong topo direction relative to edge meaning (reach[u] |= reach[v] depends on whether edges point to children or parents).",
+     "weight": "extended",
+     "evidence_hint": "Checks edge orientation before choosing which side receives the OR."
+    },
+    {
+     "id": "pit4",
+     "point": "Answering large digraph reach queries with Floyd on n=1e5 instead of SCC + bitset reachability on the condensation.",
+     "weight": "extended",
+     "evidence_hint": "Rejects dense Floyd at n=1e5 and switches to SCC + DAG bitset OR."
+    }
+   ],
+   "probes": [
+    "How is bitset optimization different from bitmask DP?",
+    "What breaks if you materialize a full n×n reach bitset matrix or Floyd a huge digraph?"
+   ],
+   "hints": {
+    "1": "One is 2^n over masks; the other packs a long bool array into words.",
+    "2": "Watch memory n²/8 and whether Floyd is even feasible.",
+    "3": "Bitmask DP is n≤20 / 2^n; bitset opt is /64 on large bools; MLE → blocks of 64 or high-degree only; match OR direction to edges; large reach queries → SCC + bitset, not Floyd on n=1e5."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Bitset optimization vs bitmask DP",
+   "strong_answer": "Bitmask DP is for n≤20 with state = mask and 2^n transitions. Bitset optimization is the /64 word-parallel speedup on large boolean arrays (reachable/adjacent/exists), not a substitute for mask DP."
+  },
+  {
+   "topic": "compile-time bitset<N> vs uint64_t[] blocks",
+   "strong_answer": "Prefer std::bitset with compile-time N when the length is fixed. When N is dynamic, use your own uint64_t blocks so AND/OR/XOR/shift still run in O(N/64)."
+  },
+  {
+   "topic": "Full n×n reach bitsets vs blocked / high-degree materialization",
+   "strong_answer": "n bitsets of length n cost ≈ n²/8 bytes. On MLE, process sources in blocks of 64, or only materialize bitsets for high-degree vertices (Mediator hybrid adj-list / bitset)."
+  },
+  {
+   "topic": "SCC + bitset reachability vs Floyd on a large digraph",
+   "strong_answer": "For “can u reach v” with many queries on a large digraph, condense SCCs to a DAG and OR bitsets on topo order (CSES Reachability Queries). Do not run Floyd on n=1e5; bitset OR can speed O(n³/64) only when n is in the thousands (Directed Graph and Query stretch)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating bitset optimization as the same tool as bitmask DP.",
+   "correction": "Bitmask DP needs n≤20 and mask state / 2^n; bitset opt packs large boolean arrays for a /64 speedup."
+  },
+  {
+   "trap": "Materializing n bitsets of length n and hitting MLE.",
+   "correction": "Budget ≈ n²/8 bytes; process in blocks of 64 sources or only give bitsets to high-degree nodes."
+  },
+  {
+   "trap": "ORing DAG reachability bitsets without matching edge direction.",
+   "correction": "Set reach[u][u]=1 and do reach[u] |= reach[v] only in the topo orientation that matches what “edge u→v” means for reachability."
+  },
+  {
+   "trap": "Using Floyd for reachability queries on a huge digraph (e.g. n=1e5).",
+   "correction": "Kosaraju/Tarjan → condensation DAG → bitset OR along topo (CSES Reachability Queries shape)."
+  },
+  {
+   "trap": "Forgetting that complement-graph BFS must skip real neighbors while scanning the unvisited bitset.",
+   "correction": "Keep unvisited in a bitset/set; iterate with _Find_first/_Find_next and skip vertices that are actual adjacency-list neighbors."
+  }
+ ]
+}

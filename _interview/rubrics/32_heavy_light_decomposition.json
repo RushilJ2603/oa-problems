@@ -1,0 +1,238 @@
+{
+ "id": "32_heavy_light_decomposition",
+ "title": "Heavy-light decomposition (HLD)",
+ "type": "CP",
+ "relevance": "Medium — OAs almost never ask for a full HLD template, but “path / subtree update+query on a tree” is the CF skill that separates “knows Euler tour” from Candidate Master tree DS; Striver never covers it.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Almost never “implement HLD”; org-chart path metrics (sum/max on manager chain with salary updates) expect Euler or binary lifting first, HLD when constraints force it. Network/cable: edge latency update + path delay (ABC294 G / Path Queries II — edge on child + path sum). Subtree broadcast + path reset (Water Tree) often Euler+lazy in interviews. Recognition gate: why path-max-with-updates is harder than subtree-sum (contiguous tour vs O(log n) chain pieces).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Map path/subtree update+query wording to HLD versus Euler, tree-diff, or binary lifting.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Signal words: path max/min under updates, paint path then query, path + subtree mixed updates, function composition along a path.",
+     "weight": "core",
+     "evidence_hint": "Lists those signals and reaches for HLD rather than Euler-only or static lifting."
+    },
+    {
+     "id": "rec2",
+     "point": "Use HLD for arbitrary path aggregates with updates (max/min/sum/composite) that Euler+BIT alone cannot do — e.g. path max with point updates.",
+     "weight": "core",
+     "evidence_hint": "Names updates + non-trivial path aggregates and cites path max with point updates as the Euler+BIT gap."
+    },
+    {
+     "id": "rec3",
+     "point": "Prefer Euler / tree-diff / binary lifting when queries are only subtree, only root→node, or path sum without awkward ops.",
+     "weight": "core",
+     "evidence_hint": "Declines HLD for subtree-only, root→node sum, or uncomplicated path sum shapes."
+    },
+    {
+     "id": "rec4",
+     "point": "Recognition gate: path-max-with-updates is harder than subtree-sum because subtrees are contiguous tour ranges while a path breaks into O(log n) chain pieces.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts contiguous [tin,tout]-style ranges with O(log n) chain segments on a path."
+    }
+   ],
+   "probes": [
+    "What wording makes you reach for HLD instead of Euler tour or binary lifting?",
+    "Why is path-max-with-updates harder than subtree-sum?"
+   ],
+   "hints": {
+    "1": "Ask whether you need path aggregates under updates, or only subtree / root→node / static path ops.",
+    "2": "Signals are path max/min under updates, paint-then-query, path+subtree mix, path composition; skip HLD for subtree-only, root→node sum, or plain path sum.",
+    "3": "Say: HLD when updates + non-trivial path aggregates (e.g. path max + point updates) beat Euler+BIT; prefer Euler/tree-diff/lifting otherwise; path-max is harder because a path is O(log n) chain pieces, not one contiguous tour range."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Define heavy/light edges, chains, heavy-first layout, and the light-edge path bound.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Root the tree; mark the child with largest subtree as heavy, others light; heavy edges form disjoint chains.",
+     "weight": "core",
+     "evidence_hint": "Defines heavy = largest sz[child], light = the rest, and chains as contiguous heavy-edge paths."
+    },
+    {
+     "id": "appr2",
+     "point": "Assign contiguous segment-tree indices along each chain via heavy-first DFS so each subtree stays a contiguous [tin, tout]-style range.",
+     "weight": "core",
+     "evidence_hint": "Names heavy-first DFS and contiguous chain (and subtree) index blocks."
+    },
+    {
+     "id": "appr3",
+     "point": "Light-edge lemma: each light step halves subtree size ⇒ any root→v path has O(log n) light edges ⇒ O(log n) chains on any u–v path.",
+     "weight": "core",
+     "evidence_hint": "States the halving argument and O(log n) light edges / chain segments on a path."
+    },
+    {
+     "id": "appr4",
+     "point": "With a segtree, each path query/update is O(log^2 n) because you query O(log n) chain segments.",
+     "weight": "extended",
+     "evidence_hint": "Multiplies O(log n) segments by segtree cost to get O(log^2 n) per path op."
+    }
+   ],
+   "probes": [
+    "How do you choose the heavy child, and what do heavy edges form?",
+    "Why does any u–v path touch only O(log n) chains?"
+   ],
+   "hints": {
+    "1": "Start from largest-subtree child as heavy, then think about chains and light jumps.",
+    "2": "Heavy-first DFS lays chains contiguously; each light edge halves sz ⇒ O(log n) lights/chains on a path.",
+    "3": "Say: heavy = max sz[child], light otherwise; heavy edges → disjoint chains with contiguous segtree indices (heavy-first DFS); light steps halve size ⇒ O(log n) chains on u–v ⇒ O(log^2 n) path ops with a segtree."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Spell head/pos fields, the climb-head path loop, edge-on-child storage, and free subtree ranges.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Heavy child = largest sz[child]; head[v] = top of v’s chain; pos[v] = index in the single segtree; decompose the heavy child first so chains and subtrees are contiguous.",
+     "weight": "core",
+     "evidence_hint": "Names sz, head, pos, and heavy-first decomposition order."
+    },
+    {
+     "id": "impl2",
+     "point": "Path query loop: while head[u] != head[v], lift the deeper head, segtree-query [pos[head], pos[node]], jump to parent[head]; then query the final same-chain segment.",
+     "weight": "core",
+     "evidence_hint": "Walks the climb-head[] loop and the final same-chain query."
+    },
+    {
+     "id": "impl3",
+     "point": "Edge values: store edge (p,v)’s weight at v; on path u–v exclude the LCA vertex when summing edge weights.",
+     "weight": "core",
+     "evidence_hint": "Puts edge weight on the child vertex and excludes LCA on edge-path queries."
+    },
+    {
+     "id": "impl4",
+     "point": "With heavy-first ordering, subtree(v) = [pos[v], pos[v]+sz[v]) — same HLD array handles path and subtree.",
+     "weight": "extended",
+     "evidence_hint": "Gives the half-open subtree range on the HLD pos array."
+    }
+   ],
+   "probes": [
+    "What do head[] and pos[] store, and why decompose the heavy child first?",
+    "Walk me through the climb-head path query loop.",
+    "How do you store edge weights and query a path sum of edges?"
+   ],
+   "hints": {
+    "1": "Fields are head (chain top) and pos (segtree index); climb until heads match.",
+    "2": "Heavy-first so ranges stay contiguous; while heads differ, query deeper chain then jump to parent[head]; edges live on the child vertex.",
+    "3": "Say: head[v]/pos[v], heavy-first; while head[u]!=head[v] lift deeper head, query [pos[head],pos[node]], jump parent[head], then same-chain segment; edge (p,v) at v and exclude LCA; subtree = [pos[v], pos[v]+sz[v])."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State the O(log n) chain bound and the O((n+q) log^2 n) target with a segtree.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Any u–v path crosses O(log n) light edges and therefore O(log n) chain segments.",
+     "weight": "core",
+     "evidence_hint": "States O(log n) light edges and O(log n) chain pieces per path."
+    },
+    {
+     "id": "cx2",
+     "point": "Each path query/update is O(log^2 n) with a segtree (O(log n) segments × segtree cost).",
+     "weight": "core",
+     "evidence_hint": "Gives O(log^2 n) per path operation with one segtree."
+    },
+    {
+     "id": "cx3",
+     "point": "Complexity target: O((n+q) log^2 n) with one segtree, or O((n+q) log n) with specialized tricks.",
+     "weight": "core",
+     "evidence_hint": "States both the log^2 target and the specialized log trick bound from the checklist."
+    }
+   ],
+   "probes": [
+    "Why is a path query O(log^2 n) rather than O(log n)?",
+    "What total complexity do you quote for n nodes and q path updates/queries?"
+   ],
+   "hints": {
+    "1": "Count how many chain pieces a path hits, then multiply by segtree cost.",
+    "2": "O(log n) chains × O(log n) segtree ⇒ O(log^2 n) per op; overall O((n+q) log^2 n).",
+    "3": "Say: O(log n) light edges/chains on any path; path op O(log^2 n) with one segtree; target O((n+q) log^2 n), or O((n+q) log n) with specialized tricks."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch LCA exclusion on edges, non-commutative path folds, overusing HLD, and integer overflow.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "When edges live on child vertices, exclude the LCA carefully on the final same-chain segment (and when summing edge weights on u–v).",
+     "weight": "core",
+     "evidence_hint": "Calls out LCA exclusion for edge-on-child path queries in the climb loop."
+    },
+    {
+     "id": "pit2",
+     "point": "Non-commutative monoids (composites): split the path at LCA into up-going and down-going folds; maintain reverse merge or two segtrees.",
+     "weight": "core",
+     "evidence_hint": "Splits at LCA and mentions reverse merge / two trees for ax+b-style composition."
+    },
+    {
+     "id": "pit3",
+     "point": "Do not reach for HLD when simpler tools suffice: subtree only → Euler; root→node sum → Euler difference; offline path += → tree diff + LCA; static path min/max → binary lifting.",
+     "weight": "core",
+     "evidence_hint": "Lists those four escape hatches before writing HLD."
+    },
+    {
+     "id": "pit4",
+     "point": "Always use long long on CF/AtCoder distances.",
+     "weight": "extended",
+     "evidence_hint": "Mentions long long for distance / path sums on those platforms."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you include the LCA when edge weights sit on child vertices?",
+    "How do you fold a non-commutative function composition along u→v?",
+    "When is HLD the wrong hammer?"
+   ],
+   "hints": {
+    "1": "Check edge-vs-vertex storage, whether the monoid commutes, and whether a simpler tree tool fits.",
+    "2": "Exclude LCA for edges-on-child; split composites at LCA with reverse/two trees; prefer Euler/tree-diff/lifting when the query shape allows.",
+    "3": "Say: store edge (p,v) at v and exclude LCA; non-commutative → up/down from LCA with reverse merge or two segtrees; skip HLD for subtree-only, root→node sum, offline path +=, or static path min/max; use long long on CF/AtCoder distances."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "HLD vs Euler tour / Fenwick",
+   "strong_answer": "Subtree-only PURS or lazy subtree flips → Euler (+ Fenwick/lazy); tin/tout is the mental model HLD reuses, but skip chains when you never need arbitrary path pieces under updates."
+  },
+  {
+   "topic": "HLD vs Euler path-to-root / tree difference",
+   "strong_answer": "Root→node sum with updates → Euler tour difference; offline path += 1 → tree difference + LCA. HLD is overkill for those shapes; reach for HLD when updates mix with non-trivial path aggregates (e.g. path max)."
+  },
+  {
+   "topic": "HLD vs binary lifting",
+   "strong_answer": "Static path min/max (no updates) → binary lifting. HLD when path aggregates must support updates (point set + path maximum, edge update + path distance)."
+  },
+  {
+   "topic": "Commutative path aggregates vs non-commutative path composites",
+   "strong_answer": "Sum/max along a path can climb chains in one segtree. Non-commutative composition (ax+b u→v) needs a split at LCA into up-going and down-going folds with reverse merge or two segtrees."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Including the LCA vertex when edge weights are stored on child vertices.",
+   "correction": "Store edge (p,v)’s weight at v; on path u–v exclude the LCA when summing edge weights, and exclude LCA carefully on the final same-chain segment."
+  },
+  {
+   "trap": "Treating a non-commutative path fold like a commutative sum/max climb.",
+   "correction": "Split at LCA into up-going and down-going folds; maintain reverse merge or two segtrees (Vertex Set Path Composite style)."
+  },
+  {
+   "trap": "Reaching for HLD on subtree-only, root→node sum, offline path increments, or static path min/max.",
+   "correction": "Use Euler; Euler difference; tree diff + LCA; or binary lifting respectively — HLD when updates + non-trivial path aggregates mix."
+  },
+  {
+   "trap": "Using 32-bit ints for path distances on CF/AtCoder.",
+   "correction": "Always use long long on CF/AtCoder distances."
+  }
+ ]
+}

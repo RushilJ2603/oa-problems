@@ -1,0 +1,201 @@
+{
+ "id": "cpp_s50_number_systems_data_rep",
+ "title": "Number systems and data representation",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs probe how candidates reason about fixed-width integers, overflow, bitwise ops, endianness, and floating-point pitfalls that show up in real C++ systems code.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish bit/byte vocabulary, positional bases, and how C++ spells integer literals.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A bit holds 0 or 1; a nibble is 4 bits; a byte is 8 bits and is the smallest addressable unit of memory in C++.",
+     "weight": "core",
+     "evidence_hint": "Candidate names bit/nibble/byte sizes and that C++ memory is addressed in bytes."
+    },
+    {
+     "id": "fund2",
+     "point": "Programmers group bits into threes for octal (base-8) or fours for hexadecimal (base-16); e.g. binary 1010 1010 is 0xAA.",
+     "weight": "core",
+     "evidence_hint": "States binary/octal/hex grouping and gives the 1010 1010 → 0xAA conversion."
+    },
+    {
+     "id": "fund3",
+     "point": "C++ integer literals: decimal plain, octal with leading 0, hex with 0x/0X, binary with 0b/0B (C++14); suffixes like u/l/ull force type.",
+     "weight": "extended",
+     "evidence_hint": "Lists the four literal forms with correct prefixes and mentions type suffixes."
+    },
+    {
+     "id": "fund4",
+     "point": "C++ integers are fixed-width with a hard maximum; Python integers are arbitrary-precision and grow with memory.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts C++ fixed-width limits with Python’s growing integers."
+    }
+   ],
+   "probes": [
+    "What is a bit, a nibble, and a byte, and how do you write the same integer in decimal, octal, hex, and binary in C++?"
+   ],
+   "hints": {
+    "1": "Think about the smallest units of memory and the bases programmers use to write numbers.",
+    "2": "Cover bit/nibble/byte sizes, then C++ prefixes 0, 0x, and 0b.",
+    "3": "Byte is 8 bits and addressable in C++; 052 is octal, 0x2A hex, 0b101010 binary; C++ ints are fixed-width unlike Python."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain two's complement, overflow rules, bitwise ops, endianness, and IEEE-754 layout.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Two's complement negation: invert all bits then add 1; e.g. 8-bit 5 is 0000 0101 and -5 is 1111 1011.",
+     "weight": "core",
+     "evidence_hint": "States invert-then-add-1 and walks the 5 → -5 8-bit example."
+    },
+    {
+     "id": "mech2",
+     "point": "Two's complement has one zero; an n-bit signed range is asymmetric, e.g. 8-bit [-128, 127].",
+     "weight": "core",
+     "evidence_hint": "Mentions single zero and the asymmetric 8-bit signed range."
+    },
+    {
+     "id": "mech3",
+     "point": "Unsigned overflow wraps with modulo 2^n arithmetic; signed overflow is undefined behaviour.",
+     "weight": "core",
+     "evidence_hint": "Says unsigned wraps (e.g. uint8_t 255+1 → 0) and signed overflow is UB."
+    },
+    {
+     "id": "mech4",
+     "point": "Endianness is byte order of multi-byte values; for 0x1A2B3C4D big-endian is 1A 2B 3C 4D and little-endian is 4D 3C 2B 1A.",
+     "weight": "extended",
+     "evidence_hint": "Defines endianness and gives both byte orders for 0x1A2B3C4D."
+    },
+    {
+     "id": "mech5",
+     "point": "IEEE-754 float is 32 bits (1 sign, 8 exponent, 23 mantissa); double is 64 bits (1 sign, 11 exponent, 52 mantissa).",
+     "weight": "extended",
+     "evidence_hint": "Recalls the three fields and the float/double bit splits exactly."
+    }
+   ],
+   "probes": [
+    "Explain two's complement and why it is used. What happens on unsigned vs signed integer overflow?"
+   ],
+   "hints": {
+    "1": "Start from how negatives are stored, then what happens when a fixed-width add exceeds the range.",
+    "2": "Cover invert+add 1, single zero, ALU reuse; then unsigned wrap vs signed UB.",
+    "3": "Negate by invert and add 1; range for 8-bit is [-128,127]; unsigned wraps modulo 2^n; signed overflow is UB."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast historical signed encodings, overflow semantics, and host vs network byte order.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Sign-magnitude and one's complement had two zeros and complex arithmetic; two's complement uses one zero and the same addition circuitry for signed and unsigned.",
+     "weight": "core",
+     "evidence_hint": "Names the two historical schemes’ dual-zero problem and two's complement’s hardware simplicity."
+    },
+    {
+     "id": "tr2",
+     "point": "Because signed overflow is UB, compilers may assume it never happens and aggressively optimize away post-overflow safety checks.",
+     "weight": "core",
+     "evidence_hint": "Links signed UB to optimizers deleting checks like after-the-fact overflow tests."
+    },
+    {
+     "id": "tr3",
+     "point": "Network protocols typically use big-endian (network byte order), so little-endian host data must be converted before transmission.",
+     "weight": "extended",
+     "evidence_hint": "States network byte order is big-endian and host little-endian data needs conversion."
+    }
+   ],
+   "probes": [
+    "Why did hardware settle on two's complement instead of sign-magnitude or one's complement?"
+   ],
+   "hints": {
+    "1": "Compare how older signed encodings handled zero and arithmetic hardware.",
+    "2": "Contrast dual +0/−0 and complex circuitry with two's complement’s single zero and shared adder.",
+    "3": "Sign-magnitude and one's complement had +0 and −0; two's complement has one zero and reuses the same addition logic."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply representation rules to overflow checks, bit flags, float equality, and encoding pitfalls.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Never test signed overflow after it happens (e.g. if (a + b < a)); check before, e.g. if (b > INT_MAX - a).",
+     "weight": "core",
+     "evidence_hint": "Rejects post-overflow checks and gives a pre-check pattern using INT_MAX."
+    },
+    {
+     "id": "app2",
+     "point": "Never compare floats with ==; use an epsilon tolerance because values like 0.1 are not exact in binary, so 0.1 + 0.2 != 0.3.",
+     "weight": "core",
+     "evidence_hint": "Says use epsilon and explains 0.1+0.2!=0.3 via base-2 approximation."
+    },
+    {
+     "id": "app3",
+     "point": "Bitmask idioms: set with |= (1<<n), clear with &= ~(1<<n), toggle with ^= (1<<n), test with & (1<<n).",
+     "weight": "extended",
+     "evidence_hint": "Lists the four flag idioms with the correct operators."
+    },
+    {
+     "id": "app4",
+     "point": "NaN compares unequal to everything including itself (NaN == NaN is false); inf comes from nonzero/0.0 and NaN from 0.0/0.0.",
+     "weight": "extended",
+     "evidence_hint": "States NaN self-inequality and the inf/NaN division origins."
+    },
+    {
+     "id": "app5",
+     "point": "ASCII maps 0–127 (e.g. 'A' is 65, 'a' is 97); UTF-8 is variable-length Unicode (ASCII 1 byte, complex symbols up to 4 bytes).",
+     "weight": "extended",
+     "evidence_hint": "Gives ASCII range/examples and UTF-8’s 1-to-4-byte variable length."
+    }
+   ],
+   "probes": [
+    "Why does 0.1 + 0.2 != 0.3, and how should you safely check for signed integer overflow?"
+   ],
+   "hints": {
+    "1": "One issue is binary fractions; the other is when you are allowed to detect overflow in C++.",
+    "2": "Tie float inequality to base-2 mantissa limits; tie overflow to checking before the add because of UB.",
+    "3": "0.1 is an infinite binary fraction so sums are approximate—use epsilon; for signed ints check if (b > INT_MAX - a) before adding."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Sign-magnitude / one's complement vs two's complement",
+   "strong_answer": "Older encodings reserved a sign bit or bit-flipped to negate, yielding two zeros and awkward arithmetic hardware; two's complement (invert then add 1) has a single zero and lets signed and unsigned addition share the same ALU circuitry, at the cost of an asymmetric range (e.g. 8-bit [-128, 127])."
+  },
+  {
+   "topic": "Unsigned wraparound vs signed overflow UB",
+   "strong_answer": "Unsigned overflow is well-defined modulo 2^n wrap (e.g. uint8_t 255+1 → 0); signed overflow is UB, so compilers may assume it never occurs and delete naive post-overflow checks—you must guard before the operation."
+  },
+  {
+   "topic": "Little-endian host vs big-endian network byte order",
+   "strong_answer": "x86/ARM desktops are typically little-endian (0x1A2B3C4D → 4D 3C 2B 1A in memory); networks usually require big-endian “network byte order,” so you convert when writing files, sending packets, or viewing multi-byte data via char*."
+  },
+  {
+   "topic": "Exact floating-point equality vs epsilon comparison",
+   "strong_answer": "IEEE-754 mantissa is finite powers of two, so most decimals (like 0.1) are approximations and 0.1+0.2 may not equal 0.3; compare with a small absolute tolerance (epsilon) instead of ==."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Checking signed overflow after it happened, e.g. if (a + b < a).",
+   "correction": "Signed overflow is UB, so the compiler may remove the check; test before the operation, e.g. if (b > INT_MAX - a)."
+  },
+  {
+   "trap": "Comparing floating-point values with ==.",
+   "correction": "Check whether the absolute difference is within a tiny epsilon; base-2 fractions cannot represent most decimals exactly."
+  },
+  {
+   "trap": "Assuming NaN == NaN is true, or treating NaN like a normal numeric result.",
+   "correction": "NaN is unequal to everything including itself; it arises from undefined ops like 0.0/0.0 (while nonzero/0.0 yields inf)."
+  }
+ ]
+}

@@ -1,0 +1,252 @@
+{
+ "id": "14_graphs_traversal_topo",
+ "title": "Graphs I: BFS/DFS, Connected Components, Flood Fill, Topological Sort",
+ "type": "CP",
+ "relevance": "High (grid/graph reachability, islands, bipartite checks, and course-order / dependency topo are OA staples)",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Grid islands / regions: count connected groups of 1s or flood-fill recolor from a click (Number of Islands / Flood Fill clones). Infection / minutes-to-spread: multi-source BFS until all fresh cells are reached (Rotting Oranges at Amazon/Meta-style OAs). Prerequisite / build order: courses or tasks with A before B; detect cycles and return a valid order (Course Schedule I/II). Reachability / walls: maze escape, blocked cells, or reach the border before X spreads — plain or racing BFS.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Establish that the candidate maps the prompt to graph/grid traversal, components, bipartite coloring, or topo/cycle signals.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Model the input as an explicit graph (adjacency list) or an implicit one (grid 4-neighbors).",
+     "weight": "core",
+     "evidence_hint": "Says build adj lists or treat the grid as an implicit graph with 4-neighbors."
+    },
+    {
+     "id": "rec2",
+     "point": "Connected components / flood fill answer how many regions, can A reach B, or min edges to connect.",
+     "weight": "core",
+     "evidence_hint": "Maps region-count / reachability / connect-with-min-edges wording to CC or flood fill."
+    },
+    {
+     "id": "rec3",
+     "point": "Topological sort is signaled by prerequisites, ordering constraints, or longest/number of paths in a DAG.",
+     "weight": "core",
+     "evidence_hint": "Names prereq/order constraints or DAG path asks as the topo cue."
+    },
+    {
+     "id": "rec4",
+     "point": "Infection or minutes-to-spread on a grid (Rotting Oranges / Monsters-style) is multi-source BFS.",
+     "weight": "extended",
+     "evidence_hint": "Maps simultaneous spread / beat-arrival wording to multi-source BFS."
+    }
+   ],
+   "probes": [
+    "Is this an explicit graph or an implicit grid graph, and is the ask regions, reachability, shortest unweighted path, bipartite, or ordering?",
+    "What wording makes you reach for flood fill, multi-source BFS, or topological sort?"
+   ],
+   "hints": {
+    "1": "Ask whether neighbors are listed edges or grid cells, and what the ask counts or orders.",
+    "2": "Regions/reach/connect → CC/flood fill; spread from many starts → multi-source BFS; A-before-B / DAG paths → topo.",
+    "3": "Say: adj list or grid 4-neighbors; CC for regions/reach/min edges to connect; prereqs/order/DAG paths → topo; infection/minutes → multi-source BFS."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Choose DFS vs BFS vs Kahn/DFS-topo and state the component, bipartite, or cycle rule before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "DFS explores deeply to mark a component, detect cycles, or color bipartitely; BFS explores by distance and is the default for unweighted shortest paths and multi-source spread.",
+     "weight": "core",
+     "evidence_hint": "Contrasts DFS for mark/cycle/2-color with BFS for distance and multi-source."
+    },
+    {
+     "id": "appr2",
+     "point": "Connected-component loop: for each unvisited node, run DFS/BFS and count or collect representatives.",
+     "weight": "core",
+     "evidence_hint": "Describes the outer scan over unvisited starts launching a traversal."
+    },
+    {
+     "id": "appr3",
+     "point": "Topological sort via Kahn indegree queue or DFS finish-order linearizes a DAG and fails exactly when a directed cycle exists.",
+     "weight": "core",
+     "evidence_hint": "Names Kahn or DFS finish-order and ties failure to a directed cycle."
+    },
+    {
+     "id": "appr4",
+     "point": "Multi-source BFS seeds the queue with all sources at dist 0; connecting C components needs C-1 edges.",
+     "weight": "extended",
+     "evidence_hint": "Seeds every source at dist 0 and/or cites answer C-1 for C components."
+    },
+    {
+     "id": "appr5",
+     "point": "After a valid topo order, DAG DP processes longest path or path counts in topo order.",
+     "weight": "extended",
+     "evidence_hint": "Says run DP along the topo order for longest path or path counts."
+    }
+   ],
+   "probes": [
+    "When do you pick DFS versus BFS here, and how do you start a connected-component count?",
+    "How do Kahn and DFS-topo detect a directed cycle, and when is multi-source BFS the right model?"
+   ],
+   "hints": {
+    "1": "Separate deep mark/cycle/color work from distance or simultaneous spread.",
+    "2": "Outer unvisited loop for CC; Kahn/DFS-topo for order; seed all sources at dist 0 for infection.",
+    "3": "Say: DFS for component/cycle/bipartite; BFS for unweighted distance/multi-source; Kahn or DFS finish-order fails iff directed cycle; C components → C-1 edges; DAG DP after topo."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Code visited-safe DFS/BFS or flood fill, path reconstruction, 2-coloring, and Kahn or DFS-topo correctly.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Adjacency-list DFS/BFS uses visited[]; iterative BFS uses a queue or deque.",
+     "weight": "core",
+     "evidence_hint": "Mentions visited[] on an adj list and queue/deque BFS."
+    },
+    {
+     "id": "impl2",
+     "point": "Grid flood fill uses 4-dir deltas, bounds checks, and marks visited before enqueue or recurse.",
+     "weight": "core",
+     "evidence_hint": "Writes 4-dir deltas, bounds, and mark-before-enqueue/recurse."
+    },
+    {
+     "id": "impl3",
+     "point": "Unweighted shortest path stores BFS distances plus parent[] or a move char to reconstruct the path (including U/D/L/R on a grid).",
+     "weight": "core",
+     "evidence_hint": "Describes parent or move-char reconstruction after BFS."
+    },
+    {
+     "id": "impl4",
+     "point": "Bipartite check 2-colors with BFS/DFS; undirected cycle uses DFS with parent; directed cycle uses WHITE/GRAY/BLACK or failed Kahn.",
+     "weight": "extended",
+     "evidence_hint": "Separates 2-color, undirected parent-DFS, and directed color states or Kahn failure."
+    },
+    {
+     "id": "impl5",
+     "point": "Kahn uses indegree plus a queue; if output size is < n, there is a cycle.",
+     "weight": "extended",
+     "evidence_hint": "States indegree queue and output size < n ⇒ cycle."
+    }
+   ],
+   "probes": [
+    "Walk through your flood-fill or BFS template—when do you mark visited, and how do you reconstruct a path?",
+    "How do you implement bipartite coloring versus undirected vs directed cycle detection, and Kahn's cycle signal?"
+   ],
+   "hints": {
+    "1": "Start from visited[] / queue BFS and grid deltas with bounds.",
+    "2": "Mark before enqueue/recurse; keep parent or move char; 2-color; parent for undirected cycles; colors or Kahn for directed.",
+    "3": "Say: adj DFS/BFS + visited; 4-dir flood fill mark-before-push; BFS parent/U-D-L-R; 2-color; undirected DFS+parent; directed WHITE/GRAY/BLACK or Kahn; output size < n ⇒ cycle."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Tie traversal safety and topo templates to the scale and query pattern the file calls out.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Marking visited before enqueue or recurse is required to avoid TLE and stack blowups on grid flood fill.",
+     "weight": "core",
+     "evidence_hint": "Links mark-before-enqueue/recurse to avoiding TLE/stack blowups."
+    },
+    {
+     "id": "cx2",
+     "point": "Kahn or DFS-topo templates must work at n ≤ 1e5 for contest Course Schedule–style graphs.",
+     "weight": "core",
+     "evidence_hint": "Cites n ≤ 1e5 as the scale the topo template must handle."
+    },
+    {
+     "id": "cx3",
+     "point": "Precomputing per component (Igor-style) lets later queries answer in O(1).",
+     "weight": "extended",
+     "evidence_hint": "Says flood-fill/memo once, then O(1) per query."
+    }
+   ],
+   "probes": [
+    "What goes wrong on a grid if you mark visited too late, and what scale must your topo code handle?",
+    "When does precomputing a component answer beat recomputing per query?"
+   ],
+   "hints": {
+    "1": "Think about revisit blowups and contest-size topo.",
+    "2": "Mark before enqueue/recurse; topo at n ≤ 1e5; optional component precompute for O(1) queries.",
+    "3": "Say: mark-before-push avoids TLE/stack blowups; Kahn/DFS-topo at n ≤ 1e5; precompute component aggregates for O(1) queries."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Surface mark-too-late, wrong cycle model, incomplete multi-source seeding, and missed Kahn cycle signal.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Forgetting to mark visited before enqueue/recurse causes TLE or stack blowups on flood fill.",
+     "weight": "core",
+     "evidence_hint": "Names late marking as the TLE/stack failure mode."
+    },
+    {
+     "id": "pit2",
+     "point": "Using directed-cycle machinery without a parent on undirected graphs, or skipping WHITE/GRAY/BLACK (or Kahn) on directed graphs, mis-detects cycles.",
+     "weight": "core",
+     "evidence_hint": "Separates undirected DFS+parent from directed colors or failed Kahn."
+    },
+    {
+     "id": "pit3",
+     "point": "Treating Kahn as always succeeding without checking that output size is < n misses the directed cycle.",
+     "weight": "extended",
+     "evidence_hint": "Says incomplete order / size < n means cycle / impossible."
+    },
+    {
+     "id": "pit4",
+     "point": "Seeding only one rotten/monster cell instead of all sources at dist 0 breaks multi-source BFS.",
+     "weight": "extended",
+     "evidence_hint": "Insists every source starts in the queue at dist 0."
+    }
+   ],
+   "probes": [
+    "What fails if you mark a grid cell only after popping it from the queue?",
+    "How do undirected and directed cycle checks differ, and what does Kahn output size < n mean?"
+   ],
+   "hints": {
+    "1": "Check when you mark visited and which cycle API you used.",
+    "2": "Mark before enqueue; undirected needs parent; directed needs colors or Kahn; seed every source at dist 0.",
+    "3": "Say: late mark → TLE/stack blowups; undirected DFS+parent vs WHITE/GRAY/BLACK or Kahn; output size < n ⇒ cycle; multi-source must enqueue all sources at dist 0."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "DFS vs BFS",
+   "strong_answer": "Use DFS to mark a component, detect cycles, or color bipartitely; use BFS when you need distances, unweighted shortest paths, or multi-source spread."
+  },
+  {
+   "topic": "Explicit adjacency list vs implicit grid 4-neighbors",
+   "strong_answer": "Build an adjacency list when edges are given; on grids, treat cells as nodes with 4-neighbor edges and run the same DFS/BFS/flood-fill templates."
+  },
+  {
+   "topic": "Kahn indegree queue vs DFS finish-order topo",
+   "strong_answer": "Both linearize a DAG and fail exactly on a directed cycle; Kahn uses indegree + queue (output size < n ⇒ cycle), DFS uses finish-order / color states (WHITE/GRAY/BLACK)."
+  },
+  {
+   "topic": "Plain CC flood fill vs flood fill + memo for queries",
+   "strong_answer": "Counting or marking components once is enough for region/reach asks; if many queries need the same component aggregate, precompute per component and answer in O(1)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Marking a grid cell visited only after dequeue/recurse instead of before enqueue/recurse.",
+   "correction": "Mark visited before enqueue or recurse to avoid TLE and stack blowups."
+  },
+  {
+   "trap": "Detecting an undirected cycle without tracking the DFS parent (or treating it like a directed graph).",
+   "correction": "Undirected cycle: DFS with parent, reconstruct length ≥ 3; directed cycle: WHITE/GRAY/BLACK or failed Kahn."
+  },
+  {
+   "trap": "Assuming a Kahn run always yields a valid order.",
+   "correction": "If output size is < n, a directed cycle exists and the ordering is impossible."
+  },
+  {
+   "trap": "Starting multi-source BFS from a single source.",
+   "correction": "Seed the queue with all sources at dist 0 (rotten oranges / monsters)."
+  },
+  {
+   "trap": "2-coloring only one component when checking bipartiteness.",
+   "correction": "2-color every component with BFS/DFS; any conflict means impossible."
+  }
+ ]
+}

@@ -1,0 +1,227 @@
+{
+ "id": "dsa_s23_dp",
+ "title": "Dynamic Programming",
+ "type": "FUND",
+ "relevance": "DP is a core OA/interview topic for recognizing overlapping subproblems, designing states/recurrences, and optimizing space on classic patterns (knapsack, LCS, stocks, LIS, partition/MCM).",
+ "difficulty": "senior",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish when DP applies and the four-step pedagogy from recursion through space optimization.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "DP applies when a problem has overlapping subproblems and optimal substructure.",
+     "weight": "core",
+     "evidence_hint": "Names both overlapping subproblems (same subproblem recomputed) and optimal substructure (optimal answer from optimal sub-answers)."
+    },
+    {
+     "id": "fund2",
+     "point": "Naive recursive Fibonacci is exponential: time O(2^n) because identical subproblems like F(n-2) are recomputed many times.",
+     "weight": "core",
+     "evidence_hint": "States F(n)=F(n-1)+F(n-2) and cites O(2^n) from the recomputation tree."
+    },
+    {
+     "id": "fund3",
+     "point": "Memoization caches recursive results to O(n) time; tabulation builds iteratively from base cases; if only a constant number of prior states are needed, the O(n) table can shrink to O(1).",
+     "weight": "core",
+     "evidence_hint": "Walks the ladder: top-down cache → bottom-up table → keep only the few predecessors (e.g. F(n-1), F(n-2))."
+    },
+    {
+     "id": "fund4",
+     "point": "Heuristic signals for DP: try-all-choices / min-max / number-of-ways plus a state that repeats during exploration.",
+     "weight": "extended",
+     "evidence_hint": "Mentions those problem phrasings together with repeated state during search."
+    }
+   ],
+   "probes": [
+    "When is a problem a DP problem, and how do you go from a recursive Fibonacci solution to an O(1)-space solution?"
+   ],
+   "hints": {
+    "1": "Think about what makes recomputation wasteful and what properties let you reuse answers.",
+    "2": "Walk the four-step ladder: recursion → memoization → tabulation → space optimization.",
+    "3": "Say overlapping subproblems + optimal substructure; naive F is O(2^n); memo/tabulation O(n); Fibonacci space-opts to O(1) with two variables."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Check that the candidate can design states and recurrences for the main DP templates in the material.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "State-design recipe: express f(index, …), write the recurrence to subproblem states, then identify base cases.",
+     "weight": "core",
+     "evidence_hint": "Lists the three recipe steps in order."
+    },
+    {
+     "id": "mech2",
+     "point": "Climbing stairs / 1D path: f(i)=f(i-1)+f(i-2) with base f(1)=1, f(2)=2; frog-with-K uses min over j in 1..K and costs O(n × k) time.",
+     "weight": "core",
+     "evidence_hint": "Gives the stairs recurrence and bases, and the K-jump min over prior K steps with O(n × k)."
+    },
+    {
+     "id": "mech3",
+     "point": "Pick/not-pick on a 1D sequence: house robber f(i)=max(f(i-1), f(i-2)+arr[i]); circular House Robber II solves two linear ranges excluding first or last.",
+     "weight": "core",
+     "evidence_hint": "States pick vs not-pick and the circle reduction to max of two linear robber passes."
+    },
+    {
+     "id": "mech4",
+     "point": "Subsequence/knapsack state is usually (index, target/weight); take OR not-take for subset sum; unbounded take stays at the same index.",
+     "weight": "core",
+     "evidence_hint": "Names index+constraint state, boolean take|notTake for subset sum, and stay-on-index for unbounded coins/knapsack."
+    },
+    {
+     "id": "mech5",
+     "point": "String DP compares prefixes f(i,j): LCS match → 1+f(i-1,j-1), mismatch → max(f(i-1,j), f(i,j-1)); Edit Distance mismatch tries insert/delete/replace each costing 1.",
+     "weight": "core",
+     "evidence_hint": "Gives LCS match/mismatch transitions and the three edit ops with +1."
+    },
+    {
+     "id": "mech6",
+     "point": "Partition/MCM: state is a range [i,j], try every partition k; MCM cost adds arr[i-1]*arr[k]*arr[j]; Burst Balloons picks the last balloon in the range so subranges become independent.",
+     "weight": "extended",
+     "evidence_hint": "Describes range DP, the MCM multiply cost formula, and last-to-burst reasoning for balloons."
+    }
+   ],
+   "probes": [
+    "Write the recurrence and base cases for House Robber, then for 0/1 Knapsack versus unbounded coin change, then for LCS."
+   ],
+   "hints": {
+    "1": "Start from choices at the current index or cell, then name what else the state must remember.",
+    "2": "For sequences use pick/not-pick or index+target; for strings compare prefixes; for MCM try every cut k in [i,j].",
+    "3": "Robber: max(skip i, take i + f(i-2)); knapsack take uses index-1, unbounded take stays at index; LCS match 1+diag else max(up,left)."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Probe space/time tradeoffs and the 1D knapsack loop-direction rule grounded in which row the recurrence reads.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "When the current row only needs the previous row (grids, LCS, subset-sum rows), a full 2D table can collapse to one or two 1D arrays; many 1D path DPs further collapse to two variables / O(1).",
+     "weight": "core",
+     "evidence_hint": "Explains previous-row rolling arrays and the two-variable optimization when only i-1 and i-2 matter."
+    },
+    {
+     "id": "tr2",
+     "point": "Frog Jump with K cannot easily reduce to O(1) variables; need O(n) (or at least size K) for tabulation.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts K-jump needing an array of size O(n) or K versus two-variable classic frog."
+    },
+    {
+     "id": "tr3",
+     "point": "1D knapsack dual-identity: 0/1 must iterate weight backward so reads stay on the previous row; unbounded iterates forward so reads chain on the current row.",
+     "weight": "core",
+     "evidence_hint": "States golden rule: 0/1 backward preserves past; unbounded forward chains present, tied to which row the recurrence names."
+    },
+    {
+     "id": "tr4",
+     "point": "LIS can be O(n^2) DP over previous indices, or O(n log n) via a temp tails array and lower_bound (temp length is LIS length, not necessarily a valid LIS).",
+     "weight": "extended",
+     "evidence_hint": "Contrasts nested prev-loop DP with binary-search tails / lower_bound caveat."
+    }
+   ],
+   "probes": [
+    "Why does 0/1 Knapsack’s 1D array go right-to-left while Unbounded goes left-to-right? What breaks if you swap them?"
+   ],
+   "hints": {
+    "1": "Ask what value still sits in dp[w] before versus after you overwrite it this row.",
+    "2": "0/1 recurrence reads previous index/row; unbounded take reads same index at smaller weight.",
+    "3": "Backward keeps yesterday’s cells so each item is used once; forward reuses today’s updates (infinite supply). Wrong direction silently solves the other problem."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply patterns to reductions, multi-agent states, reconstruction, and common interview pitfalls.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Partition Equal Subset Sum: odd total sum is impossible; even sum reduces to subset sum of total_sum/2. Target Sum / partitions-with-difference reduce to counting subsets with sum (total_sum ± D or target)/2 when that quantity is valid.",
+     "weight": "core",
+     "evidence_hint": "States the odd-sum reject and the algebraic reduction to one subset-sum/count instance."
+    },
+    {
+     "id": "app2",
+     "point": "Cherry Pickup II: both robots share one state f(i,j1,j2) with 3×3=9 move pairs; running one robot then the other misses overlapping decisions.",
+     "weight": "core",
+     "evidence_hint": "Bundles both columns into one state and cites nine transitions / same-row movement."
+    },
+    {
+     "id": "app3",
+     "point": "Count subsets with zeros: picking or not picking a zero changes the subset but not the sum; if arr[0]==0 and target 0, base ways are 2.",
+     "weight": "extended",
+     "evidence_hint": "Explains zero doubles ways and the index-0 base of 2 when the first element is 0."
+    },
+    {
+     "id": "app4",
+     "point": "Interview flow: recognize try-all-ways + overlapping states, name a template, state the recurrence f(i,j)=… before coding, then discuss space-optimizing when the current row depends only on the previous.",
+     "weight": "extended",
+     "evidence_hint": "Echoes the interview checklist: pattern → recurrence spoken aloud → optional rolling-array space talk."
+    }
+   ],
+   "probes": [
+    "How would you reduce Target Sum to a known DP, and how would you model two robots collecting cherries on the same grid?"
+   ],
+   "hints": {
+    "1": "For signed sums, think positive vs negative subsets; for two agents, ask what must be known at the same time.",
+    "2": "Derive S1=(total+target)/2 for Target Sum; for cherries keep row i and both columns.",
+    "3": "Target Sum → count subsets of (total_sum+target)/2 (if even/feasible); Cherry Pickup II → f(i,j1,j2) with nine child transitions, not two separate passes."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Memoization (top-down) vs Tabulation (bottom-up)",
+   "strong_answer": "Memoization caches recursive calls and keeps recursion-stack overhead while pruning the tree to linear states for Fibonacci-style problems; tabulation drops recursion, fills from base cases upward, and more clearly exposes which prior cells are needed for space cuts."
+  },
+  {
+   "topic": "Full DP table vs rolling / O(1) space",
+   "strong_answer": "If state i only needs i-1 and i-2 (stairs, classic frog, house robber), the O(n) array becomes two variables / O(1). Grid/LCS/subset-sum rows that only need the previous row collapse to O(min dimension) or O(k) 1D arrays. Dependencies on K prior steps or on many interval lengths (MCM) block aggressive O(1) collapse."
+  },
+  {
+   "topic": "0/1 Knapsack 1D backward vs Unbounded 1D forward",
+   "strong_answer": "After crushing dp[index][w] to dp[w], a cell is ‘yesterday’ before overwrite and ‘today’ after. 0/1 must read the previous row → iterate w from W downward. Unbounded’s take stays on the same index → iterate upward so w-weight already includes this item. On the file’s example weights {2,4,6}, values {5,11,13}, W=10: forward yields 27 (unbounded), backward yields 24 (0/1)."
+  },
+  {
+   "topic": "O(n^2) LIS DP vs O(n log n) patience/tails",
+   "strong_answer": "Classic DP tries all previous indices for O(n^2) time and can reconstruct via a parent/hash array. The tails array + lower_bound runs in O(n log n) for length only; the temp array is not necessarily a valid LIS."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Implementing 0/1 Knapsack with a left-to-right 1D loop (or Unbounded right-to-left).",
+   "correction": "Wrong direction silently becomes the other variant: forward 0/1 overcounts (too large); backward unbounded undercounts (too small). Neither crashes; samples where each item is taken once can hide the bug."
+  },
+  {
+   "trap": "Ignoring zeros when counting subsets with sum K.",
+   "correction": "A zero does not change the sum but doubles subset choices; if the first element is 0, prev[0] must be 2 (take or leave), not 1."
+  },
+  {
+   "trap": "Assuming an odd-sum array can be partitioned into two equal-sum subsets.",
+   "correction": "If total_sum is odd, equal integer halves are impossible; only even totals reduce to subset sum of total_sum/2."
+  },
+  {
+   "trap": "Solving Cherry Pickup by running one robot to completion then the other.",
+   "correction": "Concurrent actors need one unified state (row + both columns); sequential passes miss jointly optimal overlapping cell choices (same cell counted once)."
+  },
+  {
+   "trap": "Bursting balloons by choosing which to burst first in a range.",
+   "correction": "First-burst order couples neighbors so subproblems are not independent; choose the last balloon k in [i,j] so neighbors are nums[i-1] and nums[j+1] and the sides separate."
+  },
+  {
+   "trap": "Returning front-partition palindrome-cut DP without subtracting the implicit final cut.",
+   "correction": "The recurrence adds a cut after every palindrome piece including the end; return f(0)-1 so a fully palindromic string correctly costs 0 cuts."
+  },
+  {
+   "trap": "Treating Longest Common Substring like LCS on mismatch.",
+   "correction": "On mismatch, contiguous common suffix length resets to 0; track a global max over the table rather than only dp[n][m]."
+  },
+  {
+   "trap": "Assuming the O(n log n) LIS temp array is the actual subsequence.",
+   "correction": "Replacements keep smallest tails for each length; only temp.size() is the LIS length—reconstruction still needs the O(n^2) parent-pointer method."
+  }
+ ]
+}

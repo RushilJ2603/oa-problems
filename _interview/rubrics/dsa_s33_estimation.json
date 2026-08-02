@@ -1,0 +1,187 @@
+{
+ "id": "dsa_s33_estimation",
+ "title": "Estimation, Guesstimates & Market Sizing",
+ "type": "FUND",
+ "relevance": "SDE, PM, consulting, and quant interviews use Fermi and market-sizing questions to grade structure, assumptions, and order-of-magnitude reasoning rather than a precise final number.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the Fermi method and that interviewers grade structure and stated assumptions, not the exact number.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "The Fermi method breaks a target quantity into a product or sum of factors you can each estimate, anchors on known population figures or round numbers, estimates each factor to one significant figure, multiplies through, then sanity-checks order of magnitude and units while stating assumptions explicitly.",
+     "weight": "core",
+     "evidence_hint": "Candidate walks through break-down → anchor → one-sig-fig factors → multiply → sanity-check/units/assumptions as a named method."
+    },
+    {
+     "id": "fund2",
+     "point": "In consulting, PM, and quant interviews, graders score the structure and assumptions, not the exact final number; candidates should think out loud, state each assumption, and note where the model may over- or underestimate.",
+     "weight": "core",
+     "evidence_hint": "Candidate says the number is secondary and emphasizes clear assumptions plus over/under bias callouts."
+    },
+    {
+     "id": "fund3",
+     "point": "A standard surface-area Fermi technique is to treat the human head as a simple geometric shape such as a hemisphere or cylinder, with logic of Area × Density more important than precision.",
+     "weight": "extended",
+     "evidence_hint": "Candidate mentions hemisphere/cylinder scalp model and Area × Density as the core identity."
+    }
+   ],
+   "probes": [
+    "Walk me through the Fermi method for estimating an unknown quantity in an interview.",
+    "What do interviewers actually grade on a guesstimate—your final number, or something else?"
+   ],
+   "hints": {
+    "1": "Think about how you would estimate something you cannot look up, step by step.",
+    "2": "Name the five Fermi steps and what gets scored in consulting/PM/quant style interviews.",
+    "3": "Break into estimable factors; one-sig-fig each; multiply; sanity-check magnitude/units; state assumptions—graders care about structure and assumptions, not the exact number."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how classic Fermi setups factor volumes, capacities, densities, and daily-to-QPS conversion using file anchors.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Piano tuners in Chicago are estimated as total pianos divided by pianos tuned per tuner: ~3 million population → ~1 million households → 10% with a tuned piano → 100,000 pianos; once-a-year tuning; 4 pianos/day × 250 workdays = 1,000 tunings per tuner/year → about 100 tuners.",
+     "weight": "core",
+     "evidence_hint": "Candidate reproduces the household → piano fraction → tunings/year ÷ tuner capacity chain landing near 100."
+    },
+    {
+     "id": "mech2",
+     "point": "Golf balls in a school bus use bus volume ÷ ball volume × packing fraction: ~40×8×6 ft ≈ 2,000 ft³; 1 ft³ ≈ 1,700 in³ → ~3.4×10^6 in³; ball ~1.5 in³; random close packing ~0.66 → roughly 1.5×10^6 balls.",
+     "weight": "core",
+     "evidence_hint": "Candidate includes volume ratio and an ~0.66 packing factor, not raw solid volume alone."
+    },
+    {
+     "id": "mech3",
+     "point": "For throughput estimates, 1 day ≈ 86,400 seconds ≈ 10^5 seconds, so average QPS is daily traffic divided by about 10^5; e.g. 15 billion daily searches → 150,000 average QPS, then ~2× peak → 300,000 peak QPS.",
+     "weight": "extended",
+     "evidence_hint": "Candidate cites the ~10^5 seconds/day shortcut and applies peak vs average multiplier."
+    }
+   ],
+   "probes": [
+    "Estimate how many piano tuners are in Chicago—what factors do you multiply and divide?",
+    "How do you convert daily search volume into average and peak QPS?"
+   ],
+   "hints": {
+    "1": "Start from a quantity you know (population, bus size, daily searches) and peel off factors.",
+    "2": "For tuners: pianos ÷ tunings per tuner; for QPS: daily volume ÷ ~10^5, then apply a peak multiplier.",
+    "3": "Chicago: ~100,000 pianos, 1,000 tunings/tuner/year → ~100 tuners; Google: 15B searches/day ÷ 100,000 ≈ 150,000 avg QPS × 2 ≈ 300,000 peak."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast modeling choices that change bias and fidelity: segmentation, packing, empty-volume baselines, and peak vs average load.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Market sizing that assumes everyone drinks the same amount (e.g. everyone drinks 1 cup) wildly overestimates; you must strip out children and non-consumers and segment heavy/average/light usage.",
+     "weight": "core",
+     "evidence_hint": "Candidate rejects a flat per-capita coffee rate and describes age and intensity segments."
+    },
+    {
+     "id": "tr2",
+     "point": "Volume-fill estimates should multiply by a sphere packing fraction (~0.66 / 2/3) rather than assuming solid fill; an empty-bus baseline ignores seats and fixtures unless stated as a simplifying assumption.",
+     "weight": "core",
+     "evidence_hint": "Candidate separates geometric volume from packing efficiency and notes empty-bus as an explicit assumption."
+    },
+    {
+     "id": "tr3",
+     "point": "System traffic estimates need both average QPS (daily ÷ ~10^5) and a peak multiplier (roughly 2× for global time-zone traffic), because peak—not average—sizes capacity.",
+     "weight": "extended",
+     "evidence_hint": "Candidate distinguishes average from peak and justifies a ~2× peak factor."
+    }
+   ],
+   "probes": [
+    "In a coffee market-size, what goes wrong if you skip segmentation?",
+    "When packing spheres into a bus, why isn’t total balls just empty volume divided by one ball’s volume?"
+   ],
+   "hints": {
+    "1": "Ask who is in the population and whether space can be 100% filled.",
+    "2": "Compare flat per-person rates vs heavy/light segments; solid fill vs packing fraction; average vs peak QPS.",
+    "3": "Strip children/non-drinkers and weight cup rates; use ~0.66 packing; convert day→avg QPS with ~10^5 then apply ~2× peak."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply top-down market sizing and systems storage/bandwidth/throughput patterns to concrete interview prompts.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "NYC daily coffee cups: ~8 million people → 80% adults → 75% drinkers → weighted 1.75 cups/drinker/day → about 8.4 million cups/day.",
+     "weight": "core",
+     "evidence_hint": "Candidate segments age and drinking intensity and lands near 8.4 million cups/day."
+    },
+    {
+     "id": "app2",
+     "point": "India smartphone sales: ~1.4 billion pop → ~1 billion addressable → ~700 million users; /3.5 year replacement ≈ 200 million replacements + 5% growth first-time buyers ≈ 35 million → ~235 million annual sales.",
+     "weight": "core",
+     "evidence_hint": "Candidate uses users ÷ replacement cycle plus a growth add-on to ~235 million."
+    },
+    {
+     "id": "app3",
+     "point": "YouTube upload storage: 500 hours/min → 720,000 hours/day × ~1 GB/hour 1080p = 720 TB base × ~5× transcoding/replication → 3.6 PB/day; WhatsApp profile pics for 2B users at 90% adoption and ~100 KB with 3× replication → 540 TB.",
+     "weight": "extended",
+     "evidence_hint": "Candidate multiplies rate×size×replication for UGC storage and users×size×replication for profile pics."
+    }
+   ],
+   "probes": [
+    "Size daily coffee consumption in NYC.",
+    "Estimate annual smartphone sales in India, or daily storage from YouTube uploads."
+   ],
+   "hints": {
+    "1": "Pick a top-down chain: population or upload rate first, then filter and multiply.",
+    "2": "Coffee: pop → adults → drinkers → cups/day; phones: addressable → penetration → replace cycle + growth; YouTube: hours×GB×replication.",
+    "3": "Coffee ~8.4M cups/day; phones ~235M/year; YouTube ~3.6 PB/day after ~5× multiplier."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Structure and assumptions vs exact final number",
+   "strong_answer": "Interviewers in consulting, PM, and quant settings grade the decomposition, stated assumptions, and over/under bias callouts; the precise number is secondary as long as the order of magnitude and units are sane."
+  },
+  {
+   "topic": "Segmented usage vs flat per-capita estimate",
+   "strong_answer": "Flat rates like everyone drinks 1 cup wildly overestimate; strip children and non-consumers, then segment heavy/average/light (e.g. coffee: 25%/50%/25% at 3, 1.5, and 1 cups → 1.75 weighted)."
+  },
+  {
+   "topic": "Solid geometric volume vs packing fraction",
+   "strong_answer": "Sphere packing is only ~0.66 (2/3) of empty volume; using raw bus volume ÷ ball volume without a packing fraction overstates capacity, and an empty-bus baseline further ignores seats unless called out."
+  },
+  {
+   "topic": "Average QPS vs peak QPS",
+   "strong_answer": "Average QPS is daily traffic ÷ ~10^5 seconds; global services still need a peak multiplier (roughly 2×) because capacity is driven by peak, not average."
+  },
+  {
+   "topic": "Supply-side driver throughput vs demand-side population share",
+   "strong_answer": "Ride-hail trips can be sized from active drivers × trips per shift (e.g. 50,000 × 20 = 1 million/day) and sanity-checked against a demand share (~10% of population taking a ride daily)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Estimating market volume without segmenting the population (e.g. assuming everyone drinks 1 cup of coffee).",
+   "correction": "Remove children and non-consumers, then segment heavy/average/light usage and use a weighted cups-per-day rate."
+  },
+  {
+   "trap": "Filling a container with spheres using only empty volume ÷ one sphere’s volume.",
+   "correction": "Multiply by a packing fraction (~0.66 / 2/3) and state whether fixtures (seats, etc.) are ignored in the empty baseline."
+  },
+  {
+   "trap": "Reporting only average QPS from daily traffic without a peak factor.",
+   "correction": "Divide daily volume by ~10^5 for average QPS, then apply a peak multiplier (roughly 2×) for capacity sizing."
+  },
+  {
+   "trap": "Computing raw user-generated or profile storage without replication/transcoding multipliers.",
+   "correction": "Include storage multipliers such as YouTube’s ~5× for multi-resolution transcoding/replication or WhatsApp’s 3× cross-datacenter replication."
+  },
+  {
+   "trap": "Skipping explicit assumptions, units, or order-of-magnitude sanity checks after multiplying factors.",
+   "correction": "State assumptions at each step, check units, and sanity-check the result against a round population or per-capita anchor (e.g. ~1 cup per capita/day for NYC coffee)."
+  }
+ ]
+}

@@ -1,0 +1,255 @@
+{
+ "id": "dsa_s32_game_theory",
+ "title": "Game Theory & Market-Making",
+ "type": "FUND",
+ "relevance": "Tests backward induction, combinatorial game reasoning, auction strategy, and adverse-selection pricing used in SDE and quant interviews.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the core game-theory and no-arbitrage definitions used throughout the interview.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A dominant strategy yields the best payoff regardless of what the opponent does.",
+     "weight": "core",
+     "evidence_hint": "Defines dominant strategy as always-best independent of the other player's choice."
+    },
+    {
+     "id": "fund2",
+     "point": "A Nash equilibrium is a state where no player can improve expected payoff by unilaterally changing strategy.",
+     "weight": "core",
+     "evidence_hint": "States mutual best-response / no profitable unilateral deviation."
+    },
+    {
+     "id": "fund3",
+     "point": "Backward induction solves sequential games by starting at the last possible move and reasoning backwards to the first.",
+     "weight": "core",
+     "evidence_hint": "Says go to the terminal state first, fix that payoff, then step one move earlier."
+    },
+    {
+     "id": "fund4",
+     "point": "A mixed strategy plays choices with probabilities that make the opponent indifferent between counter-moves.",
+     "weight": "extended",
+     "evidence_hint": "Mentions randomizing so opponent expected payoffs across pure responses are equal."
+    },
+    {
+     "id": "fund5",
+     "point": "Fair value / no-arbitrage pricing sets a price so neither side can lock in risk-free profit, accounting for adverse selection.",
+     "weight": "extended",
+     "evidence_hint": "Links Dutch-book / market-making pricing to being picked off by an informed counterparty."
+    }
+   ],
+   "probes": [
+    "Define dominant strategy, Nash equilibrium, and backward induction, and say how they differ.",
+    "What is a mixed strategy trying to achieve against a perfect opponent?"
+   ],
+   "hints": {
+    "1": "Start with payoff language: best response vs mutual best responses.",
+    "2": "Separate one-shot dominance, equilibrium, sequential last-move reasoning, and randomization for indifference.",
+    "3": "Dominant = best no matter what; Nash = no unilateral gain; backward induction = last move first; mixed = make opponent indifferent; fair value prices out Dutch books under adverse selection."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to classify winning/losing positions and apply backward induction or Nim XOR to concrete games.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "In take-away games, a position is W if it has at least one move to an L position, and L if all moves lead to a W position.",
+     "weight": "core",
+     "evidence_hint": "States the W/L transition rule for combinatorial take-away positions."
+    },
+    {
+     "id": "mech2",
+     "point": "In the 20-coin game removing 1, 2, or 3 where taking the last coin loses, winning leave-targets are 1, 5, 9, 13, 17, so first player takes 3 to leave 17.",
+     "weight": "core",
+     "evidence_hint": "Lists leave-targets stepping by 4 and concludes opening move take 3."
+    },
+    {
+     "id": "mech3",
+     "point": "When players add 1 to 10 toward exactly 100, winning positions are 100 minus multiples of 11, so from 0 the first move is add 1 to leave 1.",
+     "weight": "extended",
+     "evidence_hint": "Names modulus 11 / leave 89 then 1, and opening add 1."
+    },
+    {
+     "id": "mech4",
+     "point": "With two equal piles of 10 under single-pile take-any, the second player wins by always restoring symmetry; first player cannot guarantee a win.",
+     "weight": "core",
+     "evidence_hint": "Says mirror the opponent's pile after any break of equal piles."
+    },
+    {
+     "id": "mech5",
+     "point": "In Nim with piles 3, 4, 5, the XOR sum is 2 (nonzero), and the winning move is take 2 from the pile of 3 to reach XOR 0.",
+     "weight": "core",
+     "evidence_hint": "Computes 3⊕4⊕5=2 and reduces pile 3 to 1."
+    },
+    {
+     "id": "mech6",
+     "point": "In the five-pirate 100-coin game needing majority acceptance, Pirate 1's backward-induction proposal is 98, 0, 1, 0, 1.",
+     "weight": "extended",
+     "evidence_hint": "Walks 2→3→4→5 pirate cases and ends at 98 for self and 1 each to pirates who would otherwise get 0."
+    }
+   ],
+   "probes": [
+    "How do you label W vs L positions in a take-away game, and what is the first move with 20 coins when last coin loses?",
+    "For Nim piles 3, 4, 5, how do you decide the winning move?",
+    "Why does the first player lose with two piles of 10 under perfect play?"
+   ],
+   "hints": {
+    "1": "Work from terminal positions or XOR=0 losing positions, not from the opening only.",
+    "2": "For misère take-away leave 1 then step by 4; for 100-race leave 100−11k; for equal piles mirror; for Nim force XOR 0.",
+    "3": "20-coin: leave 1,5,9,13,17 → take 3; 100-race → say 1; equal 10s → second-player symmetry; Nim → take 2 from pile of 3; pirates → 98,0,1,0,1."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast auction formats and rational strategy choices that change the optimal bid or whether to play.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "In a first-price sealed auction you bid below true valuation for a margin; against one opponent with value uniform on 0 to 100 and your value 100, optimal bid is 50.",
+     "weight": "core",
+     "evidence_hint": "Says shade the bid; for this symmetric uniform case bid half of 100."
+    },
+    {
+     "id": "tr2",
+     "point": "In a second-price (Vickrey) auction, bidding exactly true valuation is a dominant strategy; for value 100 you bid 100.",
+     "weight": "core",
+     "evidence_hint": "Explains bid sets win/lose only, payment is second price, so truth-telling dominates."
+    },
+    {
+     "id": "tr3",
+     "point": "In the dollar auction for a 100 dollar bill where highest and second-highest both pay, the only rational strategy via backward induction is not to enter.",
+     "weight": "extended",
+     "evidence_hint": "Describes escalation past 100 and concludes refuse the first bid."
+    },
+    {
+     "id": "tr4",
+     "point": "Under stated perfect rationality, offering the stranger 1 in the 100-dollar ultimatum maximizes your payoff because they prefer 1 to 0.",
+     "weight": "extended",
+     "evidence_hint": "Separates spiteful humans from profit-maximizing acceptance of 1."
+    }
+   ],
+   "probes": [
+    "How should your bid differ between a first-price and a second-price sealed auction for the same valuation?",
+    "In the dollar auction where both top bidders pay, what is the rational opening choice?"
+   ],
+   "hints": {
+    "1": "Ask what your bid controls: whether you win, or also what you pay.",
+    "2": "First-price shades for margin; second-price truth-tells; dollar auction traps escalators who enter.",
+    "3": "Value 100, one uniform rival → first-price bid 50; second-price bid 100; dollar auction → do not enter; ultimatum → offer 1."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply no-arbitrage, adverse selection, iterated dominance, and mixed-strategy indifference to interview-style pricing and games.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "With bookmaker odds 2.0 on A and 3.0 on B and 50 dollars, betting 30 on A and 20 on B equalizes payouts at 60 and locks in 10 risk-free profit.",
+     "weight": "core",
+     "evidence_hint": "Sets 2.0x=3.0y with x+y=50 to get 30/20 and profit 10."
+    },
+    {
+     "id": "app2",
+     "point": "For a fair coin ±100 game, the maximum fair price for the flip outcome is 50, the EV gain from playing only on Heads.",
+     "weight": "extended",
+     "evidence_hint": "Compares EV 0 without info to EV 50 with selective play."
+    },
+    {
+     "id": "app3",
+     "point": "When market-making a hidden fair die where the interviewer sells if roll ≤ P and buys if roll > P, P=3.5 minimizes expected worst-case loss under adverse selection.",
+     "weight": "core",
+     "evidence_hint": "Recognizes always-lose trades and names optimal quote 3.5."
+    },
+    {
+     "id": "app4",
+     "point": "If you bid 6 / ask 8 on the sum of two dice and the interviewer sells at 6, conditional EV of sum ≤6 is about 4.67 so expected loss is 1.33.",
+     "weight": "extended",
+     "evidence_hint": "Conditions on sum ≤6 with 15 of 36 ways and states loss 1.33."
+    },
+    {
+     "id": "app5",
+     "point": "Under winner's curse with owner value uniform 0 to 100 million and synergy 1.5×, any positive blind bid has negative expected profit, so bid 0.",
+     "weight": "core",
+     "evidence_hint": "Conditions on acceptance: your EV is 0.75B vs pay B, so refuse."
+    },
+    {
+     "id": "app6",
+     "point": "In the Keynesian beauty contest of choosing near two-thirds of the average among numbers 0 to 100, iterated elimination of dominated guesses yields equilibrium 0.",
+     "weight": "extended",
+     "evidence_hint": "Iterates ceilings 66.67, 44.44, … down to 0."
+    },
+    {
+     "id": "app7",
+     "point": "In the asymmetric RPS with Rock win 10 and Paper/Scissors wins 5, equilibrium play uses Rock with probability 1/4.",
+     "weight": "extended",
+     "evidence_hint": "Sets opponent EVs equal and reports p_R=1/4 (with p_P=1/2, p_S=1/4)."
+    },
+    {
+     "id": "app8",
+     "point": "In the truel, Alice (30%) should miss on purpose so Bob (100%) and Charlie (50%) eliminate each other before she faces a 1-on-1.",
+     "weight": "extended",
+     "evidence_hint": "Compares shoot-Bob / shoot-Charlie survival vs intentional miss."
+    }
+   ],
+   "probes": [
+    "How do you build a Dutch book from mispriced odds, and how does adverse selection change a market-maker's quote?",
+    "Why might the optimal bid for a synergistic acquisition be 0 even if the asset is worth more to you than to the seller?",
+    "In the beauty contest or asymmetric RPS, what equilibrium action do you play?"
+   ],
+   "hints": {
+    "1": "Price conditional on the trade happening against an informed counterparty, not unconditional EV.",
+    "2": "Dutch book equalizes payouts; MM quotes internalize pick-off; winner's curse uses E[V|accepted]; beauty contest iterates 2/3; mix to indifference; truel remove the strongest threat indirectly.",
+    "3": "30/20 on 2.0/3.0 → +10; info worth 50; die P=3.5; sell-at-6 loss 1.33; synergy bid 0; beauty contest 0; Rock 1/4; Alice misses on purpose."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "First-price auction vs Second-price (Vickrey) auction",
+   "strong_answer": "First-price: shade below true value for a profit margin (here bid 50 on value 100 vs one uniform 0–100 rival). Second-price: bid exact true valuation as a dominant strategy because the bid only decides winning, not the price paid."
+  },
+  {
+   "topic": "Enter the dollar auction vs Refuse to bid",
+   "strong_answer": "Once either player bids, escalation can continue past the 100 dollar prize because losing the second-highest payment is worse than overbidding slightly; backward induction says the only rational choice is not to enter."
+  },
+  {
+   "topic": "Pure strategy vs Mixed strategy in zero-sum games",
+   "strong_answer": "If no pure dominant strategy exists, randomize with probabilities that equalize the opponent's expected payoffs across replies (indifference), as in asymmetric RPS where Rock is played with probability 1/4."
+  },
+  {
+   "topic": "Unconditional asset value vs Value conditional on trade / acceptance",
+   "strong_answer": "Market-making and winner's-curse settings require EV given that the informed party chose to sell/buy or the seller accepted; ignoring that selection (e.g. bidding as if raw synergy 1.5× applies) produces systematic losses."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming real humans reject tiny ultimatum offers, so you must offer a fair split like 50.",
+   "correction": "If the problem states rational profit-maximizers, they accept 1 over 0; offer 1."
+  },
+  {
+   "trap": "Bidding positive amounts on a synergistic takeover because the asset is worth 1.5× the seller's value.",
+   "correction": "Condition on acceptance: expected owner value is B/2, so yours is 0.75B while you pay B—expected profit is negative; bid 0."
+  },
+  {
+   "trap": "Planning the dollar auction forward and bidding up toward 99 or 100.",
+   "correction": "Both top bidders pay, so escalation is unbounded; refuse to make the first bid."
+  },
+  {
+   "trap": "Quoting fair unconditional EV as a market maker when the interviewer sees the outcome.",
+   "correction": "Adverse selection: they only sell when low and buy when high; price the conditional loss (e.g. die quote 3.5; sold-at-6 dice sum loss 1.33)."
+  },
+  {
+   "trap": "Thinking the surprise-test week can still place the test on Wednesday or Monday after eliminating Friday.",
+   "correction": "Backward induction eliminates every day; under the stated logic the surprise test cannot exist."
+  },
+  {
+   "trap": "Opening with any take from one of two equal Nim piles expecting a first-player win.",
+   "correction": "Equal piles give the second player the mirroring/symmetry strategy; first player cannot guarantee a win."
+  }
+ ]
+}

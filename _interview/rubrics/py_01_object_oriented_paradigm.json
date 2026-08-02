@@ -1,0 +1,157 @@
+{
+ "id": "py_01_object_oriented_paradigm",
+ "title": "Object-Oriented Paradigm",
+ "type": "FUND",
+ "relevance": "Interviewers use OOP basics to check whether candidates can design maintainable code by bundling state with behavior instead of scattering shared data across free functions.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what OOP is and how it differs from procedural programming.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "OOP is a paradigm based on objects that contain data (fields/attributes) and code (procedures/methods).",
+     "weight": "core",
+     "evidence_hint": "Candidate defines objects as units holding both attributes and methods, not just data structs."
+    },
+    {
+     "id": "fund2",
+     "point": "In procedural programming, data and functions are completely separate entities; shared/global state becomes hard to manage as many functions touch the same data.",
+     "weight": "core",
+     "evidence_hint": "Says functions operate on separate data and that shared state causes unpredictable bugs when changed."
+    },
+    {
+     "id": "fund3",
+     "point": "OOP bundles data and the functions that operate on it into a single unit (an object), e.g. car.drive() instead of drive(car).",
+     "weight": "core",
+     "evidence_hint": "Contrasts free function over external data with a method on the object that owns the data."
+    },
+    {
+     "id": "fund4",
+     "point": "The four foundational principles are encapsulation, inheritance, polymorphism, and abstraction.",
+     "weight": "extended",
+     "evidence_hint": "Names all four pillars; brief definitions are a plus but naming them is enough at this stage."
+    }
+   ],
+   "probes": [
+    "How does OOP differ from procedural programming when organizing data and the code that uses it?",
+    "What are the four pillars of OOP at a high level?"
+   ],
+   "hints": {
+    "1": "Think about whether data and the operations on it live apart or together.",
+    "2": "Contrast a free function like drive(car) with a car object that has a drive() method, then name the four classic OOP principles.",
+    "3": "OOP = objects with attributes + methods; procedural keeps data and functions separate; pillars are encapsulation, inheritance, polymorphism, abstraction."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how Python applies OOP uniformly: every value is an object with a class type and methods.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "In Python, every piece of data—numbers, strings, functions, and even classes—is an object with a type (a class) plus attributes and methods.",
+     "weight": "core",
+     "evidence_hint": "States that values are class instances and carry behavior, not bare primitives."
+    },
+    {
+     "id": "mech2",
+     "point": "Even a literal like 5 is an instance of the int class (type(5) reports <class 'int'>), so OOP rules apply consistently across the language.",
+     "weight": "core",
+     "evidence_hint": "Gives the int example or equivalent: simple values are class instances with methods."
+    },
+    {
+     "id": "mech3",
+     "point": "You can pass a function into another function the same way you pass an integer because both are objects.",
+     "weight": "extended",
+     "evidence_hint": "Mentions uniform treatment of functions and ints as first-class objects."
+    }
+   ],
+   "probes": [
+    "In Python, is an integer a primitive, or an object? How would you show that?",
+    "If everything is an object, what does that imply about calling methods on numbers?"
+   ],
+   "hints": {
+    "1": "Ask what type(5) returns and whether that type is a class.",
+    "2": "Recall that numbers, strings, functions, and classes are all objects with attributes/methods.",
+    "3": "5 is an int instance; there are no Java/C-style primitives—you can call methods like (5).bit_length()."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Clarify when bundling data with behavior helps versus when another paradigm fits better.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "OOP modularity (data + operations in one object) makes complex systems easier to design, scale, and maintain than sprawling procedural shared state.",
+     "weight": "core",
+     "evidence_hint": "Argues maintainability/scalability benefits of encapsulating related data and methods."
+    },
+    {
+     "id": "tr2",
+     "point": "OOP is a poor fit for hyper-optimized, cache-friendly data processing (Data-Oriented Design is often better) or purely mathematical transformations (Functional Programming is better).",
+     "weight": "core",
+     "evidence_hint": "Names DOD and/or FP as better alternatives for those respective cases."
+    }
+   ],
+   "probes": [
+    "When would you prefer procedural or another paradigm over OOP?",
+    "What problem does OOP solve relative to procedural code with lots of shared data?"
+   ],
+   "hints": {
+    "1": "Consider maintainability of shared state versus raw performance or pure transforms.",
+    "2": "OOP helps design/scale/maintain by bundling data with methods; DOD and FP win in other niches.",
+    "3": "Prefer OOP for modular maintainable systems; prefer Data-Oriented Design for cache-friendly bulk processing and Functional Programming for pure mathematical transformations."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the paradigm by placing related data and behavior on objects rather than free functions.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A procedural salary helper is a free function over separate inputs (e.g. calculate_salary(base, bonus)); the OOP form keeps base/bonus on an Employee and exposes get_salary.",
+     "weight": "core",
+     "evidence_hint": "Maps the worked example: state on the object, method returns base + bonus."
+    },
+    {
+     "id": "app2",
+     "point": "For a Bank-style design, Account should own its data and expose operations such as deposit (and related mutators like withdraw).",
+     "weight": "core",
+     "evidence_hint": "Puts balance/identity on Account and lists methods that mutate or query that state."
+    }
+   ],
+   "probes": [
+    "Rewrite a procedural calculate_salary(base, bonus) in an OOP style.",
+    "What data and methods belong on an Account in a simple Bank system?"
+   ],
+   "hints": {
+    "1": "Decide what lives on the object versus what stays as a standalone function.",
+    "2": "Move base/bonus onto Employee with get_salary; for Account, put balance (and id) on the object with deposit/withdraw-style methods.",
+    "3": "class Employee with get_salary using self.base + self.bonus; Account holds balance and methods like deposit and withdraw."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Procedural vs OOP",
+   "strong_answer": "Procedural keeps data and functions separate, which is fine for simple scripts but shared/global state becomes unwieldy as many functions touch the same data; OOP bundles data with the functions that operate on it into objects for better modularity, scale, and maintenance."
+  },
+  {
+   "topic": "OOP vs Data-Oriented Design / Functional Programming",
+   "strong_answer": "OOP breaks down for hyper-optimized, cache-friendly data processing (favor Data-Oriented Design) and for purely mathematical transformations (favor Functional Programming)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating Python ints/booleans as Java/C-style primitives that have no methods.",
+   "correction": "Python has no primitives in that sense; values like 5 are int instances and you can call methods such as (5).bit_length()."
+  },
+  {
+   "trap": "Keeping operations as free functions over external structures (drive(car)) when the behavior belongs with the data.",
+   "correction": "Model a car object that knows how to drive() itself so data and behavior stay together."
+  }
+ ]
+}

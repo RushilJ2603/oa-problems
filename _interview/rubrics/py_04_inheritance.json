@@ -1,0 +1,163 @@
+{
+ "id": "py_04_inheritance",
+ "title": "Inheritance",
+ "type": "FUND",
+ "relevance": "Inheritance, overriding, super(), and MRO are core OOP checks in SDE interviews and Python OAs.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what inheritance is and how single inheritance reuses parent behavior.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Inheritance lets a child/subclass derive properties and behaviors from a parent/base class.",
+     "weight": "core",
+     "evidence_hint": "Defines child deriving from parent, or subclass/base terminology."
+    },
+    {
+     "id": "fund2",
+     "point": "Inheritance promotes code reuse: a subclass inherits logic for free and can add or override behavior.",
+     "weight": "core",
+     "evidence_hint": "Mentions reuse without rewriting shared logic, plus extending or overriding."
+    },
+    {
+     "id": "fund3",
+     "point": "In single inheritance, a child inherits from exactly one parent, passed as an argument in the class definition.",
+     "weight": "extended",
+     "evidence_hint": "States one parent and shows class Child(Parent) form."
+    }
+   ],
+   "probes": [
+    "What is inheritance, and how does single inheritance work in Python?"
+   ],
+   "hints": {
+    "1": "Think about a new class getting behavior from an existing one.",
+    "2": "Contrast rewriting shared logic versus inheriting it, then adding or overriding.",
+    "3": "Child derives from one parent via class Dog(Animal); reuse plus override/add."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Cover overriding, super(), multiple inheritance, and how MRO/C3 resolves conflicts.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Overriding means a child changes how a parent's method works; a child's __init__ completely replaces the parent's unless super() is used.",
+     "weight": "core",
+     "evidence_hint": "Names overriding and that child __init__ replaces parent init without super()."
+    },
+    {
+     "id": "mech2",
+     "point": "super() returns a temporary superclass object so you can call parent methods (e.g. parent __init__).",
+     "weight": "core",
+     "evidence_hint": "Describes calling the parent's method via super(), often in __init__."
+    },
+    {
+     "id": "mech3",
+     "point": "Python allows a class to inherit from multiple parents at once.",
+     "weight": "extended",
+     "evidence_hint": "Mentions multiple base classes in one class definition."
+    },
+    {
+     "id": "mech4",
+     "point": "MRO is the strict search order for methods/attributes; Python uses C3 Linearization so children precede parents and parent listing order is preserved.",
+     "weight": "core",
+     "evidence_hint": "Names MRO and C3, plus child-before-parent and left-to-right parent order."
+    },
+    {
+     "id": "mech5",
+     "point": "In the diamond example D(B, C) with A at the top, d_obj.say() prints B; inspect order via __mro__ or .mro().",
+     "weight": "extended",
+     "evidence_hint": "Says B wins for D(B, C) and mentions __mro__ or .mro()."
+    }
+   ],
+   "probes": [
+    "If you override __init__, how do you still run the parent's setup? What happens when two parents define the same method?"
+   ],
+   "hints": {
+    "1": "Overriding replaces behavior; multiple parents need a search order.",
+    "2": "Use super() for parent __init__; MRO/C3 orders the diamond.",
+    "3": "Child __init__ replaces parent unless super().__init__(...); C3: children first, listed parent order; D(B,C) say prints B."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast deep/wide inheritance with composition when multiple inheritance gets messy.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Casual multiple inheritance is risky because MRO and state management (e.g. multiple super().__init__ calls) get very complex.",
+     "weight": "core",
+     "evidence_hint": "Flags MRO/state complexity with multiple inheritance and super init chains."
+    },
+    {
+     "id": "tr2",
+     "point": "Modern design favors composition (objects as attributes) over deep or wide inheritance trees.",
+     "weight": "core",
+     "evidence_hint": "Prefers composition over deep/wide inheritance."
+    }
+   ],
+   "probes": [
+    "When would you avoid multiple inheritance in favor of another design?"
+   ],
+   "hints": {
+    "1": "Think about overlapping parents and initialization.",
+    "2": "Compare inheriting many bases versus holding objects as attributes.",
+    "3": "Prefer composition over deep/wide trees when MRO and multi-super init get complex."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply overriding and recognize when multiple inheritance fails in practice.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A subclass can override a parent method to change behavior (e.g. Penguin.fly printing Cannot fly instead of Flying).",
+     "weight": "core",
+     "evidence_hint": "Gives an override example where child behavior differs from parent."
+    },
+    {
+     "id": "app2",
+     "point": "Multiple inheritance becomes unmaintainable when parents have complex overlapping state initializations; favor composition.",
+     "weight": "core",
+     "evidence_hint": "Cites overlapping state init as the failure mode and favors composition."
+    }
+   ],
+   "probes": [
+    "Show how a subclass overrides a method, and when multiple inheritance breaks down."
+   ],
+   "hints": {
+    "1": "Start from a parent method and change it in the child.",
+    "2": "Override changes printed/behavior; failure is overlapping parent state init.",
+    "3": "Like Penguin overriding fly; overlapping multi-parent __init__ state → favor composition."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Inheritance vs composition",
+   "strong_answer": "Inheritance reuses and extends parent behavior, but deep/wide or casual multiple inheritance makes MRO and multi-super().__init__ state management complex; modern design favors composition (objects as attributes) instead."
+  },
+  {
+   "topic": "Multiple inheritance vs single inheritance",
+   "strong_answer": "Multiple inheritance can mix behaviors from several parents, but same-named methods need MRO/C3 and diamond hierarchies get hard to trace; single inheritance avoids that conflict surface."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming a child's __init__ still runs the parent's setup automatically.",
+   "correction": "The child's __init__ completely replaces the parent's; call super().__init__(...) when parent initialization is still needed."
+  },
+  {
+   "trap": "Using multiple inheritance casually when parents share method names or complex init state.",
+   "correction": "MRO (C3) decides which method wins, and overlapping state initializations become a tangled mess—favor composition."
+  },
+  {
+   "trap": "Thinking method conflicts in a diamond have no deterministic rule.",
+   "correction": "MRO via C3 Linearization gives a strict order: children before parents, and parent listing order preserved (e.g. D(B, C) → say prints B)."
+  }
+ ]
+}

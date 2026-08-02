@@ -1,0 +1,227 @@
+{
+ "id": "dsa_s28_cp_bucket",
+ "title": "Competitive & OA Toolbox",
+ "type": "FUND",
+ "relevance": "OA hard problems are often a standard CP technique in disguise; this toolbox turns unknown patterns into known modular, number-theory, and search templates.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the core modular, number-theory, and pattern-recognition primitives that OA hard problems reuse.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Addition, subtraction, and multiplication distribute over modulo, but division does not.",
+     "weight": "core",
+     "evidence_hint": "Candidate states that +/−/× can be reduced mod m safely, while division needs a modular inverse instead of direct /."
+    },
+    {
+     "id": "fund2",
+     "point": "When m is prime, modular inverse of b is b^{m-2} mod m by Fermat's Little Theorem, computed via binary exponentiation in O(log m).",
+     "weight": "core",
+     "evidence_hint": "Mentions Fermat for prime moduli and inverse as pow(b, m-2), not trial search."
+    },
+    {
+     "id": "fund3",
+     "point": "Sieve of Eratosthenes finds all primes up to n in O(n log log n); trial division factorizes one x in O(√x).",
+     "weight": "extended",
+     "evidence_hint": "Quotes both sieve and single-number trial-division complexities correctly."
+    },
+    {
+     "id": "fund4",
+     "point": "LCM is a·b / gcd(a,b); C++17 provides std::gcd and std::lcm in <numeric>.",
+     "weight": "extended",
+     "evidence_hint": "States the LCM identity and where the standard helpers live."
+    }
+   ],
+   "probes": [
+    "When a problem asks for answers modulo a prime, how do you handle division, and why can't you just divide then mod?",
+    "What does the Sieve of Eratosthenes buy you versus trial-dividing one number?"
+   ],
+   "hints": {
+    "1": "Think about which arithmetic ops survive modulo reduction unchanged.",
+    "2": "For prime m, connect Fermat’s Little Theorem to inverse and binary exponentiation.",
+    "3": "Division → multiply by b^{m-2}; sieve is O(n log log n) for all primes; one x is O(√x) trial division."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Check that the candidate can execute the main toolbox algorithms correctly end-to-end.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Binary exponentiation computes x^n in O(log n) via x^n = (x^{n/2})^2 for even n and x · x^{n-1} for odd n.",
+     "weight": "core",
+     "evidence_hint": "Describes the even/odd recurrence and log-time loop, not naive repeated multiply."
+    },
+    {
+     "id": "mech2",
+     "point": "Precompute factorials and inverse factorials for O(1) nCr mod m after O(N) setup.",
+     "weight": "core",
+     "evidence_hint": "Explains fact/invFact arrays and nCr as fact[n]*invFact[r]*invFact[n-r]."
+    },
+    {
+     "id": "mech3",
+     "point": "SPF sieve precomputes in O(n log log n) so any x ≤ n factorizes in O(log x) by repeatedly dividing by spf[x].",
+     "weight": "core",
+     "evidence_hint": "Distinguishes SPF precompute from per-query loop that peels smallest prime factors."
+    },
+    {
+     "id": "mech4",
+     "point": "Extended Euclidean finds x,y with a·x + b·y = gcd(a,b), used for Diophantine equations, linear congruences, and inverses when m is not prime.",
+     "weight": "extended",
+     "evidence_hint": "States Bezout coefficients and non-prime inverse use case."
+    },
+    {
+     "id": "mech5",
+     "point": "Coordinate compression maps large values to dense ranks in [0,k) with k ≤ N by sorting, unique, and lower_bound ranks.",
+     "weight": "extended",
+     "evidence_hint": "Walks sort → dedupe → rank replace; mentions BIT/segtree indexing motivation."
+    },
+    {
+     "id": "mech6",
+     "point": "Matrix exponentiation raises a k×k transition matrix in O(k^3 log n) to get the n-th term of a linear recurrence in O(log n) for fixed small k.",
+     "weight": "extended",
+     "evidence_hint": "Ties Fibonacci-style transition matrix to binary matrix powering complexity."
+    }
+   ],
+   "probes": [
+    "Walk through computing modular nCr after preprocessing, and how SPF factorization of one x works.",
+    "How do you compute the n-th Fibonacci with matrix exponentiation, and what is the cost in terms of matrix size k?"
+   ],
+   "hints": {
+    "1": "Separate precomputation from the per-query formula.",
+    "2": "For SPF: while x≠1, push spf[x] and x/=spf[x]; for matrices, identity then square-and-multiply.",
+    "3": "nCr = fact[n]*invFact[r]*invFact[n-r]; matrix pow is O(k^3 log n); Fib transition [[1,1],[1,0]]."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare when to pick SPF vs trial division, MITM vs full brute force, and related overflow-safe formulations.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Factorize many numbers ≤ n with SPF (O(log x) each after sieve) rather than O(√x) trial division per number.",
+     "weight": "core",
+     "evidence_hint": "Chooses SPF for batch factorization and trial division for a one-off x."
+    },
+    {
+     "id": "tr2",
+     "point": "Meet in the Middle cuts O(2^n) backtracking to O(2^{n/2} log(2^{n/2})) by splitting into halves, enumerating subset sums, and combining with sort/binary search.",
+     "weight": "core",
+     "evidence_hint": "States split, enumerate both halves, then O(K log K)-style combine with K=2^{n/2}."
+    },
+    {
+     "id": "tr3",
+     "point": "In the band 20 ≤ N ≤ 40, full 2^40 is hopeless while each 2^20 half is feasible; below 20 plain brute force is fine.",
+     "weight": "core",
+     "evidence_hint": "Uses the 20–40 recognition window and contrasts 2^20 vs 2^40 scale."
+    },
+    {
+     "id": "tr4",
+     "point": "Compute LCM as (a/gcd(a,b))*b, not (a*b)/gcd, to avoid intermediate overflow.",
+     "weight": "extended",
+     "evidence_hint": "Gives the overflow-safe LCM order explicitly."
+    }
+   ],
+   "probes": [
+    "When would you use SPF sieve versus trial division, and when does Meet in the Middle beat plain subset enumeration?",
+    "Why is LCM written as (a/gcd)*b instead of (a*b)/gcd?"
+   ],
+   "hints": {
+    "1": "Ask whether you factor once or many times, and whether N sits in a special range.",
+    "2": "MITM: split N/2, enumerate both, stitch with sort/search; LCM: divide before multiply.",
+    "3": "Many x≤n → SPF O(log x); 20≤N≤40 subset problems → MITM; LCM=(a/gcd)*b."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply recognition checklists: MITM constraints, huge-N linear recurrences, and the stuck-on-OA playbook.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Recognize Meet in the Middle when N is about 30–40, the task is subset/choice, DP is blocked (e.g. |nums[i]| ≤ 10^9 or negatives/multi-constraints), and halves combine in O(K log K) or O(K).",
+     "weight": "core",
+     "evidence_hint": "Hits the four-check recognition: golden N range, subset/choice, DP impossible, efficient combine."
+    },
+    {
+     "id": "app2",
+     "point": "If you need the N-th term of a linear recurrence with N up to 10^18, matrix exponentiation is the intended approach.",
+     "weight": "core",
+     "evidence_hint": "Flags huge N on a linear recurrence as matrix-pow, not iterative DP."
+    },
+    {
+     "id": "app3",
+     "point": "Coordinate compression is mandatory when values are up to 10^9 but N is small (e.g. 10^5) and you need them as BIT/segtree indices.",
+     "weight": "extended",
+     "evidence_hint": "Links huge value domain + small N + index structure to compression."
+    },
+    {
+     "id": "app4",
+     "point": "Stuck checklist: monotonic search space → binary search on answer; graph in disguise → BFS/Dijkstra; DP min/max/ways; math/counting identity; range queries → segment tree, dynamic median → two heaps.",
+     "weight": "extended",
+     "evidence_hint": "Lists several of the five angles from the interview checklist without inventing extras."
+    }
+   ],
+   "probes": [
+    "An array problem has N around 40 and values up to 10^9 asking for closest subset sum to a goal—what do you try and why not DP?",
+    "Walk the 'I'm stuck' checklist you would run on an OA problem that looks impossible."
+   ],
+   "hints": {
+    "1": "Look at N and value magnitude before building a DP table.",
+    "2": "For MITM: split, enumerate subset sums, binary-search the other half; for huge Fib-like N use matrix pow.",
+    "3": "N~40 + huge values → MITM (e.g. Closest Subsequence Sum); N up to 10^18 linear recurrence → matrix exp; then run the five stuck angles."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Trial division vs SPF sieve",
+   "strong_answer": "One-off factorization of x uses O(√x) trial division; many factorizations of values ≤ n use SPF precomputation in O(n log log n) then O(log x) per query."
+  },
+  {
+   "topic": "Full 2^n brute force vs Meet in the Middle",
+   "strong_answer": "Below ~20, enumerate subsets directly; in 20≤N≤40 split into halves so each side is ~2^{n/2}, then combine with sort/binary search in O(2^{n/2} log(2^{n/2})) instead of impossible 2^n."
+  },
+  {
+   "topic": "Fermat inverse vs Extended Euclidean",
+   "strong_answer": "For prime m, inverse via binpow(b, m-2); when m is not prime, use Extended Euclidean for Bezout coefficients / modular inverse."
+  },
+  {
+   "topic": "LCM multiply-first vs divide-first",
+   "strong_answer": "Prefer (a/gcd(a,b))*b over (a*b)/gcd(a,b) so the intermediate product does not overflow."
+  },
+  {
+   "topic": "rand() vs mt19937",
+   "strong_answer": "Avoid rand() (outdated, small period, predictable); use std::mt19937 (Mersenne Twister) for randomization."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Multiplying two 32-bit ints then taking modulo, assuming the mod prevents overflow.",
+   "correction": "Overflow happens before modulo; cast to long long (or multiply in 64-bit) before the product."
+  },
+  {
+   "trap": "Writing LCM as (a*b)/gcd(a,b).",
+   "correction": "Use (a/gcd(a,b))*b to avoid overflow on the intermediate a*b."
+  },
+  {
+   "trap": "Trying DP on a subset-sum style problem with N~30–40 and values up to 10^9.",
+   "correction": "DP indexed by sum blows memory; use Meet in the Middle: split halves, enumerate both, combine with sort/search."
+  },
+  {
+   "trap": "Using rand() for competitive randomization.",
+   "correction": "Use mt19937 seeded from a high-resolution clock (or similar), not rand()."
+  },
+  {
+   "trap": "Forgetting that subtraction mod m can go negative.",
+   "correction": "Normalize with forms like (a - b%MOD + MOD) % MOD so results stay non-negative."
+  },
+  {
+   "trap": "Heavy I/O with tied streams and endl causing TLE.",
+   "correction": "Untie cin from cout and avoid endl (fast I/O) as in the OA survival guidance."
+  }
+ ]
+}

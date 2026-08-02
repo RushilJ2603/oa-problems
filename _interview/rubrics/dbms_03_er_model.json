@@ -1,0 +1,83 @@
+{
+ "id": "dbms_03_er_model",
+ "title": "Entity–Relationship Model",
+ "type": "FUND",
+ "relevance": "ER modeling is the usual way SDE interviews and OAs ask candidates to express conceptual database design before any storage mapping.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what the ER model is and how entities, attributes, and relationships describe a domain.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "The ER model is a high-level model for designing a database; it describes a domain in terms of entities, attributes, and relationships, and captures logical design (the conceptual schema) without committing to storage details.",
+     "weight": "core",
+     "evidence_hint": "States ER is for conceptual/logical design via entities, attributes, and relationships, not physical storage."
+    },
+    {
+     "id": "fund2",
+     "point": "An entity is an object of interest; the entity type (its schema) fixes the structure shared by all such entities.",
+     "weight": "core",
+     "evidence_hint": "Separates a particular entity instance from the entity type that defines the shared structure."
+    },
+    {
+     "id": "fund3",
+     "point": "A relationship is an association between entities.",
+     "weight": "core",
+     "evidence_hint": "Defines relationship as an association and can illustrate with Student studies Course."
+    }
+   ],
+   "probes": [
+    "What does the ER model describe, and how does it relate to the conceptual schema?"
+   ],
+   "hints": {
+    "1": "Think about designing a database before choosing how data is stored.",
+    "2": "Name the three building blocks the ER model uses to describe a domain.",
+    "3": "ER uses entities, attributes, and relationships; it is the language of the conceptual schema without storage details."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Cover ER diagram notation and the independent dimensions used to classify attributes.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "In ER diagrams, a rectangle denotes an entity, an ellipse denotes an attribute, and a diamond denotes a relationship; lines connect attributes to their entity and entities to the relationships they participate in.",
+     "weight": "core",
+     "evidence_hint": "Correctly maps rectangle/ellipse/diamond and mentions the connecting lines."
+    },
+    {
+     "id": "mech2",
+     "point": "Attributes are classified along six dimensions: single-valued versus multivalued, simple versus composite, stored versus derived, key versus non-key, required versus optional, and complex (composite and multivalued together).",
+     "weight": "core",
+     "evidence_hint": "Lists all six dimensions and states that complex means composite and multivalued combined."
+    },
+    {
+     "id": "mech3",
+     "point": "Multivalued attributes are drawn as a double ellipse, derived attributes as a dashed ellipse, and key attributes are shown underlined.",
+     "weight": "core",
+     "evidence_hint": "Mentions double ellipse for multivalued, dashed ellipse for derived, and underline for key."
+    },
+    {
+     "id": "mech4",
+     "point": "A simple attribute cannot be subdivided, while a composite attribute decomposes into meaningful parts; a stored attribute is kept as-is, while a derived attribute is computed from others; a required attribute must always carry a value, while an optional one may be left empty; a single-valued attribute holds exactly one value per entity, while a multivalued attribute may hold several.",
+     "weight": "extended",
+     "evidence_hint": "Gives correct brief contrasts for simple/composite, stored/derived, required/optional, and single-valued/multivalued."
+    }
+   ],
+   "probes": [
+    "How are entities, attributes, and relationships drawn, and how do you mark multivalued, derived, and key attributes?"
+   ],
+   "hints": {
+    "1": "Start with the three basic shapes used in an ER diagram.",
+    "2": "Then say which special ellipse styles mark multivalued versus derived attributes, and how keys are marked.",
+    "3": "Rectangle = entity, ellipse = attribute, diamond = relationship; double ellipse = multivalued, dashed ellipse = derived, underline = key."
+   }
+  }
+ ],
+ "tradeoffs": [],
+ "gotchas": []
+}

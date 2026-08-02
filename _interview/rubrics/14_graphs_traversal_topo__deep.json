@@ -1,0 +1,281 @@
+{
+ "id": "14_graphs_traversal_topo__deep",
+ "title": "Graphs I: BFS/DFS, Components, Topo (Depth Pass)",
+ "type": "CP",
+ "relevance": "High (Second ladder: CF-style reachability tricks, bipartite orientation, functional graphs, complement BFS, and DAG/Kahn variants — the post-Striver skill of finding the graph, not recalling the template).",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "OA/interview shapes: block hazards then check all goods can escape (Solve The Maze / Monsters-style preprocess + reachability; Amazon/Meta grid variants); friendship/shared skill ⇒ same group and min invites/teaches (Learning Languages / News Distribution CC counting); order tasks with two machine types/cool-down (Coprocessor dual ready-set Kahn; build-system/scheduler interviews); nearest opposite category from every index (reverse multi-source BFS / Nearest Opposite Parity — multi-source infection flipped).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot that the statement hides a standard BFS/DFS/CC/topo engine behind a rewrite (block, orient, complement, reverse, state expand, or outdeg-1 structure).",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Depth asks still use DFS/BFS/CC/topo engines, but statements hide them behind rewrites: wall bad neighbors then reachability; 2-color then orient; search the complement; expand state (turns / layer mod 3 / parity); or reverse edges and multi-source from targets.",
+     "weight": "core",
+     "evidence_hint": "Names at least one rewrite family instead of only recalling a plain BFS/DFS template."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognize when you must force a property before searching, when n is large but missing edges are few, when each node has out-degree 1, when ordering splits into two processor types, or when nearest opposite/special is asked from every node.",
+     "weight": "core",
+     "evidence_hint": "Maps the prompt to one of those cues (preprocess, complement, functional graph, dual Kahn, reverse multi-source)."
+    },
+    {
+     "id": "rec3",
+     "point": "Functional-graph cue: every node has outdeg = 1, so each component is a cycle with trees feeding in.",
+     "weight": "extended",
+     "evidence_hint": "Says outdeg-1 / cycle-with-inbound-trees (Mouse Hunt shape)."
+    }
+   ],
+   "probes": [
+    "What in this statement tells you to rewrite the graph before running ordinary BFS/DFS/CC/topo?"
+   ],
+   "hints": {
+    "1": "Look for a forced property, scarce missing edges, outdeg-1 nodes, two processor types, or nearest-special from every node.",
+    "2": "Ask whether you should block neighbors, 2-color then orient, search the complement, reverse edges, expand state, or treat a functional graph.",
+    "3": "If you must force a property before search, n is large with few missing edges, outdeg=1, dual machine types, or nearest opposite from every v — name the matching rewrite."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Choose the right depth-pass rewrite: block-then-BFS, bipartite orientation, complement traversal, reverse multi-source, functional-graph cycle work, dual Kahn, or state/layered BFS.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Block-then-BFS: to forbid paths through bad cells, first wall every neighbor of a bad cell, then one reachability BFS (Solve The Maze) — do not dodge during search.",
+     "weight": "core",
+     "evidence_hint": "Describes preprocess-wall then single reachability check for goods."
+    },
+    {
+     "id": "appr2",
+     "point": "Bipartite orientation: undirected → direct every edge from color 0→1; impossible iff odd cycle (Graph Without Long Directed Paths).",
+     "weight": "core",
+     "evidence_hint": "2-colors then orients low→high color; fails on odd cycle."
+    },
+    {
+     "id": "appr3",
+     "point": "Reverse multi-source BFS: for every v, nearest u with property P → BFS from all P-nodes on the reversed graph (Nearest Opposite Parity).",
+     "weight": "core",
+     "evidence_hint": "Builds reverse edges and seeds BFS from all property sinks."
+    },
+    {
+     "id": "appr4",
+     "point": "Complement / near-complete: never materialize n^2 edges; keep an unused-node set and skip only explicit forbidden neighbors (The Two Routes / 0-1 MST).",
+     "weight": "extended",
+     "evidence_hint": "Traverses unused vertices skipping only listed adj, not a dense edge list."
+    },
+    {
+     "id": "appr5",
+     "point": "Dual Kahn: two ready-queues (scarce vs free); repeatedly drain the free side, then spend one scarce step (Coprocessor).",
+     "weight": "extended",
+     "evidence_hint": "Same indegrees, two pop policies, count scarce sessions."
+    },
+    {
+     "id": "appr6",
+     "point": "State/layered BFS: node=(v,state) for turns used, hop parity, or layer mod 3 (Igor ≤2 turns; Hopscotch Addict length ≡0 mod 3).",
+     "weight": "extended",
+     "evidence_hint": "Uses (v,state) instead of rebuilding a huge explicit graph."
+    }
+   ],
+   "probes": [
+    "Walk through which rewrite you would apply for Solve The Maze, Graph Without Long Directed Paths, or Nearest Opposite Parity before coding BFS."
+   ],
+   "hints": {
+    "1": "Match the story to block, orient, reverse, complement, dual queues, or state expand.",
+    "2": "Ask whether bad cells need walls first, edges need 0→1 orientation, queries need reverse multi-source, or outdeg-1 needs cycle compression.",
+    "3": "Solve The Maze: wall neighbors then BFS; long directed paths: 2-color orient; Nearest Opposite Parity: reverse multi-source from parity sinks."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Show checkable skeletons: component aggregates, clique-CC test, functional-graph pipeline, state-BFS arrays, dual ready-queues, and complement unused-set traversal.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Component aggregates: store comp_id[] + comp_size[] / edge count; answer per-cell or per-query in O(1) / O(deg) (The Labyrinth-style).",
+     "weight": "core",
+     "evidence_hint": "Precomputes ids/sizes then sums distinct neighboring components."
+    },
+    {
+     "id": "impl2",
+     "point": "Clique-CC check: a component with s nodes is a clique iff it has exactly binom(s,2) edges (Bear and Friendship Condition).",
+     "weight": "core",
+     "evidence_hint": "Compares edge count to binom(s,2) per component."
+    },
+    {
+     "id": "impl3",
+     "point": "Functional-graph pipeline: iterate unvisited → follow unique outs → detect cycle → process cycle then inbound trees; place the cheapest trap on each cycle (Mouse Hunt).",
+     "weight": "core",
+     "evidence_hint": "Follows outdeg-1 edges, answers on cycles only, trees need nothing extra."
+    },
+    {
+     "id": "impl4",
+     "point": "State BFS skeleton: queue of (node, state) + dist[node][state]; keep state domain tiny (≤3–5).",
+     "weight": "extended",
+     "evidence_hint": "Shows dist indexed by node and small state, not a rebuilt explicit graph."
+    },
+    {
+     "id": "impl5",
+     "point": "Complement traversal: set/list of unused vertices; on visit, erase and only skip adj-of-current.",
+     "weight": "extended",
+     "evidence_hint": "Maintains unused set and erases on visit while skipping forbidden neighbors."
+    },
+    {
+     "id": "impl6",
+     "point": "Dual ready-queues Kahn: same indegree updates, two pops policies; count how often you must open the scarce queue.",
+     "weight": "extended",
+     "evidence_hint": "Drains free queue fully between scarce pops and counts scarce opens."
+    }
+   ],
+   "probes": [
+    "How would you code the unused-node complement BFS or the Mouse Hunt cycle-trap pass without materializing a dense graph?"
+   ],
+   "hints": {
+    "1": "Lean on precomputed component arrays, unused-set walks, or outdeg-1 follow loops.",
+    "2": "For aggregates store comp_id/comp_size; for functional graphs follow unique outs to the cycle; for complement erase from an unused set.",
+    "3": "Labyrinth: sum distinct neighbor comp sizes; Mouse Hunt: min on each cycle only; complement: unused set skip adj-of-current; Coprocessor: drain free then one scarce."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Justify why rewrites stay efficient: avoid n^2 materialization, O((n+m) log n) complement walks, and O(1)/O(deg) answers after CC precompute.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Near-complete / complement graphs must not materialize n^2 edges; unused-node set traversal is the intended cost model.",
+     "weight": "core",
+     "evidence_hint": "Refuses dense adjacency and cites unused-set skipping of forbidden neighbors."
+    },
+    {
+     "id": "cx2",
+     "point": "Complement traversal with a set/list of unused vertices runs in O((n+m) log n).",
+     "weight": "core",
+     "evidence_hint": "States the O((n+m) log n) unused-set bound from the checklist."
+    },
+    {
+     "id": "cx3",
+     "point": "After storing comp_id[] and comp_size[], per-cell or per-query answers are O(1) / O(deg).",
+     "weight": "extended",
+     "evidence_hint": "Credits precompute for constant or degree-local queries."
+    },
+    {
+     "id": "cx4",
+     "point": "State BFS keeps the state domain tiny (≤3–5) instead of rebuilding a huge explicit layered graph.",
+     "weight": "extended",
+     "evidence_hint": "Argues small (v,state) product beats an explicit blow-up."
+    }
+   ],
+   "probes": [
+    "Why is building the full complement adjacency illegal here, and what runtime does the unused-set walk claim?"
+   ],
+   "hints": {
+    "1": "Think about n^2 edges versus iterating only missing/forbidden neighbors.",
+    "2": "Compare materializing the complement to an unused-vertex set with erase-on-visit.",
+    "3": "Never build n^2 edges; unused-set complement walk is O((n+m) log n); CC answers after precompute are O(1)/O(deg)."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch depth-pass failure modes: searching without preprocess, dense complement builds, wrong cycle/tree handling, and non-standard visited rules.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Trying to dodge bad cells during search instead of walling every bad neighbor first then running one reachability BFS.",
+     "weight": "core",
+     "evidence_hint": "Insists on block-then-BFS preprocess for Solve The Maze."
+    },
+    {
+     "id": "pit2",
+     "point": "Materializing n^2 complement edges instead of an unused-node set that skips only explicit forbidden neighbors.",
+     "weight": "core",
+     "evidence_hint": "Rejects dense complement construction for The Two Routes / 0-1 MST."
+    },
+    {
+     "id": "pit3",
+     "point": "On functional graphs, placing traps on inbound trees; trees feeding into a cycle need nothing extra — only the cycle needs the cheapest trap.",
+     "weight": "extended",
+     "evidence_hint": "Answers only on cycles after compressing tree→cycle structure."
+    },
+    {
+     "id": "pit4",
+     "point": "Ice Cave–style grids: destination may be re-entered iff it has ≥2 open neighbors — a non-standard visited rule.",
+     "weight": "extended",
+     "evidence_hint": "Mentions special revisit condition on the destination cell."
+    },
+    {
+     "id": "pit5",
+     "point": "DAG DP/path counts must fail cleanly if Kahn yields <n nodes (cycle present).",
+     "weight": "extended",
+     "evidence_hint": "Checks topo produced fewer than n nodes before trusting DP."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you dodge hazards mid-BFS, build the full complement, or trap every node in a functional graph?"
+   ],
+   "hints": {
+    "1": "Depth bugs are usually wrong rewrite or wrong visited/cycle policy, not missing BFS.",
+    "2": "Check preprocess walls, unused-set complement, cycle-only traps, and special destination revisit.",
+    "3": "Solve The Maze: wall then BFS; complement: unused set not n^2; Mouse Hunt: min on cycle only; Ice Cave: ≥2 open neighbors to re-enter destination; Kahn <n ⇒ cycle."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Block-then-BFS vs dodging bad cells during search",
+   "strong_answer": "Wall every neighbor of a bad cell first, then one reachability BFS from the start; do not try to dodge hazards inside the search (Solve The Maze)."
+  },
+  {
+   "topic": "Unused-node complement traversal vs materializing n^2 edges",
+   "strong_answer": "Keep an unused-node set and skip only explicit forbidden neighbors (The Two Routes / 0-1 MST); never build the dense complement."
+  },
+  {
+   "topic": "Reverse multi-source BFS vs BFS from every query node",
+   "strong_answer": "For every v, nearest u with property P → BFS once from all P-nodes on the reversed graph (Nearest Opposite Parity), not a separate forward search per v."
+  },
+  {
+   "topic": "Dual ready-queue Kahn vs single-queue Kahn",
+   "strong_answer": "Same indegree idea, different scheduler: maintain scarce vs free ready-queues, drain free repeatedly, then spend one scarce step (Coprocessor)."
+  },
+  {
+   "topic": "State/layered BFS vs rebuilding an explicit huge graph",
+   "strong_answer": "Use node=(v,state) for turns, hop parity, or layer mod 3 with a tiny state domain (Igor / Hopscotch Addict) instead of materializing layers."
+  },
+  {
+   "topic": "1-color vs 2-color digraph edge coloring",
+   "strong_answer": "If acyclic → 1 color; else 2 — mark DFS back-edges into the recursion stack (Coloring Edges)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Trying to avoid bad cells only while BFS runs.",
+   "correction": "First wall every neighbor of every bad cell, then check reachability of all goods (Solve The Maze)."
+  },
+  {
+   "trap": "Building the full complement adjacency for near-complete graphs.",
+   "correction": "Traverse an unused-node set and skip only the listed forbidden neighbors; cost O((n+m) log n)."
+  },
+  {
+   "trap": "Orienting an undirected graph for short directed paths without a bipartiteness check.",
+   "correction": "2-color then orient every edge 0→1; impossible iff there is an odd cycle."
+  },
+  {
+   "trap": "Putting a trap on every node of a functional-graph component.",
+   "correction": "Follow outdeg-1 edges; place the cheapest trap on each cycle only — inbound trees need nothing extra."
+  },
+  {
+   "trap": "Answering nearest-opposite queries with forward BFS from each index.",
+   "correction": "Build the reverse jump graph and multi-source BFS from all odd and all even sinks."
+  },
+  {
+   "trap": "Using a standard visited mark on Ice Cave’s destination.",
+   "correction": "Destination may be re-entered iff it has ≥2 open neighbors."
+  },
+  {
+   "trap": "Running DAG path-count DP without detecting a cycle.",
+   "correction": "Fail cleanly if Kahn yields <n nodes before trusting longest-path or route counts."
+  }
+ ]
+}

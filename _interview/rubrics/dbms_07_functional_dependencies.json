@@ -1,0 +1,147 @@
+{
+ "id": "dbms_07_functional_dependencies",
+ "title": "Functional Dependencies",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs use FDs to test whether you can reason about schema constraints, candidate keys, and dependency inference without memorizing normalization slogans.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what an FD asserts, how trivial vs non-trivial FDs differ, and that validity is directional.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "X → Y means that if two tuples agree on X they must agree on Y; X is the determinant and Y the dependent.",
+     "weight": "core",
+     "evidence_hint": "States the agreement condition on tuples and names determinant vs dependent."
+    },
+    {
+     "id": "fund2",
+     "point": "An FD is trivial when Y ⊆ X, and non-trivial when X ∩ Y = ∅.",
+     "weight": "core",
+     "evidence_hint": "Gives both subset and empty-intersection criteria correctly."
+    },
+    {
+     "id": "fund3",
+     "point": "In the Sid/Sname table, Sid → Sname is valid while Sname → Sid is invalid when the same name maps to different Sid values.",
+     "weight": "extended",
+     "evidence_hint": "Uses the shared-name counterexample to show one direction holds and the reverse fails."
+    }
+   ],
+   "probes": [
+    "What does X → Y mean for two rows of a relation, and when is that FD trivial?"
+   ],
+   "hints": {
+    "1": "Think about what must be true whenever two tuples match on the left-hand attributes.",
+    "2": "Separate the formal agreement rule from the trivial/non-trivial classification rules.",
+    "3": "Say: same X implies same Y; trivial if Y ⊆ X; non-trivial if X ∩ Y is empty; Sid determines Sname but not vice versa when names collide."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how Armstrong's axioms, attribute closure, and candidate-key membership are used to infer and classify dependencies.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Armstrong's primary axioms are reflexivity (Y ⊆ X ⇒ X → Y), augmentation (X → Y ⇒ XZ → YZ), and transitivity (X → Y and Y → Z ⇒ X → Z); they are sound and complete.",
+     "weight": "core",
+     "evidence_hint": "Lists the three primary rules and notes soundness plus completeness."
+    },
+    {
+     "id": "mech2",
+     "point": "Derived rules include union, decomposition, pseudo-transitivity, and composition; decomposition splits the RHS but the LHS of AB → C cannot be split into A → C or B → C.",
+     "weight": "core",
+     "evidence_hint": "Names derived rules and explicitly refuses LHS decomposition."
+    },
+    {
+     "id": "mech3",
+     "point": "X⁺ is the set of all attributes functionally determined by X; a candidate key is a minimal attribute set whose closure is all attributes of R.",
+     "weight": "core",
+     "evidence_hint": "Defines closure and minimality for candidate keys."
+    },
+    {
+     "id": "mech4",
+     "point": "A prime attribute belongs to some candidate key; a non-prime attribute belongs to none.",
+     "weight": "extended",
+     "evidence_hint": "States both membership definitions cleanly."
+    }
+   ],
+   "probes": [
+    "Given a set of FDs, how do you compute an attribute closure and decide whether a set is a candidate key?"
+   ],
+   "hints": {
+    "1": "Start from the attributes you already have and keep applying FDs whose left sides are covered.",
+    "2": "A set is a candidate key only if its closure is everything and no proper subset's closure is everything.",
+    "3": "Define X⁺, then check minimality; recall reflexivity, augmentation, and transitivity as the primary inference rules."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply closure and cover procedures to concrete FD sets: find keys, build a minimal cover, and test equivalence.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "For R(A,B,C,D) with {A → B, B → C, C → D}, only A⁺ is all attributes, so the candidate key is {A}; with the added D → A cycle, every singleton {A},{B},{C},{D} is a candidate key and all attributes are prime.",
+     "weight": "core",
+     "evidence_hint": "Contrasts the linear chain (key {A}) with the cycle (four singleton keys, empty non-prime set)."
+    },
+    {
+     "id": "app2",
+     "point": "For R(A,B,C,D,E) with {A → B, BC → D, E → C, D → A}, E never appears on any RHS so E is in every candidate key; the keys are {AE, BE, CE, DE}.",
+     "weight": "core",
+     "evidence_hint": "Uses the never-on-RHS heuristic for E and lists AE, BE, CE, DE."
+    },
+    {
+     "id": "app3",
+     "point": "Minimal cover of {A → B, C → B, D → ABC, AC → D} is {A → B, C → B, D → A, D → C, AC → D} after splitting RHSs, keeping AC → D, and dropping redundant D → B.",
+     "weight": "extended",
+     "evidence_hint": "Recalls single-attribute RHSs, no redundant LHS attributes, no redundant FDs, and the final set."
+    },
+    {
+     "id": "app4",
+     "point": "FD sets X={AB → CD, B → C, C → D} and Y={AB → C, AB → D, C → D} are not equivalent because under Y, B⁺={B}, so Y does not derive B → C and does not cover X.",
+     "weight": "extended",
+     "evidence_hint": "Checks mutual cover and fails Y covering X on B → C."
+    }
+   ],
+   "probes": [
+    "Walk through finding all candidate keys for a relation, then either compute a minimal cover or decide whether two FD sets are equivalent."
+   ],
+   "hints": {
+    "1": "Look for attributes that never appear on a right-hand side—they must be in every key.",
+    "2": "For covers: split RHSs, test LHS attributes by closure without that FD, then drop FDs still implied by the rest.",
+    "3": "State the keys {AE,BE,CE,DE} or the minimal cover {A→B,C→B,D→A,D→C,AC→D}, and for equivalence show Y fails to derive B→C."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Decomposing the RHS vs decomposing the LHS",
+   "strong_answer": "Decomposition lets you split X → YZ into X → Y and X → Z, which is required for a minimal cover's single-attribute RHSs; you must not decompose the LHS—AB → C does not imply A → C or B → C."
+  },
+  {
+   "topic": "Primary Armstrong axioms vs derived inference rules",
+   "strong_answer": "Reflexivity, augmentation, and transitivity are the sound and complete primary basis; union, decomposition, pseudo-transitivity, and composition are derived shortcuts that simplify computation without adding new inferential power."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming that if X → Y holds then Y → X also holds.",
+   "correction": "FDs are directional; Sid → Sname can hold while Sname → Sid fails when one name maps to multiple Sid values."
+  },
+  {
+   "trap": "Decomposing the left-hand side the same way as the right-hand side.",
+   "correction": "You may split the RHS of an FD into single attributes, but AB → C does not imply A → C or B → C."
+  },
+  {
+   "trap": "Treating any determining set as a candidate key without checking minimality or full closure.",
+   "correction": "A candidate key must be minimal and its closure must contain every attribute of the relation; proper subsets must fail that test."
+  },
+  {
+   "trap": "Declaring two FD sets equivalent after checking cover in only one direction.",
+   "correction": "X ≡ Y requires mutual cover: X covers Y and Y covers X; if B → C is in X but B⁺ under Y is only {B}, they are not equivalent."
+  }
+ ]
+}

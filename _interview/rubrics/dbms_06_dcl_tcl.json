@@ -1,0 +1,227 @@
+{
+ "id": "dbms_06_dcl_tcl",
+ "title": "Data Control & Transaction Control (DCL/TCL)",
+ "type": "FUND",
+ "relevance": "SDE interviews probe DCL/TCL to check whether candidates can secure access and keep concurrent writes from corrupting data.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what DCL and TCL are for, how roles grant access, and what ACID guarantees a transaction must provide.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "DCL manages permissions and access rights so each connection gets exactly the privileges it needs and nothing more.",
+     "weight": "core",
+     "evidence_hint": "Names DCL as permission/access control for users, app servers, and tools—least privilege, not schema DDL."
+    },
+    {
+     "id": "fund2",
+     "point": "In PostgreSQL a Role can own objects and hold privileges, and may act as a login user or as a group whose permissions others inherit.",
+     "weight": "core",
+     "evidence_hint": "Defines role as privilege/ownership entity; distinguishes login user vs group inheritance."
+    },
+    {
+     "id": "fund3",
+     "point": "GRANT issues privileges on an object to a role; REVOKE retracts previously granted privileges.",
+     "weight": "core",
+     "evidence_hint": "States GRANT adds rights and REVOKE removes them, optionally with concrete SELECT/INSERT examples."
+    },
+    {
+     "id": "fund4",
+     "point": "ACID means Atomicity (all-or-nothing), Consistency (valid state to valid state under constraints), Isolation (no interference from others' uncommitted work), and Durability (committed changes survive crash).",
+     "weight": "core",
+     "evidence_hint": "Lists all four with correct one-line meanings, not just the acronym."
+    },
+    {
+     "id": "fund5",
+     "point": "TCL uses BEGIN to start a transaction, COMMIT to permanently save changes, and ROLLBACK to undo all changes since BEGIN.",
+     "weight": "core",
+     "evidence_hint": "Names BEGIN/COMMIT/ROLLBACK and maps each to start, durable save, or full undo."
+    }
+   ],
+   "probes": [
+    "What is DCL versus TCL, and what does each ACID letter guarantee for a transaction?"
+   ],
+   "hints": {
+    "1": "Think permissions language versus the commands that start, save, or undo a unit of work.",
+    "2": "Cover roles/GRANT/REVOKE briefly, then Atomicity, Consistency, Isolation, Durability, then BEGIN/COMMIT/ROLLBACK.",
+    "3": "DCL = access rights via roles; TCL = BEGIN/COMMIT/ROLLBACK; Atomicity = all-or-nothing, Consistency = constraints hold, Isolation = no seeing others' uncommitted intermediates, Durability = committed data survives crash."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how grants, revoke/cascade, RLS, savepoints, isolation levels, and FOR UPDATE actually behave.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "WITH GRANT OPTION lets the recipient re-grant the privilege; REVOKE GRANT OPTION FOR removes only re-grant ability while keeping the privilege; REVOKE ... CASCADE also revokes privileges that were re-granted downstream.",
+     "weight": "core",
+     "evidence_hint": "Separates GRANT OPTION, revoking only the option, and CASCADE removing junior re-grants."
+    },
+    {
+     "id": "mech2",
+     "point": "CREATE ROLE ... WITH LOGIN creates a user that can connect; NOLOGIN creates a group container; GRANT group TO user assigns inherited privileges; DROP ROLE removes a role.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts LOGIN vs NOLOGIN and membership via GRANT role TO role."
+    },
+    {
+     "id": "mech3",
+     "point": "Standard GRANT filters tables or columns; Row-Level Security filters which rows a user can see, via ENABLE ROW LEVEL SECURITY and a policy USING predicate.",
+     "weight": "core",
+     "evidence_hint": "Says RLS is row filtering beyond table/column GRANT, with policy USING as the mechanism."
+    },
+    {
+     "id": "mech4",
+     "point": "SAVEPOINT creates a checkpoint inside a transaction; ROLLBACK TO SAVEPOINT undoes work after that point without abandoning the whole transaction.",
+     "weight": "core",
+     "evidence_hint": "Describes partial rollback to a named savepoint while earlier work can still commit."
+    },
+    {
+     "id": "mech5",
+     "point": "Dirty Read sees uncommitted data that may roll back; Non-Repeatable Read sees a committed row change between two reads; Phantom Read sees new rows appear that match the same query.",
+     "weight": "core",
+     "evidence_hint": "Defines the three phenomena distinctly (uncommitted vs same-row change vs new matching rows)."
+    },
+    {
+     "id": "mech6",
+     "point": "Read Uncommitted allows all three phenomena; Read Committed prevents Dirty Reads; Repeatable Read prevents Dirty and Non-Repeatable Reads; Serializable prevents all phenomena by behaving as if transactions ran one-by-one.",
+     "weight": "core",
+     "evidence_hint": "Maps each of the four levels to which phenomena it blocks, ending with Serializable as strictest."
+    },
+    {
+     "id": "mech7",
+     "point": "SELECT ... FOR UPDATE locks the selected rows so other transactions cannot modify them until COMMIT; NOWAIT errors instead of waiting; SKIP LOCKED skips already-locked rows.",
+     "weight": "core",
+     "evidence_hint": "Explains row lock until commit, plus NOWAIT fail-fast and SKIP LOCKED skip behavior."
+    }
+   ],
+   "probes": [
+    "Walk through GRANT OPTION versus CASCADE revoke, then how Read Committed differs from Repeatable Read on the three read phenomena."
+   ],
+   "hints": {
+    "1": "Separate permission mechanics from concurrency mechanics—grants first, then isolation.",
+    "2": "Cover WITH GRANT OPTION/CASCADE, RLS vs column grants, savepoints, then Dirty/Non-Repeatable/Phantom mapped to the four levels, then FOR UPDATE variants.",
+    "3": "WITH GRANT OPTION re-grants; CASCADE revokes downstream; RLS filters rows; ROLLBACK TO SAVEPOINT is partial undo; Dirty=uncommitted, Non-Repeatable=same row changed, Phantom=new rows; levels escalate restrictions; FOR UPDATE locks rows, NOWAIT errors, SKIP LOCKED skips."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Show the accuracy-versus-throughput trade-off when choosing isolation levels versus targeted row locks.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Higher isolation uses stricter locking to prevent more read phenomena but slows concurrent users; lower levels are faster but allow more anomalies.",
+     "weight": "core",
+     "evidence_hint": "States the ladder: stricter isolation → fewer phenomena → worse concurrency/performance."
+    },
+    {
+     "id": "tr2",
+     "point": "Read Uncommitted is fastest but offers virtually no integrity; Serializable is slowest with massive lock contention (waits or failures); Read Committed is PostgreSQL's default (fast); Repeatable Read is moderate.",
+     "weight": "core",
+     "evidence_hint": "Orders performance Fastest/Fast/Moderate/Slowest with default called out as Read Committed."
+    },
+    {
+     "id": "tr3",
+     "point": "Instead of raising the whole system to Serializable, SELECT ... FOR UPDATE can lock only the rows you need until commit, limiting contention to those rows.",
+     "weight": "core",
+     "evidence_hint": "Contrasts global Serializable slowdown with targeted FOR UPDATE on specific rows."
+    },
+    {
+     "id": "tr4",
+     "point": "PostgreSQL treats Read Uncommitted identically to Read Committed; its Repeatable Read also prevents Phantom Reads though the SQL standard allows them.",
+     "weight": "extended",
+     "evidence_hint": "States both Postgres-specific behaviors relative to the SQL standard."
+    }
+   ],
+   "probes": [
+    "When would you raise isolation to Serializable versus using SELECT ... FOR UPDATE, and what does PostgreSQL change about Read Uncommitted and Repeatable Read?"
+   ],
+   "hints": {
+    "1": "Frame it as correctness versus how many concurrent transactions you can keep moving.",
+    "2": "Compare the four levels' speed/strictness, then selective FOR UPDATE as an alternative to global Serializable, then Postgres quirks.",
+    "3": "Higher level = fewer anomalies, slower; default Read Committed; Serializable = slowest/contention; FOR UPDATE locks only needed rows; Postgres maps Read Uncommitted to Read Committed and RR also blocks phantoms."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply DCL/TCL patterns to secure data and keep multi-step and concurrent updates correct.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A bank transfer must debit and credit in one transaction so a crash mid-way cannot leave money vanished; on restart an uncommitted transaction is fully reversed.",
+     "weight": "core",
+     "evidence_hint": "Uses two-step transfer under BEGIN/COMMIT and atomic rollback if power fails mid-transfer."
+    },
+    {
+     "id": "app2",
+     "point": "Column-level GRANT (e.g. SELECT on name/email only, not salary columns) and RLS policies (e.g. only rows for the caller's department) limit exposure of sensitive data.",
+     "weight": "core",
+     "evidence_hint": "Gives column grants and/or RLS department-style row filtering as security application."
+    },
+    {
+     "id": "app3",
+     "point": "Under weak isolation, reading Checking then Savings across a concurrent transfer can sum to an impossible total (e.g. Seeing Checking before a transfer and Savings after yields 1100 instead of a true point-in-time 1000).",
+     "weight": "core",
+     "evidence_hint": "Retells the non-repeatable-read net-worth double-count failure and why multi-row consistency needs stronger isolation or locking."
+    },
+    {
+     "id": "app4",
+     "point": "FOR UPDATE SKIP LOCKED is used for job queues so workers take unlocked pending rows without waiting and without two workers claiming the same job.",
+     "weight": "extended",
+     "evidence_hint": "Describes queue workers selecting pending tasks with SKIP LOCKED to avoid wait and double-processing."
+    }
+   ],
+   "probes": [
+    "How would you implement a safe account transfer and stop two queue workers from processing the same pending job?"
+   ],
+   "hints": {
+    "1": "One answer is about atomic multi-statement updates; the other is about concurrent workers claiming rows.",
+    "2": "Wrap debit+credit in BEGIN/COMMIT; for queues combine FOR UPDATE with SKIP LOCKED on pending rows.",
+    "3": "Transfer: BEGIN, debit A, credit B, COMMIT—crash rolls back uncommitted debit; queue: SELECT ... FOR UPDATE SKIP LOCKED so locked jobs are skipped and no two workers take the same row."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Strict isolation vs high concurrency",
+   "strong_answer": "Climbing from Read Uncommitted/Read Committed toward Repeatable Read and Serializable prevents more Dirty/Non-Repeatable/Phantom phenomena via stricter locking, but moves performance from fastest/fast toward moderate and slowest with lock contention, waits, or failed transactions."
+  },
+  {
+   "topic": "Serializable vs SELECT ... FOR UPDATE",
+   "strong_answer": "Serializable forces the whole system toward one-by-one results and heavy contention; FOR UPDATE locks only the rows you read until COMMIT, so you get mutual exclusion where needed without raising global isolation."
+  },
+  {
+   "topic": "Waiting locks vs NOWAIT / SKIP LOCKED",
+   "strong_answer": "Default FOR UPDATE makes others wait; NOWAIT fails immediately so the app can retry; SKIP LOCKED skips locked rows, which suits job queues where workers should grab free work without blocking."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming Read Uncommitted in PostgreSQL actually allows dirty reads as the SQL ladder suggests.",
+   "correction": "PostgreSQL safely treats Read Uncommitted identically to Read Committed, so you still only read committed data."
+  },
+  {
+   "trap": "Assuming Repeatable Read always allows Phantom Reads because the SQL standard says so.",
+   "correction": "PostgreSQL's Repeatable Read is stronger and actually prevents Phantom Reads as well."
+  },
+  {
+   "trap": "Confusing Dirty Read, Non-Repeatable Read, and Phantom Read.",
+   "correction": "Dirty = seeing uncommitted data that may vanish; Non-Repeatable = same row's committed value changes between reads; Phantom = new rows appear matching the same query."
+  },
+  {
+   "trap": "Thinking REVOKE GRANT OPTION or a plain REVOKE always clears everything downstream.",
+   "correction": "REVOKE GRANT OPTION FOR removes only re-grant ability while keeping the privilege; to pull privileges from roles that received them via GRANT OPTION, use REVOKE ... CASCADE."
+  },
+  {
+   "trap": "Performing a multi-step money move without a transaction.",
+   "correction": "Debit and credit must share one BEGIN/COMMIT unit; otherwise a crash between steps can permanently lose money because only part of the work was applied."
+  },
+  {
+   "trap": "Raising isolation to Serializable for a single hot row when a narrower tool would do.",
+   "correction": "Prefer SELECT ... FOR UPDATE on that row (optionally NOWAIT/SKIP LOCKED) so only those rows are locked until COMMIT instead of slowing the entire workload."
+  }
+ ]
+}

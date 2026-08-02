@@ -1,0 +1,217 @@
+{
+ "id": "36_dp_optimization_cht_dc_knuth",
+ "title": "DP optimizations: Convex Hull Trick, Divide-and-Conquer, Knuth",
+ "type": "CP",
+ "relevance": "Medium — almost never a literal OA template (Striver omits this entirely); shows up only in hard screens as “partition into k segments / jump with quadratic cost / merge intervals under n∼10^5”. Primarily a Candidate Master rating-builder and the natural next step after classic 1D / interval DP.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Almost never “implement CHT from scratch” in a timed OA; small constraints often leave O(n^2) fine and they want the recurrence (partition into k segments, jump with (h_i−h_j)^2). Merge-adjacent / matrix-chain → interval DP; interviewers may ask why Knuth/QI would speed it even if they only want O(n^3). Split into exactly k contiguous parts → D&C-opt family (Bakery / Gondolas); OA usually has tiny n or simpler cost. Harder OAs occasionally ask maintain min(mx+b) under online line inserts → Li Chao / LineContainer.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot a naive O(n)-per-state DP with a “nice” cost that admits CHT, D&C opt, or Knuth.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Naive transition is O(n) per state (total O(n^2) or O(kn^2) / O(n^3)) and the cost is “nice” enough for an envelope or opt-monotonicity speedup.",
+     "weight": "core",
+     "evidence_hint": "They name the quadratic/cubic bottleneck and that the cost structure invites CHT, D&C, or Knuth."
+    },
+    {
+     "id": "rec2",
+     "point": "CHT shape: dp[i]=min_j(dp[j]+a_j·x_i+b_j) — each prior j is a line on a lower/upper envelope.",
+     "weight": "core",
+     "evidence_hint": "They rewrite the transition as evaluating lines and mention maintaining a hull."
+    },
+    {
+     "id": "rec3",
+     "point": "D&C shape: layered dp[i][j]=min_{k<j}(dp[i−1][k]+C(k,j)) with opt(i,j)≤opt(i,j+1); Knuth shape: interval dp[i][j]=C(i,j)+min_{i≤k<j}(dp[i][k]+dp[k+1][j]) with opt[i][j−1]≤opt[i][j]≤opt[i+1][j].",
+     "weight": "core",
+     "evidence_hint": "They distinguish layered decision-monotone DP from interval Knuth sandwich on opt."
+    },
+    {
+     "id": "rec4",
+     "point": "Spot cues: split array into k contiguous parts; jump/cut with cost a·b or (h_i−h_j)^2; merge adjacent segments / optimal BST shape; n too big for n^2 or n^3.",
+     "weight": "extended",
+     "evidence_hint": "They list those statement families and flag when n rules out naive n^2/n^3."
+    }
+   ],
+   "probes": [
+    "What about this DP transition and cost says CHT vs D&C opt vs Knuth rather than plain O(n^2)?"
+   ],
+   "hints": {
+    "1": "Look at whether the min is over prior states as lines, over a previous layer split, or over an interval split.",
+    "2": "Lines mj·xi+bj → CHT; layered min_k dp[i−1][k]+C(k,j) with monotone opt → D&C; interval merge with sandwich opt → Knuth.",
+    "3": "Say: naive O(n) transitions totaling O(n^2)/O(kn^2)/O(n^3); CHT if each j is a line; D&C if layered with opt(i,j)≤opt(i,j+1); Knuth if interval with opt[i][j−1]≤opt[i][j]≤opt[i+1][j]; spot k-parts, (h_i−h_j)^2 jumps, merge/BST, n too big for n^2/n^3."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Choose the right optimization and state the rewrite or opt-monotonicity condition that justifies it.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "CHT: rewrite so the min/max is min_j(m_j·x_i+b_j) (pull i-only terms out); each j → line (m_j,b_j).",
+     "weight": "core",
+     "evidence_hint": "They pull i-only terms out and identify slope/intercept per j."
+    },
+    {
+     "id": "appr2",
+     "point": "Monotone slopes and queries → deque hull; only slopes monotone → binary-search the hull; arbitrary inserts/queries → LineContainer (multiset by slope) or Li Chao tree.",
+     "weight": "core",
+     "evidence_hint": "They pick deque vs binary-search hull vs Li Chao/LineContainer from monotonicity of slopes and queries."
+    },
+    {
+     "id": "appr3",
+     "point": "D&C: for a fixed layer, compute(l,r,optl,optr) — solve mid, recurse left with optr:=opt, right with optl:=opt; quadrangle/Monge C(a,c)+C(b,d)≤C(a,d)+C(b,c) for a≤b≤c≤d ⇒ opt monotone.",
+     "weight": "core",
+     "evidence_hint": "They sketch the mid-split opt-range recurse and name QI/Monge as a sufficient condition."
+    },
+    {
+     "id": "appr4",
+     "point": "Knuth: fill by increasing length; when computing dp[i][j], only try k∈[opt[i][j−1],opt[i+1][j]]; store opt alongside dp. Cost C(i,j)=sum(i..j) is the default Knuth-friendly cost.",
+     "weight": "extended",
+     "evidence_hint": "They describe length-ordered fill with restricted k range and mention sum-cost merges like Slimes."
+    }
+   ],
+   "probes": [
+    "How do you rewrite this transition for CHT, and when would you use D&C or Knuth instead?"
+   ],
+   "hints": {
+    "1": "Decide whether j contributes a line, a previous-layer split, or an interval split.",
+    "2": "Pull i-only terms for lines; check opt monotonicity / QI for D&C or Knuth; restrict the argmin loop only after that.",
+    "3": "CHT: min_j(m_j·x_i+b_j), deque if slopes and x monotone else Li Chao/LineContainer; D&C: compute(l,r,optl,optr) mid-split after QI; Knuth: length order with k in [opt[i][j−1],opt[i+1][j]], often C=sum(i..j)."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Describe the concrete hull, D&C, or Knuth loop mechanics a correct solution uses.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Monotone CHT deque: pop front when a better line becomes optimal for the next query x; pop back when a new line makes the back not on the hull.",
+     "weight": "core",
+     "evidence_hint": "They describe front pops for obsolete best lines and back pops to restore hull convexity."
+    },
+    {
+     "id": "impl2",
+     "point": "D&C template: for fixed layer, compute(l,r,optl,optr) — evaluate candidates in [optl,optr] at mid, then recurse left with optr:=opt and right with optl:=opt.",
+     "weight": "core",
+     "evidence_hint": "They walk mid solve then left/right recurse with tightened opt bounds."
+    },
+    {
+     "id": "impl3",
+     "point": "Knuth: on increasing interval length, restrict the split loop to k∈[opt[i][j−1],opt[i+1][j]] and record the new opt; deque window max (F2 / Fireworks) is the 1D special case of CHT — master it before generalizing to lines.",
+     "weight": "extended",
+     "evidence_hint": "They mention storing opt while narrowing k, and/or sliding-window max as the bridge into CHT."
+    }
+   ],
+   "probes": [
+    "Walk through the deque pops for monotone CHT, or the mid-recurse for D&C opt."
+   ],
+   "hints": {
+    "1": "Ask what you remove from the front vs the back of the hull, or what range you search at mid.",
+    "2": "Front = obsolete best for current x; back = dominated hull points; D&C evaluates [optl,optr] only at mid then tightens children.",
+    "3": "Deque: pop front (better line) / pop back (not on hull); D&C: solve mid then left optr:=opt, right optl:=opt; Knuth: k only in [opt[i][j−1],opt[i+1][j]]."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State the asymptotic win of each optimization over the naive transition.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Monotone CHT with monotone slopes and query x is total O(n); if only slopes are monotone, binary-search the hull in O(n log n).",
+     "weight": "core",
+     "evidence_hint": "They contrast O(n) full-monotone deque CHT with O(n log n) when only slopes are monotone."
+    },
+    {
+     "id": "cx2",
+     "point": "D&C opt computes each layer in O(n log n) if C is O(1) (or amortized O(1) like YAMP); Knuth brings interval DP to O(n^2) instead of O(n^3).",
+     "weight": "core",
+     "evidence_hint": "They give O(n log n) per D&C layer and O(n^2) vs O(n^3) for Knuth."
+    }
+   ],
+   "probes": [
+    "What complexity do you get from monotone deque CHT, D&C per layer, and Knuth versus the naive DP?"
+   ],
+   "hints": {
+    "1": "Compare the hull maintenance and the restricted argmin loops to the naive O(n) per state.",
+    "2": "Full monotone CHT is linear; D&C pays a log factor per layer; Knuth drops a factor of n on interval DP.",
+    "3": "Monotone slopes+queries → O(n); slopes-only → O(n log n); D&C → O(n log n) per layer with O(1)/amortized O(1) C; Knuth → O(n^2) instead of O(n^3)."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch premature opt-loop restrictions, wrong hull structure, and OA misunderstanding of what is actually asked.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Always prove opt monotone (via QI/Monge or problem structure) before restricting the Knuth/D&C argmin loop — C(i,j)=sum(i..j) is Knuth-friendly but still needs the proof.",
+     "weight": "core",
+     "evidence_hint": "They refuse to shrink the k-range until they argue monotonicity / QI."
+    },
+    {
+     "id": "pit2",
+     "point": "Learn the interval recurrence before Knuth speedup: Slimes has n≤400 so O(n^3) passes; deque CHT is wrong when inserts/queries are arbitrary — need Li Chao / LineContainer.",
+     "weight": "core",
+     "evidence_hint": "They mention mastering the cubic recurrence first and switching to Li Chao/LineContainer when monotonicity fails."
+    },
+    {
+     "id": "pit3",
+     "point": "Timed OAs almost never want CHT coded from scratch — constraints may allow O(n^2) and they want the recurrence, while still recognizing when the opt would kick in.",
+     "weight": "extended",
+     "evidence_hint": "They separate “write the DP recurrence” from “ship a hull,” matching OA expectations."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you restrict the opt loop without a proof, or code deque CHT under arbitrary line inserts?"
+   ],
+   "hints": {
+    "1": "Ask whether opt monotonicity is proven and whether slopes/queries are monotone.",
+    "2": "No QI/proof → full loop; non-monotone inserts/queries → Li Chao/LineContainer, not a deque.",
+    "3": "Prove opt monotone before narrowing k; Slimes n≤400 teaches O(n^3) first; arbitrary online lines → Li Chao; OAs often want the recurrence under O(n^2)-feasible n."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "CHT vs D&C opt",
+   "strong_answer": "Many D&C problems also admit CHT (and vice versa) when C(k,j) is linear in a monotone key — know both tools. CHT maintains a line envelope for dp[i]=min_j(dp[j]+a_j·x_i+b_j); D&C uses opt(i,j)≤opt(i,j+1) on layered min_k dp[i−1][k]+C(k,j)."
+  },
+  {
+   "topic": "Monotone deque CHT vs Li Chao / LineContainer",
+   "strong_answer": "Deque when slopes inserted monotone and query x monotone (total O(n)); binary-search the hull if only slopes are monotone (O(n log n)). Fully dynamic arbitrary inserts/queries → LineContainer (multiset of lines by slope) or Li Chao tree."
+  },
+  {
+   "topic": "Deque window max vs full CHT lines",
+   "strong_answer": "Deque window max (F2 / Fireworks) is the 1D special case of CHT — master it first, then generalize to lines (Frog 3 / Kalila / Fair Nut)."
+  },
+  {
+   "topic": "OA recurrence vs full optimization",
+   "strong_answer": "Almost never implement CHT from scratch in a timed OA; if it appears, constraints are often small enough for O(n^2) and they want the recurrence (k segments, (h_i−h_j)^2 jumps) — still recognize when the opt would kick in. Interviewers may ask why Knuth/QI speeds merge/matrix-chain even if they only want O(n^3)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Restricting the Knuth/D&C split loop without proving opt monotonicity.",
+   "correction": "Always prove opt monotone (QI/Monge or structure) before narrowing k; C(i,j)=sum(i..j) is the default Knuth-friendly cost but still needs the proof."
+  },
+  {
+   "trap": "Jumping to Knuth speedup before the interval recurrence is solid.",
+   "correction": "On Slimes, n≤400 so O(n^3) passes — learn dp[l][r]=sum(l,r)+min_k(dp[l][k]+dp[k+1][r]) before the O(n^2) Knuth loop."
+  },
+  {
+   "trap": "Using a monotone deque when line inserts or query x are not monotone.",
+   "correction": "Fully dynamic inserts/queries need LineContainer or a Li Chao tree (Igloo / online min(mx+b) prompts)."
+  },
+  {
+   "trap": "Treating a timed OA as “code CHT from scratch.”",
+   "correction": "OAs usually want the recurrence under O(n^2)-feasible constraints; still spot when CHT/D&C/Knuth would apply at n∼10^5."
+  },
+  {
+   "trap": "Forgetting that YAMP-style D&C needs an amortized O(1) moving cost while recursing mid.",
+   "correction": "D&C is O(n log n) per layer if C is O(1), or amortized O(1) like YAMP when you move [L,R] while recursing mid."
+  }
+ ]
+}

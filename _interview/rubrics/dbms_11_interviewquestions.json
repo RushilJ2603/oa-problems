@@ -1,0 +1,257 @@
+{
+ "id": "dbms_11_interviewquestions",
+ "title": "SQL Interview & OA Questions",
+ "type": "FUND",
+ "relevance": "Classic SQL problems and theory that appear repeatedly in SDE interviews and OAs at companies like Amazon, Google, Meta, and top startups.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Asked at Amazon, Google, Meta, and top startups.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish core SELECT/WHERE/aggregate patterns and basic SQL theory distinctions.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A self join aliases the same employees table as e and m, joining e.manager_id to m.emp_id to compare salaries.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes employees aliased twice and the join linking each employee to their manager for salary comparison."
+    },
+    {
+     "id": "fund2",
+     "point": "HAVING filters after aggregation; WHERE filters individual rows before grouping.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts WHERE (pre-GROUP BY) with HAVING (post-aggregation), e.g. departments with headcount above a threshold."
+    },
+    {
+     "id": "fund3",
+     "point": "Customers with no orders can be found via LEFT JOIN plus IS NULL, or via NOT EXISTS.",
+     "weight": "core",
+     "evidence_hint": "Candidate names either LEFT JOIN/IS NULL or NOT EXISTS and explains filtering for absence of matching orders."
+    },
+    {
+     "id": "fund4",
+     "point": "Duplicate emails are found by GROUP BY email HAVING COUNT(*) > 1, then optionally pulling full rows via those emails.",
+     "weight": "extended",
+     "evidence_hint": "Candidate aggregates on the suspected duplicate column and filters groups with count greater than one."
+    }
+   ],
+   "probes": [
+    "How would you find employees who earn more than their manager?",
+    "What's the difference between WHERE and HAVING?",
+    "How do you find customers who never placed an order?"
+   ],
+   "hints": {
+    "1": "Think about joining a table to itself, or filtering after you group.",
+    "2": "Self join on manager_id; HAVING after COUNT; LEFT JOIN/IS NULL or NOT EXISTS for missing orders.",
+    "3": "Alias employees as e and m on e.manager_id = m.emp_id WHERE e.salary > m.salary; HAVING filters post-aggregation; NOT EXISTS is NULL-safe vs NOT IN."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how joins, window functions, CASE pivots, and ranking framing actually work.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "DENSE_RANK() OVER (ORDER BY salary DESC) then filter rnk = 2 finds the second-highest salary and handles ties; MAX subquery with salary < max only works for second highest.",
+     "weight": "core",
+     "evidence_hint": "Candidate prefers DENSE_RANK for ties and Nth-highest extensibility, and may mention the MAX-of-less-than-max pattern for second only."
+    },
+    {
+     "id": "mech2",
+     "point": "PARTITION BY dept_id with DENSE_RANK finds the Nth highest per department; DENSE_RANK gives no gap after ties unlike RANK.",
+     "weight": "core",
+     "evidence_hint": "Candidate explains independent ranking windows per department and why DENSE_RANK avoids skipping ranks after ties."
+    },
+    {
+     "id": "mech3",
+     "point": "ROW_NUMBER() with PARTITION BY customer_id and rn <= 3 returns exactly top N rows per group even when totals tie.",
+     "weight": "core",
+     "evidence_hint": "Candidate chooses ROW_NUMBER over RANK/DENSE_RANK when they need a fixed row count despite identical values."
+    },
+    {
+     "id": "mech4",
+     "point": "SUM(CASE WHEN quarter = 'Q1' THEN revenue ELSE 0 END) pivots quarterly rows into columns without vendor-specific PIVOT.",
+     "weight": "extended",
+     "evidence_hint": "Candidate describes the SUM(CASE ...) pattern grouping by product for Q1–Q4 columns."
+    },
+    {
+     "id": "mech5",
+     "point": "LAG looks back within a window; NULLIF on prior amount avoids division by zero in year-over-year growth.",
+     "weight": "extended",
+     "evidence_hint": "Candidate mentions LAG partitioned by month ordered by year and NULLIF guarding the growth percentage."
+    }
+   ],
+   "probes": [
+    "How do you find the second-highest salary? What if there are ties?",
+    "How would you get the top 3 orders per customer?",
+    "How do you pivot quarters from rows into columns in plain SQL?"
+   ],
+   "hints": {
+    "1": "Window ranking and framing matter more than LIMIT/OFFSET here.",
+    "2": "DENSE_RANK for Nth salary; ROW_NUMBER for exact top-N rows; SUM(CASE) for pivot; LAG plus NULLIF for YoY.",
+    "3": "DENSE_RANK OVER ORDER BY salary DESC WHERE rnk = 2; ROW_NUMBER PARTITION BY customer_id WHERE rn <= 3; SUM(CASE WHEN quarter = 'Q1' ...); LAG with NULLIF(..., 0)."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare alternate SQL approaches and ranking/index/set-operator tradeoffs from the bank.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "LEFT JOIN + IS NULL is often the fastest plan for missing matches; NOT EXISTS has cleaner semantics and is strictly NULL-safe versus NOT IN.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts execution-plan speed of LEFT JOIN/IS NULL with readability and NULL-safety of NOT EXISTS."
+    },
+    {
+     "id": "tr2",
+     "point": "Avoid LIMIT 1 OFFSET 1 for second-highest salary because ties for the highest can skip the wrong row.",
+     "weight": "core",
+     "evidence_hint": "Candidate rejects OFFSET-based second-highest and prefers DENSE_RANK or the MAX-subquery approach."
+    },
+    {
+     "id": "tr3",
+     "point": "On ties, ROW_NUMBER assigns 1, 2, 3; RANK assigns 1, 1, 3 leaving a gap; DENSE_RANK assigns 1, 1, 2 with no gap.",
+     "weight": "core",
+     "evidence_hint": "Candidate correctly states the three tie behaviors with those rank sequences."
+    },
+    {
+     "id": "tr4",
+     "point": "UNION deduplicates (slower); UNION ALL keeps duplicates (faster).",
+     "weight": "extended",
+     "evidence_hint": "Candidate names dedup cost of UNION versus speed of UNION ALL."
+    },
+    {
+     "id": "tr5",
+     "point": "Clustered index physically reorders table data (only one per table); non-clustered is a separate B-tree of pointers (many allowed).",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts one clustered physical order vs many non-clustered pointer structures."
+    }
+   ],
+   "probes": [
+    "LEFT JOIN/IS NULL vs NOT EXISTS — when would you pick each?",
+    "Why is LIMIT/OFFSET risky for second-highest salary?",
+    "How do RANK, DENSE_RANK, and ROW_NUMBER differ on ties?"
+   ],
+   "hints": {
+    "1": "Think NULL-safety, tie handling, and what the engine physically does.",
+    "2": "Compare join-vs-exists for absences; ranking vs OFFSET for Nth; RANK gap vs DENSE_RANK no gap vs ROW_NUMBER unique.",
+    "3": "NOT EXISTS is NULL-safe; OFFSET can skip the wrong row on salary ties; ROW_NUMBER → 1,2,3; RANK → 1,1,3; DENSE_RANK → 1,1,2."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply advanced window/CTE patterns to gaps-and-islands, running aggregates, deletes, and classification problems.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Gaps and islands: login_date minus ROW_NUMBER days yields a constant grp for consecutive login streaks; HAVING COUNT(*) >= 3 finds 3+ day streaks.",
+     "weight": "core",
+     "evidence_hint": "Candidate explains subtracting row number as a day interval to form island groups, then filtering streak length."
+    },
+    {
+     "id": "app2",
+     "point": "ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW is a running total; 6 PRECEDING AND CURRENT ROW is a rolling 7-day moving average.",
+     "weight": "core",
+     "evidence_hint": "Candidate distinguishes unbounded preceding running sum from a 6-preceding-plus-current rolling average."
+    },
+    {
+     "id": "app3",
+     "point": "Delete duplicates by ROW_NUMBER PARTITION BY email ORDER BY id ASC and DELETE where rn > 1, keeping the oldest id.",
+     "weight": "core",
+     "evidence_hint": "Candidate keeps rn = 1 per email and deletes higher rn rows by primary key id."
+    },
+    {
+     "id": "app4",
+     "point": "A cumulative sum that resets uses a running sum of (points < 0) as grp, then SUM partitioned by user_id and grp.",
+     "weight": "extended",
+     "evidence_hint": "Candidate describes incrementing grp on negatives then partitioning the running sum by that grp."
+    },
+    {
+     "id": "app5",
+     "point": "Consecutive numbers: LAG and LEAD of num equal to current num identify the middle of a 3-row streak.",
+     "weight": "extended",
+     "evidence_hint": "Candidate uses LAG/LEAD so num matches both prev and next, then DISTINCT."
+    }
+   ],
+   "probes": [
+    "How do you find users who logged in for 3 or more consecutive days?",
+    "How do you compute a running total and a 7-day moving average?",
+    "How would you delete duplicate emails while keeping one row?"
+   ],
+   "hints": {
+    "1": "These lean on window framing and grouping tricks, not just GROUP BY.",
+    "2": "Date minus row-number island key; ROWS BETWEEN frames; ROW_NUMBER then DELETE rn > 1; LAG/LEAD for consecutive values.",
+    "3": "grp = login_date - ROW_NUMBER * 1 day, HAVING COUNT(*) >= 3; UNBOUNDED PRECEDING for running sum and 6 PRECEDING for 7-day avg; DELETE ids with rn > 1; WHERE num = prev AND num = next."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "LEFT JOIN + IS NULL vs NOT EXISTS",
+   "strong_answer": "Both find customers with no orders; LEFT JOIN + IS NULL is often the fastest plan, while NOT EXISTS is cleaner and strictly NULL-safe, unlike NOT IN."
+  },
+  {
+   "topic": "DENSE_RANK vs MAX subquery for second-highest salary",
+   "strong_answer": "DENSE_RANK handles ties and extends to Nth highest; the MAX-where-less-than-max pattern is simple but rigid to second highest only. Avoid LIMIT 1 OFFSET 1 because ties for highest skip the wrong row."
+  },
+  {
+   "topic": "ROW_NUMBER vs RANK/DENSE_RANK for top N per group",
+   "strong_answer": "Use ROW_NUMBER when you need exactly N rows per group even with tied totals; RANK/DENSE_RANK can return more or fewer rows under ties."
+  },
+  {
+   "topic": "UNION vs UNION ALL",
+   "strong_answer": "UNION deduplicates combined results and is slower; UNION ALL keeps all duplicates and is faster."
+  },
+  {
+   "topic": "Clustered vs Non-Clustered Index",
+   "strong_answer": "Clustered physically reorders table data on disk (only one per table); non-clustered is a separate B-tree pointer structure (many per table)."
+  },
+  {
+   "topic": "Correlated vs Non-Correlated Subquery",
+   "strong_answer": "A non-correlated subquery runs once; a correlated subquery references the outer query and runs row-by-row, often much slower."
+  },
+  {
+   "topic": "ACID vs BASE",
+   "strong_answer": "ACID guarantees strong consistency (SQL); BASE guarantees eventual consistency and high availability (NoSQL)."
+  },
+  {
+   "topic": "Normalization vs Denormalization",
+   "strong_answer": "Normalization organizes tables to reduce redundancy and anomalies (e.g. 1NF → 2NF → 3NF); denormalization intentionally adds redundancy back to improve read performance by avoiding expensive joins."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using NOT IN to find rows with no match",
+   "correction": "NOT IN is plagued by NULL comparison bugs; prefer NOT EXISTS (NULL-safe) or LEFT JOIN + IS NULL."
+  },
+  {
+   "trap": "Using LIMIT 1 OFFSET 1 for second-highest salary",
+   "correction": "Ties for the highest salary make OFFSET skip the wrong row; use DENSE_RANK or MAX with salary < max salary."
+  },
+  {
+   "trap": "Using RANK or DENSE_RANK when you need exactly N rows per group",
+   "correction": "Ties inflate or distort counts; use ROW_NUMBER() so exactly N rows return per partition."
+  },
+  {
+   "trap": "Confusing RANK and DENSE_RANK on ties",
+   "correction": "RANK leaves a gap (1, 1, 3); DENSE_RANK does not (1, 1, 2); ROW_NUMBER always assigns distinct 1, 2, 3."
+  },
+  {
+   "trap": "Division by zero in year-over-year growth",
+   "correction": "Wrap the LAG prior amount with NULLIF(..., 0) so a prior-year amount of exactly 0 does not crash."
+  },
+  {
+   "trap": "Swapping odd/even seat rows when the last id is odd",
+   "correction": "If id is odd and equals MAX(id), leave it unchanged because the last student has no pair to swap with."
+  },
+  {
+   "trap": "Making a query non-SARGable",
+   "correction": "Applying functions to indexed columns in WHERE (e.g. WHERE YEAR(created_at) = 2026) forces a full table scan."
+  },
+  {
+   "trap": "Thinking a View always stores data",
+   "correction": "A View is a stored query acting as a virtual table and stores no data itself unless it is a Materialized View."
+  }
+ ]
+}

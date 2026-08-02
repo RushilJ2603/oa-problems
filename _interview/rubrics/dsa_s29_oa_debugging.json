@@ -1,0 +1,235 @@
+{
+ "id": "dsa_s29_oa_debugging",
+ "title": "Blind OA Debugging in C++",
+ "type": "FUND",
+ "relevance": "OA platforms hide failing inputs and often ban diagnostic cout, so candidates must extract signal from verdicts, stderr, assertions, custom input, and local stress tests.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Techniques framed for HackerRank, HirePro, Codility, CodeSignal, and in-house OAs; DE Shaw worked examples are cited as cases where hand-computed expected answers were wrong.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that blind OA failures are distinguishable signals and that stderr/constraints are the first safe observation channels.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "OA platforms report distinct outcomes—Compilation Error, Wrong Answer, Runtime Error, Time Limit Exceeded, Accepted—and treating them as one undifferentiated failure loses information.",
+     "weight": "core",
+     "evidence_hint": "Lists the five verdicts and says Wrong Answer means ran to completion with mismatched stdout, while Runtime Error means the process died."
+    },
+    {
+     "id": "fund2",
+     "point": "Runtime Error is the most useful blind-platform verdict because it can be triggered deliberately and is independent of whether the printed answer is correct.",
+     "weight": "core",
+     "evidence_hint": "Says RE is controlled by process survival, whereas WA/Accepted are determined by output, so RE is a separate channel."
+    },
+    {
+     "id": "fund3",
+     "point": "cerr writes to stderr and does not put bytes into cout, so diagnostic logging need not corrupt graded stdout when the platform separates the streams.",
+     "weight": "core",
+     "evidence_hint": "States the checker compares stdout, stderr is a separate stream, and cerr is unbuffered and independent of cout."
+    },
+    {
+     "id": "fund4",
+     "point": "Before coding, convert the constraint block into an operation-count check: bounds specify the algorithm, while prose often describes a naive approach that will TLE.",
+     "weight": "extended",
+     "evidence_hint": "Gives the example that n <= 2·10^5 with O(n²) implies 4·10^10 operations against a typical 1–2 second limit, and says the bounds specify the algorithm."
+    }
+   ],
+   "probes": [
+    "A submission fails with a single-word Wrong Answer and you cannot print to cout. What does each verdict actually tell you, and where can you still get debug signal?"
+   ],
+   "hints": {
+    "1": "Start from the five platform outcomes rather than from print statements.",
+    "2": "Separate what WA rules out from what RE/TLE rule out, then mention stderr vs stdout.",
+    "3": "Name Runtime Error as the deliberately triggerable channel and cerr as the non-polluting debug stream, plus checking bounds before assuming logic is wrong."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to turn hypotheses into verdict bits via assert/abort, custom-input protocol, and precise reading of compiler diagnostics.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "An assertion that is true iff a hypothesis holds maps Accepted/Wrong Answer to hypothesis held on every test and Runtime Error to hypothesis failed on at least one.",
+     "weight": "core",
+     "evidence_hint": "States assert abort produces RE, so submit and read whether the hypothesis survived all hidden tests."
+    },
+    {
+     "id": "mech2",
+     "point": "On g++/Linux a failed assert prints the failing line on stderr and exits with code 134 (SIGABRT), distinguishable from 139 (SIGSEGV).",
+     "weight": "extended",
+     "evidence_hint": "Mentions the assertion-failed stderr message, exit 134, and contrast with 139 for null/out-of-bounds dereference."
+    },
+    {
+     "id": "mech3",
+     "point": "assert is a no-op under -DNDEBUG, so calibrate with assert(false) on an Accepted solution; if no RE, use an explicit abort such as a null dereference that survives -DNDEBUG.",
+     "weight": "core",
+     "evidence_hint": "Warns some judges use -O2 -DNDEBUG and shows the volatile null-pointer force-SIGSEGV fallback."
+    },
+    {
+     "id": "mech4",
+     "point": "Custom-input protocol: round-trip the stub on the sample first, reproduce every sample, then attack edges, ambiguities, and maximum-bound timing.",
+     "weight": "core",
+     "evidence_hint": "Walks the ordered five-step protocol from harness/format check through edge cases, ambiguity inputs, and largest legal input timing."
+    },
+    {
+     "id": "mech5",
+     "point": "For g++ cascade and template walls, fix the first error and the line immediately above required from here, not the library instantiation noise.",
+     "weight": "extended",
+     "evidence_hint": "Says scroll to the first error; for std::sort/map walls, the user line is the one immediately above required from here."
+    }
+   ],
+   "probes": [
+    "How would you use assertions and the custom-input panel to learn something about hidden tests without printing to stdout?",
+    "Walk me through diagnosing a long g++ template error dump on an OA."
+   ],
+   "hints": {
+    "1": "Think of each submission as a query that maps a boolean hypothesis onto RE vs not-RE.",
+    "2": "Cover calibration for -DNDEBUG, then the ordered custom-input steps, then first-error / required-from-here.",
+    "3": "Say: assert(hypothesis); RE means it failed somewhere; calibrate with assert(false); if disabled, force SIGSEGV; custom-input: stub round-trip → samples → edges → ambiguity → max timing; compiler: first error and line above required from here."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast debugging tactics that buy information against costs in correctness risk, time, or submission budget.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "cerr debugging is high-value when stderr is ignored by the checker, but must be verified per platform and kept out of hot loops because unbuffered cerr can turn a pass into TLE.",
+     "weight": "core",
+     "evidence_hint": "Says verify with a throwaway Accepted re-submit; notes cerr is slow and a cerr inside a 10^6-iteration loop can TLE."
+    },
+    {
+     "id": "tr2",
+     "point": "Local sanitizers and -D_GLIBCXX_DEBUG catch silent UB, but never submit with them because they slow execution by 2–20× and cause TLE.",
+     "weight": "core",
+     "evidence_hint": "Lists -Wall -Wextra, address/undefined sanitizers, and _GLIBCXX_DEBUG for local use only, with the 2–20× slowdown warning."
+    },
+    {
+     "id": "tr3",
+     "point": "Assertion probing yields one bit per submission and should target hypotheses that change next steps, but only after checking submission limits and preferring Run/custom-input when it does not consume attempts.",
+     "weight": "extended",
+     "evidence_hint": "Says three or four well-chosen submissions narrow a mystery; check rules; use Run with custom input when it does not consume a submission."
+    }
+   ],
+   "probes": [
+    "When would you prefer cerr, assertion probes, sanitizers, or custom-input runs—and what do you give up with each?"
+   ],
+   "hints": {
+    "1": "Compare channels that touch stdout vs those that do not.",
+    "2": "Bring in platform policy, loop cost, -DNDEBUG, sanitizer slowdown, and submission budget.",
+    "3": "cerr if stderr is safe and not in a 10^6 loop; assert/abort for hidden-data bits; sanitizers locally only (2–20×); probes last when custom-input cannot answer."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply statement heuristics, silent-killer checks, stress testing, and the pre-submission checklist to recover from Wrong Answer when no hidden input is shown.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Hidden tests are predictable from the statement: samples, min/max bounds, named edges, one test per branch, and especially one test per exclusion rule stated separately.",
+     "weight": "core",
+     "evidence_hint": "Says every sentence that exists only to exclude something is a test case and should be built in custom input."
+    },
+    {
+     "id": "app2",
+     "point": "Integer overflow is a top silent WA cause: int tops out a little over 2·10^9, and intermediate multiply can overflow before assignment to long long—widen before the operation; prefer l + (r - l) / 2.",
+     "weight": "core",
+     "evidence_hint": "Cites int max 2,147,483,647 / ~2·10^9, the a*b vs (long long)a*b example, and binary-search midpoint overflow."
+    },
+    {
+     "id": "app3",
+     "point": "Failed cin >> leaves the variable unchanged and sets fail so later reads no-op; drive loops from declared counts and check read success rather than read-until-fail.",
+     "weight": "extended",
+     "evidence_hint": "Mentions a variable holding 777 staying 777 after failed read, extra trailing output line, and if (!(cin >> n)) return 0."
+    },
+    {
+     "id": "app4",
+     "point": "Overwrite stub sentinel initialisers such as count = -1 or final_output = \"NONE\", because empty/zero legitimate results often hit a hidden test expecting 0 or \"NA\".",
+     "weight": "core",
+     "evidence_hint": "Describes the decoy -1 / NONE stub and says overwrite explicitly even when it looks harmless."
+    },
+    {
+     "id": "app5",
+     "point": "When convinced the code is right, stress-test: naive brute force vs fast on many small random cases (n ≤ 8); a tiny mismatch is the failing case the OA withheld.",
+     "weight": "extended",
+     "evidence_hint": "Gives the generate/compare loop idea, notes counter-examples almost always exist at n ≤ 8, and hundreds of tiny cases beat few large ones."
+    }
+   ],
+   "probes": [
+    "Your solution matches samples but gets Wrong Answer with no input shown. What do you check next, and how do you manufacture a failing case locally?",
+    "Walk through the pre-submission checklist you would run in the last ninety seconds."
+   ],
+   "hints": {
+    "1": "Hunt silent killers and statement exclusion clauses before rewriting the algorithm.",
+    "2": "Cover overflow/intermediates, stub sentinels, failed reads, exclusion-rule tests, then brute-force stress.",
+    "3": "long long including intermediates; overwrite -1/NONE; don’t read-until-fail; build every exclusion sentence as input; if still stuck, random n ≤ 8 vs brute; run the ten-item checklist."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "cerr diagnostics vs cout diagnostics",
+   "strong_answer": "Prefer cerr so debug bytes never enter graded stdout; still verify the platform’s stderr policy with a throwaway Accepted re-submit, and strip/guard cerr in hot loops because unbuffered writes can cause TLE."
+  },
+  {
+   "topic": "assert probes vs explicit abort",
+   "strong_answer": "assert maps a hypothesis to Runtime Error cleanly when enabled, but -DNDEBUG makes asserts no-ops; calibrate with assert(false), and if needed force a crash (e.g. null write) that survives -DNDEBUG."
+  },
+  {
+   "topic": "Local sanitizers/debug STL vs submission build",
+   "strong_answer": "Use -Wall -Wextra, -fsanitize=address,undefined, and -D_GLIBCXX_DEBUG locally to surface silent UB; remove them before submit because 2–20× slowdown risks TLE."
+  },
+  {
+   "topic": "Hidden-test assertion probing vs custom-input Run",
+   "strong_answer": "Custom-input/Run is preferred when it does not consume submissions; assertion probes buy one bit each about truly hidden data but burn limited attempts and should change what you do next."
+  },
+  {
+   "topic": "Trusting sample explanation prose vs sample output / stated rules",
+   "strong_answer": "If a worked explanation contradicts the rules, trust the rules and machine-generated sample output; explanations are hand-written and can contain arithmetic errors."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating TLE and Wrong Answer as the same failure without checking complexity against stated bounds.",
+   "correction": "A nearly-fast solution may fail some tests on time and others on correctness; convert bounds to operation counts first—e.g. n <= 2·10^5 with O(n²) is about 4·10^10 ops vs a 1–2s limit."
+  },
+  {
+   "trap": "Relying on cerr without verifying platform policy, or leaving cerr in a 10^6-iteration loop.",
+   "correction": "Probe stderr safety on an already-Accepted solution; guard or strip heavy tracing before final submit."
+  },
+  {
+   "trap": "Reading no Runtime Error from asserts as hypothesis confirmed when the judge compiles with -DNDEBUG.",
+   "correction": "Calibrate with assert(false); if verdict stays non-RE, use an explicit abort path that is not compiled out."
+  },
+  {
+   "trap": "Burning limited submissions on probes when a non-consuming Run/custom-input path exists.",
+   "correction": "Check attempt limits; do localizable probing in custom input first; spend submissions only on hypotheses that change next actions."
+  },
+  {
+   "trap": "Whitespace/trailing-newline bugs looking correct in the custom-input panel.",
+   "correction": "Panel rendering can hide trailing spaces, missing final newlines, or \\r\\n; graders may trim trailing whitespace but not missing separators—match format exactly."
+  },
+  {
+   "trap": "Intermediate overflow: long long dest = a * b with int a,b still overflows the multiply.",
+   "correction": "Widen before the operation: (long long)a * b; avoid (l + r) / 2 in favor of l + (r - l) / 2."
+  },
+  {
+   "trap": "Failed cin >> leaves prior value (e.g. 777) and poisons all later reads.",
+   "correction": "Drive loops from declared counts; check if (!(cin >> n)) rather than read-until-fail."
+  },
+  {
+   "trap": "Returning a stub sentinel (-1 / \"NONE\") for a legitimate empty/zero result.",
+   "correction": "Overwrite the initialiser explicitly; hidden tests often cover the empty/zero path."
+  },
+  {
+   "trap": "Trusting a hand-worked expected answer that is itself wrong (as with DE Shaw examples claiming 2 flips vs true 3, or five queries vs four).",
+   "correction": "Stress-test fast vs obviously-correct brute on many small random inputs to get a minimal visible mismatch."
+  },
+  {
+   "trap": "Submitting with sanitizers or endl in tight loops.",
+   "correction": "Sanitizers are local-only; replace endl with '\\n' in loops of more than a few thousand iterations."
+  }
+ ]
+}

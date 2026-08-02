@@ -1,0 +1,212 @@
+{
+ "id": "os_08_virtual_memory",
+ "title": "Virtual memory",
+ "type": "FUND",
+ "relevance": "SDE interviews use virtual memory to test whether candidates understand how processes run with limited RAM via demand paging, TLBs, replacement, and thrashing.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what virtual memory and demand paging are, and that page faults are the normal mechanism.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Virtual memory lets a process execute without being entirely in physical memory by keeping actively used pages in RAM and the rest on a disk backing store (swap), giving each process the illusion of a large contiguous address space larger than physical memory.",
+     "weight": "core",
+     "evidence_hint": "Mentions swap/backing store and the illusion of a larger contiguous address space than RAM."
+    },
+    {
+     "id": "fund2",
+     "point": "Demand paging brings a page into a frame only when it is first referenced, never in advance.",
+     "weight": "core",
+     "evidence_hint": "States pages are loaded on first reference, not prefetched by the demand-paging design."
+    },
+    {
+     "id": "fund3",
+     "point": "Each page-table entry has a valid/invalid bit: valid means the page is in a frame; invalid means it is on disk or illegal.",
+     "weight": "core",
+     "evidence_hint": "Correctly maps valid→in frame and invalid→on disk or illegal."
+    },
+    {
+     "id": "fund4",
+     "point": "A page fault is a normal, expected trap that makes demand paging work, not an error—but disk involvement makes the fault rate dominate performance.",
+     "weight": "extended",
+     "evidence_hint": "Calls page faults expected/normal and ties cost to disk I/O and fault rate."
+    }
+   ],
+   "probes": [
+    "What is virtual memory, and how does demand paging use the valid/invalid bit?",
+    "Is a page fault an error? What actually happens when one occurs?"
+   ],
+   "hints": {
+    "1": "Think about how a process can run when not all of its pages are in RAM.",
+    "2": "Connect demand paging to the page-table valid/invalid bit and the trap on an invalid reference.",
+    "3": "Virtual memory keeps hot pages in RAM and the rest on swap; a page is brought in only on first reference; invalid PTE → page fault, which is expected, not a bug."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Walk through the page-fault path, EMAT, the TLB, and how replacement chooses a victim.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "On a page fault the OS checks the reference is legal, finds or frees a frame, schedules a disk read, marks the PTE valid, and restarts the faulting instruction.",
+     "weight": "core",
+     "evidence_hint": "Lists legality check, frame allocation/replacement, disk read, PTE update, and instruction restart."
+    },
+    {
+     "id": "mech2",
+     "point": "Effective memory access time with fault rate p, memory access m, and fault service cost s is EMAT = (1−p)·m + p·s; because s is roughly a hundred thousand times m, even a tiny fault rate inflates EMAT sharply.",
+     "weight": "core",
+     "evidence_hint": "States the EMAT formula and that disk-scale s vs memory-scale m makes low p critical."
+    },
+    {
+     "id": "mech3",
+     "point": "A naive page-table walk costs two memory accesses per reference; a TLB caches recent page→frame translations so a hit yields the frame immediately and a miss falls back to the page table then loads the TLB.",
+     "weight": "core",
+     "evidence_hint": "Mentions the two-access cost without a TLB and hit vs miss behavior."
+    },
+    {
+     "id": "mech4",
+     "point": "With TLB access c, memory access m, and hit ratio h: EMAT = h(c+m) + (1−h)(c+2m); for c = 10 ns, m = 50 ns, h = 0.8, EMAT = 70 ns.",
+     "weight": "extended",
+     "evidence_hint": "Gives the TLB EMAT formula and/or the worked 10/50/0.8 → 70 ns result."
+    },
+    {
+     "id": "mech5",
+     "point": "When no free frame exists, the OS evicts a victim and writes it back only if its dirty bit is set.",
+     "weight": "extended",
+     "evidence_hint": "Links eviction to the dirty bit and write-back only when dirty."
+    }
+   ],
+   "probes": [
+    "Walk through what the OS does on a page fault, step by step.",
+    "Why do we need a TLB, and how does it change effective memory access time?",
+    "When a victim page is replaced, when must it be written back to disk?"
+   ],
+   "hints": {
+    "1": "Start from an invalid PTE and list the OS steps before the instruction can retry.",
+    "2": "Separate pure demand-paging EMAT (p, m, s) from the TLB formula (h, c, m) and mention dirty-bit write-back.",
+    "3": "Fault path: legality → free/replace frame → disk read → valid PTE → restart; EMAT=(1−p)m+ps; TLB avoids two memory accesses; write back only if dirty."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare replacement policies on the shared reference string and identify Belady's anomaly.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "On the 15-reference string with three frames, Optimal gets 8 faults and 7 hits; FIFO and LRU each get 12 faults and 3 hits; MRU is worst with 13 faults and 2 hits.",
+     "weight": "core",
+     "evidence_hint": "Recalls the fault/hit counts for OPT/FIFO/LRU/MRU on that trace."
+    },
+    {
+     "id": "tr2",
+     "point": "FIFO can exhibit Belady's anomaly: for 1,2,3,4,1,2,5,1,2,3,4,5 it has 9 faults with 3 frames but 10 faults with 4 frames—more frames made it worse.",
+     "weight": "core",
+     "evidence_hint": "States Belady's anomaly under FIFO with the 9-vs-10 fault example."
+    },
+    {
+     "id": "tr3",
+     "point": "Optimal evicts the page unused furthest in the future and is unrealizable in practice but is the yardstick; LRU approximates it from the past and, like Optimal, never exhibits Belady's anomaly (unlike FIFO, which is not a stack algorithm).",
+     "weight": "core",
+     "evidence_hint": "Contrasts OPT (future, ideal), LRU (past, no Belady), and FIFO (can Belady)."
+    },
+    {
+     "id": "tr4",
+     "point": "MRU is rarely a good general policy but can help for patterns like a large file scanned once, where the most-recently-used page is least likely to be needed again.",
+     "weight": "extended",
+     "evidence_hint": "Gives when MRU helps (sequential once-through) vs general poor performance."
+    }
+   ],
+   "probes": [
+    "Compare FIFO, Optimal, LRU, and MRU on the standard three-frame reference string.",
+    "What is Belady's anomaly, and which algorithms can / cannot show it?",
+    "When might you prefer MRU over LRU?"
+   ],
+   "hints": {
+    "1": "Recall which policy looks at age in memory, past use, future use, or most-recent use.",
+    "2": "Use the three-frame fault counts and the FIFO Belady example with 3 vs 4 frames.",
+    "3": "OPT 8/7, FIFO&LRU 12/3, MRU 13/2; FIFO can Belady (9→10 faults); LRU/OPT never; MRU for scan-once patterns."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply virtual memory ideas to thrashing control and common OS optimizations.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Thrashing is when a process or system spends more time servicing page faults than doing useful work; as multiprogramming rises, CPU utilization climbs, peaks, then collapses sharply.",
+     "weight": "core",
+     "evidence_hint": "Defines thrashing and describes the utilization climb-peak-collapse shape."
+    },
+    {
+     "id": "app2",
+     "point": "The working-set model tracks pages referenced in a recent window and gives a process enough frames for that set; admit new processes only if working sets fit, otherwise reduce multiprogramming by swapping a process out.",
+     "weight": "core",
+     "evidence_hint": "Explains working-set sizing and reducing degree of multiprogramming when demand exceeds frames."
+    },
+    {
+     "id": "app3",
+     "point": "Copy-on-write after fork shares read-only physical frames until a write, then copies that single page.",
+     "weight": "extended",
+     "evidence_hint": "Describes shared RO pages until write triggers a private copy."
+    },
+    {
+     "id": "app4",
+     "point": "mmap maps a file into the address space so access is ordinary demand-paged memory and can be shared; the page cache keeps recently used disk pages in otherwise-free RAM with lazy write-back of dirty pages.",
+     "weight": "extended",
+     "evidence_hint": "Links mmap to demand-paged file access/sharing and free RAM as a disk page cache."
+    }
+   ],
+   "probes": [
+    "What is thrashing, and how does the working-set model address it?",
+    "How does copy-on-write speed up fork?",
+    "What are memory-mapped files and the page cache doing in terms of virtual memory?"
+   ],
+   "hints": {
+    "1": "Picture too many processes each with too few frames for their active pages.",
+    "2": "Remedy with working sets and lower multiprogramming; then connect fork COW and mmap/page cache.",
+    "3": "Thrashing = paging dominates work; give each process its working set or swap one out; COW shares until write; mmap/page cache demand-page and cache disk in free RAM."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "FIFO vs Optimal vs LRU vs MRU",
+   "strong_answer": "On the shared 15-reference, three-frame string: Optimal 8 faults / 7 hits (best, needs future knowledge); FIFO and LRU both 12 / 3; MRU worst at 13 / 2. LRU approximates Optimal from the past and avoids Belady's anomaly; FIFO is simple but can Belady; MRU only for special patterns like a once-through file scan."
+  },
+  {
+   "topic": "More frames vs fewer faults (Belady's anomaly)",
+   "strong_answer": "Intuition says more frames mean fewer faults, but FIFO can violate that: on 1,2,3,4,1,2,5,1,2,3,4,5 it has 9 faults with 3 frames and 10 with 4. Belady's anomaly hits non-stack algorithms like FIFO; LRU and Optimal never show it."
+  },
+  {
+   "topic": "Keeping fault rate low vs raw memory speed",
+   "strong_answer": "EMAT = (1−p)m + p·s; because fault service s is roughly a hundred thousand times memory access m, a tiny p dominates—so good replacement and enough frames matter more than raw m alone."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating a page fault as an error or rare failure.",
+   "correction": "A page fault is a normal, expected trap—the mechanism that makes demand paging work; the danger is a high fault rate, not the fault itself."
+  },
+  {
+   "trap": "Assuming more frames always reduce page faults under every replacement policy.",
+   "correction": "Under FIFO, Belady's anomaly can make more frames worse (9 faults with 3 frames vs 10 with 4 on the classic string); LRU and Optimal do not exhibit this."
+  },
+  {
+   "trap": "Thinking Optimal page replacement is a practical online policy.",
+   "correction": "Optimal needs future references, so it is unrealizable in practice; it is only the yardstick; LRU approximates it from the past."
+  },
+  {
+   "trap": "Always writing a victim page back to disk on eviction.",
+   "correction": "Write back only if the dirty bit is set; a clean victim can be discarded."
+  },
+  {
+   "trap": "Responding to thrashing by raising the degree of multiprogramming further.",
+   "correction": "Thrashing means too few frames per active working set; use the working-set model and reduce multiprogramming (swap a process out) when demand exceeds available frames."
+  }
+ ]
+}

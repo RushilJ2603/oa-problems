@@ -1,0 +1,173 @@
+{
+ "id": "dbms_03_er_additions",
+ "title": "ER Cardinality, Mapping, and Weak Entities",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs test whether candidates can map ER cardinality to tables correctly and reason about participation and weak entities.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish cardinality ratios, descriptive attributes, and weak-entity identity.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Cardinality (degree of relationship) is the number of entity instances that can associate across a relationship.",
+     "weight": "core",
+     "evidence_hint": "States cardinality as how many instances of one entity set can link to instances of another via a relationship."
+    },
+    {
+     "id": "fund2",
+     "point": "The four primary cardinality ratios are 1:1, 1:M, M:1, and M:N (M-M).",
+     "weight": "core",
+     "evidence_hint": "Lists all four ratios by name without inventing extra types."
+    },
+    {
+     "id": "fund3",
+     "point": "A descriptive attribute sits on the relationship diamond and records a property of the association, not of either entity alone.",
+     "weight": "extended",
+     "evidence_hint": "Gives an example like Date on an order-placement relationship belonging to the association event."
+    },
+    {
+     "id": "fund4",
+     "point": "A weak entity has no primary key of its own and depends on an owner (strong) entity for identification.",
+     "weight": "core",
+     "evidence_hint": "Defines weak entity via missing independent key and existence dependency on an owner."
+    }
+   ],
+   "probes": [
+    "What is cardinality in an ER model, and what are the four primary cardinality ratios?",
+    "What makes an entity weak, and how is a partial key different from a primary key?"
+   ],
+   "hints": {
+    "1": "Think about allowable connections between two entity sets, then about entities that cannot stand alone.",
+    "2": "Name the four ratios; for weak entities mention owner, total participation, and discriminator.",
+    "3": "Cardinality = how many instances associate; ratios are 1:1, 1:M, M:1, M:N; weak entity has no own PK and uses a partial key within one owner."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how cardinality drives foreign-key placement, table absorption, and weak-entity table keys.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Golden rule: foreign-key placement and whether a relationship becomes its own table depend entirely on cardinality, aiming to reduce tables when sound.",
+     "weight": "core",
+     "evidence_hint": "Ties mapping decisions to cardinality and the goal of fewer tables without losing information."
+    },
+    {
+     "id": "mech2",
+     "point": "For 1:1, combine into one table (or keep two and put the other's key as a foreign key on either side); if merged, the primary key can be either side's key.",
+     "weight": "core",
+     "evidence_hint": "Mentions merge flexibility and that either entity's key can be the merged PK."
+    },
+    {
+     "id": "mech3",
+     "point": "For 1:M, put the foreign key (PK of the 1 side) on the many side and absorb the relationship table; descriptive attributes migrate with that FK.",
+     "weight": "core",
+     "evidence_hint": "Says FK goes on many, relationship is absorbed, and attributes like Date land on the many-side table."
+    },
+    {
+     "id": "mech4",
+     "point": "For M:N, create a separate junction table holding both keys with composite PK of both keys; M:N cannot be absorbed into either side.",
+     "weight": "core",
+     "evidence_hint": "Insists on a relationship table with composite {both keys} and no reduction."
+    },
+    {
+     "id": "mech5",
+     "point": "A mapped weak-entity table is owner PK plus partial key plus its own attributes, with composite PK {owner PK, partial key}.",
+     "weight": "extended",
+     "evidence_hint": "Gives form like Dependent(EID, Name, age) with composite PK of owner key and Name."
+    }
+   ],
+   "probes": [
+    "How do you map 1:1, 1:M, and M:N relationships to relations?",
+    "How do you turn a weak entity into a table?"
+   ],
+   "hints": {
+    "1": "Ask where the foreign key lives for each cardinality before counting tables.",
+    "2": "1:1 can merge; 1:M puts FK on many and absorbs; M:N needs a junction; weak = owner key + partial key.",
+    "3": "State the three mapping rules plus weak-entity composite PK = {owner PK, partial key}."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast when relationships can be absorbed to cut tables versus when a separate table is mandatory.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "1:1 offers maximal flexibility: merging often reduces table count; alternatively keep two tables with a FK on either side.",
+     "weight": "core",
+     "evidence_hint": "Explains merge-to-one versus two-table-with-FK as valid 1:1 choices aimed at fewer tables."
+    },
+    {
+     "id": "tr2",
+     "point": "1:M absorbs the relationship into the many side to reduce overall tables; M:N cannot reduce and must keep a separate relationship table.",
+     "weight": "core",
+     "evidence_hint": "Contrasts absorption for 1:M with mandatory junction for M:N to avoid redundancy."
+    }
+   ],
+   "probes": [
+    "When can you absorb a relationship into an entity table, and when must you keep a separate relationship table?",
+    "Why does absorbing an M:N relationship fail even though absorbing 1:M succeeds?"
+   ],
+   "hints": {
+    "1": "Compare what happens if you put both keys only inside one participating entity table.",
+    "2": "Link absorption to 1-side FK on many versus needing both keys as a composite relationship PK.",
+    "3": "1:M absorbs into many; M:N needs a junction—absorbing M:N causes redundancy and insert anomalies."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply mapping reductions and total-participation cardinality reasoning to exam-style questions.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "In the minimum-tables ER model, the answer is 3 tables: strong entity alone, 1:M folded with its many side, and M:N as its own table.",
+     "weight": "core",
+     "evidence_hint": "Says (b) 3 with T1=strong entity, T2=1:M·many side, T3=M:N relationship."
+    },
+    {
+     "id": "app2",
+     "point": "For a many-to-one R from E1 to E2 with total participation of both and |E1| greater than |E2|, every entity in E1 is associated with exactly one entity in E2.",
+     "weight": "core",
+     "evidence_hint": "Selects GATE option (A) and rejects claims that some E1 maps to multiple E2 or that each E2 has exactly/at most one E1."
+    }
+   ],
+   "probes": [
+    "Given an ER diagram with a 1:M and an M:N among strong entities, what is the minimum number of tables and why?",
+    "If R is many-to-one from E1 to E2 with total participation and |E1| > |E2|, which statement about R must be true?"
+   ],
+   "hints": {
+    "1": "Count one table per strong entity that cannot fold, then add what M:N forces.",
+    "2": "Many-to-one from E1 to E2 means each E1 points to one E2; |E1| > |E2| forces some E2 to have several E1.",
+    "3": "Minimum tables answer is 3; GATE answer is every E1 associates with exactly one E2."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Merge 1:1 into one table vs keep two tables with a foreign key",
+   "strong_answer": "1:1 allows either merge (PK can be either side's key) or two tables with the other's key as FK on either side; merging is preferred when the goal is minimizing tables without losing information."
+  },
+  {
+   "topic": "Absorb relationship (1:M) vs separate junction table (M:N)",
+   "strong_answer": "1:M puts the 1-side PK as FK on the many side and absorbs the relationship (and descriptive attributes) into that table; M:N must create a junction with composite PK of both keys because absorbing into either side causes redundancy and insert anomalies."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Absorbing an M:N relationship into either participating table to reduce table count",
+   "correction": "M:N cannot reduce; you must create a separate relationship table with composite primary key of both keys—absorbing causes massive redundancy and insert anomalies."
+  },
+  {
+   "trap": "Treating a weak entity as having its own standalone primary key",
+   "correction": "A weak entity has no PK of its own; identification uses owner PK plus partial key (discriminator), with total participation in the identifying relationship."
+  },
+  {
+   "trap": "From many-to-one E1→E2 with |E1| > |E2| and total participation, concluding each E2 has exactly one or at most one E1",
+   "correction": "Each E1 maps to exactly one E2, but |E1| > |E2| forces some E2 entities to associate with several E1 entities, so those E2-side uniqueness claims are false."
+  }
+ ]
+}

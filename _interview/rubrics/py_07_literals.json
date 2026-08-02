@@ -1,0 +1,180 @@
+{
+ "id": "py_07_literals",
+ "title": "Python literals",
+ "type": "FUND",
+ "relevance": "OAs and early SDE screens often check that candidates can read and write integer bases, scientific floats, complex, and string/raw/Unicode literal forms correctly.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a literal is and the main literal kinds Python provides.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A literal is a fixed value written directly in source code.",
+     "weight": "core",
+     "evidence_hint": "Says literals are values written inline in source, not computed or read from input."
+    },
+    {
+     "id": "fund2",
+     "point": "Python has distinct notations for integer bases, floats, complex numbers, and strings.",
+     "weight": "core",
+     "evidence_hint": "Lists integers (bases), floats, complex, and strings as separate literal forms."
+    },
+    {
+     "id": "fund3",
+     "point": "True, False, and None are themselves literals — the only values of their respective kinds.",
+     "weight": "extended",
+     "evidence_hint": "Names True, False, and None as literal singleton values."
+    }
+   ],
+   "probes": [
+    "What is a literal in Python, and what kinds of literals does the language provide?"
+   ],
+   "hints": {
+    "1": "Think about values you type directly into source rather than variables or expressions.",
+    "2": "Cover integers in different bases, floats, complex, strings, plus True/False/None.",
+    "3": "A literal is a fixed value written in source; Python has notations for int bases, floats, complex, strings, and True/False/None."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Check exact prefix, suffix, and escape rules for int, float, complex, and string literals.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Integer bases use prefixes 0b (base 2), none (base 10), 0o (base 8), and 0x (base 16); examples 0b1010, 100, 0o310, 0x12c print as 10 100 200 300.",
+     "weight": "core",
+     "evidence_hint": "Gives the four prefixes/bases and that those example literals print as decimal 10, 100, 200, 300."
+    },
+    {
+     "id": "mech2",
+     "point": "Regardless of how an integer literal is written, once stored it is an ordinary integer and printing shows its decimal value.",
+     "weight": "core",
+     "evidence_hint": "States base notation is only source syntax; the value is a normal int shown in decimal when printed."
+    },
+    {
+     "id": "mech3",
+     "point": "Float e notation means times ten to the power of: 1.5e2 is 150.0 and 1.5e-3 is 0.0015.",
+     "weight": "core",
+     "evidence_hint": "Explains e as ×10^power and gives those two example results."
+    },
+    {
+     "id": "mech4",
+     "point": "Complex literals use a j suffix; a complex exposes .real and .imag (e.g. 3.14j has imag 3.14 and real 0.0).",
+     "weight": "extended",
+     "evidence_hint": "Mentions j for imaginary part and .real/.imag, with the 3.14j example."
+    },
+    {
+     "id": "mech5",
+     "point": "u\"...\" marks a Unicode string; \\U0001F606 is a Unicode escape naming a character by code point.",
+     "weight": "extended",
+     "evidence_hint": "Describes the u prefix and \\Uxxxxxxxx code-point escapes."
+    },
+    {
+     "id": "mech6",
+     "point": "r\"...\" is a raw string: backslash escapes are taken literally, so \\n stays backslash-n instead of a newline.",
+     "weight": "core",
+     "evidence_hint": "Says raw strings keep \\n as two characters, not a newline."
+    }
+   ],
+   "probes": [
+    "How do you write integers in binary, octal, and hex, and what do 0b1010, 0o310, and 0x12c print as?",
+    "What does the e in a float literal mean, and how does a raw string treat \\n?"
+   ],
+   "hints": {
+    "1": "Look at the prefixes 0b/0o/0x, the float e form, the j suffix, and string prefixes u and r.",
+    "2": "Walk through one int-base example, one scientific float, then contrast a normal escape with r\"...\".",
+    "3": "0b/0o/0x set the base and those examples print 10/200/300; e means ×10^n; j builds complex with .real/.imag; r keeps backslashes literal."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare quote styles and raw vs ordinary strings for how text is written and interpreted.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Single and double quotes are equivalent; choose whichever avoids escaping.",
+     "weight": "core",
+     "evidence_hint": "Says '...' and \"...\" are the same and pick the form that needs fewer escapes."
+    },
+    {
+     "id": "tr2",
+     "point": "Triple quotes (\"\"\"...\"\"\" or '''...''') create multi-line strings.",
+     "weight": "core",
+     "evidence_hint": "Names triple-quoted forms as the way to write multi-line string literals."
+    },
+    {
+     "id": "tr3",
+     "point": "A raw string is preferable when literal backslashes are wanted, unlike ordinary strings that interpret escapes.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts r\"...\" (literal backslashes) with normal strings that process escape sequences."
+    }
+   ],
+   "probes": [
+    "When would you choose single vs double quotes, and when would you use a raw string instead of a normal one?"
+   ],
+   "hints": {
+    "1": "Think about escaping quotes inside the string and about backslashes.",
+    "2": "Equivalence of ' and \"; triple quotes for multiple lines; r for literal backslashes.",
+    "3": "Pick ' or \" to avoid escaping; use \"\"\"/''' for multi-line; use r\"...\" when you want backslashes kept as written."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply literal forms to realistic source patterns (paths, regex, multi-line text, complex values).",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Raw strings are invaluable for Windows paths and regular-expression patterns where literal backslashes are wanted.",
+     "weight": "core",
+     "evidence_hint": "Gives Windows paths and regex as the motivating uses for r\"...\"."
+    },
+    {
+     "id": "app2",
+     "point": "You can write the same string with '...' or \"...\", use triple quotes for multi-line text, and build complex values with a j suffix.",
+     "weight": "extended",
+     "evidence_hint": "Connects quote choice, triple-quoted multi-line strings, and j complex literals to writing real code."
+    }
+   ],
+   "probes": [
+    "You need a Windows path or a regex with many backslashes — which string literal form do you use and why?"
+   ],
+   "hints": {
+    "1": "Which string prefix stops \\ from being treated as an escape?",
+    "2": "Name the raw-string prefix and the two common domains that need literal backslashes.",
+    "3": "Use r\"...\" so backslashes stay literal — especially for Windows paths and regex patterns."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Single quotes vs double quotes",
+   "strong_answer": "They are equivalent; choose whichever form avoids having to escape quotes inside the string."
+  },
+  {
+   "topic": "Ordinary string vs raw string",
+   "strong_answer": "Ordinary strings interpret backslash escapes (so \\n becomes a newline); raw strings take backslashes literally, which is useful for Windows paths and regex patterns."
+  },
+  {
+   "topic": "One-line quotes vs triple quotes",
+   "strong_answer": "Single/double quotes write one-line strings; triple quotes (\"\"\"...\"\"\" or '''...''') create multi-line strings."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming 0b/0o/0x integers print in that base",
+   "correction": "Notation is only how they are written; once stored they are ordinary integers and printing shows decimal values (e.g. 0b1010, 0o310, 0x12c print as 10, 200, 300)."
+  },
+  {
+   "trap": "Expecting \\n inside a raw string to become a newline",
+   "correction": "In r\"...\", backslash escapes are literal, so \\n stays the two characters backslash-n."
+  },
+  {
+   "trap": "Thinking a pure imaginary like 3.14j has a non-zero real part",
+   "correction": "It exposes .real and .imag; for 3.14j, imag is 3.14 and real is 0.0."
+  }
+ ]
+}

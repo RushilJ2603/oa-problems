@@ -1,0 +1,229 @@
+{
+ "id": "dsa_s03_algorithms",
+ "title": "Built-in Algorithms",
+ "type": "FUND",
+ "relevance": "STL <algorithm> and <numeric> routines are expected in C++ interviews and OAs; using them correctly saves time and avoids hand-rolled loop bugs.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what core <algorithm>/<numeric> facilities exist and what each one returns or mutates.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "std::sort is an O(n log n) comparison-based sort, typically Introsort (Quicksort, Heapsort, and Insertion Sort).",
+     "weight": "core",
+     "evidence_hint": "Names sort’s class (comparison-based O(n log n)) and mentions Introsort or the three hybrid pieces."
+    },
+    {
+     "id": "fund2",
+     "point": "A comparator is a boolean callable on (a, b) that returns true iff a must appear strictly before b in the sorted order.",
+     "weight": "core",
+     "evidence_hint": "States the strict-before contract, not a vague “returns whether a is smaller.”"
+    },
+    {
+     "id": "fund3",
+     "point": "lower_bound returns the first element not less than (>=) val; upper_bound returns the first strictly greater than (>) val.",
+     "weight": "core",
+     "evidence_hint": "Gives both iterator semantics with >= vs > wording."
+    },
+    {
+     "id": "fund4",
+     "point": "equal_range returns the half-open [lower_bound, upper_bound) of elements equivalent to val.",
+     "weight": "extended",
+     "evidence_hint": "Describes the pair of iterators as that half-open span."
+    },
+    {
+     "id": "fund5",
+     "point": "unique and remove only rearrange and return a new logical end; they do not resize—pair with erase (erase-unique / erase-remove).",
+     "weight": "core",
+     "evidence_hint": "Mentions no resize / new logical end and the erase pairing idioms."
+    }
+   ],
+   "probes": [
+    "What does std::sort guarantee about time and typical implementation, and how do you express a custom order?",
+    "What do lower_bound and upper_bound each return on a sorted range?"
+   ],
+   "hints": {
+    "1": "Think iterators and ordering contracts, not just “sort the vector.”",
+    "2": "Sort: O(n log n) Introsort; comparator means strictly before; bounds are first >= vs first >.",
+    "3": "sort is O(n log n) Introsort; comparator returns true if a must precede b; lower_bound = first not less than val, upper_bound = first strictly greater; unique/remove need erase to shrink."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Check how complexities, iterator categories, and ordering rules make these algorithms correct or wrong.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A custom comparator must enforce strict weak ordering and return false for identical/equivalent elements; returning a <= b instead of a < b is undefined behavior.",
+     "weight": "core",
+     "evidence_hint": "Links non-strict <= to UB / crash risk under strict weak ordering."
+    },
+    {
+     "id": "mech2",
+     "point": "nth_element places the correct element at the k-th position as if fully sorted; elements before are ≤ it and after are ≥ it, in O(n) average time (QuickSelect).",
+     "weight": "core",
+     "evidence_hint": "States k-th position guarantee, ≤/≥ partition, and O(n) average QuickSelect."
+    },
+    {
+     "id": "mech3",
+     "point": "partial_sort makes the first k elements the smallest k in sorted order in O(n log k); is_sorted checks sortedness in O(n).",
+     "weight": "extended",
+     "evidence_hint": "Gives both algorithms’ roles and those complexities from the notes."
+    },
+    {
+     "id": "mech4",
+     "point": "Binary search algorithms are O(log n) for random-access iterators; on std::set/map you must use member lower_bound/upper_bound because free std::lower_bound is O(n) on non-random-access iterators while members are O(log n).",
+     "weight": "core",
+     "evidence_hint": "Contrasts free O(n) on trees vs member O(log n), and RA O(log n) baseline."
+    },
+    {
+     "id": "mech5",
+     "point": "make_heap is O(n); push_heap and pop_heap are O(log n) and require push_back before push_heap and pop_back after pop_heap; sort_heap sorts a heap ascending in O(n log n).",
+     "weight": "extended",
+     "evidence_hint": "Recites those complexities and the push_back/pop_back choreography."
+    },
+    {
+     "id": "mech6",
+     "point": "Set algebra algorithms need two sorted ranges, write via an output iterator, and run in O(N + M).",
+     "weight": "extended",
+     "evidence_hint": "Mentions sorted inputs, output iterator (e.g. back_inserter), and O(N + M)."
+    }
+   ],
+   "probes": [
+    "Why can a comparator written with <= crash sort, and what must it guarantee?",
+    "Why must you call set/map member lower_bound instead of std::lower_bound on the tree?"
+   ],
+   "hints": {
+    "1": "Ordering and iterator category drive both correctness and asymptotic cost.",
+    "2": "Strict weak ordering forbids <= on equals; tree free algorithms walk linearly; heap helpers need the push/pop vector steps.",
+    "3": "<= in a comparator is UB; nth_element is O(n) average QuickSelect with ≤/≥ sides; free lower_bound on set/map is O(n) vs member O(log n); make_heap O(n), push/pop_heap O(log n)."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose among related STL tools when stability, access to storage, or evaluation order matters.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "stable_sort preserves relative order of equivalent elements (useful for multi-key passes) and is O(n log^2 n), or O(n log n) with enough extra memory, unlike ordinary sort.",
+     "weight": "core",
+     "evidence_hint": "Names stability use-case and the two complexity cases from the notes."
+    },
+    {
+     "id": "tr2",
+     "point": "Manual heap on a vector (make_heap and friends) vs priority_queue: use the vector heap when you need to inspect the underlying array or build a heap in O(n) in place without copying.",
+     "weight": "core",
+     "evidence_hint": "Ties manual heap to inspectability and O(n) in-place build."
+    },
+    {
+     "id": "tr3",
+     "point": "reduce is like accumulate but may evaluate out of order (C++17, for parallelism); accumulate’s init type fixes the accumulation type.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts out-of-order reduce with typed accumulate init."
+    }
+   ],
+   "probes": [
+    "When would you pick stable_sort over sort, and what complexity should you quote?",
+    "When is a manual heap on a vector preferable to priority_queue?"
+   ],
+   "hints": {
+    "1": "Stability, memory, and whether you need the container layout are the levers.",
+    "2": "stable_sort keeps equivalent order; vector heap exposes storage and O(n) make_heap; reduce relaxes order vs accumulate.",
+    "3": "stable_sort: preserve equivalent order, O(n log^2 n) or O(n log n) with extra memory; make_heap for O(n) in-place inspectable heap; reduce allows out-of-order vs accumulate’s init-typed sum."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply standard idioms and numeric/bit pitfalls the way interview/OA code expects.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "To generate all permutations: sort first, then process in a do/while driven by next_permutation (O(n) per call); false means it wrapped to the lexicographically smallest.",
+     "weight": "core",
+     "evidence_hint": "States sort-then-next_permutation loop and wrap-around meaning of false."
+    },
+    {
+     "id": "app2",
+     "point": "Count equals on a sorted vector via upper_bound index minus lower_bound index (iterators converted with it - v.begin()).",
+     "weight": "core",
+     "evidence_hint": "Uses bound difference after converting iterators to indices."
+    },
+    {
+     "id": "app3",
+     "point": "Pass 0LL (not 0) as accumulate’s init when the sum may overflow a 32-bit integer, because init’s type dictates the sum type.",
+     "weight": "core",
+     "evidence_hint": "Names 0LL and the type-of-init rule."
+    },
+    {
+     "id": "app4",
+     "point": "__builtin_clz(0) and __builtin_ctz(0) are undefined behavior—check x != 0 first; abs(INT_MIN) is also UB from overflow.",
+     "weight": "extended",
+     "evidence_hint": "Mentions both zero-arg builtin UB and abs(INT_MIN)."
+    },
+    {
+     "id": "app5",
+     "point": "Avoid std::pow for integer powers (e.g. inaccuracies that truncate wrong); use 1LL << k for powers of two or iterative modular exponentiation in O(log exp).",
+     "weight": "extended",
+     "evidence_hint": "Rejects pow for ints and names bit-shift or modexp alternative."
+    }
+   ],
+   "probes": [
+    "Show the idiom to enumerate all permutations of a vector with next_permutation.",
+    "How do you safely sum a vector of ints that might overflow 32-bit with accumulate?"
+   ],
+   "hints": {
+    "1": "Interview code leans on erase idioms, bounds arithmetic, and typed accumulate.",
+    "2": "Sort then next_permutation; ub-lb for counts; 0LL init; guard clz/ctz and INT_MIN abs.",
+    "3": "do { … } while (next_permutation(...)) after sort; count = (upper_bound - begin) - (lower_bound - begin); accumulate(..., 0LL); never clz/ctz(0); prefer 1LL << k or modexp over pow."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "sort vs stable_sort",
+   "strong_answer": "Use sort for default O(n log n) unordered ties among equals; use stable_sort when equivalent elements must keep relative order across multi-criteria passes, accepting O(n log^2 n) or O(n log n) if enough extra memory is available."
+  },
+  {
+   "topic": "std::lower_bound free function vs set/map member lower_bound",
+   "strong_answer": "On vectors/arrays (random-access), free lower_bound/upper_bound are O(log n). On std::set/map, free std::lower_bound is O(n) because iterators are not random-access; call the container’s member lower_bound/upper_bound for O(log n)."
+  },
+  {
+   "topic": "priority_queue vs manual heap on a vector",
+   "strong_answer": "priority_queue is the usual interface; make_heap/push_heap/pop_heap/sort_heap when you need to inspect the underlying array or build a heap in O(n) directly on an existing vector without copying."
+  },
+  {
+   "topic": "accumulate vs reduce",
+   "strong_answer": "accumulate folds with a typed init (init type is the sum type). reduce (C++17) is similar but may evaluate out of order, enabling parallelism."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Writing a comparator with a <= b (or otherwise returning true for equivalent elements).",
+   "correction": "Comparators must implement strict weak ordering and return false for identical/equivalent elements; use strict < style predicates or sort hits undefined behavior (often a segfault)."
+  },
+  {
+   "trap": "Calling std::lower_bound / std::upper_bound on a std::set or std::map.",
+   "correction": "Use the member .lower_bound() / .upper_bound(); free algorithms are O(n) on bidirectional tree iterators, members are O(log n)."
+  },
+  {
+   "trap": "Expecting unique or remove to shrink the container by themselves.",
+   "correction": "They only compact and return the new logical end; finish with erase (erase-unique / erase-remove). For unique, sort first if duplicates are not already consecutive."
+  },
+  {
+   "trap": "accumulate(v.begin(), v.end(), 0) when the sum can exceed 32-bit range.",
+   "correction": "Init type controls the accumulation type—pass 0LL so the sum is long long."
+  },
+  {
+   "trap": "Calling __builtin_clz(0) or __builtin_ctz(0).",
+   "correction": "Those are undefined behavior; always ensure x != 0 first."
+  },
+  {
+   "trap": "Using abs(INT_MIN), or std::pow / floating sqrt for exact integer results.",
+   "correction": "abs(INT_MIN) overflows (UB). Prefer integer methods or careful rounding for roots; for powers of two use 1LL << k, otherwise iterative modular exponentiation—not std::pow on doubles."
+  }
+ ]
+}

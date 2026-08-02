@@ -1,0 +1,199 @@
+{
+ "id": "dsa_s13_linked_lists",
+ "title": "Linked Lists",
+ "type": "FUND",
+ "relevance": "Core SDE interview and OA topic for testing in-place pointer manipulation, edge-case handling, and two-pointer techniques.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a linked list is, its varieties, and how it differs from arrays.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A linked list is a linear structure of heap-allocated nodes, each holding data and one or more pointers to other nodes, with no O(1) random access to the i-th element.",
+     "weight": "core",
+     "evidence_hint": "Contrasts contiguous array indexing with pointer-chasing traversal from the head."
+    },
+    {
+     "id": "fund2",
+     "point": "Main varieties are singly linked (forward only), doubly linked (forward and backward), and circular (tail points back to head).",
+     "weight": "core",
+     "evidence_hint": "Names all three varieties and what each pointer arrangement enables."
+    },
+    {
+     "id": "fund3",
+     "point": "A dummy/sentinel head that points at the real head lets insert/delete at the head use the same logic as other nodes and removes empty-list and head-change edge cases.",
+     "weight": "extended",
+     "evidence_hint": "Explains why a temporary node in front of head unifies pointer updates."
+    }
+   ],
+   "probes": [
+    "What is a linked list, and how does access cost compare to an array?",
+    "When would you use a dummy head node?"
+   ],
+   "hints": {
+    "1": "Think about how nodes are stored in memory versus an array.",
+    "2": "Cover varieties (singly/doubly/circular) and the sentinel trick for head operations.",
+    "3": "Nodes are heap-scattered with no O(1) indexed jump; dummy head unifies insert/delete including at head."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Verify correct pointer updates for build, insert, delete, reverse, and slow/fast traversal.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Insert at head is O(1): new node's next points to current head, then head becomes the new node; insert at tail or position k without a tail pointer is O(N) due to traversal.",
+     "weight": "core",
+     "evidence_hint": "States head vs tail/position costs and the (k-1)-th predecessor walk for position insert."
+    },
+    {
+     "id": "mech2",
+     "point": "Delete requires bypassing the target via the predecessor's next (or prev/next on a doubly list) then freeing the node; head delete is O(1), tail or position delete is O(N).",
+     "weight": "core",
+     "evidence_hint": "Mentions predecessor adjustment, free/delete, and empty/single-node edge cases."
+    },
+    {
+     "id": "mech3",
+     "point": "Iterative singly-list reverse uses three pointers (prev, curr, nextTemp): store next, point curr->next to prev, then advance prev and curr; recursive reverse is O(n) time and O(n) stack space.",
+     "weight": "core",
+     "evidence_hint": "Walks the three-pointer loop or the attach-current-to-reversed-sublist recursive step."
+    },
+    {
+     "id": "mech4",
+     "point": "Slow/fast (tortoise and hare): slow moves one step, fast two; when fast ends, slow is at the middle (second middle if two); same idea detects cycles when they meet.",
+     "weight": "extended",
+     "evidence_hint": "Describes relative speeds and the middle or meet condition without an extra length pass."
+    }
+   ],
+   "probes": [
+    "How do you insert or delete at the head versus at position k?",
+    "Walk through iterative reverse, then how slow and fast find the middle or a cycle."
+   ],
+   "hints": {
+    "1": "Separate the head case from cases that need a predecessor.",
+    "2": "For reverse, name prev/curr/nextTemp; for middle/cycle, name slow and fast step sizes.",
+    "3": "Head insert/delete O(1); elsewhere traverse to predecessor. Reverse flips next with three pointers. Slow+1/fast+2 yields middle or Floyd meet."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast arrays vs lists and space/time choices among standard linked-list techniques.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Lists beat arrays for O(1) insert/delete at a known position without reallocation; arrays win for O(1) indexed access and cache-friendly contiguous memory.",
+     "weight": "core",
+     "evidence_hint": "States both sides: pointer local edits vs random access and locality."
+    },
+    {
+     "id": "tr2",
+     "point": "Cycle detection: hash set of visited nodes uses O(n) space; Floyd's slow/fast meeting uses O(1) space.",
+     "weight": "core",
+     "evidence_hint": "Compares visited-set approach to tortoise-hare constant space."
+    },
+    {
+     "id": "tr3",
+     "point": "Merge sort suits linked lists: sequential access, O(n log n) time, with O(log n) recursion-stack space (O(1) auxiliary ignoring the stack).",
+     "weight": "extended",
+     "evidence_hint": "Explains why merge sort fits lists better than random-access-heavy sorts."
+    }
+   ],
+   "probes": [
+    "When would you pick a linked list over an array?",
+    "How do Floyd's cycle detection and merge sort trade space versus a hash-set or array-based approach?"
+   ],
+   "hints": {
+    "1": "Start from insert/delete versus indexing and cache behavior.",
+    "2": "Then compare O(n) visited-set cycle check to O(1)-space Floyd, and sorting via merge.",
+    "3": "Lists: O(1) known-position edit, poor locality/index. Cycles: set O(n) vs Floyd O(1). Sort lists with merge sort O(n log n)."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply pointer patterns to classic interview problems: cycles, palindrome, nth-from-end, intersection, and advanced clones/flatten/k-group.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "After Floyd meet inside a cycle, reset slow to head and advance both one step; their next meet is the cycle start; loop length is counted by fixing slow at the meet and walking fast once around.",
+     "weight": "core",
+     "evidence_hint": "States reset-to-head then equal-speed meet, plus count-until-return for length."
+    },
+    {
+     "id": "app2",
+     "point": "Palindrome in O(1) space: find middle, reverse second half, compare halves, optionally restore; remove nth-from-end in one pass by advancing fast n steps then moving slow/fast together, often with a dummy head.",
+     "weight": "core",
+     "evidence_hint": "Chains middle+reverse+compare and the n-gap two-pointer delete with dummy."
+    },
+    {
+     "id": "app3",
+     "point": "Intersection in O(1) space: when A finishes list A switch to headB and when B finishes switch to headA so both walk A+B and meet at the intersection (or null).",
+     "weight": "extended",
+     "evidence_hint": "Describes the dual-pointer redirect so total distances match."
+    },
+    {
+     "id": "app4",
+     "point": "Clone with random in O(1) extra space: interleave clones after originals, set clone random via original.random.next, then unweave; flatten merges sorted bottom-lists recursively like merge-sort merge.",
+     "weight": "extended",
+     "evidence_hint": "Outlines weave/assign/separate for random clone and bottom-up merge for flatten."
+    }
+   ],
+   "probes": [
+    "How do you find a cycle's start and its length with constant space?",
+    "How would you check palindrome, remove the nth node from the end, or clone a list with random pointers in place?"
+   ],
+   "hints": {
+    "1": "Reuse Floyd for cycle problems; reuse middle/reverse for palindrome.",
+    "2": "Nth-from-end: gap of n with dummy; intersection: switch heads so paths equalize.",
+    "3": "Meet then reset slow to head for cycle start; count one lap for length; middle+reverse halves for palindrome; weave clones for random copy."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Linked list vs array",
+   "strong_answer": "Prefer a list for O(1) insertions/deletions at a known position without reallocation; prefer an array for O(1) indexed access and contiguous cache-friendly memory."
+  },
+  {
+   "topic": "Iterative vs recursive reverse",
+   "strong_answer": "Iterative reverse uses a few pointers and O(1) space; recursive reverse is O(n) time but O(n) call-stack space."
+  },
+  {
+   "topic": "Hash set vs Floyd for cycles",
+   "strong_answer": "A visited-node set detects cycles in O(n) time with O(n) space; Floyd's slow/fast meeting detects cycles in O(n) time with O(1) space."
+  },
+  {
+   "topic": "Array copy vs in-place for palindrome / sort",
+   "strong_answer": "Copying values to an array is simple but O(n) space; optimal palindrome reverses the second half in place for O(1) space, and merge sort sorts a list in O(n log n) time with sequential merges instead of random-access sorts."
+  },
+  {
+   "topic": "Hash map vs weave for cloning with random",
+   "strong_answer": "A map from original to clone uses O(n) space; weaving each clone after its original, assigning random via original.random.next, then separating restores O(1) auxiliary space."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Reassigning head while traversing and losing the rest of the list",
+   "correction": "Keep a temporary curr (or similar) for traversal; only update head when the operation intentionally changes the first node."
+  },
+  {
+   "trap": "Dereferencing node->next or node->data without a null check",
+   "correction": "Always test for nullptr before following or reading a pointer to avoid segmentation faults."
+  },
+  {
+   "trap": "Forgetting head/empty/single-node edge cases on insert or delete",
+   "correction": "Use a dummy head so head edits share the same predecessor logic, and explicitly handle empty list and deleting the only node."
+  },
+  {
+   "trap": "After swapping next and prev while reversing a doubly linked list, continuing via the old next",
+   "correction": "After the swap, advance with curr = curr->prev (the original next), and return the new head from the last processed node's partner (e.g. temp->prev)."
+  },
+  {
+   "trap": "When two middle nodes exist, returning the first middle",
+   "correction": "With equal-start slow/fast stepping one and two, return the second middle when the length is even, matching the usual interview requirement."
+  }
+ ]
+}

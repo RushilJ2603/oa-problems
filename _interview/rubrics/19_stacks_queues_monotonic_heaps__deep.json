@@ -1,0 +1,280 @@
+{
+ "id": "19_stacks_queues_monotonic_heaps__deep",
+ "title": "Stacks, Queues, Monotonic Deque & Priority Queue (Depth Pass)",
+ "type": "CP",
+ "relevance": "High (contest-form stack/deque/heap greeds beyond LC NGE / sliding-window max / top-K; trains CF-style observation on the same DS).",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Serve customers from preferred then cheapest stock — Lunar New Year / multi-queue inventory simulation. k workers on the most non-overlapping intervals — Movie Festival II / Meeting Rooms II with k rooms. Running k-th largest in a stream / prefix — ABC234 D; top-K heap interview staple. For every window length, max of the window minimum — Mike and Feet; histogram / contribution interviews in CF clothing.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot depth-pass asks that hide lex-min deque greeds, capped sort+heap loot, stack cancel, nearest-smaller ranges, or lazy PQ offsets behind contest wording.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Statements hide the same LIFO / FIFO / extremum-in-window ideas behind lex-minimization with a deque, capped “who can take whom” heaps after a sort, cancel-pairs on a stack, nearest-smaller ranges that feed histogram / contribution formulas, or regret-style PQ undos.",
+     "weight": "core",
+     "evidence_hint": "Names at least one of those hidden wrappers instead of plain NGE / sliding-window max / top-K."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognize it when order of processing is forced (left→right, by power, by deadline), when each index needs its nearest stricter neighbor, when a sliding window only needs min/max (not k-th), or when a global add on all heap keys can be deferred as a lazy offset.",
+     "weight": "core",
+     "evidence_hint": "Cites forced processing order, nearest stricter neighbor, window min/max only, or lazy global heap add as the cue."
+    },
+    {
+     "id": "rec3",
+     "point": "OA-flavoured inventory / k-resource interval / streaming k-th / max-of-window-minimum wording maps to Lunar New Year, Movie Festival II, ABC234 D, and Mike and Feet-style contribution.",
+     "weight": "extended",
+     "evidence_hint": "Ties preferred-then-cheapest stock, k non-overlapping watchers, prefix k-th largest, or max of minima per length to this DS family."
+    }
+   ],
+   "probes": [
+    "What in the statement says this is lex-min with a deque, capped loot after a sort, stack cancel, nearest-smaller ranges, or a lazy heap offset rather than plain NGE / window max / top-K?",
+    "Is processing order forced, does each index need a nearest stricter neighbor, does the window only need min/max, or can a global heap add be deferred?"
+   ],
+   "hints": {
+    "1": "Look past stack/queue/heap keywords — ask what contest wrapper is hiding the template.",
+    "2": "Forced order, nearest stricter neighbor, window min/max (not k-th), or global +Δ deferred as lazy offset are the depth signals.",
+    "3": "Say: lex-min / cancel-pairs / capped sort+heap / nearest-smaller→histogram / lazy PQ offset; OA cousins are preferred-then-cheapest, k rooms, streaming k-th, max of window minima."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Pick the right depth model from the technique notes: L/R nearest-smaller, lazy PQ offset, size-k heap, capped loot, stack cancel, mono deque DP, or merge/frequency PQ.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Nearest-smaller/greater on both sides gives, for each i, the maximal segment where a[i] is the min (or max); then push answers by segment length (Mike and Feet) or check prefix conditions inside that range (Max GEQ Sum).",
+     "weight": "core",
+     "evidence_hint": "States L/R bounds define the maximal min/max segment, then length answers or prefix checks inside the range."
+    },
+    {
+     "id": "appr2",
+     "point": "Lazy heap offset: store value − global_add in the PQ; type-2 “add X to all” only bumps global_add (ABC212 D).",
+     "weight": "core",
+     "evidence_hint": "Stores shifted keys and bumps a global add instead of touching every entry."
+    },
+    {
+     "id": "appr3",
+     "point": "Size-k heap for k-th largest in a growing prefix: min-heap of size k; top is the answer after each insert (ABC234 D).",
+     "weight": "core",
+     "evidence_hint": "Maintains a size-k min-heap whose top is the streaming k-th largest."
+    },
+    {
+     "id": "appr4",
+     "point": "Capped loot heap: process entities sorted by strength; maintain a size-k multiset of taken values, evicting the minimum when over capacity (Knights).",
+     "weight": "extended",
+     "evidence_hint": "Sorts by power and keeps a capacity-k multiset, dropping the minimum when full."
+    },
+    {
+     "id": "appr5",
+     "point": "Histogram / Skyscrapers: after L/R bounds, ans[i] is often a prefix contribution from the left stack plus a suffix from the right — compute both passes, then pick the best peak.",
+     "weight": "extended",
+     "evidence_hint": "Runs left and right contribution passes from L/R bounds and picks the best peak."
+    },
+    {
+     "id": "appr6",
+     "point": "Mono deque DP: window min of dp[j] (or of a[j]) over a sliding feasible interval turns O(nk) into O(n) (Strip / Cashback-family).",
+     "weight": "extended",
+     "evidence_hint": "Replaces an O(nk) sliding min transition with a mono deque for O(n)."
+    },
+    {
+     "id": "appr7",
+     "point": "Merge-equals / frequency PQ: always combine the current minimum key (or highest freq); use map/multiset so the next candidate is O(log n).",
+     "weight": "extended",
+     "evidence_hint": "Always merges the current min key or highest freq via map/multiset for O(log n) next picks."
+    }
+   ],
+   "probes": [
+    "Given nearest-smaller L/R bounds, do you answer by segment length, prefix checks inside the range, or left+right contribution peaks?",
+    "When do you use a lazy PQ offset, a size-k min-heap, a capped loot multiset, or a mono deque DP window?"
+   ],
+   "hints": {
+    "1": "Match the ask to one technique-note template, not generic stack/heap.",
+    "2": "L/R segment → length or prefix check or both-side contributions; lazy add; size-k min-heap; capped multiset; mono deque for sliding DP min; map/multiset merges.",
+    "3": "Say: Mike and Feet / Max GEQ Sum from L/R; Skyscrapers left+right peaks; ABC212 D store value−add; ABC234 D size-k min-heap; Knights capacity-k multiset; Strip O(nk)→O(n) mono deque; Merge Equals / frequency via map/multiset."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Encode L/R mono-stack passes, length-indexed suffix-max, mono deque window ops, size-k / lazy PQ templates, lex stack+suffix mins, and multiset lower_bound assignment.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Write nearest-smaller/greater L/R arrays in one left-to-right and one right-to-left mono-stack pass.",
+     "weight": "core",
+     "evidence_hint": "Sketches two mono-stack sweeps to fill L and R nearest-stricter neighbors."
+    },
+    {
+     "id": "impl2",
+     "point": "Convert L/R bounds into length-indexed answers (ans[len]=max(ans[len],a[i])) then suffix-max sweep.",
+     "weight": "core",
+     "evidence_hint": "Fills ans by segment length from L/R then sweeps suffix maxima."
+    },
+    {
+     "id": "impl3",
+     "point": "Maintain a monotonic deque of indices for window min/max; expire from the front, pop dominated from the back.",
+     "weight": "core",
+     "evidence_hint": "Expires stale front indices and pops dominated candidates from the back."
+    },
+    {
+     "id": "impl4",
+     "point": "Lazy global offset on a PQ: store x−add, bump add for “add to all keys” queries; size-k heap / capped multiset for streaming k-th and top-k loot while scanning.",
+     "weight": "extended",
+     "evidence_hint": "Implements store x−add plus capacity-k heap/multiset templates."
+    },
+    {
+     "id": "impl5",
+     "point": "Stack greedy for lex-smallest output: pop while safe w.r.t. a precomputed suffix minimum (Minimal String); multiset lower_bound / upper_bound for modular or interval assignment (Minimum Array, Movie Festival II).",
+     "weight": "extended",
+     "evidence_hint": "Pops while top ≤ remaining suffix minimum, or assigns via multiset bound queries."
+    }
+   ],
+   "probes": [
+    "How do you build L/R nearest-smaller arrays and turn them into length-indexed answers?",
+    "How do you maintain a mono deque window, a lazy PQ offset, or a lex stack with suffix minima?"
+   ],
+   "hints": {
+    "1": "Implementation is checklist bookkeeping: two mono-stack passes, deque front/back, lazy add, suffix mins.",
+    "2": "L then R mono-stack; ans[len] then suffix-max; expire front / pop back; store x−add; pop while ≤ suffix min; multiset lower_bound.",
+    "3": "Say: LTR+RTL mono-stack for L/R; ans[len]=max then suffix-max; deque indices with front expire and back pop; PQ stores x−add; Minimal String pops vs suffix min; Movie Festival II / Minimum Array use multiset bounds."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Justify O(n) mono deque / window minima and O(log n) map/multiset candidates; refuse O(nk) sliding DP mins and per-key global adds.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Mono deque DP over a sliding feasible window turns an O(nk) min-of-prior-states transition into O(n) (Strip / Cashback-family).",
+     "weight": "core",
+     "evidence_hint": "States O(nk)→O(n) via mono deque on the sliding DP window."
+    },
+    {
+     "id": "cx2",
+     "point": "Canonical sliding-window minima with a monotonic deque run in O(n); when the DP transition is min over a sliding feasible window, reach for a mono deque — not a segtree.",
+     "weight": "core",
+     "evidence_hint": "Cites O(n) window minima and prefers mono deque over segtree for that sliding min."
+    },
+    {
+     "id": "cx3",
+     "point": "Merge-equals / frequency PQ with map/multiset keeps the next candidate O(log n) instead of scanning all keys.",
+     "weight": "extended",
+     "evidence_hint": "Names O(log n) next-candidate cost from map/multiset."
+    }
+   ],
+   "probes": [
+    "Why does a sliding feasible min of prior DP states go from O(nk) to O(n) with a mono deque?",
+    "When is map/multiset O(log n) the right merge structure, and when is a segtree the wrong tool for window min DP?"
+   ],
+   "hints": {
+    "1": "Complexity fails are O(nk) sliding mins or touching every heap key / scanning for the next merge.",
+    "2": "Mono deque → O(n) window/DP min; map/multiset → O(log n) next candidate; not segtree for plain sliding min DP.",
+    "3": "Cite Strip/Cashback O(nk)→O(n); CSES-style O(n) window minima; Merge Equals / frequency via map/multiset O(log n); checklist says mono deque not segtree."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch depth-pass failure modes: segtree overkill, eager global heap updates, missing suffix-max after L/R, and unsafe lex pops.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Using a segtree when the DP transition is min over a sliding feasible window of prior states — the checklist says reach for a mono deque.",
+     "weight": "core",
+     "evidence_hint": "Rejects segtree for that sliding min and names mono deque."
+    },
+    {
+     "id": "pit2",
+     "point": "Implementing “add X to all” by touching every PQ key instead of storing value − global_add and bumping global_add (ABC212 D).",
+     "weight": "core",
+     "evidence_hint": "Flags per-key updates and describes the lazy offset."
+    },
+    {
+     "id": "pit3",
+     "point": "Stopping after L/R nearest-smaller bounds without converting to length-indexed ans[len]=max(ans[len],a[i]) and a suffix-max sweep (Mike and Feet-style).",
+     "weight": "extended",
+     "evidence_hint": "Requires the length-index fill plus suffix-max after L/R."
+    },
+    {
+     "id": "pit4",
+     "point": "Lex-smallest stack greedy that pops without consulting a precomputed suffix minimum (Minimal String requires pop while top ≤ remaining minimum).",
+     "weight": "extended",
+     "evidence_hint": "Requires the suffix-minimum safety check before each pop to output."
+    },
+    {
+     "id": "pit5",
+     "point": "Mono deque bugs: forgetting to expire from the front or to pop dominated indices from the back when maintaining window min/max.",
+     "weight": "extended",
+     "evidence_hint": "Mentions both front expiry and back dominance pops."
+    }
+   ],
+   "probes": [
+    "What’s wrong with answering sliding DP window min with a segtree, or global heap adds by updating every key?",
+    "Where do Mike and Feet-style and Minimal String solutions fail after the obvious stack pass?"
+   ],
+   "hints": {
+    "1": "Depth bugs are skipping checklist bookkeeping after the obvious stack/heap.",
+    "2": "Mono deque not segtree; lazy offset not per-key add; L/R then ans[len]+suffix-max; pop only if ≤ suffix min; expire front and pop back.",
+    "3": "Say: sliding DP min → mono deque; ABC212 D → store value−add; Mike and Feet → length index then suffix-max; Minimal String → suffix min gate; window deque → front expire + back pop."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Mono deque vs segtree for sliding DP window min",
+   "strong_answer": "When the transition is min over a sliding feasible window of prior states (or of a[j]), a mono deque turns O(nk) into O(n); the checklist says not to reach for a segtree for that pattern (Strip / Cashback-family)."
+  },
+  {
+   "topic": "Lazy PQ offset vs updating every heap key",
+   "strong_answer": "For type-2 “add X to all”, store value − global_add in the PQ and only bump global_add (ABC212 D) instead of rewriting every key."
+  },
+  {
+   "topic": "Size-k min-heap vs full resort for streaming k-th",
+   "strong_answer": "For k-th largest on a growing prefix, keep a min-heap of size k whose top is the answer after each insert (ABC234 D) rather than re-sorting the whole prefix."
+  },
+  {
+   "topic": "Capped multiset loot vs unrestricted heap while scanning by power",
+   "strong_answer": "Process by strength and keep a size-k multiset of taken values, evicting the minimum when over capacity (Knights), instead of accumulating unlimited loot."
+  },
+  {
+   "topic": "L/R nearest-smaller contribution vs recomputing per length or per peak",
+   "strong_answer": "One LTR and one RTL mono-stack build L/R; then either length-index + suffix-max (Mike and Feet), prefix checks inside the max-range (Max GEQ Sum), or left+right contribution passes picking the best peak (Skyscrapers)."
+  },
+  {
+   "topic": "Stack + suffix mins vs blind stack pops for lex-min strings",
+   "strong_answer": "For lex-smallest output, pop to the answer while top ≤ remaining suffix minimum (Minimal String); do not pop solely by local comparison without the suffix gate."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Answering sliding feasible-window DP min with a segment tree.",
+   "correction": "Use a monotonic deque of indices; that transition is O(n), not a segtree job."
+  },
+  {
+   "trap": "Global “add X to all heap keys” by mutating every entry.",
+   "correction": "Store value − global_add and bump global_add only (ABC212 D)."
+  },
+  {
+   "trap": "Building L/R nearest-smaller arrays but never doing the length-index + suffix-max sweep.",
+   "correction": "Set ans[len]=max(ans[len],a[i]) from each maximal segment, then suffix-max for every length (Mike and Feet)."
+  },
+  {
+   "trap": "Lex stack that pops whenever the top looks large, without a suffix minimum.",
+   "correction": "Precompute suffix mins; pop to output only while top ≤ remaining minimum (Minimal String)."
+  },
+  {
+   "trap": "Mono deque that only inserts, never expires the front or pops dominated backs.",
+   "correction": "Expire indices that leave the window from the front; pop dominated candidates from the back."
+  },
+  {
+   "trap": "Streaming k-th largest with an unbounded structure or full prefix sort each time.",
+   "correction": "Keep a min-heap of size k; after each insert the top is the k-th largest (ABC234 D)."
+  },
+  {
+   "trap": "Assigning intervals/resources without multiset lower_bound / upper_bound on free ends.",
+   "correction": "For k resources, assign each film to the latest free end ≤ start (Movie Festival II); similarly use multiset bounds for modular picks (Minimum Array)."
+  }
+ ]
+}

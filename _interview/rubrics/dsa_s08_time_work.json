@@ -1,0 +1,189 @@
+{
+ "id": "dsa_s08_time_work",
+ "title": "Time & Work; Pipes & Cisterns",
+ "type": "FUND",
+ "relevance": "Campus aptitude OAs and technical screens routinely test time-work and pipes-cisterns, often rewrapped as servers, threads, or agents processing work.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the LCM/Total Work method and the MDH equation as the default integer-rate framing.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Define Total Work as the LCM of the given times so each worker's rate is an integer (Total Work / time).",
+     "weight": "core",
+     "evidence_hint": "Says take LCM of the times as total units, then rate = total/time, not starting from 1/A fractions."
+    },
+    {
+     "id": "fund2",
+     "point": "Combined rate is the sum of individual rates; time to finish is Total Work divided by combined rate.",
+     "weight": "core",
+     "evidence_hint": "States add rates, then time = Total Work / combined rate."
+    },
+    {
+     "id": "fund3",
+     "point": "For men, days, and hours with fixed work, use the MDH relation M1×D1×H1/W1 = M2×D2×H2/W2.",
+     "weight": "extended",
+     "evidence_hint": "Writes or cites the MDH equation equating man-day-hour effort per unit work across scenarios."
+    }
+   ],
+   "probes": [
+    "Instead of working with 1/A and 1/B, how do you set up a time-and-work problem using total work and rates?",
+    "When the inputs are numbers of people, days, and hours per day, what equation do you use?"
+   ],
+   "hints": {
+    "1": "Think about choosing a convenient unit for the whole job rather than fractions per day.",
+    "2": "Total Work is the LCM of the given times; rate is that total divided by each person's time.",
+    "3": "Total Work = LCM(t1,t2,…); rate = Total Work/time; combined rate = sum of rates; time = Total Work/combined rate; groups use M1 D1 H1 / W1 = M2 D2 H2 / W2."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Apply LCM rates to combined workers, leftover work, pairwise sums, efficiency ratios, MDH scaling, wages, alternate days, and early leavers.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "With A in 10 days and B in 15 days, LCM total 30 gives rates 3 and 2, combined 5, so together they finish in 6 days.",
+     "weight": "core",
+     "evidence_hint": "Computes LCM(10,15)=30, rates 3+2=5, time 30/5=6."
+    },
+    {
+     "id": "mech2",
+     "point": "From pairwise rates (A+B), (B+C), (C+A), summing yields twice (A+B+C), so divide by 2 to get the triple combined rate.",
+     "weight": "core",
+     "evidence_hint": "Adds the three pair rates and halves to get A+B+C, then divides total work by that rate."
+    },
+    {
+     "id": "mech3",
+     "point": "Efficiency and time are inverse: if A is 30% more efficient than B, A:B efficiency is 13:10 so time ratio is 10:13.",
+     "weight": "extended",
+     "evidence_hint": "Converts 30% more into 130:100 = 13:10, then flips for time and solves with B's given days."
+    },
+    {
+     "id": "mech4",
+     "point": "Wages for people working the same duration split in their efficiency (rate) ratio, not equally.",
+     "weight": "extended",
+     "evidence_hint": "Takes LCM-based rates, forms rate shares of total pay (e.g. B gets 3/9 of the purse)."
+    },
+    {
+     "id": "mech5",
+     "point": "On alternate days, work in full A-then-B cycles, then finish the remainder day-by-day (possibly a fractional last day).",
+     "weight": "extended",
+     "evidence_hint": "Uses cycle work, floor of full cycles, then assigns remaining units to the next workers in order."
+    },
+    {
+     "id": "mech6",
+     "point": "If someone leaves x days before completion, add the work they would have done in those x days to Total Work, then divide by the all-workers combined rate (\"didn't leave\" trick).",
+     "weight": "core",
+     "evidence_hint": "Inflates total work by the missed contributions and divides by the full combined rate to get total days."
+    }
+   ],
+   "probes": [
+    "A finishes in 10 days, B in 15; how long together, using LCM total work?",
+    "A+B, B+C, and C+A times are given—how do you find how long all three take together?",
+    "Someone leaves a few days before the job ends; how can you still solve with one combined-rate division?"
+   ],
+   "hints": {
+    "1": "Stay in integer units from the LCM; avoid mixing fractions mid-problem.",
+    "2": "Pairs: sum of pair rates = 2×(A+B+C). Early leave: pretend they stayed and add their missed work to the total.",
+    "3": "Example shape: LCM, rates, sum or half of pair sums; for leave-x-early, adjusted total = original + x×rate_left, time = adjusted/combined."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast LCM integer rates vs unit-fraction rates, and inlet (positive) vs outlet/leak (negative) rate signs.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer defining Total Work as LCM of times over computing fractional work per day like 1/A, because rates stay clean integers.",
+     "weight": "core",
+     "evidence_hint": "Explicitly chooses LCM total units instead of starting from 1/A, 1/B fractions."
+    },
+    {
+     "id": "tr2",
+     "point": "Filling pipes get positive rates; emptying pipes or leaks get negative rates—blindly adding all rates as positive answers a different problem.",
+     "weight": "core",
+     "evidence_hint": "Assigns + to inlets and − to outlets/leaks before combining, and mentions the MCQ trap of treating the outlet as positive."
+    }
+   ],
+   "probes": [
+    "Why use an LCM total-work setup instead of working only with 1/A-type fractions?",
+    "In a tank with fill pipes and an emptying pipe or leak, how do you treat the rates when combining?"
+   ],
+   "hints": {
+    "1": "One approach keeps arithmetic integer; the other keeps unit fractions.",
+    "2": "LCM turns every rate into Total/time; outlets must reduce the net fill rate.",
+    "3": "Total Work = LCM(...); fill rates positive, empty/leak negative; net rate = sum with signs; time = capacity/net."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Map the same LCM-rate model onto pipes/cisterns and OA wrappers (servers, swarms) including crashes and jammers-as-outlets.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Pipes and cisterns use the same LCM capacity and rates; an emptying pipe or leak is a negative rate (e.g. fill + empty together: +5,+4,−3 → net 6).",
+     "weight": "core",
+     "evidence_hint": "Sets tank capacity to LCM, signs outlet negative, divides capacity by net rate."
+    },
+    {
+     "id": "app2",
+     "point": "If a fill pipe alone takes 10 hours but with a leak takes 15 hours, leak rate is effective rate minus fill rate (negative), and empty-alone time is capacity over that magnitude.",
+     "weight": "extended",
+     "evidence_hint": "LCM(10,15)=30; A=+3; effective=+2; leak=−1; empty time 30 hours."
+    },
+    {
+     "id": "app3",
+     "point": "OA wrappers (servers processing a batch, drone swarms vs a jammer) are identical math: workers as inlets, corruption/crash as partial leave or an outlet.",
+     "weight": "core",
+     "evidence_hint": "Restates server/swarm wording as standard combined work or two-inlets-one-outlet, then applies LCM rates."
+    }
+   ],
+   "probes": [
+    "Two fill pipes and one emptying pipe open together—how long to fill, and what is the trap in the options?",
+    "Server Alpha and Beta process a batch together until Beta crashes mid-job; how do you find total time?",
+    "Two mapping swarms plus a jammer that ruins a full map over a fixed time—what rates do you assign?"
+   ],
+   "hints": {
+    "1": "Rename the story back to workers and pipes; the equations do not change.",
+    "2": "Crash after t minutes = together for t, then one rate on the remainder; jammer = negative rate.",
+    "3": "LCM capacity; positive process/map rates; jammer negative; for crash: together work then remainder/survivor rate; add the two time segments."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "LCM total-work rates vs fractional 1/A per day",
+   "strong_answer": "LCM of the given times as Total Work makes each rate Total/time an integer, combined rate a simple sum, and finish time Total/combined—cleaner than carrying unit fractions throughout."
+  },
+  {
+   "topic": "Inlet (positive) rates vs outlet/leak (negative) rates",
+   "strong_answer": "Fill pipes and productive workers contribute positive units per time; emptying pipes, leaks, or jammers contribute negative rates. Net rate is the signed sum; treating an outlet as positive computes the wrong scenario."
+  },
+  {
+   "topic": "Efficiency ratio vs time ratio",
+   "strong_answer": "Time is inversely proportional to efficiency. A percentage efficiency advantage (e.g. 30% more → 13:10) flips when converting to days, then scale with the given person's time."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Adding an emptying pipe or leak as a positive rate along with the fill pipes.",
+   "correction": "Assign a negative rate to outlets/leaks; net fill rate is sum with signs. Blind positive addition is a classic wrong MCQ path."
+  },
+  {
+   "trap": "Trying to piece-wise model early leavers without a clear timeline and getting stuck.",
+   "correction": "Use the didn't-leave trick: add the work the early leavers would have done in the days they missed to Total Work, then divide by the full combined rate."
+  },
+  {
+   "trap": "On alternate-day work, stopping after whole cycles or forgetting who works the leftover units.",
+   "correction": "Finish full A-then-B cycles, subtract completed units, then continue day by day (or fraction of a day) in the stated starting order until the remainder is done."
+  },
+  {
+   "trap": "Splitting wages equally when people worked the same calendar time but have different rates.",
+   "correction": "With equal duration together, pay shares follow the efficiency (rate) ratio from the LCM setup."
+  }
+ ]
+}

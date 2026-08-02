@@ -1,0 +1,243 @@
+{
+ "id": "cpp_s44_sequence_containers",
+ "title": "Sequence Containers",
+ "type": "FUND",
+ "relevance": "Interviewers probe which sequence container you default to and why—cache locality, growth, and invalidation—not just big-O tables.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a sequence container is and name the five Standard Library options with their storage models.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A sequence container stores elements in a definite linear order; position is part of the meaning, unlike associative containers where keys decide placement.",
+     "weight": "core",
+     "evidence_hint": "Says linear order / predecessor-successor; contrasts with key-based associative placement."
+    },
+    {
+     "id": "fund2",
+     "point": "The five sequence containers are std::vector (one contiguous heap block), std::array (inline fixed buffer of size N), std::deque (map of fixed-size chunks), std::list (doubly-linked heap nodes), and std::forward_list (singly-linked heap nodes).",
+     "weight": "core",
+     "evidence_hint": "Lists all five with matching storage models from the summary table."
+    },
+    {
+     "id": "fund3",
+     "point": "Default choice is std::vector unless you have a measured reason not to; interviewers want cache-locality reasoning.",
+     "weight": "core",
+     "evidence_hint": "Reaches for vector by default and mentions contiguous / cache-friendly layout."
+    },
+    {
+     "id": "fund4",
+     "point": "In Python, list is a dynamic array (like std::vector) and collections.deque is a double-ended queue (like std::deque); C++ exposes them as distinct types for strict control of layout and performance.",
+     "weight": "extended",
+     "evidence_hint": "Maps Python list→vector and deque→deque and notes C++’s stricter control."
+    }
+   ],
+   "probes": [
+    "Which sequence container do you reach for by default, and why?",
+    "What distinguishes a sequence container from an associative container?"
+   ],
+   "hints": {
+    "1": "Think about linear order versus key-based placement.",
+    "2": "Name the five containers and how each stores elements in memory.",
+    "3": "Default to std::vector for contiguous cache-friendly storage unless you have a measured reason otherwise."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain growth, access, and invalidation mechanics for vector, array, deque, list, and forward_list.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "vector tracks size (live elements) and capacity (allocated slots); reserve grows the buffer without changing size, while resize changes logical size by constructing or destroying elements.",
+     "weight": "core",
+     "evidence_hint": "Separates size vs capacity and contrasts reserve (no new elements) with resize (construct/destroy)."
+    },
+    {
+     "id": "mech2",
+     "point": "To keep amortised O(1) push_back, vector grows geometrically (typically ~2× or ~1.5×); reallocation move/copies elements and invalidates all iterators, pointers, and references.",
+     "weight": "core",
+     "evidence_hint": "States geometric growth, amortised O(1), and full invalidation on realloc."
+    },
+    {
+     "id": "mech3",
+     "point": "Without realloc, vector insert/erase invalidates from the modification point to the end; pop_back invalidates only the removed last element.",
+     "weight": "extended",
+     "evidence_hint": "Gives the from-point-to-end and pop_back-only rules when capacity is not exceeded."
+    },
+    {
+     "id": "mech4",
+     "point": "std::array has compile-time size N as part of the type, inline storage (no heap), and no push_back/insert/reserve/resize growth API.",
+     "weight": "core",
+     "evidence_hint": "Mentions N in the type, stack/embedded storage, and missing growth modifiers."
+    },
+    {
+     "id": "mech5",
+     "point": "deque is a map of fixed-size chunks: amortised O(1) push/pop at both ends and O(1) random access, but no reserve/capacity/data() and not one contiguous block.",
+     "weight": "core",
+     "evidence_hint": "Describes chunk map, both-end O(1), indexing, and absence of contiguous/data/capacity."
+    },
+    {
+     "id": "mech6",
+     "point": "On deque, end insertions may invalidate all iterators while element pointers/references typically remain valid; middle insert/erase can invalidate iterators and references.",
+     "weight": "extended",
+     "evidence_hint": "Separates iterator fragility from pointer/reference survival on end ops."
+    },
+    {
+     "id": "mech7",
+     "point": "list insert/erase is O(1) given an iterator (no operator[]); splice transfers nodes without copying; member sort is O(n log n) via pointer relinks because std::sort needs random access.",
+     "weight": "core",
+     "evidence_hint": "Covers iterator-given O(1) edit, splice node transfer, and why list::sort exists."
+    },
+    {
+     "id": "mech8",
+     "point": "forward_list has no size(); edits use before_begin and insert_after/erase_after because nodes have only a next pointer.",
+     "weight": "extended",
+     "evidence_hint": "Mentions missing size, before_begin, and after-oriented API for singly-linked nodes."
+    }
+   ],
+   "probes": [
+    "What is the difference between reserve and resize on a vector?",
+    "How can deque offer O(1) push_front and random access?",
+    "Why does std::list have its own sort()?",
+    "Why does forward_list provide before_begin?"
+   ],
+   "hints": {
+    "1": "Separate logical size from allocated slots, and think about where each container puts memory.",
+    "2": "Walk vector reallocation, deque’s chunk map, list’s node rewiring, and forward_list’s predecessor iterators.",
+    "3": "reserve does not create elements; geometric growth invalidates everything on realloc; deque end-insert can keep references while killing iterators; list/forward_list only invalidate erased nodes."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose among vector, array, deque, list, and forward_list based on access pattern, ends vs middle, and cache cost.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Even when list middle insert is O(1) and vector is O(n), contiguous vector often wins in practice due to cache lines versus list pointer chasing, until n is huge and you already hold a stable iterator.",
+     "weight": "core",
+     "evidence_hint": "Defaults to vector and cites cache locality / pointer chasing over raw big-O."
+    },
+    {
+     "id": "tr2",
+     "point": "Prefer deque for heavy push/pop at both ends plus indexing, or when vector realloc latency spikes are unacceptable; prefer array for fixed compile-time N with no heap.",
+     "weight": "core",
+     "evidence_hint": "Matches deque to both-end + index needs and array to fixed N / no heap."
+    },
+    {
+     "id": "tr3",
+     "point": "Prefer list for stable iterators, O(1) splice, or middle edit with an iterator already in hand; prefer forward_list for minimal node overhead and forward-only algorithms.",
+     "weight": "extended",
+     "evidence_hint": "Names iterator stability/splice for list and minimal singly-linked footprint for forward_list."
+    },
+    {
+     "id": "tr4",
+     "point": "For a binary buffer needing T* for C APIs, use vector or array data(); never deque or list.",
+     "weight": "extended",
+     "evidence_hint": "Requires contiguous data() and rejects deque/list for T* APIs."
+    }
+   ],
+   "probes": [
+    "std::vector vs std::list—when is list actually justified?",
+    "When would you pick deque over vector?",
+    "std::array vs C array vs std::vector?"
+   ],
+   "hints": {
+    "1": "Start from the access and insert/erase pattern you need.",
+    "2": "Map needs to default sequential, fixed N, both ends + index, stable splice, or minimal forward-only nodes.",
+    "3": "Default vector; array for fixed N/no heap; deque for both ends + indexing; list only for stability/splice with a known iterator; forward_list for minimal forward-only nodes."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply container rules to classic interview traps and justify a concrete choice under constraints.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "v[i] after reserve but before the element exists is undefined behaviour—reserve does not create elements.",
+     "weight": "core",
+     "evidence_hint": "States that indexing reserved-but-unconstructed slots is UB."
+    },
+    {
+     "id": "app2",
+     "point": "std::vector<bool> is a space-optimised specialisation returning a proxy from operator[]; you cannot bind bool&, take &v[i] as a real bool*, or assume contiguous bool storage—prefer vector<char>, deque<bool>, or a bitset.",
+     "weight": "core",
+     "evidence_hint": "Names proxy reference, broken addressability, and safer alternatives."
+    },
+    {
+     "id": "app3",
+     "point": "front(), back(), or pop_back() on an empty vector is undefined behaviour—check empty() first.",
+     "weight": "extended",
+     "evidence_hint": "Flags empty-container end access / pop as UB."
+    },
+    {
+     "id": "app4",
+     "point": "list::unique only removes consecutive duplicates—sort first for global uniqueness; splice keeps iterators to transferred elements valid in the destination.",
+     "weight": "extended",
+     "evidence_hint": "Mentions consecutive-only unique and splice iterator validity across lists."
+    }
+   ],
+   "probes": [
+    "What's wrong with std::vector<bool>?",
+    "Explain amortised push_back and what reallocation invalidates.",
+    "You need queue-like push/pop at both ends and still want operator[]—what do you use?"
+   ],
+   "hints": {
+    "1": "Watch for operations that look safe but do not create or relocate elements the way you expect.",
+    "2": "Tie the trap to storage model: packed bits, unconstructed capacity, or empty ends.",
+    "3": "vector<bool> returns a proxy; reserve ≠ construct; empty front/back/pop_back is UB; use deque for both-end + index."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "std::vector vs std::list",
+   "strong_answer": "Default to vector: contiguous scans beat list pointer chasing on modern CPUs even when big-O favors list insert, unless the container is massive and you already hold a stable iterator, or you need O(1) splice / iterator stability."
+  },
+  {
+   "topic": "std::deque vs std::vector",
+   "strong_answer": "Use deque when you need push/pop at both ends with indexing, or when vector reallocations cause unacceptable latency spikes; vector remains better for single-block contiguous data() and simpler iterators."
+  },
+  {
+   "topic": "std::array vs C array vs std::vector",
+   "strong_answer": "Fixed compile-time size and no heap → array (STL size/at/iterators, no pointer decay). Runtime size/growth → vector. Raw C arrays decay to pointers and do not carry size."
+  },
+  {
+   "topic": "std::list vs std::forward_list",
+   "strong_answer": "list for bidirectional edit, splice, and member algorithms with prev/next. forward_list when absolute minimum node size and forward-only passes matter, accepting before_begin / *_after APIs and no size()."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Indexing or assuming elements exist after reserve",
+   "correction": "reserve only grows capacity; size is unchanged and new slots are uninitialised—creating elements requires resize, push_back/emplace_back, insert, or construction."
+  },
+  {
+   "trap": "Assuming iterators stay valid across vector growth",
+   "correction": "Any op that may exceed capacity (push_back, insert, resize, reserve larger) can reallocate and invalidate all iterators, pointers, and references."
+  },
+  {
+   "trap": "Treating deque iterators like pointers after end insert",
+   "correction": "End insertions may keep element pointers/references valid while invalidating iterators—do not assume pointer validity implies iterator validity; store indices or re-get iterators."
+  },
+  {
+   "trap": "Using std::vector<bool> as a normal container of bool",
+   "correction": "It is a bit-packed specialisation: operator[] returns a proxy, not bool&; address-of and contiguous-bool assumptions fail—prefer vector<char>, deque<bool>, or a bitset."
+  },
+  {
+   "trap": "Calling front/back/pop_back on an empty vector",
+   "correction": "Undefined behaviour—check empty() first in defensive code."
+  },
+  {
+   "trap": "Expecting list::unique to remove all duplicates",
+   "correction": "unique only erases consecutive duplicates; for global uniqueness do sort then unique."
+  },
+  {
+   "trap": "Trying to erase *it directly on forward_list",
+   "correction": "There is no erase(it) for the current node—keep the predecessor and call erase_after(pred); losing the previous iterator means restarting from before_begin()."
+  }
+ ]
+}

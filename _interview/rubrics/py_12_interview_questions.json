@@ -1,0 +1,232 @@
+{
+ "id": "py_12_interview_questions",
+ "title": "Python Language Fundamentals",
+ "type": "FUND",
+ "relevance": "Campus and early SDE interviews and OAs routinely probe core Python semantics—typing, identity vs equality, data types, and floating-point behavior—to screen for language fluency before harder coding problems.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what Python is and the core language properties candidates must name accurately.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Python is a high-level, interpreted, general-purpose language that supports objects, modules, threads, exception-handling, and automatic memory management.",
+     "weight": "core",
+     "evidence_hint": "Candidate calls it high-level and interpreted/general-purpose and names at least some of objects, modules, threads, exceptions, or automatic memory management."
+    },
+    {
+     "id": "fund2",
+     "point": "Python is dynamically typed: type-checking happens during execution because it runs statements line by line; it is also strongly typed, so \"1\" + 2 raises a type error rather than coercing.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts static vs dynamic checking and says Python checks types at runtime; may note strong typing vs JavaScript-style weak coercion."
+    },
+    {
+     "id": "fund3",
+     "point": "PEP stands for Python Enhancement Proposal; PEP 8 documents Python code style guidelines expected for open-source contribution.",
+     "weight": "core",
+     "evidence_hint": "Candidate expands PEP and ties PEP 8 specifically to style guidelines, not language features."
+    },
+    {
+     "id": "fund4",
+     "point": "Built-in types group into NoneType, Numeric (int, float, complex; bool is a sub-type of integers), Sequence (list, tuple, range), Mapping (dict), Set (set, frozenset), and Callable types; type() and isinstance() check types.",
+     "weight": "extended",
+     "evidence_hint": "Candidate lists several categories correctly and notes dict as the standard mapping and set vs frozenset."
+    },
+    {
+     "id": "fund5",
+     "point": "The Zen of Python is a collection of 19 guiding principles for writing programs that influence Python’s design (e.g., readability counts; explicit is better than implicit).",
+     "weight": "extended",
+     "evidence_hint": "Candidate says ~19 principles and can quote or paraphrase at least one Zen line."
+    }
+   ],
+   "probes": [
+    "What is Python, and what are the main benefits of using it?",
+    "What does it mean that Python is a dynamically typed language?",
+    "What is PEP 8 and why does it matter?"
+   ],
+   "hints": {
+    "1": "Think about how Python runs code and when types are checked.",
+    "2": "Separate language kind (interpreted, general-purpose), typing model (dynamic + strong), and community style (PEP 8 / Zen).",
+    "3": "Python executes line by line with runtime type checks; \"1\" + 2 errors; PEP 8 is the style PEP; Zen has 19 guiding principles."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Verify concrete mechanics of operators, identity, strings, floats, and documentation.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Ternary form is [on true] if [expression] else [on false] (no C++-style ?:); e.g. with a, b = 2, 3, min = a if a < b else b prints 2.",
+     "weight": "core",
+     "evidence_hint": "Candidate writes or verbally gives the if-else expression form and the min example outcome."
+    },
+    {
+     "id": "mech2",
+     "point": "`is` / `is not` compare identity (same memory location); `==` / `!=` compare values; equal values need not be identical.",
+     "weight": "core",
+     "evidence_hint": "Candidate clearly separates memory identity from value equality."
+    },
+    {
+     "id": "mech3",
+     "point": "Python caches small integers in the range -5 to 256, so a = 256 and b = 256 can make a is b True, while a = 257 and b = 257 can make a is b False even though a == b is True.",
+     "weight": "core",
+     "evidence_hint": "Candidate cites the -5..256 cache and the 257 counterexample for is vs ==."
+    },
+    {
+     "id": "mech4",
+     "point": "Operator precedence descends from () through **, unary +x/-x/~x, */ // %, +-, shifts, &, ^, |, comparisons/identity/membership, then not, and, or.",
+     "weight": "extended",
+     "evidence_hint": "Candidate places parentheses and ** high and logical or lowest, or walks the major bands correctly."
+    },
+    {
+     "id": "mech5",
+     "point": "Strings are arrays of bytes representing Unicode characters; there is no separate character type (a single character is a string of length 1); strings are immutable.",
+     "weight": "extended",
+     "evidence_hint": "Candidate says Unicode/immutable and no char type—length-1 string."
+    },
+    {
+     "id": "mech6",
+     "point": "0.3 - 0.2 is not equal to 0.1 because floats are stored in binary (base-2) and values like 0.1 cannot be represented exactly, causing floating-point inaccuracy.",
+     "weight": "extended",
+     "evidence_hint": "Candidate blames binary floating-point precision, not a Python bug."
+    },
+    {
+     "id": "mech7",
+     "point": "Docstrings are string literals right after a function, method, class, or module definition and are accessed via the object’s __doc__ attribute.",
+     "weight": "extended",
+     "evidence_hint": "Candidate places the docstring immediately after the definition and names __doc__."
+    }
+   ],
+   "probes": [
+    "What does the is operator do, and how does it differ from ==?",
+    "Explain the ternary operator in Python.",
+    "Why is 0.3 - 0.2 not equal to 0.1 in Python?"
+   ],
+   "hints": {
+    "1": "Focus on memory location vs value, and on how floats are stored.",
+    "2": "Cover ternary syntax, is vs == with the integer cache, string immutability, and binary float precision.",
+    "3": "is checks identity; small ints -5..256 are cached; 257 may not share identity; ternary is x if cond else y; 0.1 isn’t exact in binary float; docstrings live in __doc__."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Surface known Python limitations and when related constructs differ in intent.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "As an interpreted high-level language, Python is slower than C/C++ or Java because execution goes through an interpreter rather than a compiler.",
+     "weight": "core",
+     "evidence_hint": "Candidate links speed cost to interpretation vs compiled languages."
+    },
+    {
+     "id": "tr2",
+     "point": "Dynamic typing means many errors appear only at runtime, so more testing is required.",
+     "weight": "core",
+     "evidence_hint": "Candidate connects dynamic typing to deferred/runtime errors and testing burden."
+    },
+    {
+     "id": "tr3",
+     "point": "Python is weak for mobile development and has high memory use for memory-intensive work due to flexible data types; its DB access layer is described as underdeveloped vs JDBC/ODBC.",
+     "weight": "extended",
+     "evidence_hint": "Candidate names at least two of: mobile weakness, high memory, primitive DB access."
+    },
+    {
+     "id": "tr4",
+     "point": "set is mutable (add/remove); frozenset is immutable and cannot be modified after creation.",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts mutability of set vs frozenset."
+    }
+   ],
+   "probes": [
+    "What are the main disadvantages of Python?",
+    "When would you choose a frozenset over a set?"
+   ],
+   "hints": {
+    "1": "Think about speed, memory, mobile, and when type errors show up.",
+    "2": "Separate runtime/performance costs from mutability choices on set types.",
+    "3": "Slower than C/C++/Java via interpreter; runtime type errors need more tests; weak on mobile/high memory; set mutable, frozenset not."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply fundamentals to packaging vocabulary and choosing is vs == correctly in real answers.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A module is a Python file meant to be imported; a package is a folder of related modules often with __init__.py; a library is a loose umbrella for a bundle of code (the Standard Library has hundreds of modules).",
+     "weight": "core",
+     "evidence_hint": "Candidate maps module→file, package→folder (+ __init__.py), library→bundle/standard library."
+    },
+    {
+     "id": "app2",
+     "point": "Use == when comparing values and is when you need identity (same object in memory)—do not assume equal integers share identity outside the small-int cache.",
+     "weight": "core",
+     "evidence_hint": "Candidate gives a practical rule: == for values, is for identity/singletons-style checks, wary of 257-style pitfalls."
+    },
+    {
+     "id": "app3",
+     "point": "Mappings map hashable values to objects, are mutable, and the standard mapping type is the dictionary; sequence types support in / not in for membership.",
+     "weight": "extended",
+     "evidence_hint": "Candidate mentions dict as the mapping type and membership operators on sequences."
+    }
+   ],
+   "probes": [
+    "How do modules, packages, and libraries differ in Python?",
+    "Identity operator (is) vs equality operator (==)—when do you use each?",
+    "What are Python docstrings and how do you read them?"
+   ],
+   "hints": {
+    "1": "Start from file vs folder vs “bundle of code.”",
+    "2": "Define module/package/library, then say when is is safe vs when == is required.",
+    "3": "Module=importable file; package=related modules in a folder with __init__.py; library=umbrella/Standard Library; == for values, is for identity; docstrings via __doc__."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "is (identity) vs == (equality)",
+   "strong_answer": "is/is not compare whether two names refer to the same object in memory; ==/!= compare values. Equal values are not necessarily identical—e.g. a = 257; b = 257 can yield a is b False while a == b True; small integers from -5 to 256 may be cached so a is b can be True."
+  },
+  {
+   "topic": "Module vs Package vs Library",
+   "strong_answer": "A module is one importable Python file (classes/functions/variables). A package is a collection of related modules in a folder, often with __init__.py. A library is a loose umbrella for a bundle of code; the Python Standard Library ships hundreds of modules."
+  },
+  {
+   "topic": "set vs frozenset",
+   "strong_answer": "set is mutable and supports add() and remove(); frozenset is immutable and cannot be changed after creation."
+  },
+  {
+   "topic": "Python vs C/C++/Java (speed and deployment)",
+   "strong_answer": "Python’s interpreter-based execution is slower than compiled C/C++ or Java; it is strong on desktop/server but weak for mobile; flexible types raise memory use; dynamic typing pushes more errors to runtime and needs more testing; DB access is called primitive vs JDBC/ODBC."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming a is b whenever a == b for integers.",
+   "correction": "is checks identity, not value. Small ints -5..256 may be cached (256 is 256 can be True); 257 and 257 may be False for is while == is True."
+  },
+  {
+   "trap": "Expecting C++-style ?: ternary in Python.",
+   "correction": "Python uses [on true] if [expression] else [on false], e.g. a if a < b else b."
+  },
+  {
+   "trap": "Expecting 0.3 - 0.2 == 0.1.",
+   "correction": "Floats use binary base-2 representation; values like 0.1 are not exact, so floating-point results can disagree with decimal intuition."
+  },
+  {
+   "trap": "Treating a single character as a distinct char type.",
+   "correction": "Python has no character type; a single character is a string of length 1, and strings are immutable Unicode."
+  },
+  {
+   "trap": "Confusing strong vs weak typing with static vs dynamic checking.",
+   "correction": "Strong typing (Python) rejects \"1\" + 2; weak typing (e.g. JavaScript) may coerce to \"12\". Static checking is before execution; dynamic checking (Python) is during execution."
+  },
+  {
+   "trap": "Calling any folder of code a module or any import a package.",
+   "correction": "Module = importable file; package = collection of modules in a folder (often with __init__.py); library = broad bundle term."
+  }
+ ]
+}

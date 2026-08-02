@@ -1,0 +1,195 @@
+{
+ "id": "dsa_s19_greedy",
+ "title": "Greedy Algorithms",
+ "type": "FUND",
+ "relevance": "Greedy is a core optimization paradigm in SDE interviews and OAs; candidates must recognize when a local choice is safe and prove it before coding.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a greedy algorithm is and what properties make a greedy choice globally optimal.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A greedy algorithm builds a solution piece by piece, always choosing the next piece that offers the most immediate benefit, without reconsidering past choices.",
+     "weight": "core",
+     "evidence_hint": "Candidate states local best-at-each-step construction and that past choices are never revisited."
+    },
+    {
+     "id": "fund2",
+     "point": "For greedy to yield a globally optimal solution, the problem must exhibit the greedy-choice property and optimal substructure.",
+     "weight": "core",
+     "evidence_hint": "Names both properties: a local optimum leads to a global optimum, and an optimal solution contains optimal solutions to subproblems."
+    },
+    {
+     "id": "fund3",
+     "point": "To prove a greedy choice is safe in an interview, use an exchange argument: assume an optimal solution that skips the greedy choice, then swap elements to match the greedy solution without worsening the score.",
+     "weight": "extended",
+     "evidence_hint": "Describes contradiction-plus-swap: transform a non-greedy optimal into the greedy one without loss, so the greedy choice is always safe."
+    }
+   ],
+   "probes": [
+    "What two properties must a problem have for a greedy algorithm to be guaranteed optimal?",
+    "How do you justify a greedy approach in an interview using an exchange argument?"
+   ],
+   "hints": {
+    "1": "Think about what you decide at each step and whether you ever undo it.",
+    "2": "Name the two structural properties, then describe assuming a non-greedy optimal and swapping.",
+    "3": "Greedy-choice property + optimal substructure; exchange: swap until the solution matches greedy without worsening the score."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how common greedy patterns actually make and update choices (sort order, range tracking, multi-pass).",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Activity-style scheduling: sort by end time and always pick the next meeting/interval that starts after the current one ends (N Meetings, Non-overlapping Intervals).",
+     "weight": "core",
+     "evidence_hint": "Says sort by end times, then greedily take the earliest-finishing compatible interval; mentions this is classic activity selection."
+    },
+    {
+     "id": "mech2",
+     "point": "Fractional Knapsack: sort by value-to-weight ratio descending and take as much of the highest-ratio items as possible until capacity is full.",
+     "weight": "core",
+     "evidence_hint": "Mentions ratio sort and filling the knapsack with highest bang-for-buck first, allowing fractions."
+    },
+    {
+     "id": "mech3",
+     "point": "Valid Parenthesis String with '*': track a range of possible open counts (low/high); fail if high goes negative; cap low at 0; accept only if low ends at 0.",
+     "weight": "extended",
+     "evidence_hint": "Explains min/max open range updates for '(', ')', '*', the high<0 fail, low=max(low,0), and final low==0."
+    },
+    {
+     "id": "mech4",
+     "point": "Candy: initialize all to 1, left-to-right pass for left-neighbor constraints, then right-to-left taking max with right_neighbor+1; a single pass can invalidate earlier left constraints.",
+     "weight": "extended",
+     "evidence_hint": "Describes two linear passes and why isolating left then right dependencies needs two passes."
+    }
+   ],
+   "probes": [
+    "For maximum non-overlapping meetings, what do you sort by and what is the greedy pick?",
+    "How does the valid-parenthesis-with-star greedy track possibility without a stack of stars?"
+   ],
+   "hints": {
+    "1": "For intervals, finishing early frees the room for more later.",
+    "2": "End-time sort + next compatible start; for '*', think range of open counts not a single counter.",
+    "3": "Sort by end, pick next start after freeTime; low/high open range, high<0 false, low capped at 0, return low==0."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Distinguish when greedy is safe versus when it fails and DP (or another method) is required.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Greedy often looks right but is wrong: in 0/1 Knapsack, taking most valuable items can waste space and be suboptimal—prove the greedy choice is safe or use DP.",
+     "weight": "core",
+     "evidence_hint": "Gives 0/1 Knapsack as the counterexample and says ask whether the choice is provably safe before committing to greedy."
+    },
+    {
+     "id": "tr2",
+     "point": "Fractional Knapsack makes greedy safe because items can be broken into fractions; without fractions (0/1 Knapsack), the same ratio greedy fails and DP is required.",
+     "weight": "core",
+     "evidence_hint": "Explicitly contrasts fractional vs 0/1: fractions enable ratio greedy; indivisible items break it."
+    },
+    {
+     "id": "tr3",
+     "point": "Never code a greedy solution until you have mentally verified it with an exchange argument; many look-greedy problems fail on edge cases and need DP.",
+     "weight": "extended",
+     "evidence_hint": "States the interview discipline: prove with exchange before writing code; flags look-greedy → actually DP cases."
+    }
+   ],
+   "probes": [
+    "Why does value/weight greedy work for Fractional Knapsack but fail for 0/1 Knapsack?",
+    "What should you do before committing to a greedy solution in an interview?"
+   ],
+   "hints": {
+    "1": "Ask what changes if you cannot break an item.",
+    "2": "Fractions preserve ratio optimality; indivisible items can strand capacity.",
+    "3": "Fractional: ratio greedy is safe; 0/1: greedy can waste space → DP; always exchange-argue first."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply greedy templates to classic OA patterns: change-making, jumps, platforms, jobs, intervals.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Lemonade Change: for a 20 bill, prefer giving one 10 and one 5 over three 5s because 5s are more versatile for future change.",
+     "weight": "core",
+     "evidence_hint": "States the preferential break for 20 and the reason 5 bills must be conserved."
+    },
+    {
+     "id": "app2",
+     "point": "Jump Game I: track maxReach; if index exceeds maxReach you are stuck; update maxReach with i+nums[i]. Jump Game II: treat reachable indices as BFS-like levels using currentEnd and farthest, incrementing jumps when i hits currentEnd.",
+     "weight": "core",
+     "evidence_hint": "Separates reachability (maxReach scan) from min jumps (level boundaries currentEnd/farthest)."
+    },
+    {
+     "id": "app3",
+     "point": "Minimum Platforms: sort arrivals and departures independently; sweep—arrival before next departure needs a new platform, departure frees one; track the maximum in use.",
+     "weight": "extended",
+     "evidence_hint": "Describes dual-pointer event sweep on sorted arr/dep and max concurrent platforms."
+    },
+    {
+     "id": "app4",
+     "point": "Job Sequencing: sort jobs by profit descending; assign each to the latest free slot on or before its deadline (each job takes 1 unit of time).",
+     "weight": "extended",
+     "evidence_hint": "Profit-desc sort + latest-feasible slot before deadline to leave earlier slots open."
+    }
+   ],
+   "probes": [
+    "On a 20 lemonade payment, which change strategy do you prefer and why?",
+    "How do Jump Game I and Jump Game II differ in what the greedy state tracks?"
+   ],
+   "hints": {
+    "1": "Think about which bill denomination you can reuse later.",
+    "2": "Conserve 5s; for jumps, reach vs jump-count levels.",
+    "3": "Prefer one 10+one 5 for 20; I: maxReach; II: currentEnd/farthest levels and jump on boundary."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Fractional Knapsack vs 0/1 Knapsack",
+   "strong_answer": "With fractions, sorting by value-to-weight and taking highest ratio first is safe because a lower-ratio substitute strictly hurts value per unit weight. Without fractions, the same greedy can leave wasted capacity and miss the optimum, so use Dynamic Programming."
+  },
+  {
+   "topic": "Greedy vs Dynamic Programming",
+   "strong_answer": "Use greedy only when you can prove the greedy-choice property (typically via an exchange argument) and optimal substructure. If you cannot prove the local choice is safe—as with 0/1 Knapsack or other look-greedy edge-case failures—switch to DP."
+  },
+  {
+   "topic": "N Meetings / activity selection vs Non-overlapping Intervals removals",
+   "strong_answer": "Both sort by end time and keep earliest-ending compatible intervals. Maximizing meetings kept is dual to minimizing removals: count kept incompatibles as removals instead of kept meetings."
+  },
+  {
+   "topic": "Candy two-pass vs single pass",
+   "strong_answer": "Left-to-right then right-to-left isolates neighbor constraints and takes max on the second pass. A single pass fails because fixing a right-neighbor constraint can invalidate a previously set left-neighbor relationship."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming greedy is correct because the local choice looks optimal (e.g., taking highest-value items in 0/1 Knapsack).",
+   "correction": "Always ask whether the greedy choice is provably safe via an exchange argument; if not, the problem likely needs Dynamic Programming."
+  },
+  {
+   "trap": "In Lemonade Change, always breaking a 20 with three 5s.",
+   "correction": "Prefer one 10 and one 5 so remaining 5s stay available for future 10 and 20 customers."
+  },
+  {
+   "trap": "In Assign Cookies, giving large cookies to low-greed children first.",
+   "correction": "Satisfy least-greedy children with the smallest valid cookie; a cookie too small for the least greedy child helps no one and should be discarded."
+  },
+  {
+   "trap": "Trying to solve Candy constraints in one left-to-right pass.",
+   "correction": "Use two passes: left-to-right for left neighbors, right-to-left taking max with right_neighbor+1 so both sides stay satisfied minimally."
+  },
+  {
+   "trap": "Coding a greedy solution before verifying it.",
+   "correction": "Mentally run an exchange argument first; many look-greedy problems fail on edge cases and require DP."
+  }
+ ]
+}

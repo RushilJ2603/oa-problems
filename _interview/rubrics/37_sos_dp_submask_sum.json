@@ -1,0 +1,216 @@
+{
+ "id": "37_sos_dp_submask_sum",
+ "title": "Sum over Subsets (SOS) DP & Submask Enumeration",
+ "type": "CP",
+ "relevance": "Medium — rarely the first OA template, but “count / aggregate over all bit-subsets of a mask” and “partition a small set via submasks” show up in harder bit-mask screens; essential CF ~1700–2200 toolkit Striver never covers",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "OA/interview appearances: puzzle/word letter-masks (enumerate submasks of a 7-letter puzzle); AND/OR compatibility (disjoint bits or covering flags); team/group partition for n ≤ 16 via O(3^n) DP; aggregate over bit-subsets at scale via CSES-style SOS on frequencies.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Candidate spots SOS vs submask-enumeration and the problem shapes that call for each.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Recognize need, for every mask, of a sum/count/max over all its submasks (or supersets/complements) → SOS DP.",
+     "weight": "core",
+     "evidence_hint": "Says: when every mask needs an aggregate over i ⊆ mask (or supersets), use SOS."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognize “split set mask into group sub + rest” / clique-partition / reconstruct-from-parts → submask enumeration transitions.",
+     "weight": "core",
+     "evidence_hint": "Names partition/split or clique-cover DP driven by walking sub ⊆ mask."
+    },
+    {
+     "id": "rec3",
+     "point": "Spot statement cues like compatible AND = 0, OR-subsets, count y with x|y=x or x&y=x.",
+     "weight": "extended",
+     "evidence_hint": "Maps those phrasings to SOS or pairwise mask checks."
+    }
+   ],
+   "probes": [
+    "When would you reach for SOS DP versus enumerating submasks of a fixed mask?",
+    "What problem wording suggests sum-over-subsets or complementary disjoint-pair SOS?"
+   ],
+   "hints": {
+    "1": "Think about whether you need one aggregate per mask or must try every split of a set.",
+    "2": "Aggregates over all submasks/supersets → SOS; trying group sub + rest → (s-1)&m enumeration.",
+    "3": "n around 20 with per-mask submask aggregates → SOS; partition/clique cover needing each split → O(3^n) submask DP."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Candidate states the two tools and when each applies under typical bit-mask constraints.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Submask enumeration: for fixed m, walk every s ⊆ m via for (s=m; s; s=(s-1)&m), handling 0 separately; over all masks this is O(3^n), not O(4^n).",
+     "weight": "core",
+     "evidence_hint": "Writes the (s-1)&m loop and cites O(3^n) for all (mask, submask) pairs."
+    },
+    {
+     "id": "appr2",
+     "point": "SOS: given A[0…2^n), compute F[mask]=Σ_{i⊆mask} A[i] (or sum over supersets) in O(n·2^n) by sweeping one bit at a time — an n-dimensional prefix sum on the subset lattice.",
+     "weight": "core",
+     "evidence_hint": "Describes bit-by-bit subset-lattice prefix sums yielding F as sum over submasks."
+    },
+    {
+     "id": "appr3",
+     "point": "Use submask enum when n ≤ 18ish for partition DP; switch to SOS when only aggregates are needed and n ≤ 20–23 makes n·2^n fit but 3^n/4^n does not.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts partition-DP n band with SOS when only aggregates matter at larger n."
+    }
+   ],
+   "probes": [
+    "Walk through how you’d compute F[mask] = sum of A[i] over all i ⊆ mask efficiently.",
+    "Why is iterating all masks and all their submasks O(3^n) rather than O(4^n)?"
+   ],
+   "hints": {
+    "1": "Each bit of the universe plays a fixed role in the (mask, submask) count.",
+    "2": "Per bit: off / in-mask-only / in-both → 3 choices → 3^n pairs.",
+    "3": "SOS adds along one bit dimension at a time: if bit i is on, F[mask] += F[mask^(1<<i)]."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Candidate can write the submask loop, SOS / superset SOS, and the partition DP skeleton.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Submask loop must be for (int s=m; s; s=(s-1)&m) plus explicit handling of s=0; never s-- alone.",
+     "weight": "core",
+     "evidence_hint": "Codes (s-1)&m and mentions adding the empty submask separately."
+    },
+    {
+     "id": "impl2",
+     "point": "SOS update: F=A; for i in 0..n-1: for mask: if mask>>i&1: F[mask] += F[mask^(1<<i)].",
+     "weight": "core",
+     "evidence_hint": "Gives the bit-on accumulation from the bit-cleared sibling."
+    },
+    {
+     "id": "impl3",
+     "point": "Sum over supersets: same loop but add into the bit-off side (F[mask^(1<<i)] += F[mask] when bit i is on), or SOS on bit-flipped indices.",
+     "weight": "extended",
+     "evidence_hint": "Reverses the SOS flow into the unset-bit side or flips indices first."
+    },
+    {
+     "id": "impl4",
+     "point": "Partition template: dp[0]=0 (or 1 for ways); for mask: for sub=mask; sub; sub=(sub-1)&mask: dp[mask]=best(dp[mask], combine(score(sub), dp[mask^sub])).",
+     "weight": "extended",
+     "evidence_hint": "Shows submask transitions combining score(sub) with dp on the complement bits."
+    }
+   ],
+   "probes": [
+    "Write the SOS recurrence that fills F from A in one bit sweep.",
+    "How do you adapt the loop for sum-over-supersets or for partition DP?"
+   ],
+   "hints": {
+    "1": "Start from copying A into F, then layer one bit dimension.",
+    "2": "When bit i is set, pull from (or push to) the mask with that bit cleared.",
+    "3": "Subset SOS: F[mask]+=F[mask^(1<<i)]; superset: F[mask^(1<<i)]+=F[mask]; partition: enumerate sub of mask and combine with mask^sub."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Candidate states the right bounds and which constraint band favors which tool.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "All (mask, submask) pairs cost 3^n because each bit is off / in-mask-only / in-both.",
+     "weight": "core",
+     "evidence_hint": "Explains the three-way per-bit accounting for 3^n."
+    },
+    {
+     "id": "cx2",
+     "point": "SOS (and inverse SOS with -= along each bit) runs in O(n·2^n).",
+     "weight": "core",
+     "evidence_hint": "States O(n·2^n) for the bit-dimension sweeps."
+    },
+    {
+     "id": "cx3",
+     "point": "Comfort band: n ≤ 20 / values ≤ 2^20 style constraints; n·2^n fits where 3^n/4^n may not when n ≤ 20–23.",
+     "weight": "extended",
+     "evidence_hint": "Ties n·2^n feasibility to the n ≤ 20–23 / 2^20 setting versus heavier 3^n."
+    }
+   ],
+   "probes": [
+    "What is the complexity of SOS versus enumerating every submask of every mask?",
+    "For which n would you prefer SOS aggregates over an O(3^n) partition DP?"
+   ],
+   "hints": {
+    "1": "Count how many times each bit configuration appears in nested mask/submask loops.",
+    "2": "SOS is one pass per bit over the 2^n array; full submask enum hits 3^n pairs.",
+    "3": "Need splits → pay 3^n (n ≤ 18ish); only aggregates at n ≈ 20 → SOS O(n·2^n)."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Candidate avoids wrong submask iteration and mis-applied SOS / disjoint-pair templates.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Writing s-- (or otherwise decrementing without &m) visits non-submasks.",
+     "weight": "core",
+     "evidence_hint": "Warns that plain decrement leaves the subset lattice."
+    },
+    {
+     "id": "pit2",
+     "point": "Forgetting to handle s=0 separately after for (s=m; s; s=(s-1)&m) drops the empty submask.",
+     "weight": "core",
+     "evidence_hint": "Notes the loop condition skips 0 and must add it explicitly."
+    },
+    {
+     "id": "pit3",
+     "point": "Inverse SOS / Möbius: given F[mask]=Σ_{i⊆mask} A[i], recover A by subtracting along each bit (same loops, -=).",
+     "weight": "extended",
+     "evidence_hint": "Describes undoing the prefix by -= on the same bit order."
+    },
+    {
+     "id": "pit4",
+     "point": "Compatible/disjoint pair template: store presence/value at each mask; SOS-max/OR into supersets; answer for x is SOS[((1<<B)-1)^x].",
+     "weight": "extended",
+     "evidence_hint": "Queries the SOS of the bitwise complement of x after pushing onto supersets."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you iterate submasks with s-- instead of (s-1)&m?",
+    "How do you recover A from F after a sum-over-subsets transform?"
+   ],
+   "hints": {
+    "1": "The loop body must stay inside bits of m.",
+    "2": "Empty mask is a valid submask; the nonzero loop misses it.",
+    "3": "Inverse uses the same bit sweeps with subtraction; disjoint queries look up SOS on the complement mask."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "O(3^n) submask enumeration vs O(n·2^n) SOS",
+   "strong_answer": "Enumerate submasks when you must try splits of a set (partition / clique-cover / reconstruct-from-parts). Use SOS when you only need aggregates (sum/count/max) over all submasks or supersets of every mask — especially when n ≈ 20 makes n·2^n fit but 3^n/4^n does not."
+  },
+  {
+   "topic": "Sum over subsets vs sum over supersets",
+   "strong_answer": "Subset SOS accumulates into bit-on masks from bit-cleared siblings. Superset SOS adds into the bit-off side when bit i is on, or runs ordinary SOS on bit-flipped indices — choose by whether queries need i ⊆ mask or supersets of mask."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using s-- (or any decrement without &m) to walk submasks of m.",
+   "correction": "Use for (int s=m; s; s=(s-1)&m) so every step stays a submask of m; plain s-- visits non-submasks."
+  },
+  {
+   "trap": "Omitting the empty submask after the nonzero (s-1)&m loop.",
+   "correction": "The loop stops before s=0; handle the empty submask separately whenever it is a valid case."
+  },
+  {
+   "trap": "Paying O(3^n) partition-style enumeration when only per-mask aggregates are required.",
+   "correction": "If you need something for every mask from all its submasks and n≈20, switch to SOS O(n·2^n) instead of trying every split."
+  },
+  {
+   "trap": "Leaving F as sum-over-subsets when the problem needs the original A (e.g. exact AND equals k after “AND ⊇ k” counts).",
+   "correction": "Apply inverse SOS / Möbius on the subset lattice: same bit loops with -= to recover A from F."
+  }
+ ]
+}

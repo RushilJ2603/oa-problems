@@ -1,0 +1,263 @@
+{
+ "id": "33_euler_tour_subtree_queries",
+ "title": "Euler tour + subtree/path queries (BIT/segtree)",
+ "type": "CP",
+ "relevance": "Medium — org-chart / file-tree “sum or update this department” maps directly to flatten+BIT; full path/LCA variants are rarer in OAs but dominate CF Div2 D–E tree DS. Striver never teaches tree linearization, so this is a pure CP unlock.",
+ "difficulty": "mid",
+ "prereqs": [
+  "20_range_queries",
+  "17_trees"
+ ],
+ "company_notes": "Org/manager trees: sum salaries under manager X or add bonus to department X → Subtree Queries / Ki (flatten + Fenwick). File-system / nested folders: toggle or recolor a folder and all descendants → Euler range update (Danil / New Year Tree shape, often simplified). Path cost after edge edits: update road length, query distance between cities → ABC294 G / CSES Path Queries + LCA (Juspay-style). Hierarchy reachability: is A an ancestor of B? / any of these IDs under boss X? → tin/tout checks (Tree Queries / Unusual Entertainment).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Map org-chart, folder, path-distance, and hierarchy wording to Euler flatten + Fenwick/segtree (vs needing LCA or HLD).",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Signal words: subtree sum/add/flip after updates, values on root→node path, “descendants at depth h”, color assign on a whole subtree, company hierarchy queries.",
+     "weight": "core",
+     "evidence_hint": "Lists those signals and reaches for Euler tour + BIT/segtree rather than plain DFS only."
+    },
+    {
+     "id": "rec2",
+     "point": "Org/manager “sum salaries under manager X” or “add bonus to department X” → Subtree Queries / Ki (flatten + Fenwick).",
+     "weight": "core",
+     "evidence_hint": "Maps department sum/add under a manager to flatten + Fenwick subtree range ops."
+    },
+    {
+     "id": "rec3",
+     "point": "File-system toggle/recolor of a folder and descendants → Euler range update; “update road length, query distance between cities” → ABC294 G / CSES Path Queries + LCA; “is A an ancestor of B?” / IDs under boss X → tin/tout checks.",
+     "weight": "core",
+     "evidence_hint": "Splits folder recolor, edge-edit distances, and ancestor/reachability into the matching Euler shapes."
+    },
+    {
+     "id": "rec4",
+     "point": "Full path/LCA variants are rarer in OAs but dominate CF Div2 D–E tree DS; Striver never teaches tree linearization.",
+     "weight": "extended",
+     "evidence_hint": "Notes OA rarity of full path/LCA variants versus CF Div2 D–E dominance and the Striver gap."
+    }
+   ],
+   "probes": [
+    "What wording makes you flatten the tree with tin/tout instead of walking the subtree each query?",
+    "Is this a department sum/add, a folder recolor, a city-distance after edge edits, or an ancestor check?"
+   ],
+   "hints": {
+    "1": "Ask whether the ask is under-a-node aggregates, root→node values, folder-wide flips, or ancestor/reachability.",
+    "2": "Manager sum/bonus → Subtree Queries/Ki; folder recolor → Euler range update; road update + city distance → Path Queries/ABC294 G + LCA; ancestor/under-boss → tin/tout.",
+    "3": "Say: signals are subtree sum/add/flip, root→node values, descendants at depth h, subtree color assign, hierarchy queries; org sum/bonus → flatten+Fenwick; folder toggle → Euler range update; edge edit + distance → Path Queries/ABC294 G + LCA; ancestor/IDs under boss → tin/tout; path/LCA variants rarer in OAs, big on CF Div2 D–E."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "State DFS tin/tout flatten so subtree→range and root→node→prefix, then when to add LCA.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Root the tree and DFS-timestamp each node: enter → tin[v], leave → tout[v]; subtree of v is contiguous [tin[v], tout[v]] (or [tin[v], tin[v]+sz[v]-1]).",
+     "weight": "core",
+     "evidence_hint": "Defines tin/tout in one DFS and the contiguous subtree index range."
+    },
+    {
+     "id": "appr2",
+     "point": "Put a Fenwick/segtree on that linear order so subtree ops become range ops.",
+     "weight": "core",
+     "evidence_hint": "States that the tour array + Fenwick/segtree turns subtree asks into range asks."
+    },
+    {
+     "id": "appr3",
+     "point": "Root→node path ops become prefix ops via the +x at tin, −x at tout+1 difference trick.",
+     "weight": "core",
+     "evidence_hint": "Names the tour difference endpoints and prefix-to-tin answer for root→node."
+    },
+    {
+     "id": "appr4",
+     "point": "Ancestor tests are tin[u] ≤ tin[v] ≤ tout[u]; combine with LCA for arbitrary u–v paths.",
+     "weight": "extended",
+     "evidence_hint": "Gives the tin/tout ancestor check and says LCA is needed for general u–v paths."
+    }
+   ],
+   "probes": [
+    "How do you turn a subtree query into an array range query?",
+    "How do root→node path sums become prefix sums on the tour?"
+   ],
+   "hints": {
+    "1": "Timestamp enter/leave in DFS, then think contiguous indices under a node.",
+    "2": "Subtree → range on [tin,tout]; root→node → prefix via +x at tin and −x at tout+1; ancestors via tin/tout; general paths need LCA.",
+    "3": "Say: tin on enter, tout on leave; subtree = [tin[v],tout[v]] (or tin..tin+sz-1); Fenwick/segtree on the tour; root→node via +x at tin, −x at tout+1 then prefix to tin[u]; ancestor if tin[u]≤tin[v]≤tout[u]; arbitrary u–v needs LCA."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Code tin/tout DFS, subtree PURS, path-to-root BIT-as-diff, LCA path formula, and lazy/offline variants.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Write tin/tout (or in/out) in one DFS; subtree of v = contiguous [tin[v], tout[v]]; sz[v] = tout[v] − tin[v] (convention-dependent — pick one and stick to it).",
+     "weight": "core",
+     "evidence_hint": "Codes one DFS for timestamps and states the sz ↔ tout−tin link under a fixed convention."
+    },
+    {
+     "id": "impl2",
+     "point": "Subtree PURS: store value at tin[v]; point update tin[v]; query sum/min/OR on [tin[v], tout[v]] with Fenwick or segtree.",
+     "weight": "core",
+     "evidence_hint": "Places the value at tin[v] and does point-update + range query on the subtree interval."
+    },
+    {
+     "id": "impl3",
+     "point": "Path root→u: on value change of v by δ, range-add [tin[v], tout[v]] by δ (BIT-as-diff: +δ at tin[v], −δ at tout[v]+1); answer = prefix sum to tin[u].",
+     "weight": "core",
+     "evidence_hint": "Writes the two BIT endpoints and answers with prefix to tin[u]."
+    },
+    {
+     "id": "impl4",
+     "point": "Path u–v: path(u)+path(v)−2·path(lca) (edge weights) or adjust by ±value[lca] for node weights; need LCA template.",
+     "weight": "core",
+     "evidence_hint": "States the edge-weight path identity and the node-weight LCA adjustment."
+    },
+    {
+     "id": "impl5",
+     "point": "Subtree assign/flip → lazy segtree on the tour array; offline distinct-in-subtree: scan Euler order, keep only last index of each color in a BIT (Distinct Colors).",
+     "weight": "extended",
+     "evidence_hint": "Names lazy-on-tour for assign/flip and last-occurrence BIT for offline distinct colors."
+    }
+   ],
+   "probes": [
+    "Where do you store a node’s value for subtree sum queries?",
+    "Walk me through updating a node so root→u path sums stay correct.",
+    "How do you get an arbitrary u–v path from root→node prefixes?"
+   ],
+   "hints": {
+    "1": "One DFS for tin/tout; decide whether the op is subtree range, root→node prefix, or full u–v.",
+    "2": "PURS: value at tin, query [tin,tout]; path-to-root: +δ at tin, −δ at tout+1, prefix to tin[u]; u–v via LCA formula; assign/flip → lazy; distinct → last-occurrence BIT.",
+    "3": "Say: tin/tout in one DFS, sz=tout−tin under one convention; store at tin[v], point-update, range on [tin,tout]; root→u via +δ at tin[v], −δ at tout[v]+1, prefix to tin[u]; path(u)+path(v)−2·path(lca) (edges) or ±value[lca] (nodes); lazy for assign/flip; Distinct Colors last-occurrence BIT."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State the O(1) ancestor check and where Euler’s range reduction stops (need HLD).",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Ancestor test in O(1): tin[u] ≤ tin[v] && tout[v] ≤ tout[u] (equivalently tin[u] ≤ tin[v] ≤ tout[u] with matching tout convention).",
+     "weight": "core",
+     "evidence_hint": "Quotes the O(1) tin/tout ancestor predicate and notes the convention pair."
+    },
+    {
+     "id": "cx2",
+     "point": "After flatten, subtree ops are contiguous range ops and root→node ops are prefix ops on the tour (via the difference trick).",
+     "weight": "core",
+     "evidence_hint": "States the structural reduction: subtree→range, root→node→prefix."
+    },
+    {
+     "id": "cx3",
+     "point": "Euler shines for subtrees and root-paths; arbitrary path aggregates with updates usually need HLD (Path Queries II).",
+     "weight": "core",
+     "evidence_hint": "Draws the capability limit and names Path Queries II / HLD as the upgrade."
+    },
+    {
+     "id": "cx4",
+     "point": "New Year Tree stretch: ≤60 colors → uint64 OR on tour ranges.",
+     "weight": "extended",
+     "evidence_hint": "Cites the ≤60 → uint64 bitmask capacity on Euler ranges."
+    }
+   ],
+   "probes": [
+    "How fast is an ancestor check after tin/tout?",
+    "When does Euler stop being enough and you need HLD?"
+   ],
+   "hints": {
+    "1": "Ancestor is a constant-time timestamp compare; capability differs for subtree vs arbitrary path.",
+    "2": "O(1) tin/tout ancestor; subtree→range and root→node→prefix; arbitrary path aggregates with updates → HLD / Path Queries II.",
+    "3": "Say: ancestor in O(1) via tin/tout inequalities; flatten makes subtree a range and root→node a prefix; Euler for subtrees/root-paths, HLD (Path Queries II) for arbitrary path aggregates with updates; ≤60 colors → uint64 OR on tour ranges."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch tin/tout convention bugs, wrong path formulas, and using Euler when HLD is required.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "sz[v] = tout[v] − tin[v] is convention-dependent — mixing inclusive/exclusive tout with the wrong sz formula breaks ranges.",
+     "weight": "core",
+     "evidence_hint": "Warns to pick one tin/tout/sz convention and keep it consistent."
+    },
+    {
+     "id": "pit2",
+     "point": "Ancestor formulas tin[u]≤tin[v]&&tout[v]≤tout[u] vs tin[u]≤tin[v]≤tout[u] only match under the same tout convention.",
+     "weight": "core",
+     "evidence_hint": "Refuses to mix the two ancestor forms across incompatible tout conventions."
+    },
+    {
+     "id": "pit3",
+     "point": "Forgetting −δ at tout[v]+1 (or the matching range-add end) corrupts root→node prefix answers after updates.",
+     "weight": "core",
+     "evidence_hint": "Calls out the missing difference endpoint on path-to-root updates."
+    },
+    {
+     "id": "pit4",
+     "point": "Using Euler alone for arbitrary path aggregates with updates — usually need HLD (Path Queries II).",
+     "weight": "core",
+     "evidence_hint": "Rejects Euler-only for update+arbitrary-path aggregates and names HLD."
+    },
+    {
+     "id": "pit5",
+     "point": "On u–v paths, omitting path(u)+path(v)−2·path(lca) (edges) or the ±value[lca] node-weight adjustment double-counts or drops the LCA.",
+     "weight": "extended",
+     "evidence_hint": "Requires the LCA term for edge vs node path reconstruction."
+    }
+   ],
+   "probes": [
+    "What breaks if your tout convention and sz formula disagree?",
+    "What goes wrong if you skip the −δ at tout+1 on a path-to-root update?",
+    "When is Euler the wrong tool versus HLD?"
+   ],
+   "hints": {
+    "1": "Check timestamp conventions, difference endpoints, LCA terms, and whether the path is arbitrary under updates.",
+    "2": "Stick to one tin/tout/sz convention; pair ancestor forms with that convention; always close the diff with −δ at tout+1; add LCA for u–v; HLD when Euler can’t do arbitrary path aggregates with updates.",
+    "3": "Say: sz=tout−tin is convention-dependent; don’t mix ancestor inequalities across tout styles; path-to-root needs +δ at tin and −δ at tout+1; u–v needs path(u)+path(v)−2·path(lca) or ±value[lca]; arbitrary path aggregates with updates → HLD / Path Queries II."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Euler+Fenwick/segtree vs HLD",
+   "strong_answer": "Euler shines for subtrees and root-paths (flatten + BIT/segtree). Arbitrary path aggregates with updates usually need HLD (Path Queries II)."
+  },
+  {
+   "topic": "Subtree PURS vs path-to-root difference",
+   "strong_answer": "Subtree PURS: store at tin[v], point update, range query [tin[v], tout[v]]. Path root→u: range-add [tin[v], tout[v]] by δ via BIT-as-diff (+δ at tin[v], −δ at tout[v]+1), answer = prefix to tin[u]."
+  },
+  {
+   "topic": "Fenwick/segtree PURS vs lazy segtree on the tour",
+   "strong_answer": "Point-set / range-sum (or min/OR) on subtrees → Fenwick or plain segtree. Subtree assign / flip → lazy segtree on the tour array (Danil / New Year Tree / Water Tree)."
+  },
+  {
+   "topic": "Offline last-occurrence BIT vs small-to-large for distinct colors",
+   "strong_answer": "Offline distinct-in-subtree: scan Euler order, keep only last index of each color in a BIT (Distinct Colors). Alternative: small-to-large."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Mixing tin/tout conventions with sz[v] = tout[v] − tin[v] so subtree ranges are off-by-one.",
+   "correction": "Pick one tin/tout (in/out) convention and stick to it; sz[v] = tout[v] − tin[v] is convention-dependent."
+  },
+  {
+   "trap": "Using one ancestor inequality with a tout style that matches the other form.",
+   "correction": "Use tin[u] ≤ tin[v] && tout[v] ≤ tout[u], or equivalently tin[u] ≤ tin[v] ≤ tout[u] only with a matching tout convention."
+  },
+  {
+   "trap": "Updating a node for path-to-root sums without the −δ at tout[v]+1 difference end.",
+   "correction": "On value change of v by δ: +δ at tin[v], −δ at tout[v]+1 (range-add [tin[v], tout[v]]); answer is prefix sum to tin[u]."
+  },
+  {
+   "trap": "Reaching for Euler alone on arbitrary path aggregates with updates.",
+   "correction": "Euler shines for subtrees and root-paths; arbitrary path aggregates with updates usually need HLD (Path Queries II)."
+  },
+  {
+   "trap": "Building u–v path from root prefixes without the LCA correction.",
+   "correction": "path(u)+path(v)−2·path(lca) for edge weights, or adjust by ±value[lca] for node weights; need an LCA template."
+  }
+ ]
+}

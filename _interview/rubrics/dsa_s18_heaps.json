@@ -1,0 +1,217 @@
+{
+ "id": "dsa_s18_heaps",
+ "title": "Heaps and Priority Queues",
+ "type": "FUND",
+ "relevance": "Heaps and priority queues underpin classic SDE/OA patterns: Top-K selection, merge-k streams, streaming medians, and greedy scheduling.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a heap is, the heap-order property, and why it maps to a flat array.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A heap is a complete binary tree that satisfies the heap-order property.",
+     "weight": "core",
+     "evidence_hint": "States both completeness and heap-order, not just 'a binary tree of priorities'."
+    },
+    {
+     "id": "fund2",
+     "point": "In a max-heap every parent is >= its children; in a min-heap every parent is <= its children.",
+     "weight": "core",
+     "evidence_hint": "Correctly distinguishes max-heap vs min-heap ordering."
+    },
+    {
+     "id": "fund3",
+     "point": "A complete binary tree is filled on all levels except possibly the lowest, which is filled from the left, so a heap can be stored as a flat array without pointers.",
+     "weight": "core",
+     "evidence_hint": "Mentions left-filled lowest level and array representation without child pointers."
+    },
+    {
+     "id": "fund4",
+     "point": "For 0-indexed array index i: left child at 2i+1, right child at 2i+2, parent at floor((i-1)/2).",
+     "weight": "extended",
+     "evidence_hint": "Recites the three index formulas for 0-based layout."
+    }
+   ],
+   "probes": [
+    "What is a heap, and why can we store it in an array without pointers?"
+   ],
+   "hints": {
+    "1": "Think about the shape constraint plus the parent-vs-children value rule.",
+    "2": "Complete binary trees have no gaps, so children land at fixed offsets from index i.",
+    "3": "Definition: complete binary tree + heap-order; 0-based: left 2i+1, right 2i+2, parent floor((i-1)/2)."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain insert, extract-root, build-heap, heap sort, and std::priority_queue defaults.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Insert appends at the end then restores order by bubble-up/sift-up in O(log n) because tree height is logarithmic.",
+     "weight": "core",
+     "evidence_hint": "Describes append-then-swap-with-parent until order holds, cites O(log n)."
+    },
+    {
+     "id": "mech2",
+     "point": "Extract-root replaces the root with the last element, shrinks size by 1, then restores order by sift-down/heapify in O(log n).",
+     "weight": "core",
+     "evidence_hint": "Describes last-to-root replacement and swapping with largest (max-heap) or smallest (min-heap) child."
+    },
+    {
+     "id": "mech3",
+     "point": "Bottom-up build-heap starts at the last internal node and heapifies backward to the root, running in O(n), not O(n log n).",
+     "weight": "core",
+     "evidence_hint": "Names bottom-up heapify-from-last-internal-node and insists on O(n)."
+    },
+    {
+     "id": "mech4",
+     "point": "Heap sort builds a max-heap, then repeatedly swaps the root with the last heap element, shrinks the heap, and heapifies the new root for n-1 rounds; it is O(n log n) time, O(1) auxiliary space, and not stable.",
+     "weight": "extended",
+     "evidence_hint": "Covers build, swap-to-end loop, complexities, and non-stability."
+    },
+    {
+     "id": "mech5",
+     "point": "C++ std::priority_queue<int> is a max-heap by default; a min-heap needs an explicit container and std::greater<int>.",
+     "weight": "extended",
+     "evidence_hint": "Flags the default max-heap surprise and the greater comparator pattern."
+    }
+   ],
+   "probes": [
+    "Walk through insert and extract-min on an array heap. Why is bottom-up build-heap O(n)?"
+   ],
+   "hints": {
+    "1": "Start from how the array stays complete, then how order is repaired after insert vs delete.",
+    "2": "Contrast one-by-one inserts with heapifying internal nodes from the bottom; most nodes sit near the leaves.",
+    "3": "Append+bubble-up and last-to-root+sift-down are O(log n); bottom-up build is O(n) because half the nodes are leaves (height 0) with almost no sift work."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare construction strategies, Top-K heap vs alternatives, and which heap polarity fits which query.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Building by inserting one by one is O(n log n); the optimal bottom-up approach is O(n) because most nodes are near the bottom with small sift-down distance.",
+     "weight": "core",
+     "evidence_hint": "Contrasts the two build costs and explains the geometric bottom-heavy work argument."
+    },
+    {
+     "id": "tr2",
+     "point": "For the k-th largest, a size-k min-heap guarantees O(n log k); QuickSelect averages O(n) but can hit O(n^2) worst case.",
+     "weight": "core",
+     "evidence_hint": "States heap guarantee vs QuickSelect average/worst-case split."
+    },
+    {
+     "id": "tr3",
+     "point": "k-th largest uses a min-heap of size k; k-th smallest uses a max-heap of size k.",
+     "weight": "core",
+     "evidence_hint": "Correctly pairs polarity of heap with largest vs smallest query."
+    },
+    {
+     "id": "tr4",
+     "point": "Heap sort is in-place with O(1) auxiliary space and O(n log n) time, but it is not a stable sort.",
+     "weight": "extended",
+     "evidence_hint": "Mentions in-place/O(1) aux and explicitly that stability is lost."
+    }
+   ],
+   "probes": [
+    "When would you use a size-k min-heap versus QuickSelect for the k-th largest? Why is build-heap linear?"
+   ],
+   "hints": {
+    "1": "Compare guaranteed bounds versus average-case faster algorithms.",
+    "2": "Think about which end of the ordered set the heap root represents when the heap is capped at size k.",
+    "3": "Size-k min-heap traps the largest k and the root is the k-th largest in O(n log k); QuickSelect is O(n) average / O(n^2) worst; bottom-up build is O(n)."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Map interview patterns to the right heap setup: Top-K, merge-k, two-heaps median, and greedy merges.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "K-th / Top-K: keep a bounded heap of size k so the root is the k-th extreme among the elite k.",
+     "weight": "core",
+     "evidence_hint": "Describes streaming into a size-k heap and reading the root as the answer."
+    },
+    {
+     "id": "app2",
+     "point": "Merging k sorted streams uses a min-heap of size k holding the current front of each stream; overall time O(N log k) for N total elements.",
+     "weight": "core",
+     "evidence_hint": "Says heap of heads, pop min then push next from that list, cites O(N log k)."
+    },
+    {
+     "id": "app3",
+     "point": "Running median: max-heap for the lower half and min-heap for the upper half, keeping a size difference of at most 1.",
+     "weight": "core",
+     "evidence_hint": "Names two heaps with roles and the balance invariant."
+    },
+    {
+     "id": "app4",
+     "point": "Minimum cost to connect sticks: repeatedly extract the two shortest via a min-heap, pay their sum, and push the fused stick back (Huffman-style).",
+     "weight": "extended",
+     "evidence_hint": "States greedy two-shortest merges managed by a min-heap."
+    }
+   ],
+   "probes": [
+    "How do you find a running median from a stream? How do you merge k sorted lists efficiently?"
+   ],
+   "hints": {
+    "1": "Ask which end of each half you need in O(1) after each insertion.",
+    "2": "For streams of lists, you only need the current heads under comparison at once.",
+    "3": "Two heaps: max-heap lower half + min-heap upper half, size gap at most 1; merge-k: min-heap of size k of list heads, O(N log k)."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "One-by-one inserts vs bottom-up build-heap",
+   "strong_answer": "Inserting n elements one by one is O(n log n). Bottom-up heapify from the last internal node to the root is O(n), because half the nodes are leaves (height 0), a quarter sit at height 1, and so on, so total sift work converges linearly."
+  },
+  {
+   "topic": "Size-k heap vs QuickSelect for k-th largest",
+   "strong_answer": "A min-heap of size k yields a strict O(n log k) bound. QuickSelect averages O(n) but can degrade to O(n^2); the heap answer is preferred when a reliable bound matters."
+  },
+  {
+   "topic": "Min-heap of size k vs max-heap of size k",
+   "strong_answer": "k-th largest / top-k largest keep a min-heap of size k (root is the smallest of the large set). k-th smallest keeps a max-heap of size k (root is the largest of the small set)."
+  },
+  {
+   "topic": "Heap sort stability and space vs other O(n log n) sorts",
+   "strong_answer": "Heap sort is O(n log n) time with O(1) auxiliary space (in-place) but is not stable, so it loses when relative order of equal keys must be preserved."
+  },
+  {
+   "topic": "Merge-all-then-sort vs min-heap of k heads",
+   "strong_answer": "Dumping every node and sorting costs O(N log N). A min-heap of the k current heads merges in O(N log k) while using O(k) heap space."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming std::priority_queue<int> is a min-heap.",
+   "correction": "It is a max-heap by default; a min-heap needs std::priority_queue<int, std::vector<int>, std::greater<int>>."
+  },
+  {
+   "trap": "Writing a custom comparator with 'normal' less-than intuition.",
+   "correction": "operator() should return true when the first argument has lower priority than the second; returning true pushes that element further down the extraction order."
+  },
+  {
+   "trap": "Using a max-heap for the k-th largest (or a min-heap for the k-th smallest).",
+   "correction": "k-th largest needs a min-heap of size k; k-th smallest needs a max-heap of size k."
+  },
+  {
+   "trap": "Claiming bottom-up build-heap is O(n log n) like n inserts.",
+   "correction": "Bottom-up build-heap is O(n); most nodes are near the bottom with small maximum sift-down distance."
+  },
+  {
+   "trap": "Thinking 'convert min-heap to max-heap' must exploit the existing min-heap structure specially.",
+   "correction": "The min-heap label is misdirection—treat it as an array and run bottom-up max-heapify in O(n)."
+  },
+  {
+   "trap": "Forgetting heap sort is unstable despite being in-place.",
+   "correction": "Heap sort is O(n log n) with O(1) auxiliary space but is not a stable sort."
+  }
+ ]
+}

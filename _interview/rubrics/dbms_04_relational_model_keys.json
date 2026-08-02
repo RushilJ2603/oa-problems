@@ -1,0 +1,173 @@
+{
+ "id": "dbms_04_relational_model_keys",
+ "title": "Relational Model: Tables and Keys",
+ "type": "FUND",
+ "relevance": "Campus OAs and SDE interviews routinely test whether you can define keys, distinguish super/candidate/primary keys, and count super keys from a schema.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a schema/table is and what makes an attribute set a key or candidate key.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A schema is the logical representation of the data; data is held in tables (relations) of rows and columns.",
+     "weight": "core",
+     "evidence_hint": "Says schema is logical structure and tables/relations store the actual rows and columns."
+    },
+    {
+     "id": "fund2",
+     "point": "A key is an attribute or set of attributes whose purpose is to uniquely identify a row (tuple) of a table.",
+     "weight": "core",
+     "evidence_hint": "States uniqueness of a row/tuple as the purpose of a key."
+    },
+    {
+     "id": "fund3",
+     "point": "A candidate key is a minimal set of attributes that can uniquely identify every tuple of a relation; a relation may have several candidate keys.",
+     "weight": "core",
+     "evidence_hint": "Mentions both uniqueness and minimality, and that multiple candidate keys are allowed."
+    },
+    {
+     "id": "fund4",
+     "point": "SQL's data-definition language (DDL) is the sub-language used to declare tables.",
+     "weight": "extended",
+     "evidence_hint": "Names DDL as the language for declaring table structure."
+    }
+   ],
+   "probes": [
+    "What is a candidate key, and how does it differ from just any unique-looking column?",
+    "In the Student example with repeating Sname/City/Age, why is Rollno a candidate key and the others not?"
+   ],
+   "hints": {
+    "1": "Think about what lets you pick out exactly one row.",
+    "2": "Separate uniqueness from minimality — candidate keys need both.",
+    "3": "A candidate key is a minimal uniquely identifying attribute set; Rollno works because Sname/City/Age repeat across rows."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain super keys, how to count them, and how primary and alternate keys are chosen from candidate keys.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A super key is any combination of attributes that can uniquely identify the tuples of a table; any superset of a candidate key is a super key.",
+     "weight": "core",
+     "evidence_hint": "Defines super key as uniquely identifying and notes supersets of candidate keys remain super keys."
+    },
+    {
+     "id": "mech2",
+     "point": "If a relation has n attributes and one single-attribute candidate key, the number of super keys is 2^{n-1}.",
+     "weight": "core",
+     "evidence_hint": "Gives 2^{n-1}, optionally illustrating with Rollno/name/age yielding 4 super keys."
+    },
+    {
+     "id": "mech3",
+     "point": "With two single-attribute candidate keys A1 and A2, super keys are counted by inclusion–exclusion as 2^{n-1} + 2^{n-1} - 2^{n-2}.",
+     "weight": "extended",
+     "evidence_hint": "States the formula and explains subtracting the double-counted subsets containing both keys."
+    },
+    {
+     "id": "mech4",
+     "point": "Among candidate keys the designer selects one primary key; the rest become alternate keys. Primary key means Unique + Not Null.",
+     "weight": "core",
+     "evidence_hint": "Says one candidate is promoted to primary, others are alternate, and cites Unique + Not Null."
+    },
+    {
+     "id": "mech5",
+     "point": "Key hierarchy: every primary key is a candidate key, and every candidate key is a super key.",
+     "weight": "extended",
+     "evidence_hint": "States the inclusion chain PK ⊂ candidate ⊂ super key."
+    }
+   ],
+   "probes": [
+    "If Rollno is the only candidate key in a 3-attribute relation, how many super keys are there and what are they?",
+    "How do you count super keys when there are two single-attribute candidate keys?"
+   ],
+   "hints": {
+    "1": "Start from subsets that contain the whole candidate key.",
+    "2": "For one single-attribute candidate key, freely include or exclude each of the other n-1 attributes.",
+    "3": "Answer is 2^{n-1}; for Rollno/name/age that is 4: {Rollno}, {Rollno,name}, {Rollno,age}, {Rollno,name,age}."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Distinguish super keys, candidate keys, and the chosen primary key without conflating the three.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "A super key need not be minimal — {Rollno, name} is a super key but not a candidate key because Rollno alone already suffices.",
+     "weight": "core",
+     "evidence_hint": "Gives a non-minimal super key example and says candidate keys must be minimal."
+    },
+    {
+     "id": "tr2",
+     "point": "A candidate key is a minimal super key; the primary key is the chosen candidate key.",
+     "weight": "core",
+     "evidence_hint": "Explicitly separates minimality (candidate) from designer choice (primary)."
+    }
+   ],
+   "probes": [
+    "Is {Rollno, name} a candidate key? Why or why not?",
+    "What is the difference between a candidate key and the primary key?"
+   ],
+   "hints": {
+    "1": "Ask whether any attribute can be dropped while still uniquely identifying rows.",
+    "2": "Candidate = minimal super key; primary = the one the designer picks among candidates.",
+    "3": "{Rollno, name} is a super key but not a candidate key; Rollno alone is the candidate, and primary is whichever candidate is chosen."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the definitions to the Student example and to composite multi-candidate counting.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "In the Student table, Sname, City, and Age repeat across rows (e.g. rows 1 and 3 share Reddy, Hyderabad, 20), so none of those columns can distinguish a row; Rollno is unique and is a candidate key.",
+     "weight": "core",
+     "evidence_hint": "Walks the example and rejects non-unique columns while accepting Rollno."
+    },
+    {
+     "id": "app2",
+     "point": "For two disjoint composite candidate keys {A1,A2} and {A3,A4}, the number of super keys is 2^{n-2} + 2^{n-2} - 2^{n-4}.",
+     "weight": "extended",
+     "evidence_hint": "Applies inclusion–exclusion to the two pairs and subtracts subsets containing all four attributes."
+    }
+   ],
+   "probes": [
+    "Using the Student table sample, which attributes can be candidate keys and why?",
+    "How do you count super keys if the candidate keys are the disjoint pairs {A1,A2} and {A3,A4}?"
+   ],
+   "hints": {
+    "1": "Look for columns whose values never collide across rows.",
+    "2": "Count subsets that contain at least one whole candidate key; use inclusion–exclusion when there are several.",
+    "3": "Only Rollno qualifies in the example; for the two pairs the count is 2^{n-2} + 2^{n-2} - 2^{n-4}."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Super key vs candidate key",
+   "strong_answer": "Any uniquely identifying attribute set is a super key, including non-minimal ones like {Rollno, name}. A candidate key must be a minimal super key — no proper subset still uniquely identifies tuples."
+  },
+  {
+   "topic": "Primary key vs alternate key",
+   "strong_answer": "Both are candidate keys (unique and not null). The designer selects one candidate as the primary key; the remaining candidates are alternate keys."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating any uniquely identifying set as a candidate key — e.g. calling {Rollno, name} a candidate key.",
+   "correction": "A candidate key must be minimal. {Rollno, name} is a super key but not a candidate key because Rollno alone already suffices."
+  },
+  {
+   "trap": "Confusing candidate key with primary key.",
+   "correction": "Every primary key is a candidate key, but not every candidate key is primary — primary is the one chosen; the others are alternate keys."
+  },
+  {
+   "trap": "Counting super keys as all 2^n subsets, or forgetting inclusion–exclusion with multiple candidate keys.",
+   "correction": "Count only subsets that contain at least one whole candidate key. One single-attribute candidate key gives 2^{n-1}; for several candidates, apply inclusion–exclusion (e.g. 2^{n-1}+2^{n-1}-2^{n-2} for two single-attribute keys)."
+  }
+ ]
+}

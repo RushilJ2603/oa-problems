@@ -1,0 +1,231 @@
+{
+ "id": "dbms_08_normalization",
+ "title": "Normalization and Normal Forms",
+ "type": "FUND",
+ "relevance": "Interviewers use normalization to test whether candidates can spot redundancy, anomalies, and functional-dependency violations when designing or reviewing relational schemas.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what normalization is, why unnormalized designs fail, and the definition of each normal form from 1NF through 5NF.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Normalization decomposes a table into multiple related tables to remove redundancy while keeping the decomposition lossless.",
+     "weight": "core",
+     "evidence_hint": "Candidate states decomposition for less redundancy plus the lossless requirement, not just 'split tables'."
+    },
+    {
+     "id": "fund2",
+     "point": "Unnormalized designs suffer insertion, deletion, and updation anomalies that corrupt integrity.",
+     "weight": "core",
+     "evidence_hint": "Names all three anomaly types and briefly distinguishes add-without-unrelated-data, delete-losing-independent-facts, and multi-row update inconsistency."
+    },
+    {
+     "id": "fund3",
+     "point": "1NF (E.F. Codd) requires every cell atomic: no multivalued or composite attributes.",
+     "weight": "core",
+     "evidence_hint": "Says one value per cell / no lists-in-a-cell, optionally citing Codd."
+    },
+    {
+     "id": "fund4",
+     "point": "2NF requires 1NF and no partial dependency: every non-prime attribute is fully functionally dependent on the whole candidate key.",
+     "weight": "core",
+     "evidence_hint": "Links 1NF plus 'no non-prime on a proper subset of a CK'."
+    },
+    {
+     "id": "fund5",
+     "point": "3NF requires 2NF and no transitive dependency of a non-prime on the CK; equivalently for every FD X→Y, X is a superkey or Y is prime.",
+     "weight": "core",
+     "evidence_hint": "Gives either the transitive-dependency wording or the superkey-or-prime test."
+    },
+    {
+     "id": "fund6",
+     "point": "BCNF requires every non-trivial FD X→Y to have X as a superkey; BCNF ⊂ 3NF ⊂ 2NF ⊂ 1NF.",
+     "weight": "core",
+     "evidence_hint": "States LHS-must-be-superkey and the strict containment hierarchy."
+    },
+    {
+     "id": "fund7",
+     "point": "4NF is BCNF with no non-trivial multivalued dependency; 5NF (PJNF) is 4NF with no non-trivial join dependency.",
+     "weight": "extended",
+     "evidence_hint": "Mentions MVD for 4NF and join dependency / Project-Join Normal Form for 5NF."
+    }
+   ],
+   "probes": [
+    "What is normalization, and what three anomalies does a single wide Student–Course–Faculty table create?",
+    "Define 1NF through BCNF, and how does the containment hierarchy look?"
+   ],
+   "hints": {
+    "1": "Start from why one wide table is bad, then layer forms as successive FD restrictions.",
+    "2": "Map anomalies → atomic cells (1NF) → no partial FD (2NF) → no transitive FD (3NF) → every LHS superkey (BCNF).",
+    "3": "Normalization = lossless decomposition to cut redundancy; anomalies are insert/delete/update; BCNF ⊂ 3NF ⊂ 2NF ⊂ 1NF."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to detect partial/transitive FDs, run the 3NF vs BCNF tests, and check lossless and dependency-preserving decompositions including MVDs.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Partial dependency example: CK={CustomerID,StoreID}, StoreID→Location with Location non-prime violates 2NF; fix by Store(StoreID, Location).",
+     "weight": "core",
+     "evidence_hint": "Identifies StoreID as proper subset of CK determining Location and names the split."
+    },
+    {
+     "id": "mech2",
+     "point": "On R(A,B,C,D,E,F) with FDs {CD→F, E→A, EC→D, A→B}, CK={EC} via EC⁺ covering all attributes; E→A is a partial dependency so not 2NF.",
+     "weight": "extended",
+     "evidence_hint": "Finds CK={EC}, primes {E,C}, non-primes {A,B,D,F}, flags E→A."
+    },
+    {
+     "id": "mech3",
+     "point": "Transitive example Rollno→State→City fails 3NF because State→City has State not a superkey and City not prime.",
+     "weight": "core",
+     "evidence_hint": "Applies the equivalent 3NF test to State→City and both conditions fail."
+    },
+    {
+     "id": "mech4",
+     "point": "R(A,B,C,D) with AB→CD and D→A has CK={AB,BD}; D→A passes 3NF (A prime) but fails BCNF (D not superkey).",
+     "weight": "core",
+     "evidence_hint": "States overlapping CKs, 3NF yes because A is prime, BCNF no because LHS D is not a superkey."
+    },
+    {
+     "id": "mech5",
+     "point": "Decomposition R→R1,R2 is lossless iff R1∩R2 is a superkey of R1 or R2; else the natural join can invent spurious tuples.",
+     "weight": "core",
+     "evidence_hint": "States the intersection-superkey rule and links failure to spurious tuples."
+    },
+    {
+     "id": "mech6",
+     "point": "Dependency-preserving means the union of projected FDs on fragments implies the original F⁺.",
+     "weight": "extended",
+     "evidence_hint": "Says projected FDs together recover F⁺, not merely that tables still join."
+    },
+    {
+     "id": "mech7",
+     "point": "A non-trivial MVD A→→B needs at least 3 columns, the MVD, and B independent of the other attribute(s); Enrolment(s_id,course,hobby) with independent course/hobby violates 4NF and splits into CourseOpted and Hobbies.",
+     "weight": "extended",
+     "evidence_hint": "Lists the three MVD conditions and the two-table fix for independent course/hobby."
+    }
+   ],
+   "probes": [
+    "Given CK={CustomerID,StoreID} and StoreID→Location, why is that not 2NF and how do you fix it?",
+    "When does a decomposition stay lossless, and how can a relation be in 3NF but not BCNF?"
+   ],
+   "hints": {
+    "1": "Classify attributes as prime vs non-prime before hunting partial or transitive FDs.",
+    "2": "For BCNF vs 3NF, check whether the RHS being prime can rescue 3NF when the LHS is not a key.",
+    "3": "Lossless ⇔ common attributes form a superkey of one side; classic 3NF-not-BCNF is AB→CD with D→A and CKs {AB,BD}."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast what 3NF vs BCNF decompositions guarantee about losslessness and dependency preservation.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "A 3NF decomposition can always be both lossless and dependency-preserving.",
+     "weight": "core",
+     "evidence_hint": "States the always-both guarantee for 3NF."
+    },
+    {
+     "id": "tr2",
+     "point": "A BCNF decomposition is always lossless but may not be dependency-preserving.",
+     "weight": "core",
+     "evidence_hint": "Contrasts always-lossless BCNF with possible loss of FD enforcement across fragments."
+    },
+    {
+     "id": "tr3",
+     "point": "In the AB→CD, D→A example, BCNF fragments that separate A from B can make AB→C impossible to enforce inside one fragment.",
+     "weight": "extended",
+     "evidence_hint": "Connects splitting DA away from B with inability to preserve AB→C locally."
+    }
+   ],
+   "probes": [
+    "If you must choose between a 3NF design and a BCNF design, what do you gain and risk on dependency preservation?",
+    "Why might enforcing BCNF force you to give up a functional dependency you still need?"
+   ],
+   "hints": {
+    "1": "Compare the two guarantees side by side: lossless vs dependency-preserving.",
+    "2": "Recall that BCNF is stricter on determinants, so splitting keys can scatter a composite FD.",
+    "3": "3NF can always be lossless+DP; BCNF always lossless but may lose DP—e.g. AB→CD with D→A when A and B land in different fragments."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply highest-normal-form analysis to schema variants the way an OA or GATE-style question would.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Highest-NF workflow: find CKs and primes, then test 2NF (no partial), 3NF (RHS prime if LHS not SK), BCNF (LHS CK/SK), stopping at the first failure.",
+     "weight": "core",
+     "evidence_hint": "Describes iterative strongest-to-weaker checking from keys outward."
+    },
+    {
+     "id": "app2",
+     "point": "GATE-2018 S1 Registration(rollno,courseid) with only the composite key's trivial FDs is in BCNF.",
+     "weight": "core",
+     "evidence_hint": "Says BCNF because no non-trivial FD beyond the key."
+    },
+    {
+     "id": "app3",
+     "point": "GATE-2018 S2 Registration(rollno,courseid,email) with email→rollno is BCNF because email is also a candidate key so every determinant is a key.",
+     "weight": "core",
+     "evidence_hint": "Treats email as CK alongside the registration key and concludes BCNF."
+    },
+    {
+     "id": "app4",
+     "point": "GATE-2018 S3 Registration(rollno,courseid,marks,grade) with marks→grade is only 2NF: transitive dependency between non-primes fails 3NF.",
+     "weight": "core",
+     "evidence_hint": "Flags marks→grade as transitive non-prime→non-prime and answers 2NF."
+    },
+    {
+     "id": "app5",
+     "point": "GATE-2018 S4 Registration(rollno,courseid,credit) with courseid→credit is only 1NF: courseid is a proper subset of CK determining a non-prime (partial dependency).",
+     "weight": "core",
+     "evidence_hint": "Names partial dependency on courseid and answers 1NF."
+    }
+   ],
+   "probes": [
+    "For Registration(rollno, courseid, marks, grade) with marks→grade, what is the highest normal form and why?",
+    "Walk the four GATE-2018 Registration variants and state highest NF for each."
+   ],
+   "hints": {
+    "1": "First write the candidate key for Registration, then see what each extra attribute depends on.",
+    "2": "Partial (subset of CK→non-prime) caps at 1NF; transitive non-prime→non-prime caps at 2NF; all determinants keys ⇒ BCNF.",
+    "3": "S1/S2 BCNF; S3 marks→grade ⇒ 2NF only; S4 courseid→credit ⇒ 1NF only."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "3NF decomposition vs BCNF decomposition",
+   "strong_answer": "3NF can always be decomposed to be both lossless and dependency-preserving. BCNF decomposition is always lossless but may fail dependency preservation—illustrated when AB→CD and D→A force fragments that separate A from B and lose local enforcement of AB→C."
+  },
+  {
+   "topic": "Staying in 3NF vs pushing to BCNF with overlapping candidate keys",
+   "strong_answer": "Overlapping keys can make D→A legal in 3NF because A is prime even though D is not a superkey; BCNF still rejects that FD. Choosing BCNF removes that anomaly at the risk of losing dependency preservation."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming every relation in 3NF is automatically in BCNF.",
+   "correction": "A relation can pass 3NF yet fail BCNF when overlapping candidate keys exist—e.g. R(A,B,C,D) with AB→CD and D→A: D→A is allowed in 3NF because A is prime, but BCNF requires D to be a superkey."
+  },
+  {
+   "trap": "Treating any common attribute between R1 and R2 as enough for a safe split.",
+   "correction": "Lossless join requires R1∩R2 to be a superkey of R1 or R2; if not (as when splitting R(ABC) into AB and BC with non-key B), the join invents spurious tuples."
+  },
+  {
+   "trap": "Thinking BCNF decomposition always preserves all original FDs the way 3NF can.",
+   "correction": "BCNF guarantees losslessness only; dependency preservation may fail, unlike 3NF which can always achieve both."
+  },
+  {
+   "trap": "Storing independent multi-valued facts (course and hobby) in one Enrolment table and calling it fine because it is in BCNF-looking shape.",
+   "correction": "Independent MVDs (s_id→→course and s_id→→hobby) violate 4NF and cause a Cartesian blow-up; decompose into separate two-column tables such as CourseOpted and Hobbies."
+  }
+ ]
+}

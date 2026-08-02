@@ -1,0 +1,214 @@
+{
+ "id": "dsa_s21_bst",
+ "title": "Binary Search Trees",
+ "type": "FUND",
+ "relevance": "BSTs underpin ordered dynamic sets/maps and a large class of OA/interview tree problems that exploit the inorder-sorted property and O(h) path-based operations.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the BST ordering invariant, the inorder-sorted property, and the height-based cost model.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "For every node, all keys in the left subtree are strictly smaller and all keys in the right subtree are strictly larger than the node's key.",
+     "weight": "core",
+     "evidence_hint": "States the left-<node and right->node rule for every node, not only immediate children."
+    },
+    {
+     "id": "fund2",
+     "point": "An inorder traversal of a BST yields keys in sorted order.",
+     "weight": "core",
+     "evidence_hint": "Calls out inorder as producing a sorted stream and notes many BST problems reduce to that."
+    },
+    {
+     "id": "fund3",
+     "point": "Search, insert, and delete take O(h) time; if the tree is balanced then h = log n so operations are O(log n).",
+     "weight": "core",
+     "evidence_hint": "Ties runtime to height h and states balanced height gives logarithmic operations."
+    },
+    {
+     "id": "fund4",
+     "point": "A standard BST is not guaranteed balanced; inserting in sorted or reverse-sorted order can skew it into a linked list with O(n) operations.",
+     "weight": "extended",
+     "evidence_hint": "Names the degeneration trap and the O(n) cost on a skewed tree."
+    }
+   ],
+   "probes": [
+    "What property must hold at every node for a binary tree to be a BST, and what does that imply for inorder traversal and operation cost?"
+   ],
+   "hints": {
+    "1": "Start from the left/right key ordering around a single node.",
+    "2": "Connect that ordering to inorder output and to path length from root.",
+    "3": "State left < node < right globally, inorder is sorted, ops are O(h), and unbalanced insert order can make h = n."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how BST ordering drives search, extrema, floor/ceil, insert, delete, validation, LCA, and order-statistic walks.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Search compares the target to the current node and discards an entire subtree at each step, running in O(h) time and O(1) auxiliary space iteratively.",
+     "weight": "core",
+     "evidence_hint": "Describes go-left if smaller / go-right if larger until match or null."
+    },
+    {
+     "id": "mech2",
+     "point": "The minimum is the leftmost node and the maximum is the rightmost node, each found in O(h) time.",
+     "weight": "core",
+     "evidence_hint": "Follow left children for min and right children for max."
+    },
+    {
+     "id": "mech3",
+     "point": "Ceil is the smallest value ≥ key and floor is the largest value ≤ key; both walk one path updating a candidate when branching toward a tighter valid bound.",
+     "weight": "core",
+     "evidence_hint": "On a greater node for ceil, record candidate and go left; on a lesser node for floor, record candidate and go right."
+    },
+    {
+     "id": "mech4",
+     "point": "Insert walks to the nullptr leaf position implied by comparisons and attaches the new node as left or right child.",
+     "weight": "core",
+     "evidence_hint": "Explains finding the empty child slot without rebuilding the tree."
+    },
+    {
+     "id": "mech5",
+     "point": "Delete has three cases: leaf remove; one child replace with that child; two children replace with inorder successor (min of right subtree) or predecessor then delete that node.",
+     "weight": "core",
+     "evidence_hint": "Lists all three cases and names successor/predecessor for the two-child case."
+    },
+    {
+     "id": "mech6",
+     "point": "Validating a BST requires every node to lie in a strict (min, max) range updated from ancestors, not only local parent–child comparisons.",
+     "weight": "core",
+     "evidence_hint": "Mentions passing tightened bounds left/right and rejecting local-only checks."
+    },
+    {
+     "id": "mech7",
+     "point": "LCA in a BST is the first node whose value lies between p and q inclusive; both smaller go left, both larger go right, else current is LCA.",
+     "weight": "extended",
+     "evidence_hint": "Walks from the root using ordering until the split point."
+    },
+    {
+     "id": "mech8",
+     "point": "Kth smallest follows inorder and stops at the k-th visit; kth largest uses reverse inorder (right, root, left), in O(h + k) time bounded by O(n).",
+     "weight": "extended",
+     "evidence_hint": "Ties kth order statistics to (reverse) inorder early stop."
+    }
+   ],
+   "probes": [
+    "Walk through how you search, find floor/ceil, insert, and delete in a BST—especially the two-children delete case—and how you validate the tree.",
+    "How do you find the LCA of two nodes and the kth smallest value using BST structure?"
+   ],
+   "hints": {
+    "1": "Use comparisons to choose one child and discard the other subtree.",
+    "2": "Separate leaf / one-child / two-child delete, and contrast local vs range validation.",
+    "3": "Two-child delete copies successor then deletes it; validate with (min,max); LCA is the split node; kth uses inorder counting."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast BSTs with hash sets and space/time choices when exploiting ordered traversal.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "A hash set gives O(1) average insert/lookup but no ordering; a BST supports floor, ceiling, successor, and range-style ordered queries.",
+     "weight": "core",
+     "evidence_hint": "Explicitly trades constant-time unordered ops for ordered BST operations."
+    },
+    {
+     "id": "tr2",
+     "point": "C++ std::set and std::map are balanced BSTs (Red-Black Trees), so they keep the dynamic ordered-set cost model in practice.",
+     "weight": "extended",
+     "evidence_hint": "Names std::set/map as balanced BST implementations."
+    },
+    {
+     "id": "tr3",
+     "point": "A BST iterator can precompute full inorder in O(n) space for O(1) next, or simulate inorder with a stack bounded by O(h) and O(1) amortized next.",
+     "weight": "core",
+     "evidence_hint": "Compares eager array materialization versus height-bounded stack simulation."
+    }
+   ],
+   "probes": [
+    "When would you choose a BST over a hash set, and how would you trade space versus next()-cost for an inorder iterator?"
+   ],
+   "hints": {
+    "1": "Think about whether you need order, not only membership.",
+    "2": "Compare unordered O(1) average ops with floor/ceil/successor support.",
+    "3": "Hash set: fast, unordered; BST: ordered queries; iterator: O(n) preload vs O(h) stack with amortized O(1) next."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply BST properties to construction, streaming inorder, two-sum, successor, and recovering swapped nodes.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Constructing a BST from preorder can run in O(n) by consuming the array once with a dynamic upper bound instead of repeated inserts in O(n^2).",
+     "weight": "core",
+     "evidence_hint": "Describes bound-guided linear build versus insert-each-element rebuild."
+    },
+    {
+     "id": "app2",
+     "point": "Inorder successor/predecessor can be found in O(h) by walking from the root and tracking the best greater/lesser candidate.",
+     "weight": "core",
+     "evidence_hint": "On successor, when current > key record and go left; otherwise go right (predecessor symmetric)."
+    },
+    {
+     "id": "app3",
+     "point": "Two-sum in a BST can mimic two pointers with forward and reverse inorder iterators, using O(h) space instead of materializing an O(n) sorted array.",
+     "weight": "core",
+     "evidence_hint": "Mentions dual iterators and advancing the end whose sum is too small or too large."
+    },
+    {
+     "id": "app4",
+     "point": "With exactly two nodes swapped, inorder finds one or two violations via a prev pointer; swap first with last if distant, or first with middle if adjacent.",
+     "weight": "extended",
+     "evidence_hint": "Explains first/middle/last anomaly marking during inorder and the final value swap."
+    }
+   ],
+   "probes": [
+    "How do you build a BST from preorder in linear time, find successors, solve two-sum without an array, and recover a tree with two swapped nodes?"
+   ],
+   "hints": {
+    "1": "Lean on inorder as a sorted stream and on bounds while scanning preorder.",
+    "2": "For two-sum, think two pointers on that stream; for recover, look for dips vs prev.",
+    "3": "Preorder+upper bound O(n); successor walk O(h); dual iterators O(h); recover marks first/middle/last then swaps."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "BST vs hash set",
+   "strong_answer": "Hash sets give O(1) average insert/lookup but no order; BSTs keep ordered ops (floor, ceiling, successor, ranges). In C++, std::set/std::map are balanced BSTs (Red-Black) providing dynamic ordered-set behavior."
+  },
+  {
+   "topic": "Eager inorder array vs height-bounded BST iterator",
+   "strong_answer": "Precomputing full inorder uses O(n) space for O(1) next(); a stack that pushes left spines uses O(h) space with O(1) amortized next() because each node is pushed and popped once."
+  },
+  {
+   "topic": "Repeated insert vs bound-guided preorder construction",
+   "strong_answer": "Inserting each preorder value sequentially can cost O(n^2); walking the array once with a dynamic upper bound builds the tree in O(n)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming a standard BST is always O(log n) because binary search is logarithmic.",
+   "correction": "Cost is O(h). Sorted or reverse-sorted inserts can skew the tree into a linked list with O(n) search/insert/delete."
+  },
+  {
+   "trap": "Validating a BST by only checking each node against its immediate children.",
+   "correction": "A deep right-subtree node can violate the global root bound; enforce a strict (min, max) range at every node, tightening max on left and min on right."
+  },
+  {
+   "trap": "Deleting a two-child node by only unlinking it or swapping with an arbitrary neighbor.",
+   "correction": "Replace its value with the inorder successor (minimum of the right subtree) or predecessor, then delete that successor/predecessor node."
+  },
+  {
+   "trap": "Treating recover-BST as sorting the whole tree structure or only fixing one adjacent dip.",
+   "correction": "Exactly two values are swapped; inorder yields one or two violations—swap first with last if two dips, or first with middle if the swapped pair was adjacent."
+  }
+ ]
+}

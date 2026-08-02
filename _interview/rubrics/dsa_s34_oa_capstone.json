@@ -1,0 +1,205 @@
+{
+ "id": "dsa_s34_oa_capstone",
+ "title": "OA Capstone — Wrapped & Company-Specific Questions",
+ "type": "FUND",
+ "relevance": "Online assessments and interviews stress disguised aptitude patterns—binary bit tricks, work/speed rates, path counting, and expected-value probability—under speed and accuracy pressure.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Cisco OA; Product-SDE OAs tagged Amazon/Microsoft/Uber; Quant/trading styles associated with Optiver, SIG, Jane Street, and D.E. Shaw.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the core OA pattern families: nibble/popcount reading, functional/set identities, rates and means, grid paths, and basic probability/EV setups.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A value written as coefficients times 4096, 256, 16, and 1 can be read as separate 4-bit nibbles when each coefficient is strictly less than 16, so set bits are counted per nibble without forming the base-10 sum.",
+     "weight": "core",
+     "evidence_hint": "Candidate maps powers to 2^12, 2^8, 2^4, 2^0 and popcounts the nibbles (e.g. 0011 1111 0101 0011 → 10)."
+    },
+    {
+     "id": "fund2",
+     "point": "Equal-distance round-trip average speed is the harmonic mean 2xy/(x+y), not the arithmetic mean of the two speeds.",
+     "weight": "core",
+     "evidence_hint": "For 60 km/h out and 40 km/h back they give 4800/100 = 48 km/h, and reject naive 50."
+    },
+    {
+     "id": "fund3",
+     "point": "Shortest grid paths with only North/East moves from (0,0) to (5,5) equal choosing 5 East moves among 10 total moves, and that count is 252.",
+     "weight": "extended",
+     "evidence_hint": "States exactly 5 East + 5 North and writes the count as 252."
+    },
+    {
+     "id": "fund4",
+     "point": "Successive percentage changes of +a% then −a% net to a decrease of (a^2)/100 percent, not zero.",
+     "weight": "extended",
+     "evidence_hint": "For +20% then −20% they conclude a 4% decrease via 20^2/100."
+    }
+   ],
+   "probes": [
+    "Why is 45×45 − 44×46 equal to 1 without multiplying out both products?",
+    "A shuttle every 15 minutes: why is P(wait > 10 minutes) equal to 1/3?"
+   ],
+   "hints": {
+    "1": "Look for algebraic identities or uniform waiting windows before computing.",
+    "2": "Difference of squares for the product; wait > 10 means arrival in the first 5 minutes of a 15-minute cycle.",
+    "3": "44×46 = 45^2 − 1 so the expression is 1; probability is 5/15 = 1/3."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show step-by-step solution mechanics for work-rate leftovers, complement counting, LCM alignment, painted-cube borders, and Bayes/coupon-collector setups.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "With A at 1/12 and B at 1/15 per minute, after 4 minutes of combined work the remaining fraction is 2/5, which B alone finishes in 6 minutes.",
+     "weight": "core",
+     "evidence_hint": "Combined 3/20 per minute → 3/5 done → (2/5)/(1/15)=6."
+    },
+    {
+     "id": "mech2",
+     "point": "PINs with at least one repeated digit use complement: 10^4 total minus 10×9×8×7 no-repeat PINs equals 4960.",
+     "weight": "core",
+     "evidence_hint": "States 10000 − 5040 = 4960."
+    },
+    {
+     "id": "mech3",
+     "point": "Two tokens with 12 and 15 states realign after a number of state-steps equal to their LCM, which is 60, so token A needs 60/12 = 5 full cycles.",
+     "weight": "extended",
+     "evidence_hint": "Names LCM 60 and divides by 12 to get 5."
+    },
+    {
+     "id": "mech4",
+     "point": "For a rare disease at 1% prevalence with a 99%-accurate test (1% false positive and 1% false negative), P(disease | positive) is 50% by Bayes.",
+     "weight": "extended",
+     "evidence_hint": "Writes (0.99×0.01)/(0.99×0.01 + 0.01×0.99) = 1/2."
+    }
+   ],
+   "probes": [
+    "Walk through the painted cube: side 18 cm into 729 unit cubes; how do you get 64 with at least one red and one blue?",
+    "How do you set up expected rolls to see all six faces on a fair die?"
+   ],
+   "hints": {
+    "1": "Separate which faces give red vs blue, or sum waiting times for each new coupon.",
+    "2": "Red on top/bottom; blue on sides → border rings of each 9×9 face: 81−49=32 each, total 64; coupon terms 6/(6−k).",
+    "3": "32+32=64; E = 6/6+6/5+6/4+6/3+6/2+6/1 = 14.7."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast product-OA speed/accuracy habits with quant-style EV reasoning and conditional profit, including keep-vs-reroll thresholds.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Product OAs emphasize brute-force speed and accuracy, while quant interviews emphasize out-loud reasoning and risk management.",
+     "weight": "core",
+     "evidence_hint": "Explicitly contrasts those two interview styles from the intro."
+    },
+    {
+     "id": "tr2",
+     "point": "Optimal single-die keep-or-reroll-once keeps only faces strictly above the one-roll EV 3.5 (i.e. 4, 5, 6), yielding EV 4.25.",
+     "weight": "core",
+     "evidence_hint": "Threshold at 3.5; (1/6)(4+5+6)+(3/6)(3.5)=4.25."
+    },
+    {
+     "id": "tr3",
+     "point": "In the uniform-V bid problem with resale 1.5V, conditional expected profit given winning is negative for any positive bid, so the optimal bid is $0.",
+     "weight": "extended",
+     "evidence_hint": "Mentions winner’s curse / E[profit|win]=−0.25B and chooses B=$0."
+    }
+   ],
+   "probes": [
+    "When should you use harmonic mean instead of averaging two speeds?",
+    "Why is bidding halfway between $0 and $1000 not optimal in the car-value puzzle?"
+   ],
+   "hints": {
+    "1": "Equal distances weight time differently; winning a bid is a selected sample of V.",
+    "2": "More time is spent at the slower speed; E[V|V≤B]=B/2 so 1.5·(B/2)−B < 0.",
+    "3": "Harmonic mean → 48 km/h not 50; optimal bid is $0."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the same patterns to clock/calendar/set/boat/tank and guarantee/data-sufficiency OA staples under time pressure.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Hands opposite between 4 and 5: minute hand must gain 50 minute-spaces at 55 spaces per 60 minutes, giving 54 6/11 minutes past 4.",
+     "weight": "core",
+     "evidence_hint": "Uses (60/55)×50 = 600/11 = 54 6/11."
+    },
+    {
+     "id": "app2",
+     "point": "In a class of 100 with 60 cricket, 50 football, and 20 neither, both sports equals 30 via |C∪F|=80 = 60+50−|intersection|.",
+     "weight": "core",
+     "evidence_hint": "Gets |C∩F|=30 from 80=110−intersection."
+    },
+    {
+     "id": "app3",
+     "point": "With 10 black and 10 white identical socks, pigeonhole guarantee of a matching pair requires drawing 3 socks.",
+     "weight": "extended",
+     "evidence_hint": "Worst case one of each color then the third matches; answer 3 not 11."
+    },
+    {
+     "id": "app4",
+     "point": "Data sufficiency can leave C undetermined even with both statements: A+B+C=60 and A−B=10 still leave 2B+C=50 with two unknowns.",
+     "weight": "extended",
+     "evidence_hint": "Chooses “both together are not sufficient.”"
+    }
+   ],
+   "probes": [
+    "A dishonest dealer uses 900 g for a kg at cost price—what is the gain percent, and why divide by the false weight?",
+    "Boat: 24 km upstream in 6 h and 20 km downstream in 4 h—what is still-water speed?"
+   ],
+   "hints": {
+    "1": "Profit is true-minus-false relative to what was actually given; still water averages up and down speeds.",
+    "2": "Gain% = (1000−900)/900 × 100%; U=4, D=5.",
+    "3": "Gain is 11 1/9%; still-water speed is 4.5 km/h."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Product-SDE OA speed/accuracy vs quant out-loud EV reasoning",
+   "strong_answer": "Product OAs reward fast, exact pattern execution (rates, combinatorics, means). Quant screens reward narrating strategy, thresholds, and risk (keep-vs-reroll, conditional profit), not just the final number."
+  },
+  {
+   "topic": "Arithmetic mean of speeds vs harmonic mean",
+   "strong_answer": "Equal-distance round trips use 2xy/(x+y). Averaging 60 and 40 to 50 is wrong because more time is spent at the slower speed; the true average is 48 km/h."
+  },
+  {
+   "topic": "Keep first die roll vs reroll once",
+   "strong_answer": "Compare the roll to the continuation value 3.5: keep 4–6, reroll 1–3. That optimal policy raises EV from 3.5 to 4.25."
+  },
+  {
+   "topic": "Positive bid vs bid $0 under winner’s curse",
+   "strong_answer": "Winning only when V≤B makes E[V|win]=B/2; with resale 1.5V, expected profit given a win is −0.25B, so any positive bid loses in expectation and $0 is optimal."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Averaging outbound and return speeds (60 and 40) as 50 km/h.",
+   "correction": "Use the harmonic mean for equal distances: 2×60×40/(60+40)=48 km/h; more time is spent at the slower speed."
+  },
+  {
+   "trap": "Assuming +20% then −20% returns to the original consumption.",
+   "correction": "Net change is a decrease of (20^2)/100 = 4%."
+  },
+  {
+   "trap": "Bidding a “reasonable” positive amount for the car because resale is 1.5V.",
+   "correction": "Condition on acceptance: E[profit|win]=−0.25B < 0 for B>0, so optimal bid is $0 (winner’s curse)."
+  },
+  {
+   "trap": "Treating a 99%-accurate disease test at 1% prevalence as ~99% PPV after a positive.",
+   "correction": "Bayes gives P(D|T)=50% when false-positive mass among the healthy nearly matches true positives."
+  },
+  {
+   "trap": "Thinking data-sufficiency statements that constrain A, B, C jointly always determine C.",
+   "correction": "A+B+C=60 and A−B=10 yield only 2B+C=50—still insufficient for a unique C."
+  },
+  {
+   "trap": "Requiring 11 socks to guarantee a matching pair among two colors.",
+   "correction": "With two colors, three draws guarantee a pair by the pigeonhole principle."
+  }
+ ]
+}

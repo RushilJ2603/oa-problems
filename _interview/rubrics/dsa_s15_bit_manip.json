@@ -1,0 +1,210 @@
+{
+ "id": "dsa_s15_bit_manip",
+ "title": "Bit Manipulation",
+ "type": "FUND",
+ "relevance": "Bit manipulation is asked because it is essential for high-performance computing, cryptography, and solving specific algorithmic constraints optimally when everyday abstractions are not enough.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish binary representation, two's complement, and the six bitwise operators plus core one-liner idioms.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "In a standard C++ environment an int is a 32-bit signed integer using two's complement, where the 31st bit (zero-indexed from the right) is the sign bit.",
+     "weight": "core",
+     "evidence_hint": "Candidate states 32-bit int, two's complement, and that the sign bit is the 31st bit (0 positive, 1 negative)."
+    },
+    {
+     "id": "fund2",
+     "point": "To negate in two's complement: invert all bits with bitwise NOT, then add 1.",
+     "weight": "core",
+     "evidence_hint": "Says ~x + 1 (or invert-then-add-one) yields the negative."
+    },
+    {
+     "id": "fund3",
+     "point": "C++ has six fundamental bitwise operators: & (AND), | (OR), ^ (XOR), ~ (NOT), << (left shift), and >> (right shift); left shift is mathematically equivalent to multiplying by a power of 2.",
+     "weight": "core",
+     "evidence_hint": "Lists the six operators and links << to multiply-by-power-of-2."
+    },
+    {
+     "id": "fund4",
+     "point": "Core idioms: set i-th bit with x | (1 << i), clear with x & ~(1 << i), toggle with x ^ (1 << i), check with (x >> i) & 1, lowest set bit with x & -x, remove lowest set bit with x & (x - 1).",
+     "weight": "extended",
+     "evidence_hint": "Recalls several table idioms accurately, especially set/clear/toggle/check and x & (x - 1) / x & -x."
+    }
+   ],
+   "probes": [
+    "Walk through how a signed int is stored in two's complement and name the six bitwise operators with what each does.",
+    "What one-liner sets, clears, toggles, or checks the i-th bit?"
+   ],
+   "hints": {
+    "1": "Think about the sign bit and how negation is formed from NOT.",
+    "2": "List &, |, ^, ~, <<, >> and the set/clear/toggle/check masks.",
+    "3": "32-bit two's complement uses the 31st bit as sign; negate via ~ then +1; idioms are x|(1<<i), x&~(1<<i), x^(1<<i), (x>>i)&1."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how bit idioms compose into O(1) checks and Kernighan-style loops for set-bit work.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Check the i-th bit by shifting right by i then AND with 1: ((n >> k) & 1) != 0.",
+     "weight": "core",
+     "evidence_hint": "Explains bring bit to position 0 then isolate with & 1."
+    },
+    {
+     "id": "mech2",
+     "point": "A number is a power of 2 iff n > 0 and (n & (n - 1)) == 0, because that expression drops the lowest set bit and a power of 2 has exactly one set bit.",
+     "weight": "core",
+     "evidence_hint": "States both the n > 0 guard and the (n & (n - 1)) == 0 check with the one-set-bit rationale."
+    },
+    {
+     "id": "mech3",
+     "point": "Brian Kernighan's popcount repeatedly does n = n & (n - 1) until n is 0; iteration count equals the number of set bits, in O(k) time where k is the number of set bits.",
+     "weight": "core",
+     "evidence_hint": "Describes clearing the lowest set bit each step and counting until zero."
+    },
+    {
+     "id": "mech4",
+     "point": "Oddness is (n & 1) != 0 because the 0-th bit is 1 for odd integers; even is (x & 1) == 0.",
+     "weight": "extended",
+     "evidence_hint": "Ties LSB to parity via & 1."
+    }
+   ],
+   "probes": [
+    "How do you test power-of-two in O(1) without looping divides by 2?",
+    "Explain Brian Kernighan's algorithm versus shifting through all bits."
+   ],
+   "hints": {
+    "1": "Relate n & (n - 1) to clearing the lowest set bit.",
+    "2": "Power of two has exactly one set bit; popcount loops that clear until zero.",
+    "3": "isPowerOfTwo: n > 0 && (n & (n - 1)) == 0; Kernighan: while n: n &= n-1; count++."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast production vs interview bit techniques and when bitmask enumeration is the right subset tool.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "For counting set bits in competitive programming prefer __builtin_popcount (often a single hardware instruction) over a manual Kernighan loop.",
+     "weight": "core",
+     "evidence_hint": "Says use the builtin/intrinsic in CP rather than hand-rolled popcount."
+    },
+    {
+     "id": "tr2",
+     "point": "XOR swap without an extra variable is mostly an interview curiosity; in production always use std::swap.",
+     "weight": "core",
+     "evidence_hint": "Acknowledges XOR swap works via self-inverse XOR but prefers std::swap in real code."
+    },
+    {
+     "id": "tr3",
+     "point": "Bitmask power-set enumeration is elegant, but backtracking is often preferred when subsets must be generated in a specific lexicographical order.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts mask-from-0-to-2^n-1 with backtracking for ordered subset generation."
+    }
+   ],
+   "probes": [
+    "When would you use __builtin_popcount instead of Brian Kernighan's loop?",
+    "Bitmask subsets versus backtracking—when do you prefer each?"
+   ],
+   "hints": {
+    "1": "Think interview demo versus what you ship or need ordered.",
+    "2": "Intrinsics vs O(k) loop; mask enumeration vs lex-order backtracking; XOR swap vs std::swap.",
+    "3": "CP: __builtin_popcount; production swap: std::swap; ordered subsets: often backtracking over pure bitmasks."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply XOR cancellation, bit-diff popcount, range XOR, bitmask subsets, and safe division-by-shifts to classic interview problems.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Minimum bit flips from start to goal is the popcount of start ^ goal (XOR marks differing bits).",
+     "weight": "core",
+     "evidence_hint": "Computes start ^ goal then counts set bits (e.g. Kernighan)."
+    },
+    {
+     "id": "app2",
+     "point": "Single Number I: XOR all elements; duplicates cancel (XOR self-inverse), leaving the unique value in O(n) time and O(1) space.",
+     "weight": "core",
+     "evidence_hint": "Accumulates ^= across the array and cites pair annihilation."
+    },
+    {
+     "id": "app3",
+     "point": "Power set: n elements yield 2^n subsets; iterate mask from 0 to 2^n - 1 and include i if (mask >> i) & 1, in O(n · 2^n) time and space.",
+     "weight": "core",
+     "evidence_hint": "Describes mask loop and bit test to build each subset."
+    },
+    {
+     "id": "app4",
+     "point": "XOR of [L, R] is f(R) ^ f(L - 1) where f(n) is XOR of 1..n and depends on n % 4 (0→n, 1→1, 2→n+1, 3→0).",
+     "weight": "extended",
+     "evidence_hint": "Uses prefix XOR identity and the four-case mod-4 formula."
+    },
+    {
+     "id": "app5",
+     "point": "Single Number III: XOR all to get X ^ Y, take lowest set bit (xorAll & -xorAll), partition into two buckets by that bit, XOR each bucket to isolate X and Y.",
+     "weight": "extended",
+     "evidence_hint": "Separates by a differing bit of the two uniques after full XOR."
+    },
+    {
+     "id": "app6",
+     "point": "Divide without * / % by shifting the divisor to the largest fitting multiple of a power of 2, subtracting, and accumulating; handle dividend == INT_MIN && divisor == -1 by returning INT_MAX, and use long long to avoid shift UB.",
+     "weight": "extended",
+     "evidence_hint": "Describes shift-and-subtract quotient building plus the INT_MIN/-1 and long long safeguards."
+    }
+   ],
+   "probes": [
+    "How do you find the single number when every other value appears twice?",
+    "Generate all subsets with bitmasks—what is the mask range and how do you test membership?",
+    "Two uniques appear once and others twice—how do you recover both in O(1) extra space?"
+   ],
+   "hints": {
+    "1": "XOR cancels pairs; differing bits are exactly where XOR is 1.",
+    "2": "Flips: popcount(start^goal); subsets: masks 0..2^n-1; two uniques: split on lowest set bit of total XOR.",
+    "3": "result ^= num for Single Number I; for III use lowestSetBit = xorAll & -xorAll then two buckets; range XOR via xor1ToN(r)^xor1ToN(l-1) with n%4 cases."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Brian Kernighan popcount vs naive shift-by-1 loop",
+   "strong_answer": "Kernighan clears one set bit per iteration so time is O(k) in the number of set bits; interviewers contrast this with a naive loop that shifts through all bits. In competitive programming, prefer __builtin_popcount, which often compiles to a single hardware instruction."
+  },
+  {
+   "topic": "Bitmask subset enumeration vs backtracking",
+   "strong_answer": "Bitmasks map each subset to a mask from 0 to 2^n - 1 and extract bits in O(n · 2^n); elegant for full power sets, but backtracking is often preferred when subsets must appear in a specific lexicographical order."
+  },
+  {
+   "topic": "XOR swap vs std::swap",
+   "strong_answer": "Chained XOR exploits X^X=0 and X^0=X to swap without an extra variable, but it is mostly an interview curiosity; in production code always use std::swap."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Writing n & 1 == 0 without parentheses",
+   "correction": "& , | , and ^ have lower precedence than == / !=, so n & 1 == 0 parses as n & (1 == 0). Always write (n & 1) == 0."
+  },
+  {
+   "trap": "Left-shifting a negative signed integer, or shifting by a count >= width (e.g. 1 << 32 on a 32-bit int)",
+   "correction": "These invoke Undefined Behavior in C++. Convert to a wider type such as long long before aggressive shifts, and never shift by >= bit width."
+  },
+  {
+   "trap": "Dividing INT_MIN by -1 or shifting toward the sign bit during divide-without-operators",
+   "correction": "INT_MIN / -1 overflows a 32-bit int (INT_MAX + 1); return INT_MAX. Operate on long long absolutes so left shifts do not hit sign-bit UB."
+  },
+  {
+   "trap": "Claiming n & (n - 1) == 0 alone proves power of two",
+   "correction": "Also require n > 0; non-positive numbers cannot be powers of 2 even if the bit idiom looks plausible."
+  },
+  {
+   "trap": "Computing lowest set bit as xorAll & -xorAll on a plain int when xorAll could be INT_MIN",
+   "correction": "Cast to long long before xorAll & -xorAll to avoid UB on INT_MIN when isolating the lowest set bit for Single Number III."
+  }
+ ]
+}

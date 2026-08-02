@@ -1,0 +1,193 @@
+{
+ "id": "py_14_tuples",
+ "title": "Tuples",
+ "type": "FUND",
+ "relevance": "Interviewers use tuples to check whether candidates understand immutability, safe aliasing, and when to prefer tuples over lists in Python.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that a tuple is an immutable ordered sequence and how it is created.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A tuple is an immutable list: once created, its elements cannot be changed in any way.",
+     "weight": "core",
+     "evidence_hint": "Candidate says tuples are like lists but immutable / unchangeable after creation."
+    },
+    {
+     "id": "fund2",
+     "point": "Tuples are ordered, unchangeable (immutable), and allow duplicate values.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists the three characteristics: ordered, immutable, duplicates allowed."
+    },
+    {
+     "id": "fund3",
+     "point": "A single-item tuple requires a trailing comma; without it, Python treats the value as a string (or other non-tuple type).",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts ('hello') as str vs ('hello',) as tuple."
+    }
+   ],
+   "probes": [
+    "What is a tuple, and how does it differ from a list at a high level?",
+    "How do you create a one-element tuple correctly?"
+   ],
+   "hints": {
+    "1": "Think about whether you can change the contents after creation.",
+    "2": "Compare list brackets vs tuple parentheses, and the trailing-comma rule for length one.",
+    "3": "A tuple is an immutable ordered sequence that allows duplicates; ('hello',) is a tuple, ('hello') is a str."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how access, failed mutation, operations, and built-in functions work on tuples.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Access works like lists: indexing (t[0], t[-1]), slicing (t[1:4]), and nested indexing (e.g. t5[-1][0]).",
+     "weight": "core",
+     "evidence_hint": "Candidate demonstrates positive/negative index, slice, and nested access."
+    },
+    {
+     "id": "mech2",
+     "point": "You cannot edit items, add items, or delete individual items; item assignment and item deletion raise TypeError, though del can delete the entire tuple.",
+     "weight": "core",
+     "evidence_hint": "Candidate says no append/extend/insert/assignment/per-item delete; whole-tuple del is allowed."
+    },
+    {
+     "id": "mech3",
+     "point": "Tuples support concatenation (+), repetition (*), membership (in / not in), and for-loop iteration.",
+     "weight": "extended",
+     "evidence_hint": "Candidate names + and * and mentions membership/iteration like strings and lists."
+    },
+    {
+     "id": "mech4",
+     "point": "Built-ins include len, sum, min/max, count, and index; sorted(t) returns a list and does not modify the tuple.",
+     "weight": "extended",
+     "evidence_hint": "Candidate notes sorted returns a list because of immutability."
+    }
+   ],
+   "probes": [
+    "Can you change, add, or remove elements in a tuple? What happens if you try?",
+    "Which operations and functions work on tuples, and what does sorted return?"
+   ],
+   "hints": {
+    "1": "Access is familiar; mutation paths are where tuples diverge from lists.",
+    "2": "Split into: read (index/slice), write failures (TypeError), ops (+, *), and helpers (len/sum/sorted/count/index).",
+    "3": "Reads work like lists; assignment/deletion of items TypeError; del whole tuple OK; +/* /in/for work; sorted returns a new list."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare lists and tuples on mutability, performance, memory, API surface, safety, and typical use.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Lists use []; tuples use (); lists are mutable, tuples are immutable.",
+     "weight": "core",
+     "evidence_hint": "Candidate states syntax and mutability contrast clearly."
+    },
+    {
+     "id": "tr2",
+     "point": "Tuples are generally faster to iterate over and create than lists, and consume less memory.",
+     "weight": "core",
+     "evidence_hint": "Candidate mentions speed and lower memory for tuples vs lists."
+    },
+    {
+     "id": "tr3",
+     "point": "Lists have more built-in methods (e.g. append, remove) and are more error-prone due to mutability/aliasing; tuples are safer.",
+     "weight": "extended",
+     "evidence_hint": "Candidate ties richer list API to mutability risks and tuples as the safer choice."
+    },
+    {
+     "id": "tr4",
+     "point": "Tuples are typically used for heterogeneous data; lists are often used for homogeneous data.",
+     "weight": "extended",
+     "evidence_hint": "Candidate maps tuples→mixed types, lists→same-type sequences."
+    }
+   ],
+   "probes": [
+    "When would you choose a tuple over a list, and why?",
+    "Beyond mutability, what practical differences exist between lists and tuples?"
+   ],
+   "hints": {
+    "1": "Start with syntax and whether contents can change.",
+    "2": "Then cover speed, memory, method richness, aliasing safety, and hetero vs homo use.",
+    "3": "Prefer tuples for fixed/heterogeneous records and safer sharing; lists when you need mutation and richer methods."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply unpacking, safe rebinding vs list aliasing, and zip on tuples.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Tuple unpacking assigns elements to variables; the number of variables must match the number of items, or you get ValueError.",
+     "weight": "core",
+     "evidence_hint": "Candidate unpacks a,b,c = (1,2,3) and notes mismatch errors."
+    },
+    {
+     "id": "app2",
+     "point": "Unpacking supports swapping (a, b = b, a) and * to gather remaining items into a list.",
+     "weight": "core",
+     "evidence_hint": "Candidate shows swap and a, b, *others yielding others as a list."
+    },
+    {
+     "id": "app3",
+     "point": "Because tuples are immutable, rebinding one name (e.g. a = a + (4,)) does not change an aliased name still pointing at the old tuple, unlike list.append aliasing.",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts list append affecting both aliases vs tuple rebinding leaving b unchanged."
+    },
+    {
+     "id": "app4",
+     "point": "zip() pairs items from two tuples into an iterator of tuples (viewable via list(zip(...))).",
+     "weight": "extended",
+     "evidence_hint": "Candidate describes zip pairing corresponding positions into tuples."
+    }
+   ],
+   "probes": [
+    "How does tuple unpacking work, including swap and starred capture?",
+    "Why does immutability protect you from list-style aliasing bugs?"
+   ],
+   "hints": {
+    "1": "Think about assigning tuple elements to names in one step.",
+    "2": "Cover match-count unpacking, swap, *others as list, then aliasing vs list.append, then zip.",
+    "3": "a,b,c must match length; a,b=b,a swaps; *others is a list; a=a+(4,) rebinds a only; zip pairs tuples."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Lists vs Tuples",
+   "strong_answer": "Lists use [] and are mutable with richer methods (append, remove) but more aliasing risk and higher memory; tuples use (), are immutable, generally faster to create/iterate, use less memory, and are safer—typically for heterogeneous fixed records, while lists suit homogeneous mutable sequences."
+  },
+  {
+   "topic": "Rebinding a tuple vs mutating a list under aliasing",
+   "strong_answer": "With lists, b=a then a.append changes both; with tuples, b=a then a=a+(4,) rebinds a to a new tuple while b still refers to the original, so immutability avoids that side effect."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Writing a one-element 'tuple' without a trailing comma, e.g. t2 = ('hello').",
+   "correction": "That is a str; use ('hello',) to get a tuple."
+  },
+  {
+   "trap": "Assuming you can assign, append, or delete individual tuple elements like a list.",
+   "correction": "Item assignment and item deletion raise TypeError; only deleting the whole tuple with del is allowed."
+  },
+  {
+   "trap": "Expecting sorted(t) to return or mutate a tuple.",
+   "correction": "sorted(t) returns a list and does not modify the immutable tuple."
+  },
+  {
+   "trap": "Unpacking with the wrong number of variables.",
+   "correction": "Variable count must match item count, or you get ValueError (e.g. too many values to unpack)."
+  },
+  {
+   "trap": "Assuming a = a + (4,) updates every name aliased to the old tuple.",
+   "correction": "That rebinds a only; other names still reference the original immutable tuple."
+  }
+ ]
+}

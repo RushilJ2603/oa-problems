@@ -1,0 +1,219 @@
+{
+ "id": "dbms_07_queryoptimization",
+ "title": "Query Optimization & Execution",
+ "type": "FUND",
+ "relevance": "Interviewers use this to separate candidates who guess at SQL performance from those who can reason about plans, indexes, and why a query suddenly got slow.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that SQL states what data is wanted and the engine decides how via Parser, Optimizer, and Executor.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A SQL query describes what data you want, not how to retrieve it; the database engine figures out the how.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts declarative SQL with the engine choosing a retrieval strategy."
+    },
+    {
+     "id": "fund2",
+     "point": "Every query goes through Parser (syntax/semantics/permissions), Optimizer (generate plans and pick the estimated fastest), then Executor (run the plan against storage).",
+     "weight": "core",
+     "evidence_hint": "Names the three phases in order and gives each a one-line job."
+    },
+    {
+     "id": "fund3",
+     "point": "The optimizer produces multiple possible execution plans and chooses the one it estimates will be fastest.",
+     "weight": "extended",
+     "evidence_hint": "Mentions multiple candidate plans and cost/estimate-based selection, not a single fixed path."
+    }
+   ],
+   "probes": [
+    "Walk through what happens from the moment you submit a SQL query until rows come back."
+   ],
+   "hints": {
+    "1": "Think about checking the query is valid before any data is read.",
+    "2": "There are three main phases: one validates, one plans, one runs.",
+    "3": "Parser → Optimizer (multiple plans, pick fastest estimate) → Executor against the storage engine."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Establish how to read plans: scan/join operators, EXPLAIN vs EXPLAIN ANALYZE, and cost-based optimization driven by statistics.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "An execution plan is a tree of operators; data flows from leaf nodes upward, each operator a physical algorithm to retrieve or combine data.",
+     "weight": "core",
+     "evidence_hint": "Describes bottom-up operator tree, not just a flat list of steps."
+    },
+    {
+     "id": "mech2",
+     "point": "Seq Scan reads every table page; Index Scan walks a B-Tree then visits the heap; Index Only Scan serves from the index alone when it covers the SELECT columns.",
+     "weight": "core",
+     "evidence_hint": "Distinguishes full-table read, index-then-heap, and cover-from-index-only."
+    },
+    {
+     "id": "mech3",
+     "point": "Nested Loop probes the inner set per outer row; Hash Join builds a hash on the smaller set and probes from the larger; Merge Join steps through two join-column-sorted sets together.",
+     "weight": "core",
+     "evidence_hint": "Names all three joins with when each fits (small+indexed outer, large unsorted, already ordered)."
+    },
+    {
+     "id": "mech4",
+     "point": "EXPLAIN shows the estimated plan without running the query; EXPLAIN ANALYZE executes it and reports real timing and row counts.",
+     "weight": "extended",
+     "evidence_hint": "Clearly separates estimate-only EXPLAIN from execute-and-measure EXPLAIN ANALYZE."
+    },
+    {
+     "id": "mech5",
+     "point": "A Cost-Based Optimizer estimates CPU, memory, and I/O cost using statistics such as row counts, distinct values, and distribution histograms; PostgreSQL ANALYZE (often via autovacuum) refreshes them.",
+     "weight": "core",
+     "evidence_hint": "Ties plan choice to stats metadata and mentions ANALYZE/autovacuum for updates."
+    },
+    {
+     "id": "mech6",
+     "point": "For many index matches, Bitmap Index Scan builds a bitmap of heap blocks, then Bitmap Heap Scan reads those blocks sequentially—useful for ranges or combining indexes.",
+     "weight": "extended",
+     "evidence_hint": "Explains bitmap-then-heap to avoid random I/O per matching row."
+    }
+   ],
+   "probes": [
+    "What do Seq Scan, Index Scan, and Index Only Scan each do, and how do Nested Loop, Hash Join, and Merge Join differ?"
+   ],
+   "hints": {
+    "1": "Start with how rows are read from a table or index, then how two sets are combined.",
+    "2": "Scans: every page vs B-Tree+heap vs index-only; joins: per-outer probe vs hash build/probe vs sorted merge.",
+    "3": "Also mention EXPLAIN vs EXPLAIN ANALYZE and that the CBO picks plans using table statistics updated by ANALYZE."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Establish when the optimizer prefers one scan or join strategy over another based on selectivity, size, and ordering.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "If most rows match (e.g. 99% status active), Seq Scan can beat Index Scan because the index plus heap is more work than reading the table; if few match (e.g. 1% active), Index Scan is cheaper.",
+     "weight": "core",
+     "evidence_hint": "Uses selectivity: dense matches → seq scan; sparse → index, with the 99%/1% active example."
+    },
+    {
+     "id": "tr2",
+     "point": "Nested Loop fits a very small outer set with an indexed inner join column; Hash Join is the go-to for large unsorted sets; Merge Join shines when both sides are already ordered on the join column.",
+     "weight": "core",
+     "evidence_hint": "Maps each join to size/ordering conditions without claiming one is always best."
+    },
+    {
+     "id": "tr3",
+     "point": "Rule-based optimizers always prefer an index when one exists; cost-based optimizers use live statistics and may reject the index when a seq scan is cheaper.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts historical RBO rules with CBO cost estimates from stats."
+    }
+   ],
+   "probes": [
+    "When would the optimizer choose a sequential scan even though an index exists on the filter column?"
+   ],
+   "hints": {
+    "1": "Think about how many rows actually match the predicate.",
+    "2": "Compare reading the whole table once versus reading the index and then most of the heap.",
+    "3": "If ~99% of rows match (e.g. status active), Seq Scan wins; if ~1% match, Index Scan wins—CBO uses stats for that call."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply plan literacy to SARGable predicates, expression indexes, bulk-load stats, and common SQL anti-patterns.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "A query is SARGable if the engine can use a B-Tree via ordered operators (=, >, <); wrapping the indexed column in a function, arithmetic, or a leading wildcard forces evaluation per row and a Seq Scan.",
+     "weight": "core",
+     "evidence_hint": "Defines SARGable and gives at least one non-SARGable pattern (function/arithmetic/leading %)."
+    },
+    {
+     "id": "app2",
+     "point": "An expression index (e.g. on UPPER(name)) can make a matching functional predicate SARGable again.",
+     "weight": "extended",
+     "evidence_hint": "Says create an index on the expression so WHERE UPPER(name) = ... can use it."
+    },
+    {
+     "id": "app3",
+     "point": "After a massive load (e.g. inserting 10 million rows) without updating stats, the CBO may still think the table has ~1,000 rows and pick Nested Loop instead of Hash Join, turning a ~1 second query into minutes.",
+     "weight": "core",
+     "evidence_hint": "Links stale stats after bulk insert to wrong join choice and sudden slowdown; mentions ANALYZE."
+    },
+    {
+     "id": "app4",
+     "point": "Common anti-patterns: SELECT * blocks Index Only Scans; correlated subqueries run per outer row (N+1); DISTINCT papers over a bad join; ORDER BY + LIMIT without an index sorts all rows before returning a few.",
+     "weight": "core",
+     "evidence_hint": "Names several anti-patterns with the right fix direction (project columns, JOIN rewrite, fix join/EXISTS, index the order key)."
+    }
+   ],
+   "probes": [
+    "A query is slow even after you added an index—what do you check next, and how do you confirm with EXPLAIN?"
+   ],
+   "hints": {
+    "1": "Ask whether the index can actually be used for the WHERE clause as written.",
+    "2": "Look for functions/casts on the column, leading wildcards, stale stats after bulk loads, and anti-patterns like SELECT * or correlated subqueries.",
+    "3": "Use EXPLAIN/EXPLAIN ANALYZE: non-SARGable predicates → Seq Scan; fix with SARGable rewrite or expression index; run ANALYZE after bulk changes; rewrite correlated subqueries as joins."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Seq Scan vs Index Scan",
+   "strong_answer": "Prefer Seq Scan when most of the table must be read (e.g. 99% match) because index+heap is extra work; prefer Index Scan when few rows match (e.g. 1%). CBO decides from statistics, not from index existence alone."
+  },
+  {
+   "topic": "Nested Loop vs Hash Join vs Merge Join",
+   "strong_answer": "Nested Loop for small outer + indexed inner; Hash Join for large unsorted inputs (hash the smaller side); Merge Join when both sides are already sorted on the join key."
+  },
+  {
+   "topic": "Rule-Based Optimizer vs Cost-Based Optimizer",
+   "strong_answer": "RBO applies fixed rules (e.g. always use an index if present); CBO estimates CPU/memory/I/O from statistics and may choose Seq Scan over an index when that is cheaper."
+  },
+  {
+   "topic": "Filter in the database vs fetch-all and filter in the app",
+   "strong_answer": "App-side filtering abandons DB indexes, incurs large network transfer, and moves CPU to the app server; keep predicates SARGable in SQL so the optimizer can use indexes."
+  },
+  {
+   "topic": "Bitmap Heap path vs per-row Index Scan visits",
+   "strong_answer": "When many rows match via the index, Bitmap Index Scan + Bitmap Heap Scan batches heap blocks for sequential access and can combine multiple indexes, avoiding random I/O per row."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming an existing index means the optimizer will use it.",
+   "correction": "CBO may pick Seq Scan when selectivity is high; also non-SARGable predicates (functions, arithmetic, leading wildcards, casts) disable B-Tree use."
+  },
+  {
+   "trap": "Query that was ~1 second yesterday now takes minutes with no SQL change.",
+   "correction": "Often stale statistics after a bulk load (e.g. 10 million inserts while planner still thinks ~1,000 rows)—wrong plan like Nested Loop instead of Hash Join; run ANALYZE (autovacuum may lag)."
+  },
+  {
+   "trap": "Adding an index but the query stays slow.",
+   "correction": "Check SARGability: rewrite EXTRACT/LEFT/casts/arithmetic off the column, or add an expression index that matches the predicate."
+  },
+  {
+   "trap": "SELECT * for performance-sensitive reads.",
+   "correction": "Prevents Index Only Scans unless the index covers every column; project only needed columns."
+  },
+  {
+   "trap": "Correlated subquery counting related rows per parent.",
+   "correction": "Runs the inner query per outer row (N+1); rewrite as a JOIN so Hash/Merge joins can be used."
+  },
+  {
+   "trap": "Using DISTINCT to clean up duplicate join results.",
+   "correction": "Usually masks a wrong one-to-many join; fix the join or use EXISTS instead of DISTINCT as a band-aid."
+  },
+  {
+   "trap": "ORDER BY … LIMIT without an index on the sort key.",
+   "correction": "Engine sorts the full set then takes the limit; index the ordered column (e.g. created_at DESC) so it can stop early."
+  },
+  {
+   "trap": "Leading-wildcard LIKE '%son' hoping for an index.",
+   "correction": "Cannot be SARGable on a normal B-Tree—sort order does not help when the first character is unknown."
+  }
+ ]
+}

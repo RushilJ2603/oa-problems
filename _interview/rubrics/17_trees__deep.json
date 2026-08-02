@@ -1,0 +1,300 @@
+{
+ "id": "17_trees__deep",
+ "title": "Trees: LCA / Euler / Rerooting / DSU-on-tree (Depth Pass)",
+ "type": "CP",
+ "relevance": "Medium — second ladder after CSES Company Queries / Distances / Distinct Colors / 600E; these are the CF Div2 D–E and AtCoder ABC E–F drills that turn “I can write LCA” into “I can invent the path-diff / reroot transfer / centroid count.”",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Org-chart range asks (k-th employee under manager v in DFS HR order / count reports at level d) → Military Problem / Count Descendants. Cable/road usage after listing endpoint pairs → Connecting Universities / Fools and Roads. Best warehouse/capital minimizing total distance or max latency → Distance Sums 2 / Gardening Friends / Expensive Expense rerooting. Network with one forced link / path bottleneck between two nodes → 609E MST-for-each-edge.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Map messier tree asks to path-diff LCA, Euler+depth filters, non-trivial rerooting, or centroid/sack pair counts.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Depth-pass tree problems hide four engines: path increments via LCA difference arrays, subtree+depth filters on an Euler tour, every-root answers with a non-trivial transfer (XOR, max-of-two-branches, marked-node distances), or count pairs through a centroid / heavy bag.",
+     "weight": "core",
+     "evidence_hint": "Names those four engines and ties the prompt to at least one of them."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognize the pattern when the statement wants every-vertex answers, offline path/subtree updates, k-length paths, or cut/rehang so the tree satisfies X.",
+     "weight": "core",
+     "evidence_hint": "Quotes those signal asks as the depth-pass recognition triggers."
+    },
+    {
+     "id": "rec3",
+     "point": "OA/interview shapes: org-chart k-th-in-subtree / reports-at-depth; journeys per road after endpoint pairs; pick root for distance/latency; MST if one edge is forced / path bottleneck.",
+     "weight": "extended",
+     "evidence_hint": "Maps each OA phrasing to Military/Count Descendants, Fools/Universities, Distance Sums/reroot, or 609E."
+    }
+   ],
+   "probes": [
+    "What wording says this is path-diff, Euler+depth, reroot-every-root, or centroid/sack pair counting rather than plain LCA?",
+    "Would you reach for LCA difference marks, tin/tout+depth, a transfer formula, or centroid/DSU-on-tree—and why?"
+   ],
+   "hints": {
+    "1": "Listen for every-vertex answers, offline path marks, exact-length paths, or rehang/cut constraints.",
+    "2": "Four engines: LCA path-diff, Euler∩depth, reroot transfer, centroid/heavy bag.",
+    "3": "Say: offline path increments → LCA ± marks; subtree∩depth → Euler+depth BIT; answer for every root → non-trivial reroot transfer; k-length pairs → centroid or sack."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "State the depth formula: path marks, reroot transfer, triple-LCA meeting, Euler+depth, lift aggregates, or centroid pairs.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Path u→v mark: +1 at u, +1 at v, −1 at lca, −1 at parent[lca] (or −2 at lca if counting vertices), then one upward DFS aggregates edge/vertex hits (Fools and Roads).",
+     "weight": "core",
+     "evidence_hint": "Writes the four endpoint corrections and the single DFS push."
+    },
+    {
+     "id": "appr2",
+     "point": "Sum-of-dist reroot: ans[v] = ans[u] + n − 2·sz[v] when moving root u→v (ABC220F); generalize by tracking a second aggregate (weight sum, XOR of a[i]).",
+     "weight": "core",
+     "evidence_hint": "States the +n−2sz transfer and names a second-aggregate generalization."
+    },
+    {
+     "id": "appr3",
+     "point": "White-subtree reroot (1324F): down[v]=max(0,∑ down[child]); when moving u→v, peel v’s contribution from u and push the residual as v’s up — never recompute from scratch.",
+     "weight": "core",
+     "evidence_hint": "Describes down clamp, peel, and residual up transfer."
+    },
+    {
+     "id": "appr4",
+     "point": "Triple terminals (832D): among {lca(a,b), lca(b,c), lca(a,c)} the deepest is the unique meeting vertex; path length uses dep[a]+dep[b]−2dep[lca] with the meeting substituted.",
+     "weight": "extended",
+     "evidence_hint": "Picks the deepest of the three LCAs and plugs it into the depth distance formula."
+    },
+    {
+     "id": "appr5",
+     "point": "Depth-capped subtree add (1076E): Euler-range update on [tin[v],tout[v]] alone is not enough — couple with a depth BIT / process by increasing depth so +x only hits nodes with dep ≤ dep[v]+d.",
+     "weight": "extended",
+     "evidence_hint": "Requires Euler range plus a depth filter/BIT, not tin/tout alone."
+    },
+    {
+     "id": "appr6",
+     "point": "Centroid count (Fixed-Length Paths I): each path has a unique highest centroid; remove centroid, add pairs with d1+d2=k from different components, recurse — DSU-on-tree cousin for length-k pairs.",
+     "weight": "extended",
+     "evidence_hint": "States highest-centroid uniqueness and cross-component d1+d2=k pairing."
+    },
+    {
+     "id": "appr7",
+     "point": "Binary lifting extras / MST-for-edge: store sum[k][v] or mx[k][v] on the 2^k jump; deepest ancestor with root-path sum ≤ S, or replacement cost = MST + w(e) − max_on_tree_path(u,v).",
+     "weight": "extended",
+     "evidence_hint": "Puts sum/mx on jumps and names either the Path Prefixes binary search or the 609E replacement formula."
+    }
+   ],
+   "probes": [
+    "How do you mark an offline u–v path so one DFS yields edge/vertex hits?",
+    "When moving the root across an edge, what transfer do you use for ∑dist versus max-white?"
+   ],
+   "hints": {
+    "1": "Match the ask to path marks, a one-edge transfer, triple LCA, Euler∩depth, lift aggregates, or centroid pairs.",
+    "2": "±1 endpoints + LCA correction; +n−2sz or residual up; deepest of three LCAs; tin/tout plus depth BIT; 2^k sum/mx; d1+d2=k at centroid.",
+    "3": "Say: +1,+1,−1,−1 (or −2 at lca) then DFS push; ans[v]=ans[u]+n−2·sz[v] or peel residual up; deepest of three LCAs; Euler+[depth filter]; sum/mx on 2^k jumps; centroid cross-component d1+d2=k."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Code Euler tin/tout, offline path aggregates, lift sum/mx, two-DFS rerooting, top-2, centroid/sack, and MST path-max from the checklist.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Euler tin/tout: subtree = contiguous range; ancestor test tin[u] ≤ tin[v] ≤ tout[u]; k-th in subtree = order-stat on the tour (Military Problem).",
+     "weight": "core",
+     "evidence_hint": "Defines contiguous subtree ranges, the ancestor inequality, and tour order-stat for k-th."
+    },
+    {
+     "id": "impl2",
+     "point": "Path aggregate offline: endpoint ±1 + LCA correction, then one DFS to push values onto edges/vertices (Fools and Roads / Counting Paths family).",
+     "weight": "core",
+     "evidence_hint": "Implements mark-then-single-DFS push, not walking each path."
+    },
+    {
+     "id": "impl3",
+     "point": "Binary lifting extras: besides up[k][v], store sum/mx/mn on the jump; combine while equalizing depth and joint-lifting.",
+     "weight": "core",
+     "evidence_hint": "Stores jump aggregates and folds them during equalize + joint lift."
+    },
+    {
+     "id": "impl4",
+     "point": "Rerooting checklist: (1) down-DP from arbitrary root (2) formula to transfer across one edge using sz / residual (3) DFS2 visits each edge once.",
+     "weight": "core",
+     "evidence_hint": "States the three-step down → transfer → DFS2 plan."
+    },
+    {
+     "id": "impl5",
+     "point": "Top-2 down values: when the up-path must avoid the child you came from (Book of Evil / Expensive Expense), keep best and second-best child contributions.",
+     "weight": "extended",
+     "evidence_hint": "Keeps best and second-best downs for excluded-child up."
+    },
+    {
+     "id": "impl6",
+     "point": "Centroid: component sizes after removal ≤ n/2; recurse independently; paths counted at the highest centroid they touch.",
+     "weight": "extended",
+     "evidence_hint": "Checks ≤ n/2, recurses per component, attributes paths to highest centroid."
+    },
+    {
+     "id": "impl7",
+     "point": "DSU-on-tree / sack: keep heavy child’s frequency map, add light children, answer, then clear if current node is light — same bag idea as Fixed-Length Paths depth counts.",
+     "weight": "extended",
+     "evidence_hint": "Orders keep-heavy, add-lights, answer, clear-if-light."
+    },
+    {
+     "id": "impl8",
+     "point": "MST-for-edge: compute one MST, then for non-tree edges (or all edges) answer via path-max between endpoints on the tree.",
+     "weight": "extended",
+     "evidence_hint": "Builds one MST then answers with tree path-max, not a fresh MST per edge."
+    }
+   ],
+   "probes": [
+    "Walk tin/tout ancestor tests and how offline path ± marks become edge hits.",
+    "What are the three rerooting steps, and when do you keep top-2 downs?"
+   ],
+   "hints": {
+    "1": "Implement checklist bookkeeping: tour ranges, mark+DFS, jump aggregates, two DFS, top-2, centroid/sack, one MST.",
+    "2": "tin/tout ranges; ±1+LCA then DFS; sum/mx on ups; down then transfer; best+second; ≤n/2 centroid; keep heavy clear light; MST then path-max.",
+    "3": "Say: subtree=[tin,tout], ancestor tin[u]≤tin[v]≤tout[u]; mark endpoints+LCA then one DFS; store sum/mx/mn on jumps; down-DP, edge transfer, DFS2 once per edge; top-2 for excluded child; centroid ≤n/2 + highest; sack keep-heavy clear-if-light; one MST + path-max."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Justify why rerooting, offline path marks, and centroid recursion avoid restarting full tree work per root/path.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Rerooting DFS2 visits each edge once via a transfer formula — never recompute every-root answers from scratch.",
+     "weight": "core",
+     "evidence_hint": "Contrasts one edge-transfer DFS2 with n independent rooted recomputes."
+    },
+    {
+     "id": "cx2",
+     "point": "Offline path aggregates use endpoint ±1 + LCA correction then a single DFS push, rather than walking each queried path separately.",
+     "weight": "core",
+     "evidence_hint": "Cites one DFS over the marked tree instead of per-path walks."
+    },
+    {
+     "id": "cx3",
+     "point": "Centroid decomposition: after removal each component has size ≤ n/2 and recurses independently; each path is counted at its unique highest centroid.",
+     "weight": "extended",
+     "evidence_hint": "States the ≤ n/2 shrink, independent recurse, and highest-centroid counting."
+    }
+   ],
+   "probes": [
+    "Why is a reroot transfer cheaper than restarting DP for every root?",
+    "How does centroid removal bound component size, and where is each path counted?"
+   ],
+   "hints": {
+    "1": "Compare transfer/offline marks/centroid recurse to naive per-root or per-path work.",
+    "2": "DFS2 once per edge; one mark-DFS for all paths; components ≤ n/2 at the highest centroid.",
+    "3": "Say: reroot DFS2 visits each edge once; offline ±marks then one DFS; centroid components ≤ n/2, recurse independently, count at highest centroid."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch wrong path-mark signs, Euler-without-depth, scratch reroots, missing top-2, and centroid/sack clear mistakes.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Path marks: using −2 at lca when counting edges (or forgetting −1 at parent[lca]) breaks edge vs vertex hit aggregation.",
+     "weight": "core",
+     "evidence_hint": "Distinguishes −1 at lca and parent[lca] for edges from −2 at lca for vertices."
+    },
+    {
+     "id": "pit2",
+     "point": "Depth-capped subtree adds: Euler-range update on [tin[v],tout[v]] alone is not enough — must couple with a depth BIT / increasing-depth processing.",
+     "weight": "core",
+     "evidence_hint": "Rejects tin/tout-only updates for dep ≤ dep[v]+d windows."
+    },
+    {
+     "id": "pit3",
+     "point": "White/max rerooting: recomputing from scratch instead of peeling the child’s contribution and pushing residual up (1324F).",
+     "weight": "core",
+     "evidence_hint": "Requires peel + residual up, not a fresh rooted DP."
+    },
+    {
+     "id": "pit4",
+     "point": "Book of Evil / Expensive Expense: computing up without top-2 (or excl-child prefix/suffix maxima) reuses the child you came from.",
+     "weight": "extended",
+     "evidence_hint": "Keeps best and second-best downs or excl-child maxima."
+    },
+    {
+     "id": "pit5",
+     "point": "Triple-path overlap: taking an arbitrary LCA among the three pairs instead of the deepest meeting vertex.",
+     "weight": "extended",
+     "evidence_hint": "Selects the deepest of {lca(a,b), lca(b,c), lca(a,c)}."
+    },
+    {
+     "id": "pit6",
+     "point": "Centroid without the max-component ≤ n/2 check, or sack that forgets to clear when the current node is light.",
+     "weight": "extended",
+     "evidence_hint": "States ≤ n/2 centroid validity and clear-if-light sack discipline."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you only range-update [tin,tout] for depth-limited adds?",
+    "When must path marks use −2 at lca, and when do you need −1 at parent[lca]?"
+   ],
+   "hints": {
+    "1": "Check mark signs, depth filter, residual transfer, top-2, deepest triple LCA, centroid/sack clear.",
+    "2": "Edge vs vertex corrections; Euler+depth BIT; peel residual up; best+second; deepest of three LCAs; ≤n/2 and clear-if-light.",
+    "3": "Say: −1/−1 (or −2 for vertices); tin/tout alone fails 1076E; peel residual not scratch recompute; top-2 for excluded child; deepest of three LCAs; centroid ≤n/2; sack clear if light."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Centroid decomposition vs DSU-on-tree for length-k pairs",
+   "strong_answer": "Both count paths of length exactly k: centroid removes the unique highest centroid and pairs d1+d2=k across components then recurses; DSU-on-tree/sack keeps heavy depth-frequency bags and clears lights — cousins for Fixed-Length Paths I after Distinct Colors."
+  },
+  {
+   "topic": "Scratch recompute-per-root vs residual reroot transfer",
+   "strong_answer": "For ∑dist use ans[v]=ans[u]+n−2·sz[v]; for max-white (1324F) peel the child’s contribution and push residual up — never restart down-DP from scratch for every root."
+  },
+  {
+   "topic": "Euler subtree range alone vs Euler + depth BIT",
+   "strong_answer": "Plain [tin[v],tout[v]] handles unrestricted subtree updates; depth-capped adds (1076E) need a depth BIT or increasing-depth processing so +x only hits dep ≤ dep[v]+d."
+  },
+  {
+   "topic": "Binary lifting parents-only vs sum/mx on jumps",
+   "strong_answer": "up[k][v] alone gives ancestors/LCA; Path Prefixes and MST-for-each-edge need sum[k][v] / mx[k][v] on the 2^k jump to binary-search path-sum ≤ S or take max_on_tree_path for replacement cost."
+  },
+  {
+   "topic": "Rebuild MST per forced edge vs one MST + path-max",
+   "strong_answer": "Compute one MST, then for each edge answer MST + w(e) − max_on_tree_path(u,v) via lifted mx — do not run a fresh MST for every forced edge (609E)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Marking path hits with the wrong LCA correction (edge vs vertex).",
+   "correction": "+1 at u, +1 at v, −1 at lca, −1 at parent[lca] for edges; use −2 at lca if counting vertices; then one upward DFS."
+  },
+  {
+   "trap": "Depth-limited subtree updates with only an Euler [tin,tout] range add.",
+   "correction": "Couple with a depth BIT / process nodes by increasing depth so +x hits only dep ≤ dep[v]+d (1076E)."
+  },
+  {
+   "trap": "Rerooting max-white / every-root answers by recomputing DP from each new root.",
+   "correction": "Transfer across the edge: peel the child’s contribution and push residual up (1324F), or use ans[v]=ans[u]+n−2·sz[v] for ∑dist."
+  },
+  {
+   "trap": "Taking any of the three pairwise LCAs as the triple-path meeting point.",
+   "correction": "Among {lca(a,b), lca(b,c), lca(a,c)} the deepest is the unique meeting vertex (832D)."
+  },
+  {
+   "trap": "Computing up-distance/max without excluding the child just climbed.",
+   "correction": "Keep top-2 down distances (Book of Evil) or excl-child prefix/suffix maxima (Expensive Expense)."
+  },
+  {
+   "trap": "Calling a node a centroid without checking component sizes after removal.",
+   "correction": "After removal every component must have size ≤ n/2; then recurse independently."
+  },
+  {
+   "trap": "Answering MST-for-each-edge by rebuilding the spanning tree every time.",
+   "correction": "One MST plus binary-lifted path-max: replacement cost = MST + w(e) − max_on_tree_path(u,v)."
+  }
+ ]
+}

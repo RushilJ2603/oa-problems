@@ -1,0 +1,207 @@
+{
+ "id": "13_dp_bitmask_digit",
+ "title": "DP IV: Bitmask DP (Subset / TSP / Assignment) & Digit DP",
+ "type": "CP",
+ "relevance": "Medium (harder OAs reuse assignment-under-mask and \"count numbers in [L,R] with a digit property\"; essential for CF ~1600–2100, not as common as knapsack/LCS in easy screens)",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Assign n workers to n jobs with a compatibility matrix (count ways / max score) → Matching / assignment bitmask. Minimum trips / days / buses under capacity W → Elevator Rides subset packing. Count integers in [L,R] with a digit property (digit-sum divisible by k / at most 3 non-zero digits / no equal adjacent digits) → Digit DP. Order n≤20 tasks with pairwise adjacency bonuses → TSP-style dp[mask][last].",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Confirm the candidate spots bitmask DP versus digit DP from constraints and wording.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Spot bitmask DP when n≤20 or the ask is to assign / visit / choose a subset of roles.",
+     "weight": "core",
+     "evidence_hint": "Names n≤20 or assign/visit/subset-of-roles as the bitmask trigger."
+    },
+    {
+     "id": "rec2",
+     "point": "Spot digit DP when the range is up to 10^18 (or a huge digit string) and the constraint is on digits.",
+     "weight": "core",
+     "evidence_hint": "Ties a huge numeric bound plus a digit property to digit DP instead of looping the range."
+    },
+    {
+     "id": "rec3",
+     "point": "OA flavors: worker–job assignment, capacity packing under W, count in [L,R] with a digit property, or visit-all order with pairwise bonuses.",
+     "weight": "extended",
+     "evidence_hint": "Maps at least one of those phrasings to Matching, Elevator Rides, Digit DP, or TSP-style mask DP."
+    }
+   ],
+   "probes": [
+    "Is this bitmask DP or digit DP—and which constraint or phrase tipped you off?"
+   ],
+   "hints": {
+    "1": "Look at how large n is, and whether the ask is about digits of a numeric range.",
+    "2": "Small n with assign/visit/subset → bitmask; huge [L,R] with a digit rule → digit DP.",
+    "3": "n≤20 or assign/visit/roles → bitmask; range up to 10^18 (or a huge digit string) with a digit constraint → digit DP."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Lock the state shape: mask, mask+end, assignment by unused bit, or digit DFS with tight.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Typical bitmask states: dp[mask] best over subset mask; dp[mask][i] best path visiting mask ending at i (TSP / Hamiltonian); or dp[mask] ways to assign the next free person to an unused bit.",
+     "weight": "core",
+     "evidence_hint": "Names at least one of those three state shapes and what the mask (and optional end index) means."
+    },
+    {
+     "id": "appr2",
+     "point": "Digit DP builds numbers left-to-right against an upper bound with state (pos, tight, started, extra); answer [L,R] as f(R)-f(L-1).",
+     "weight": "core",
+     "evidence_hint": "Mentions tight/started/extra and subtracting the (L-1) upper-bound solve for a range."
+    },
+    {
+     "id": "appr3",
+     "point": "Transitions flip one bit, or enumerate submasks; digit extra tracks digit-sum / remainder / nonzero-count / last digit / used-digit mask.",
+     "weight": "extended",
+     "evidence_hint": "Describes bit-flip or submask moves, or what extra carries for the digit constraint."
+    }
+   ],
+   "probes": [
+    "What is your DP state—dp[mask], dp[mask][i], or digit (pos, tight, …)—and how do you answer a range [L,R]?"
+   ],
+   "hints": {
+    "1": "Ask whether you encode a small set of items/cities/roles or walk digits of an upper bound.",
+    "2": "Subset/path/assignment → mask states; digit property on a bound → (pos, tight, started, extra).",
+    "3": "Use dp[mask] / dp[mask][i] / assignment to an unused bit; for digits, dfs with tight and answer f(R)-f(L-1)."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Verify templates for assignment, TSP, elevator packing, submasks, and digit DFS.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Assignment template: dp[0]=1; for each mask, let i=__builtin_popcount(mask), try unmatched j compatible with person i.",
+     "weight": "core",
+     "evidence_hint": "Sketches popcount-as-person-index and trying unused partners starting from dp[0]=1."
+    },
+    {
+     "id": "impl2",
+     "point": "TSP / Hamiltonian: dp[1<<s][s]=1 (or 0 cost); transition dp[mask][v] → dp[mask|(1<<u)][u] over edges v→u.",
+     "weight": "core",
+     "evidence_hint": "Writes the single-source seed and the extend-by-unused-neighbor transition."
+    },
+    {
+     "id": "impl3",
+     "point": "Elevator / subset packing stores (min_rides, load_in_last_ride) per mask; digit DFS uses limit = tight ? digits[pos] : 9 with memo.",
+     "weight": "core",
+     "evidence_hint": "Mentions the rides/load pair and/or looping digits up to the tight limit of 9."
+    },
+    {
+     "id": "impl4",
+     "point": "Submask enumeration: for (int sub=mask; sub; sub=(sub-1)&mask).",
+     "weight": "extended",
+     "evidence_hint": "Writes the (sub-1)&mask loop over nonempty submasks."
+    }
+   ],
+   "probes": [
+    "Code the assignment or TSP transition from a mask, then sketch digit DFS with the tight digit limit."
+   ],
+   "hints": {
+    "1": "Start from the empty mask or a single starting city, then extend by one unused bit.",
+    "2": "Assignment uses popcount as the next person; TSP extends with mask|(1<<u); digit loops 0..limit.",
+    "3": "dp[0]=1 with popcount person i; dp[1<<s][s] then mask|(1<<u); elevator (rides, last_load); digit limit = tight ? digits[pos] : 9; submasks via (sub-1)&mask."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Anchor when bitmask fits, when digit DP is required, and the submask O(3^n) cost.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Use bitmask DP when n≤20; use digit DP when R≤10^18 (or a huge digit string) with a digit property.",
+     "weight": "core",
+     "evidence_hint": "States those two constraint cutovers without inventing a time bound not in the source."
+    },
+    {
+     "id": "cx2",
+     "point": "Submask enumeration runs in O(3^n).",
+     "weight": "core",
+     "evidence_hint": "Quotes O(3^n) for the submask DP pattern (Grouping-style)."
+    }
+   ],
+   "probes": [
+    "When do you reach for bitmask versus digit DP, and what is the cost of enumerating all submasks?"
+   ],
+   "hints": {
+    "1": "Compare n to the subset-encoding limit, and the numeric bound to something you cannot loop.",
+    "2": "n≤20 → mask; R≤10^18 plus a digit rule → digit DP; partitioning via submasks has a named exponential.",
+    "3": "n≤20 bitmask; R≤10^18 digit DP; submask enumeration is O(3^n)."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch leading-zero bugs, wrong range handling, and missing last-city state.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Always handle leading zeros with a started flag so previous digit / nonzero count do not treat padding zeros as real digits.",
+     "weight": "core",
+     "evidence_hint": "Calls out started/leading-zero so adj≠ or nonzero counts ignore prefix padding."
+    },
+    {
+     "id": "pit2",
+     "point": "Range answers must be solve(R)-solve(L-1), not a single upper-bound call on R alone.",
+     "weight": "core",
+     "evidence_hint": "Explicitly subtracts the (L-1) solve for [L,R]."
+    },
+    {
+     "id": "pit3",
+     "point": "Both techniques combine when digit DP carries a used-digit mask inside the digit state.",
+     "weight": "extended",
+     "evidence_hint": "Mentions used-digit mask inside digit DP (permutation-of-digits / distinct-digit styles)."
+    }
+   ],
+   "probes": [
+    "What breaks digit DP if you forget leading zeros or answer [L,R] with only f(R)?"
+   ],
+   "hints": {
+    "1": "Think about prefix zeros and how a range [L,R] reduces to upper-bound solves.",
+    "2": "Padding zeros are not real digits; ranges need two upper-bound solves.",
+    "3": "Use started so prev/nonzero ignore padding; answer f(R)-f(L-1); used-digit mask can live inside digit DP."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Bitmask DP vs Digit DP",
+   "strong_answer": "Use bitmask when n≤20 or the task is assign / visit / choose a subset of roles; use digit DP when the range is up to 10^18 (or a huge digit string) and the constraint is on digits."
+  },
+  {
+   "topic": "dp[mask] vs dp[mask][i]",
+   "strong_answer": "dp[mask] is enough for subset best/ways or assignment; dp[mask][i] is needed for TSP / Hamiltonian paths that care where the path ends."
+  },
+  {
+   "topic": "One-bit transitions vs submask enumeration",
+   "strong_answer": "Flip one bit to add an item/city/person; enumerate submasks in O(3^n) when partitioning a set into groups."
+  },
+  {
+   "topic": "Pure digit DP vs used-digit mask inside digit DP",
+   "strong_answer": "Plain digit DP tracks tight/started/extra (digit-sum, remainder, nonzero-count, last digit); when distinct used digits matter, carry a used-digit mask inside the digit state."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating leading/padding zeros as real digits for previous-digit or nonzero-count constraints.",
+   "correction": "Keep a started flag so padding zeros do not count as digits or set prev."
+  },
+  {
+   "trap": "Answering count-in-[L,R] with only an upper-bound solve on R.",
+   "correction": "Compute solve(R)-solve(L-1) (Classy Numbers / Counting Numbers style)."
+  },
+  {
+   "trap": "Using plain dp[mask] for a visit-all path with pairwise adjacency bonuses that depend on the last city.",
+   "correction": "Use TSP-style dp[mask][last] (Kefa and Dishes / Hamiltonian Flights)."
+  },
+  {
+   "trap": "Forgetting elevator state needs both ride count and load in the last ride.",
+   "correction": "Store (min_rides, load_in_last_ride) per mask and try adding into the last ride or starting a new one."
+  }
+ ]
+}

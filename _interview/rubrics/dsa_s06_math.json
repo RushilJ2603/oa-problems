@@ -1,0 +1,203 @@
+{
+ "id": "dsa_s06_math",
+ "title": "Mathematics for DSA and Competitive Programming",
+ "type": "FUND",
+ "relevance": "Integer overflow, modular arithmetic, GCD/LCM, sieves, and fast exponentiation are staple OA/interview tools for digit, prime, and combinatorics problems.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish C++ integer arithmetic pitfalls and basic digit/number problem patterns.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "In C++, integer division truncates toward zero and % takes the sign of the dividend (e.g., -5/2 is -2 and -5%2 is -1).",
+     "weight": "core",
+     "evidence_hint": "States both truncation-toward-zero and dividend-signed modulo with the negative examples."
+    },
+    {
+     "id": "fund2",
+     "point": "Use long long for products or sums that might exceed 10^9, and append LL to literals when shifting or multiplying (e.g., 1LL<<32) because literals default to int.",
+     "weight": "core",
+     "evidence_hint": "Mentions long long for large products/sums and LL-suffixed literals for shifts/multiplies."
+    },
+    {
+     "id": "fund3",
+     "point": "Digit count can be done by repeated /10, by floor(log10(n))+1, or by converting to a string and taking its size (with a special case for n==0).",
+     "weight": "extended",
+     "evidence_hint": "Names the three approaches and the zero edge case."
+    },
+    {
+     "id": "fund4",
+     "point": "Negatives are never palindromes; numbers ending in 0 (except 0) are not either; optimal palindrome check reverses only half the digits.",
+     "weight": "extended",
+     "evidence_hint": "Covers negative/trailing-zero rejection and half-reverse comparison including odd-length /10."
+    }
+   ],
+   "probes": [
+    "What goes wrong with a%m when a is negative in C++, and how do you get a non-negative residue?",
+    "How would you reverse a signed 32-bit integer without overflowing?"
+   ],
+   "hints": {
+    "1": "Think about sign of % and when rev*10 can exceed INT_MAX/INT_MIN.",
+    "2": "Positive modulo uses (a%m+m)%m; reverse checks bounds before multiplying by 10.",
+    "3": "Cite -5%2==-1, the (a%m+m)%m fix, and pre-multiply checks against INT_MAX/10 with pop>7 and INT_MIN/10 with pop<-8."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how Euclidean GCD/LCM, sqrt-n divisor/prime tricks, sieves, and modular ops actually work.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Euclidean GCD uses gcd(a,b)=gcd(b,a%b); LCM follows from a*b=gcd*lcm, computed as (a/gcd)*b to avoid overflow.",
+     "weight": "core",
+     "evidence_hint": "States the Euclidean recurrence and overflow-safe LCM formula."
+    },
+    {
+     "id": "mech2",
+     "point": "Divisors and trial primality only need iteration up to sqrt(n) because divisors come in pairs (i and n/i).",
+     "weight": "core",
+     "evidence_hint": "Explains the pair trick and why the loop bound is i*i<=n."
+    },
+    {
+     "id": "mech3",
+     "point": "Sieve of Eratosthenes marks multiples of each prime starting from its square; SPF precompute then factorizes each query in O(log n) after O(n log log n) build.",
+     "weight": "extended",
+     "evidence_hint": "Describes marking from i*i and SPF giving O(log n) per factorization."
+    },
+    {
+     "id": "mech4",
+     "point": "Binary exponentiation computes a^b mod m in O(log b) by squaring; modular inverse for prime m is binpow(b,m-2,m) via Fermat.",
+     "weight": "extended",
+     "evidence_hint": "Links even/odd binary exp recurrence to Fermat inverse as b^(m-2)."
+    }
+   ],
+   "probes": [
+    "Walk through Euclidean GCD and how you safely get LCM from it.",
+    "How does an SPF sieve turn many factorizations into O(log n) each?"
+   ],
+   "hints": {
+    "1": "Recall the remainder step and what you store instead of a boolean sieve.",
+    "2": "gcd via repeated %; SPF[i] is the smallest prime dividing i, then peel factors.",
+    "3": "gcd(a,b)=gcd(b,a%b); lcm=(a/gcd)*b; after SPF build in O(n log log n), while n!=1 push spf[n] and divide."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare approaches candidates choose under different constraints and correctness needs.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Cast before multiplying: assigning a*b to long long still overflows if both are int and the product exceeds 2*10^9; use (long long)a*b.",
+     "weight": "core",
+     "evidence_hint": "States intermediate int multiply overflows even when the destination is long long."
+    },
+    {
+     "id": "tr2",
+     "point": "For many factorizations prefer SPF sieve over per-query O(sqrt(n)) trial division; for range primes with small R (up to 10^7) use sieve+prefix, but large L,R with small R-L need a segmented sieve.",
+     "weight": "core",
+     "evidence_hint": "Contrasts SPF vs trial and standard sieve+prefix vs segmented sieve by constraint."
+    },
+    {
+     "id": "tr3",
+     "point": "nCr mod p via precomputed factorials and inverse factorials beats Pascal for large n; Pascal's identity still fits DP under small constraints.",
+     "weight": "extended",
+     "evidence_hint": "Says factorial+inverse is faster for large n while Pascal helps small DP."
+    }
+   ],
+   "probes": [
+    "When do you pick SPF over plain trial factorization?",
+    "Why is nCr via factorials preferred over building Pascal's triangle in OAs?"
+   ],
+   "hints": {
+    "1": "Think one-shot vs many queries, and size of n vs need for DP.",
+    "2": "Precompute once when many numbers share a bound; Pascal grows with n and r.",
+    "3": "SPF: O(n log log n) then O(log n)/query; factorial inverses for large nCr mod p, Pascal when constraints are small and DP-shaped."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the toolkit to typical OA/interview asks and avoid common failure modes.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Apply modulo at every step; for subtraction use ((a%m)-(b%m)+m)%m; 10^9+7 is prime and fits in 32-bit signed int but products need long long.",
+     "weight": "core",
+     "evidence_hint": "Recites per-step mod, subtract-with-+m, and 10^9+7 product needing 64-bit."
+    },
+    {
+     "id": "app2",
+     "point": "pow(x,n) must handle negative exponents via reciprocal and cast n to long long before abs because n=INT_MIN overflows 32-bit negation.",
+     "weight": "core",
+     "evidence_hint": "Mentions reciprocal for negatives and INT_MIN via long long."
+    },
+    {
+     "id": "app3",
+     "point": "Interviews/OAs frequently hit GCD/LCM, standard sieve, modpow, combinatorics modulo p, and overflow discipline; Möbius inversion and advanced Diophantine equations virtually never appear.",
+     "weight": "extended",
+     "evidence_hint": "Lists the frequent topics and explicitly excludes olympiad-heavy theory."
+    }
+   ],
+   "probes": [
+    "Implement a^b mod m and explain why you mod after every multiply.",
+    "What number-theory topics should you prepare for SDE OAs versus skip?"
+   ],
+   "hints": {
+    "1": "Focus on overflow of intermediate products and the interview shortlist.",
+    "2": "Binary exp with %m each multiply; prep sieve/modpow/nCr, skip Möbius-level theory.",
+    "3": "binpow loops with (res*a)%m and (a*a)%m; expect GCD/LCM, sieve, modpow, nCr mod p, overflow care—not Möbius or hard Diophantine."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Digit count: iterative /10 vs log10 vs string",
+   "strong_answer": "Iterative division is O(log10 n); log and string conversion are O(1) for fixed 32-bit ints (string uses O(log10 n) space). String is often the most convenient in C++."
+  },
+  {
+   "topic": "Palindrome: full reverse vs half reverse",
+   "strong_answer": "Reversing the whole int risks overflow; reversing only half until reversedHalf>=x avoids overflow and still compares correctly (use reversedHalf/10 for odd length)."
+  },
+  {
+   "topic": "Factorization: trial O(sqrt(n)) vs SPF sieve",
+   "strong_answer": "Single query: trial-divide to sqrt(n). Many queries up to n: precompute SPF in O(n log log n) then factorize each in O(log n)."
+  },
+  {
+   "topic": "Range primes: full sieve+prefix vs segmented sieve",
+   "strong_answer": "If R is up to 10^7, sieve to R and prefix for O(1) queries. If R is about 10^12 but R-L is small, use a segmented sieve."
+  },
+  {
+   "topic": "nCr: factorial+inverse vs Pascal DP",
+   "strong_answer": "Precompute factorials and modular inverses for large n under mod p; use Pascal identity nCr=(n-1)Cr+(n-1)C(r-1) when DP fits small constraints."
+  },
+  {
+   "topic": "Rolling your own GCD vs std::gcd",
+   "strong_answer": "Euclidean is the standard algorithm, but prefer std::gcd (C++17) or std::__gcd from <numeric> over hand-rolled code."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming a%m is always in [0,m-1] for negative a in C++.",
+   "correction": "Negative a yields a negative remainder; use (a%m+m)%m for a non-negative residue."
+  },
+  {
+   "trap": "Writing long long x = a * b with a and b as int.",
+   "correction": "The int multiply overflows before the assignment if the product exceeds 2*10^9; cast first: (long long)a * b."
+  },
+  {
+   "trap": "Only taking modulo at the end of a long computation.",
+   "correction": "Apply % at every step; for subtraction add m before % to avoid negatives."
+  },
+  {
+   "trap": "Negating n when implementing pow(x,n) if n is INT_MIN.",
+   "correction": "Cast n to long long before taking the absolute value, then reciprocal the base for negative exponents."
+  },
+  {
+   "trap": "Preparing Möbius inversion or advanced Diophantine equations for SDE interviews.",
+   "correction": "Those virtually never appear; focus on GCD/LCM, sieve, modpow, combinatorics mod p, and overflow discipline."
+  }
+ ]
+}

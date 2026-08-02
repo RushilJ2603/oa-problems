@@ -1,0 +1,173 @@
+{
+ "id": "dsa_s16_series_analogy",
+ "title": "Series, Analogy & Classification",
+ "type": "FUND",
+ "relevance": "Number/letter series, analogies, and odd-one-out patterns are staple aptitude items in SDE campus OAs and interviews, often disguised as node counts or server loads.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the ordered series toolkit and letter-position basics before solving.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "When faced with a sequence, test in order: constant/arithmetic difference, geometric/multiplicative ratio, squares/cubes, primes, difference of differences, alternating/double series, then letter/number positions.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists the toolkit steps in roughly that order rather than jumping to one random pattern."
+    },
+    {
+     "id": "fund2",
+     "point": "Map letters with A=1 through Z=26; memorize EJOTY anchors E=5, J=10, O=15, T=20, Y=25; reverse position is 27 minus n.",
+     "weight": "core",
+     "evidence_hint": "Mentions A=1…Z=26, EJOTY values, and reverse via 27-n."
+    },
+    {
+     "id": "fund3",
+     "point": "For a normal n×n magic square using 1 to n², the magic constant is n(n²+1)/2; for n=3 that constant is 15 and the centre is always 5.",
+     "weight": "extended",
+     "evidence_hint": "States magic constant formula, gives 15 for 3×3, and centre 5."
+    }
+   ],
+   "probes": [
+    "Walk through the Series Toolkit: what patterns do you check first when you see an unknown number sequence?"
+   ],
+   "hints": {
+    "1": "Start with gaps between consecutive terms before trying fancy formulas.",
+    "2": "Name arithmetic gaps, multiplicative growth, near squares/cubes, primes, second differences, then split alternating series.",
+    "3": "Order: difference → ratio Tn=a×T(n-1)±b → n²/n³ → primes → difference of differences → interleaved/alternating → letter positions with EJOTY."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how common number-series generators are detected and verified on concrete examples.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Arithmetic first differences: for 2, 5, 10, 17, 26 the gaps are 3, 5, 7, 9 so the next gap is 11 and the next term is 37; equivalently terms are n²+1.",
+     "weight": "core",
+     "evidence_hint": "Computes odd gaps ending at 11, or recognizes n²+1, and gets 37."
+    },
+    {
+     "id": "mech2",
+     "point": "Multiplicative recurrence: 3, 7, 15, 31, ?, 127 uses Tn=2·T(n-1)+1 so the missing term is 63; rapid growth like 8, 28, 116, 584 uses Tn=T(n-1)×(n+1)+4 giving next term 3508.",
+     "weight": "core",
+     "evidence_hint": "States ×2+1 → 63 and/or ×(n+1)+4 → 3508 with a verification step."
+    },
+    {
+     "id": "mech3",
+     "point": "Square/cube forms and wrong-term spotting: terms can follow n³−n² (missing term 48); odd-gap series 5, 7, 9, 11, 13, 15 exposes 34 as wrong (should be 35); first differences that are consecutive squares yield next term 92 after 56.",
+     "weight": "extended",
+     "evidence_hint": "Gives at least one of: 48 via n³−n², 34→35, or 56+36=92."
+    }
+   ],
+   "probes": [
+    "Given 3, 7, 15, 31, ?, 127, how do you find the missing term, and how would you approach a rapidly growing series like 8, 28, 116, 584, ?"
+   ],
+   "hints": {
+    "1": "Try multiplying the previous term by a small constant and adding/subtracting a fixed amount.",
+    "2": "For the first series try ×2 then +1; for the second try increasing multipliers plus a fixed addend.",
+    "3": "Tn=2·T(n-1)+1 → 63 (check 63×2+1=127); Tn=T(n-1)×(n+1)+4 → 584×6+4=3508."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose the right pattern-hunting strategy when series oscillate or are disguised as systems scenarios.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "When a series repeatedly increases and decreases, do not search for a single arithmetic progression; immediately check interleaved sequences or a two-step alternating operation (e.g. multiply by 2 then subtract 8 → next 56).",
+     "weight": "core",
+     "evidence_hint": "Rejects one global AP and names interleaved split or alternating ops, citing ×2/−8 → 56."
+    },
+    {
+     "id": "tr2",
+     "point": "If first-level differences are unclear, take differences of differences; second-level gaps may form an AP (e.g. second differences 12, 18, 24 increasing by 6).",
+     "weight": "core",
+     "evidence_hint": "Explains second differences and that a constant/AP there unlocks the next term."
+    },
+    {
+     "id": "tr3",
+     "point": "For OA wording like node counts or server loads, always check n² and n³ baseline progressions—e.g. 5, 12, 31, 68, 129 as n³+4 yields next 220.",
+     "weight": "extended",
+     "evidence_hint": "Says technical framing still hides n³/n² forms and gets 220 via n³+4 or second differences."
+    }
+   ],
+   "probes": [
+    "A series goes up and down, or an OA frames a sequence as cluster node counts—what do you try immediately, and what do you avoid?"
+   ],
+   "hints": {
+    "1": "Oscillation and ‘infra’ story problems need different first checks than a smooth rising AP.",
+    "2": "Alternating: split or two-step ops; OA disguise: try n³/n² baselines and second differences.",
+    "3": "Trap: don’t force one AP on up/down series (use ×2 then −8). OA: 5=1³+4 … 129=5³+4 → next 6³+4=220."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply pattern logic to letter/alphanumeric series, analogies, classification, and magic squares.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Letter/alphanumeric series: track each component separately (e.g. BZA→HWG via +2/−1/+2; Q1F…→Y120B via +2 letters, ×2/×3/×4… on numbers, −1 on trailing letters; C,G,K,O → S by +4 positions).",
+     "weight": "core",
+     "evidence_hint": "Splits letter vs number tracks and lands on HWG, Y120B, or S."
+    },
+    {
+     "id": "app2",
+     "point": "Analogies encode a rule such as x³−x² (11→1210 so 10→900), x(x+1) (7→56 so 9→90), predecessor/successor letter coding (BUCKET→…, BONUS→ACNPMOTVRT), or instrument:function (Odometer:Mileage :: Compass:Direction).",
+     "weight": "core",
+     "evidence_hint": "States the relational rule and applies it to the second pair correctly."
+    },
+    {
+     "id": "app3",
+     "point": "Classification picks the rule breakers: 210 among perfect squares; PQS among +2 letter triples; Brass as alloy vs elemental metals; 71 as the non-multiple of 7; 14−2746 because 14³=2744 not 2746.",
+     "weight": "extended",
+     "evidence_hint": "Names the shared rule and the single exception with the corrected expectation where given."
+    },
+    {
+     "id": "app4",
+     "point": "In a 3×3 magic square of 1..9, row/column/diagonal sum is 15 because 3S=45, and the centre must be 5.",
+     "weight": "extended",
+     "evidence_hint": "Derives S=15 from total 45 and argues centre 5."
+    }
+   ],
+   "probes": [
+    "How would you solve a letter group series like BZA, DYC, FXE, ?, JVI, and how do you pick the odd one out among numbers or words?"
+   ],
+   "hints": {
+    "1": "Treat each letter (or letter vs number) track independently; for odd-one-out name one shared property first.",
+    "2": "BZA-style: ±steps per position; classification: squares, uniform letter gaps, element vs alloy, divisibility, x vs x³.",
+    "3": "B→H, Z→W, A→G gives HWG; examples of odds: 210 not square, PQS not +2/+2, Brass alloy, 71 not ÷7, 2746≠14³."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Single arithmetic progression vs interleaved/alternating operations",
+   "strong_answer": "If terms bounce up and down, abandon one global AP and immediately try two interleaved sequences or a fixed two-step op (e.g. ×2 then −8), which yields 56 after 64."
+  },
+  {
+   "topic": "First differences only vs difference-of-differences / n³ baseline",
+   "strong_answer": "When first gaps look irregular, take second differences (12, 18, 24 stepping by 6) or test n³±const forms; OA ‘node count’ frames often hide n³+4 (next 220)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Forcing a single arithmetic progression on a series that repeatedly increases and decreases.",
+   "correction": "Immediately check interleaved sequences or a two-step alternating operation instead of one AP."
+  },
+  {
+   "trap": "Treating OA ‘node counts’ / ‘server loads’ as novel domain math.",
+   "correction": "Still check standard n² and n³ baseline progressions; technical stories usually disguise ordinary sequences."
+  },
+  {
+   "trap": "In wrong-number series, accepting every listed term without testing the intended gap pattern.",
+   "correction": "Project the odd-gap (or other) rule forward—e.g. after gaps 5, 7, 9 the next should be 11 so 24+11=35, exposing 34 as wrong."
+  },
+  {
+   "trap": "In cube-pair classification, not verifying the exact cube.",
+   "correction": "Check x³ exactly: 14³=2744, so 14−2746 is the odd group (off by 2)."
+  }
+ ]
+}

@@ -1,0 +1,262 @@
+{
+ "id": "11_dp_grid_interval__deep",
+ "title": "DP II: Grid DP & Interval DP (Depth Pass)",
+ "type": "CP",
+ "relevance": "High — post-Striver second wave: CF/AtCoder/CSES packings of path grids, 2×n tilings/columns, and dp[l][r] merges that OAs still reuse under contest wrappers.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "2-row / strip games: pick from two rows of heights without consecutive same-row → Basketball Exercise (common OA recoloring of path DP). Min operations to unify a segment: recolor connected same-value components / paint fence with horizontal or vertical strokes → Flood Fill / Painting Fence interview variants. Seat assignment / taxi pickup on a line: move people to empty seats minimizing total |Δ| → Armchairs (sequence DP disguised as matching). Edit / align two strings: Edit Distance table remains the OA default for grid-shaped DP interviews (contest form CSES, not LeetCode).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Confirm the candidate sees the same grid/interval engines under contest wrappers—2×n strips, run compression, sparse obstacles, or length-ordered [l,r] merges.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Same engines as the base topic—dp[r][c] on grids and length-ordered dp[l][r] on arrays/strings—but statements hide the template: 2-row / column / tiling states, lex-min frontiers, sparse obstacle path counts via binomials, flood-fill / bracket / fence recursions, matching people↔positions, or compress-runs-then-interval-DP.",
+     "weight": "core",
+     "evidence_hint": "Names grid dp[r][c] / interval dp[l][r] and lists several hide-the-template skins (2×n, sparse binomials, flood-fill/fence, ordered matching, run compression)."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognize it when moves stay right/down (or along a 2×n strip), when only contiguous segments matter, or when cost/ways on [l,r] depend only on strictly smaller intervals.",
+     "weight": "core",
+     "evidence_hint": "States right/down or 2×n strip, contiguous segments, or [l,r] depending on smaller intervals as the membership test."
+    },
+    {
+     "id": "rec3",
+     "point": "OA skins: 2-row strip pick without consecutive same-row (Basketball Exercise); unify/recolor a segment or paint fence horizontal vs vertical (Flood Fill / Painting Fence); seat people into empty chairs minimizing Σ|Δ| (Armchairs); Edit Distance as the default grid-shaped OA DP.",
+     "weight": "extended",
+     "evidence_hint": "Maps the prompt to one of those four Where-it-appears skins."
+    }
+   ],
+   "probes": [
+    "What makes this depth-pass grid/interval DP rather than a plain path-sum or MCM template?",
+    "If the statement hides a 2×n strip, run recolor, fence strokes, sparse walls, or line seating, what family do you reach for?"
+   ],
+   "hints": {
+    "1": "Ask whether the template is disguised even though the engine is still dp[r][c] or length-ordered dp[l][r].",
+    "2": "Cue: right/down or 2×n strip; contiguous segments; [l,r] cost/ways from strictly smaller intervals; skins include tiling/column states, run compression, sparse binomials, fence/bracket, ordered matching.",
+    "3": "Say: same dp[r][c] / dp[l][r] engines; recognize on right/down, 2×n, contiguous [l,r]; OA maps are Basketball Exercise, Flood Fill / Painting Fence, Armchairs, Edit Distance."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Pick the right rewrite—run compression, horizontal/vertical fence branch, sparse binomial obstacle DAG, ordered line matching, or lex-min frontier—before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Flood Fill: first compress equal-color runs; then dp[l][r] = min recolors to make the run-segment monochrome; matching endpoints often let you absorb a side cheaper than painting from scratch.",
+     "weight": "core",
+     "evidence_hint": "States RLE then interval DP on runs, plus absorb-via-matching-endpoints."
+    },
+    {
+     "id": "appr2",
+     "point": "Painting Fence: recurse on unfinished [L,R] above height h—either pay (R−L+1) vertical strokes, or paint one horizontal layer and split into contiguous unpainted subsegments (horizontal vs vertical branch, not MCM-for-k).",
+     "weight": "core",
+     "evidence_hint": "Describes vertical pay-(R−L+1) vs horizontal layer then split; rejects MCM-for-k framing."
+    },
+    {
+     "id": "appr3",
+     "point": "Sparse Grid 2: with huge H,W and few walls, paths((r1,c1)→(r2,c2)) = C(Δr+Δc, Δr); sort walls; dp[i] = ways to first hit wall i (subtract paths that hit an earlier wall)—inclusion on the obstacle DAG.",
+     "weight": "core",
+     "evidence_hint": "Quotes binomial path counts plus DP only on sorted obstacles with earlier-wall subtraction."
+    },
+    {
+     "id": "appr4",
+     "point": "Armchairs / ordered matching: people and empty chairs on a line—dp[i][j] = cost placing first i people into first j chairs (chair j unused, or person i sits there); monotone sequence DP, not bipartite matching flow.",
+     "weight": "extended",
+     "evidence_hint": "States people×chairs prefix DP and rejects flow/bipartite matching."
+    },
+    {
+     "id": "appr5",
+     "point": "Minimal Grid Path: at manhattan step t, keep only cells still compatible with the lexicographically best prefix so far; take the min letter among candidates, discard the rest—frontier shrinks, no O(n²) string DP.",
+     "weight": "extended",
+     "evidence_hint": "Describes per-diagonal compatible frontier and min-letter pick without storing full path strings."
+    }
+   ],
+   "probes": [
+    "Before coding, is this run-interval recolor, fence horizontal/vertical, sparse binomial obstacles, ordered seating, or a lex-min frontier?",
+    "For Flood Fill vs Painting Fence vs Grid 2 vs Armchairs vs Minimal Grid Path, which rewrite do you pick?"
+   ],
+   "hints": {
+    "1": "Classify RLE-interval vs fence branch vs binomial-obstacle DAG vs line matching vs lex frontier.",
+    "2": "Flood Fill compresses runs then absorbs matching ends; Fence pays vertical (R−L+1) or splits after a horizontal layer; Sparse Grid uses C(Δr+Δc, Δr) and DP on walls; Armchairs is dp[i][j] on prefixes; Minimal Grid Path shrinks a compatible frontier.",
+    "3": "Say: RLE then dp[l][r] with absorb; vertical vs horizontal-layer split; binomials + first-hit wall DP; people×chairs sequence DP not flow; keep only still-optimal cells per step t."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Verify length-ordered interval loops, 2×n last-column states, factorial/binomial setup for sparse grids, and canonical outer structure for brackets/fences.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Write length-ordered interval loops (len, then l, set r=l+len-1) and know when to add a split k vs only endpoint transitions.",
+     "weight": "core",
+     "evidence_hint": "States len→l→r=l+len-1 ordering and distinguishes split-k from endpoint-only transitions."
+    },
+    {
+     "id": "impl2",
+     "point": "Compress equal runs before Flood-Fill-style interval DP; never interval-DP the raw n=5000 array without RLE when runs dominate.",
+     "weight": "core",
+     "evidence_hint": "Insists on RLE before interval DP when n=5000 and runs dominate."
+    },
+    {
+     "id": "impl3",
+     "point": "2×n / column DPs: state is configuration of the last column (colors, fused/separate, group count)—not a full H×W table.",
+     "weight": "core",
+     "evidence_hint": "Names last-column configuration (fused/separate, colors, groups) instead of full grid DP."
+    },
+    {
+     "id": "impl4",
+     "point": "Sparse large grids: precompute factorial/invfactorial; path counts are binomials; DP only on the obstacle list. Empty String: when pairing s[i] with equal s[k], empty [i+1,k−1] then [k+1,j], multiply by binomials that interleave the two emptying sequences.",
+     "weight": "extended",
+     "evidence_hint": "Mentions fact/invfact + obstacle-only DP and/or pair-then-binomial-interleave for emptying."
+    },
+    {
+     "id": "impl5",
+     "point": "Bracket/fence recursions: identify the canonical outer structure (matching pair / height layer) before writing transitions. Coloring Brackets: only matching pairs get colors; state is interval plus colors of the outer pair.",
+     "weight": "extended",
+     "evidence_hint": "Names matching-pair or height-layer as the outer structure, and outer-pair colors for brackets."
+    }
+   ],
+   "probes": [
+    "How do you loop intervals by length, and when is RLE mandatory before Flood Fill?",
+    "Sketch last-column state for a 2×n DP versus factorial/binomial setup for sparse Grid 2."
+   ],
+   "hints": {
+    "1": "Think len-ordered fills, run compression, and last-column vs obstacle-list state.",
+    "2": "Loops: len, l, r=l+len-1; RLE before interval DP at n=5000; 2×n keeps last-column config; sparse grids use fact/invfact and DP on walls; brackets/fences start from matching pair / height layer.",
+    "3": "Say: length-ordered (len,l,r); never raw n=5000 without RLE; last-column not H×W; binomials + obstacle DP; Empty String multiplies interleaving binomials; color only matching outer pairs."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State when O(n³) interval DP is OK, when n≤5000 forces O(n²) after compression or endpoint-only transitions, and what 2×n / ordered-matching costs look like.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Always check n≤400/500 ⇒ O(n³) interval OK; n≤5000 ⇒ need O(n²) after compression or endpoint-only transitions.",
+     "weight": "core",
+     "evidence_hint": "Quotes n≤400/500 for O(n³) and n≤5000 needing O(n²) via compression or endpoint-only."
+    },
+    {
+     "id": "cx2",
+     "point": "Ordered matching on a line (Armchairs): one pointer for people, one for seats—O(#people · #chairs). Counting Towers: 2×n tiling DP with fused vs separate top cells; precompute to 1e6.",
+     "weight": "core",
+     "evidence_hint": "Cites O(#people · #chairs) and precompute-to-1e6 for towers."
+    },
+    {
+     "id": "cx3",
+     "point": "Lex-min / multi-criteria grid paths: advance a frontier of still-optimal cells; don’t store full path strings in DP (avoids O(n²) string DP). Sparse grids DP only on the obstacle list, not the full H×W table.",
+     "weight": "extended",
+     "evidence_hint": "Separates frontier shrink from full-string DP, and obstacle-list DP from full grid."
+    }
+   ],
+   "probes": [
+    "What n bounds make O(n³) interval DP safe versus forcing O(n²) after compression?",
+    "What complexity do you quote for Armchairs, Counting Towers precompute, and lex-min frontier vs string DP?"
+   ],
+   "hints": {
+    "1": "Separate the n≤400/500 vs n≤5000 fit check from people×chairs and frontier costs.",
+    "2": "n≤400/500 → O(n³) OK; n≤5000 → O(n²) after RLE or endpoint-only; Armchairs O(#people · #chairs); towers precompute to 1e6; lex-min keeps a frontier, not O(n²) strings.",
+    "3": "Say: n≤400/500 ⇒ O(n³); n≤5000 ⇒ O(n²) via compression/endpoints; Armchairs O(#people · #chairs); Counting Towers to 1e6; frontier not full path strings; sparse DP on obstacles only."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch missing RLE, full H×W on strips, flow for line seating, full path strings for lex-min, and MCM framing of fence/bracket recursions.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Interval-DP on the raw n=5000 array without RLE when runs dominate (Flood Fill needs compress equal-color runs first).",
+     "weight": "core",
+     "evidence_hint": "Corrects to RLE then dp[l][r] on runs for Flood Fill."
+    },
+    {
+     "id": "pit2",
+     "point": "Treating 2×n / column problems as a full H×W table instead of last-column configuration (colors, fused/separate, group count).",
+     "weight": "core",
+     "evidence_hint": "Insists on last-column state for 2×n / column DPs."
+    },
+    {
+     "id": "pit3",
+     "point": "Casting Armchairs as bipartite matching flow instead of monotone sequence DP dp[i][j] on first i people and first j chairs.",
+     "weight": "core",
+     "evidence_hint": "Rejects flow; states people×chairs ordered DP."
+    },
+    {
+     "id": "pit4",
+     "point": "Painting Fence as MCM-for-k, or storing full path strings for Minimal Grid Path / skipping the compatible frontier; Sparse Grid walking the full grid instead of binomials + obstacle DAG.",
+     "weight": "extended",
+     "evidence_hint": "Names horizontal/vertical fence branch, frontier not strings, and binomials+obstacles not full-grid walk."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you skip RLE on Flood Fill, build H×W for a 2×n strip, or run flow on Armchairs?",
+    "How do fence horizontal/vertical branching, lex-min frontiers, and sparse binomial DP save you?"
+   ],
+   "hints": {
+    "1": "Check run compression, last-column state, and whether seating is sequence DP.",
+    "2": "Flood Fill needs RLE at n=5000; 2×n is last-column not H×W; Armchairs is dp[i][j] not flow; Fence is horizontal vs vertical not MCM-for-k; lex-min keeps a frontier; Sparse Grid uses binomials on walls.",
+    "3": "List: compress runs first; last-column config; people×chairs sequence DP; fence pay (R−L+1) or split after a layer; frontier of still-optimal cells; C(Δr+Δc, Δr) + first-hit obstacle DP."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Horizontal vs vertical strokes (Painting Fence)",
+   "strong_answer": "On unfinished [L,R] above height h, either pay (R−L+1) vertical strokes or paint one horizontal layer and split into contiguous unpainted subsegments—classic horizontal vs vertical branch, not MCM-for-k."
+  },
+  {
+   "topic": "Absorb matching endpoints vs paint from scratch (Flood Fill)",
+   "strong_answer": "After compressing equal-color runs, matching endpoints often let you absorb a side cheaper than painting from scratch; start-square choice folds into which run you grow from."
+  },
+  {
+   "topic": "Sequence DP vs bipartite matching flow (Armchairs)",
+   "strong_answer": "People and empty chairs on a line use dp[i][j] = cost placing first i people into first j chairs (chair unused or person sits there)—monotone structure, not bipartite matching flow."
+  },
+  {
+   "topic": "Lex-min frontier vs O(n²) string DP (Minimal Grid Path)",
+   "strong_answer": "At manhattan step t keep only cells compatible with the lexicographically best prefix so far, pick the min letter, discard the rest—frontier shrinks; do not store full path strings in DP."
+  },
+  {
+   "topic": "Binomials on obstacle DAG vs full grid DP (Sparse Grid 2)",
+   "strong_answer": "With huge H,W and few walls, path counts are C(Δr+Δc, Δr); sort walls and DP ways to first hit each wall (subtract earlier-wall paths)—inclusion on the obstacle DAG, not a full H×W table."
+  },
+  {
+   "topic": "2×n last-column state vs full H×W table",
+   "strong_answer": "For 2×n / column DPs the state is configuration of the last column (colors, fused/separate, group count), not a full H×W table."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Interval-DP the raw n=5000 array without RLE when runs dominate (Flood Fill).",
+   "correction": "Compress equal-color runs first; then dp[l][r] = min recolors to make the run-segment monochrome."
+  },
+  {
+   "trap": "Building a full H×W DP for 2×n / column / tiling problems.",
+   "correction": "State is configuration of the last column (colors, fused/separate, group count)."
+  },
+  {
+   "trap": "Treating Armchairs as bipartite matching / flow.",
+   "correction": "Use ordered matching DP: dp[i][j] cost of first i people into first j chairs in O(#people · #chairs)."
+  },
+  {
+   "trap": "Framing Painting Fence as MCM-for-k splits.",
+   "correction": "Recurse on unfinished [L,R] above height h: pay (R−L+1) vertical strokes, or paint one horizontal layer and split into contiguous unpainted subsegments."
+  },
+  {
+   "trap": "Storing full path strings for lex-min grid paths.",
+   "correction": "Maintain a frontier of cells still compatible with the best prefix; take the min letter each step and discard the rest."
+  },
+  {
+   "trap": "Walking the full grid for sparse obstacle path counts.",
+   "correction": "Precompute factorial/invfactorial; paths = C(Δr+Δc, Δr); DP only on the sorted obstacle list with earlier-wall subtraction."
+  },
+  {
+   "trap": "Using O(n³) interval DP at n≤5000 without compression or endpoint-only transitions.",
+   "correction": "n≤400/500 ⇒ O(n³) OK; n≤5000 ⇒ need O(n²) after compression or endpoint-only transitions."
+  }
+ ]
+}

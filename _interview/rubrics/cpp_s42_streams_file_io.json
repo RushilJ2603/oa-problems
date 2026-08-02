@@ -1,0 +1,189 @@
+{
+ "id": "cpp_s42_streams_file_io",
+ "title": "Streams and File I/O",
+ "type": "FUND",
+ "relevance": "C++ I/O is library-based (streams, not language syntax), and interviews probe endl vs newline, mixing >> with getline, text vs binary modes, and recovering from failed extraction.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that C++ I/O is a stream abstraction with a class hierarchy and four standard global streams.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "I/O is not built into language syntax; it uses a standard-library stream model: a sequence of characters flowing in or out, decoupling I/O logic from the device.",
+     "weight": "core",
+     "evidence_hint": "Candidate says streams abstract console/file/string buffers rather than treating I/O as core syntax."
+    },
+    {
+     "id": "fund2",
+     "point": "Hierarchy roots at ios_base (flags/state), then ios (holds streambuf), then istream/ostream (formatted and unformatted I/O); ifstream/istringstream inherit from istream so polymorphism accepts them as istream&.",
+     "weight": "core",
+     "evidence_hint": "Names ios_base → ios → istream/ostream and notes file/string streams plug in via inheritance."
+    },
+    {
+     "id": "fund3",
+     "point": "<iostream> provides cin (istream), cout (ostream), cerr (unbuffered stderr), and clog (buffered stderr).",
+     "weight": "extended",
+     "evidence_hint": "Lists all four and contrasts cerr immediate vs clog buffered logging."
+    }
+   ],
+   "probes": [
+    "What is a C++ stream, and how do the standard stream objects and the iostream class hierarchy fit together?"
+   ],
+   "hints": {
+    "1": "Think about whether cin/cout are language keywords or library objects.",
+    "2": "Sketch ios_base → ios → istream/ostream, then where ifstream sits.",
+    "3": "Mention cin/cout/cerr/clog and that cerr is unbuffered while clog is buffered."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain formatted vs unformatted operations, manipulators, file/string streams, and stream state recovery.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Formatted >> and << convert between text and binary types; extraction skips leading whitespace. Unformatted I/O (get/read/ignore, put/write, getline) treats raw characters without type conversion or whitespace skipping.",
+     "weight": "core",
+     "evidence_hint": "Contrasts >> skipping whitespace with get/getline reading raw chars including spaces."
+    },
+    {
+     "id": "mech2",
+     "point": "File streams: ifstream/ofstream/fstream; open modes in/out/app/trunc/binary/ate combinable with |; RAII destructor closes the file when the stream leaves scope; check is_open, operator bool, or fail.",
+     "weight": "core",
+     "evidence_hint": "Names modes, prefers constructor open + scope exit over manual close, and mentions open-success checks."
+    },
+    {
+     "id": "mech3",
+     "point": "A stream keeps an iostate bitmask: good/eof/fail/bad; failed formatted extraction sets failbit, operator bool becomes false, further I/O is ignored until clear() resets to goodbit, then ignore discards bad buffer data.",
+     "weight": "core",
+     "evidence_hint": "Walks fail → clear → ignore after typing non-numeric input into an int extraction."
+    },
+    {
+     "id": "mech4",
+     "point": "String streams: istringstream for parsing/tokenising; ostringstream for building strings; .str() extracts the built string; getline with a custom delimiter tokenises CSV-like input.",
+     "weight": "extended",
+     "evidence_hint": "Shows number↔string via ostringstream/istringstream or comma-delimited getline."
+    }
+   ],
+   "probes": [
+    "How do you open a file, choose text or binary behaviour, and recover after a failed cin >> int extraction?"
+   ],
+   "hints": {
+    "1": "Separate what >> does from what get/read/getline do.",
+    "2": "Cover fstream open modes, RAII close, then good/fail/clear/ignore.",
+    "3": "After failbit, clear() then ignore up to newline before retrying input."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare buffering, newline strategies, and text versus binary file handling.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "endl writes a newline and flushes; \\n only writes a newline—prefer \\n in large loops because flushing is a heavy system call unless immediate visibility is required.",
+     "weight": "core",
+     "evidence_hint": "States flush difference and performance cost of endl in loops."
+    },
+    {
+     "id": "tr2",
+     "point": "cerr is unbuffered (immediate, good for crash diagnostics); clog is buffered (more efficient for large log volumes).",
+     "weight": "extended",
+     "evidence_hint": "Picks cerr for diagnostics and clog for bulk logging based on buffering."
+    },
+    {
+     "id": "tr3",
+     "point": "Default text mode translates line endings (e.g. \\r\\n on Windows ↔ \\n); binary mode with ios::binary leaves bytes untouched—use read/write with a char* buffer for structured/binary data.",
+     "weight": "core",
+     "evidence_hint": "Explains newline translation risk and read/write for binary payloads."
+    }
+   ],
+   "probes": [
+    "What is the difference between std::endl and \\n, and when would you open a file in binary mode instead of text mode?"
+   ],
+   "hints": {
+    "1": "Ask what else endl does besides printing a newline.",
+    "2": "Connect flushing cost to loops; connect text-mode translation to images or raw dumps.",
+    "3": "endl = newline + flush; binary mode + read/write avoids OS newline translation."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply stream patterns to mixed input, file reading, parsing, and safe file lifetime.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "After cin >> value, a trailing newline remains; an immediate getline reads an empty string—discard the leftover with cin.ignore before getline.",
+     "weight": "core",
+     "evidence_hint": "Describes leftover \\n and ignore(... max(), '\\n') before getline."
+    },
+    {
+     "id": "app2",
+     "point": "Read files line-by-line with while (getline(fin, line)) and word-by-word with while (fin >> word); use istringstream when asked to parse or tokenise a complex string in memory.",
+     "weight": "core",
+     "evidence_hint": "Gives the two while-loop idioms and names istringstream for in-memory parsing."
+    },
+    {
+     "id": "app3",
+     "point": "Prefer opening via constructor and relying on RAII destruction over manual close(); Python's with-open safety maps to C++ stream destructors leaving scope.",
+     "weight": "extended",
+     "evidence_hint": "Compares Python context managers to C++ file-stream RAII."
+    }
+   ],
+   "probes": [
+    "Why does getline seem to skip input after cin >> age, and how would you read a file line by line or parse tokens from a string?"
+   ],
+   "hints": {
+    "1": "What character does >> leave in the buffer after reading an integer?",
+    "2": "Fix with ignore, then contrast getline-loop vs >> loop vs istringstream.",
+    "3": "ignore leftover newline; while(getline)/while(>>); istringstream for string parsing; RAII closes files."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "std::endl vs \\n",
+   "strong_answer": "Both emit a newline; endl also flushes. Prefer \\n unless you need immediate visibility, because flushing in a large loop is a costly system call."
+  },
+  {
+   "topic": "std::cerr vs std::clog",
+   "strong_answer": "Both target stderr; cerr is unbuffered for crash diagnostics, clog is buffered and better for large volumes of general log messages."
+  },
+  {
+   "topic": "Text mode vs binary mode",
+   "strong_answer": "Text mode performs OS-specific newline translation; binary mode (ios::binary) reads/writes exact bytes. Use unformatted read/write for structured or raw data so translation cannot corrupt it."
+  },
+  {
+   "topic": "Formatted vs unformatted I/O",
+   "strong_answer": "Formatted >>/<< convert types and skip leading whitespace on extraction; unformatted get/read/put/write/getline handle raw characters without conversion or whitespace skipping."
+  },
+  {
+   "topic": "RAII destructor close vs manual close()",
+   "strong_answer": "Open via constructor and let the stream leave scope so the destructor closes the handle (RAII), analogous to Python's with open; prefer that over calling close() manually."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using cin >> then immediately getline",
+   "correction": ">> leaves the trailing newline in the buffer; getline consumes it as an empty line. Call ignore to discard through '\\n' before getline."
+  },
+  {
+   "trap": "Using endl inside a large loop",
+   "correction": "Each endl flushes; prefer \\n for newlines and flush only when output must be visible immediately."
+  },
+  {
+   "trap": "Reading binary/structured data in default text mode",
+   "correction": "Newline translation can corrupt bytes. Open with ios::binary and transfer with read/write on a char* buffer."
+  },
+  {
+   "trap": "Assuming I/O continues after a failed extraction",
+   "correction": "failbit leaves the stream unusable and bad data in the buffer. clear() the state, then ignore the offending input before retrying."
+  },
+  {
+   "trap": "Writing structs with write() as portable serialisation",
+   "correction": "Crude struct dumps break with pointers, strings, or cross-system endianness/padding differences."
+  }
+ ]
+}

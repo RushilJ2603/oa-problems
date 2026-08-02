@@ -1,0 +1,239 @@
+{
+ "id": "42_cses_digest",
+ "title": "CSES Problem Set digest (post-Striver)",
+ "type": "CP",
+ "relevance": "CSES is the standard bridge from Striver/LC templates to contest constraints; Sorting & Searching + Range Queries + Trees + contest Graphs/DP cover most OA and Div2 C–D patterns Striver never drills in CF form.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "OA/interview prompts map to CSES patterns: max concurrent users/rooms/servers (Restaurant Customers / Room Allocation sweeps, Amazon/Uber-style scheduling); point update + range sum or first hotel with capacity ≥ x (Dynamic Range Sum / Hotel Queries); shortest path with one coupon (Flight Discount state Dijkstra, Div2 C/D and harder OA); digit-constrained counts in [L,R] or n≤40 subset sum (Counting Numbers digit DP / Meet-in-the-Middle when knapsack or 2^n is the wrong reflex).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Establish that CSES is a section-priority post-Striver curriculum and that OA prompts map to specific CSES pattern families.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Treat CSES as a section-priority curriculum, not a solve-all-300 grind.",
+     "weight": "core",
+     "evidence_hint": "Says prioritize sections by placement value rather than clearing the whole set."
+    },
+    {
+     "id": "rec2",
+     "point": "Using CSES right means Striver-like patterns under n≤2e5, multi-query, and writing the template under constraints.",
+     "weight": "core",
+     "evidence_hint": "Contrasts LC/template comfort with contest-scale I/O and multi-query form."
+    },
+    {
+     "id": "rec3",
+     "point": "Max concurrent users/rooms/servers from intervals maps to Restaurant Customers / Room Allocation sweep patterns.",
+     "weight": "extended",
+     "evidence_hint": "Names arrival/departure sweep or free-room assignment for scheduling screens."
+    },
+    {
+     "id": "rec4",
+     "point": "Shortest path with one coupon/discount maps to Flight Discount state Dijkstra; n≤40 subset sum maps to Meet-in-the-Middle, not forced knapsack.",
+     "weight": "extended",
+     "evidence_hint": "Calls out expand-node-state graphs and MITM when 2^n is too big."
+    }
+   ],
+   "probes": [
+    "After Striver, how should you use CSES—and what OA prompt shapes should trigger which CSES patterns?"
+   ],
+   "hints": {
+    "1": "Think curriculum order and OA wording, not problem count.",
+    "2": "Bridge idea: same algorithms as Striver, contest constraints and multi-query form.",
+    "3": "Section-priority (not all 300); concurrent intervals → sweep; one coupon → state Dijkstra; n≤40 subset sum → MITM."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Establish the post-Striver section order and which families to do deeply, selectively, or defer.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Section order: Sorting & Searching (STL/sweep/BS) → DP contest gems → Graphs (state Dijkstra / BF / lifting) → Range Queries (whole section) → Trees (diameter → rerooting → LCA → Euler+BIT) → selective Math/Strings → MITM → then stretch Advanced/Additional.",
+     "weight": "core",
+     "evidence_hint": "Recites that pipeline, especially diameter before rerooting before LCA before Euler+BIT."
+    },
+    {
+     "id": "appr2",
+     "point": "Do deeply: Sorting & Searching, Range Queries, Tree Algorithms, contest Graph flavors, and DP gems (Array Description, Counting Towers, Projects, Elevator Rides, Counting Numbers).",
+     "weight": "core",
+     "evidence_hint": "Lists those deep sections and names several DP gems."
+    },
+    {
+     "id": "appr3",
+     "point": "Skip/skim Introductory and easy Sorting warmups that are pure LC; defer Geometry, Additional Problems, Interactive, and most Advanced Techniques until cores are solid (except Meet-in-the-Middle).",
+     "weight": "extended",
+     "evidence_hint": "Explicit skip/defer list with MITM as the Advanced exception."
+    },
+    {
+     "id": "appr4",
+     "point": "Range-query ladder: prefix → sparse RMQ → Fenwick PURS → segtree walk → lazy (stretch); Dynamic Range Sum is the entry ticket.",
+     "weight": "extended",
+     "evidence_hint": "Starts Range Queries at Dynamic Range Sum and climbs Fenwick then segtree walk."
+    }
+   ],
+   "probes": [
+    "Walk the section order you would follow post-Striver, and what you skip or defer."
+   ],
+   "hints": {
+    "1": "Start from Sorting & Searching skills, not Introductory grind.",
+    "2": "Name the deep blocks: Sorting/Searching, DP gems, Graphs, full Range Queries, Trees, then MITM.",
+    "3": "Order: Sorting & Searching → DP gems → Graphs → Range Queries → Trees → selective Math/Strings → MITM; skip Introductory/Geometry/Additional until cores; MITM is the Advanced must-do exception."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Establish the concrete contest kits: STL/sweep/BS, range structures, tree/graph lifting, and contest DP shapes.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "STL contest kit: multiset with --upper_bound (Concert Tickets: largest ticket ≤ price), sweep events (time, ±1), and a priority queue for free resources (Room Allocation).",
+     "weight": "core",
+     "evidence_hint": "Describes --it after upper_bound, ±1 events, and free-room PQ assignment."
+    },
+    {
+     "id": "impl2",
+     "point": "BS-on-answer reflex: monotone can(mid) as in Factory Machines (“can we make t products by time mid?”), always long long.",
+     "weight": "core",
+     "evidence_hint": "States timed production feasibility check and long long habit."
+    },
+    {
+     "id": "impl3",
+     "point": "Graph contest kit: Dijkstra with extra state dist[u][usedCoupon] (Flight Discount); Bellman-Ford plus cycle reachability (High Score); functional binary lifting for k-th successor (Planets Queries I); same jump idea as LCA up[k][v] without a tree.",
+     "weight": "extended",
+     "evidence_hint": "Mentions coupon state, positive-cycle reachability for ∞ score, and functional jumps."
+    },
+    {
+     "id": "impl4",
+     "point": "DP contest kit shapes: dp[i][v] ways for Array Description with |a_i−a_{i+1}|≤1; weighted intervals Projects as sort-by-end dp[i]=max(skip, reward+dp[prev]); Elevator Rides dp[mask]=(rides, last_load); digit DP for Counting Numbers on [a,b] with no adjacent equal digits.",
+     "weight": "extended",
+     "evidence_hint": "Names those DP formulations rather than generic knapsack memo."
+    }
+   ],
+   "probes": [
+    "For Concert Tickets, Factory Machines, Flight Discount, and Projects, what are the implementation reflexes?"
+   ],
+   "hints": {
+    "1": "Pick one STL, one BS-on-answer, one graph-state, one DP shape.",
+    "2": "Concert Tickets is multiset upper_bound; Factory Machines is can(mid); Flight Discount expands node state; Projects is weighted intervals with prev via BS.",
+    "3": "multiset --upper_bound; can(mid) for products by time with long long; dist[u][usedCoupon]; sort by end and dp[i]=max(skip, reward+dp[prev])."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Establish the constraint reflexes that force contest templates: n≤2e5 multi-query form, BS answer range, and n≤40 MITM.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Under n≤2e5 with multi-query contest form, you write the template (Fenwick/segtree, lifting, sweeps) rather than LC-style one-shot solutions.",
+     "weight": "core",
+     "evidence_hint": "Ties n≤2e5 and multi-query to needing the actual DS/template."
+    },
+    {
+     "id": "cx2",
+     "point": "BS-on-answer (Factory Machines) uses monotone can(mid) with answer on [0, 1e18] and long long.",
+     "weight": "core",
+     "evidence_hint": "States the [0, 1e18] search domain and long long."
+    },
+    {
+     "id": "cx3",
+     "point": "When n≤40 and 2^n is too big, use Meet-in-the-Middle: two halves 2^{n/2}; do not force knapsack DP.",
+     "weight": "extended",
+     "evidence_hint": "Says split into halves at 2^{n/2} instead of full 2^n or knapsack."
+    }
+   ],
+   "probes": [
+    "What constraint signals tell you to reach for Fenwick/segtree or MITM instead of a plain LC approach?"
+   ],
+   "hints": {
+    "1": "Look at n and whether queries or subset explosion dominate.",
+    "2": "n≤2e5 multi-query → range/lifting templates; n≤40 subset sum → MITM.",
+    "3": "n≤2e5 means write Fenwick/segtree/sweep templates; BS answers live on [0, 1e18] with long long; n≤40 → two halves 2^{n/2}, not knapsack."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Surface skip mistakes, numeric traps, cycle/score traps, and wrong DP/graph reflexes.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Subarray Sums II: count subarrays with sum x via prefix + hashmap, but watch long long and the empty prefix.",
+     "weight": "core",
+     "evidence_hint": "Mentions both long long and initializing/handling the empty prefix."
+    },
+    {
+     "id": "pit2",
+     "point": "High Score: max path with ∞ if a positive cycle reaches the relevant part—Bellman-Ford plus cycle reachability, not plain shortest-path intuition.",
+     "weight": "core",
+     "evidence_hint": "Explains positive-cycle reachability implying unbounded score."
+    },
+    {
+     "id": "pit3",
+     "point": "Do not force knapsack DP when n≤40 subset sum calls for Meet-in-the-Middle; digit-constrained [L,R] counts need digit DP (Counting Numbers), which Striver under-covers.",
+     "weight": "extended",
+     "evidence_hint": "Rejects 2^n/knapsack reflex and names digit DP for adjacent-digit constraints."
+    },
+    {
+     "id": "pit4",
+     "point": "Tree Distances I needs diameter readiness first if rusty; rerooting/2-pass is the core pattern before stretching to Distinct Colors small-to-large / Euler+BIT.",
+     "weight": "extended",
+     "evidence_hint": "Says do diameter first, then rerooting, and treats Distinct Colors as stretch."
+    }
+   ],
+   "probes": [
+    "What traps show up in Subarray Sums II, High Score, and n≤40 subset-sum style prompts?"
+   ],
+   "hints": {
+    "1": "One numeric/prefix trap, one cycle trap, one wrong-complexity reflex.",
+    "2": "Prefix hashmap edge case; positive cycle on max-score; MITM vs knapsack.",
+    "3": "long long + empty prefix; ∞ when positive cycle reaches; n≤40 → MITM 2^{n/2}, not knapsack; digit [L,R] → digit DP."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Section-priority curriculum vs solve-all-300 grind",
+   "strong_answer": "Prioritize Sorting & Searching, Range Queries, Trees, contest Graphs/DP, and MITM for OA/Div2 C–D coverage; skimming Introductory and deferring Geometry/Additional/most Advanced until cores are solid beats clearing every task."
+  },
+  {
+   "topic": "Do deeply vs selective vs defer",
+   "strong_answer": "Deep: Sorting & Searching (STL/multiset/sweep/BS-on-answer), Range Queries (Fenwick/segtree/sparse), Trees (diameter, rerooting, LCA/binary lifting, Euler+BIT), contest Graphs (state Dijkstra, Bellman-Ford cycles, functional lifting, SCC/2-SAT later), DP gems. Selective: Mathematics and Strings beyond KMP. Defer: Geometry, Additional, Interactive, most Advanced except Meet-in-the-Middle."
+  },
+  {
+   "topic": "Range structure ladder vs jumping to lazy segtree",
+   "strong_answer": "Enter at Dynamic Range Sum with Fenwick/segtree PURS, then segtree walk for Hotel Queries (first ≥ x); treat lazy as stretch after the core ladder prefix → sparse RMQ → Fenwick → segtree walk."
+  },
+  {
+   "topic": "Knapsack/2^n DP vs Meet-in-the-Middle for subset sum",
+   "strong_answer": "When n≤40 and 2^n is too big, split into two halves at 2^{n/2} (CSES Meet in the Middle) instead of forcing knapsack DP."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating CSES like another LC grind starting at Introductory and easy Sorting warmups.",
+   "correction": "Skip/skim Introductory (maybe Gray Code / Digit Queries if weak on construction) and pure-LC Sorting warmups; start where contest form begins."
+  },
+  {
+   "trap": "Concert Tickets: picking an arbitrary feasible ticket from the multiset.",
+   "correction": "Assign the largest ticket ≤ price via upper_bound then --it."
+  },
+  {
+   "trap": "Subarray Sums II off-by-one or overflow when counting sum-x subarrays.",
+   "correction": "Use prefix + hashmap with long long and correctly handle the empty prefix."
+  },
+  {
+   "trap": "High Score answered as ordinary shortest/longest path without cycle logic.",
+   "correction": "Bellman-Ford plus positive-cycle reachability: report unbounded when a positive cycle can affect the answer."
+  },
+  {
+   "trap": "Seeing n≤40 subset sum and reaching for knapsack or full 2^n.",
+   "correction": "Use Meet-in-the-Middle with two halves 2^{n/2}."
+  },
+  {
+   "trap": "Jumping into Tree Distances I without diameter/rerooting basics.",
+   "correction": "Do Tree Diameter first if rusty, then rerooting/2-pass for max distance from every node."
+  }
+ ]
+}

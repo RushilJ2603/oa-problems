@@ -1,0 +1,243 @@
+{
+ "id": "13_dp_bitmask_digit__deep",
+ "title": "DP IV: Bitmask & Digit DP — Depth Pass",
+ "type": "CP",
+ "relevance": "Medium — second wave after Matching / Elevator / Classy Numbers / TSP; these are the CF Div2 D–E and ABC E drills that hide mask packing, profile DP, and digit-bound construction rather than announcing the template.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "OA/interview shapes: visit k POIs or playlists with genre rules (shortest paths/adjacency then Hamiltonian mask DP); count valid strings/colorings with local forbidden patterns (last few symbols packed as a mask); largest arrangement or next number under digit constraints (left-to-right under an upper bound); assign a tiny set of skills/problems/medicines (2^n over the skill mask, often after sorting an external cost dimension).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot hidden bitmask or digit DP from tiny universes, numeric digit invariants, or thin-grid column fills rather than an announced template.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Depth states still look like dp[mask], dp[mask][last], or dfs(pos,tight,extra), but contests hide the template behind tiny dimensions or a huge numeric bound with a digit property.",
+     "weight": "core",
+     "evidence_hint": "Candidate names mask/TSP/digit-tight shapes and says the hard part is the non-obvious extra (APSP before TSP, topo checks, AND shrinkage, profile compatibility, product IDs)."
+    },
+    {
+     "id": "rec2",
+     "point": "Recognize when brute subsets or 2^n·n^2 fits, when [L,R] is up to 10^18 with a digit property, or when a thin grid forces filling one column or one mask at a time.",
+     "weight": "core",
+     "evidence_hint": "Gives at least one of: subset/2^n fit, digit-range bound, or thin-grid column-mask cue."
+    },
+    {
+     "id": "rec3",
+     "point": "Tiny-universe cue: n≤20, k≤10 specials, width ≤3–8, ≤10 factorials, or ≤16 rows often means mask packing rather than a named DP chapter.",
+     "weight": "extended",
+     "evidence_hint": "Cites those constraint families as the tell that a mask or column profile will fit."
+    }
+   ],
+   "probes": [
+    "What constraint or story cues would make you reach for bitmask DP or digit DP here instead of plain memo on indices?"
+   ],
+   "hints": {
+    "1": "Look past the story for a tiny set size or a digit-bound numeric range.",
+    "2": "Ask whether a subset of specials, a column of width a few cells, or digits of a bound up to 10^18 is the real state.",
+    "3": "If 2^n·n^2 fits, [L,R] has a digit invariant, or the grid is thin enough to fill one column mask at a time, name dp[mask]/dp[mask][last]/dfs(pos,tight,extra)."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Choose the right depth-pass reduction: specials-then-TSP, topo mask, AND/OR shrinkage, bit-greedy oracle, BS+coordinate mask, product compression, or thin-grid profile.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Specials-then-TSP: when only k≤20 keys matter on a big graph, BFS/APSP among keys first, then dp[mask][i] on the complete digraph.",
+     "weight": "core",
+     "evidence_hint": "States reduce-to-keys then Hamiltonian mask DP (Magical Ornament / Playlist shape)."
+    },
+    {
+     "id": "appr2",
+     "point": "Topo mask: dp[mask] adds from dp[mask^1<<v] only if every prerequisite of v already lies in mask^1<<v (counting linear extensions).",
+     "weight": "core",
+     "evidence_hint": "Explains prerequisite check before placing v into the set mask."
+    },
+    {
+     "id": "appr3",
+     "point": "AND/OR shrinkage keeps state in 2^{bitwidth}: iterate new = old & a[i], or check a[i] under a candidate OR mask — bits only disappear.",
+     "weight": "extended",
+     "evidence_hint": "Mentions Don't Blame Me–style AND transitions or Boboniu-style candidate OR feasibility."
+    },
+    {
+     "id": "appr4",
+     "point": "Bit-greedy + oracle: fix answer bits MSB→LSB and use a segment/partition DP only to ask whether frozen high bits are still realizable — do not DP the full numeric answer.",
+     "weight": "extended",
+     "evidence_hint": "Describes Bookshelves-style MSB decisions with a feasibility oracle."
+    },
+    {
+     "id": "appr5",
+     "point": "BS + coordinate mask: threshold x turns each vector into a bitset of good coordinates; feasibility is an OR cover of (1<<m)-1 (often two masks).",
+     "weight": "extended",
+     "evidence_hint": "Binary-searches x, packs coords ≥x into masks, checks full OR coverage."
+    }
+   ],
+   "probes": [
+    "Walk through how you would reduce Magical Ornament or Footrace before writing the mask DP transitions."
+   ],
+   "hints": {
+    "1": "Separate graph reduction or ordering constraints from the mask recurrence itself.",
+    "2": "For POIs: APSP on specials then TSP; for topo: only add a vertex when all prereqs are already in the prior mask.",
+    "3": "State Magical Ornament as BFS/APSP on ≤10 keys then dp[mask][i]; Footrace as dp[mask] ways with prerequisite gates on mask^1<<v."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Encode digit DP extras (used-digit mask, product/sum IDs) and thin-grid column profiles with correct transition filters.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Digit product/sum compression: map every reachable product or digit-sum to a dense ID before memoizing — raw product explodes.",
+     "weight": "core",
+     "evidence_hint": "Mentions Digit Products / Travelling Salesman Special Numbers style ID compression in the DFS/memo key."
+    },
+    {
+     "id": "impl2",
+     "point": "Used-digit mask inside digit DP: for ≤k distinct digits or minimize distinct digits in a range, keep mask of digits used so far plus tight.",
+     "weight": "core",
+     "evidence_hint": "Names tight + used-digit mask (Unlucky Numbers family)."
+    },
+    {
+     "id": "impl3",
+     "point": "Thin-grid profile: width w≤8 or n≤3 ⇒ process the long direction; state is occupancy/colors of the previous column; reject incompatible 2×2 or run patterns.",
+     "weight": "extended",
+     "evidence_hint": "Describes column-mask DP with 2×2/run filters (505 / Barcode / Bicolorings)."
+    },
+    {
+     "id": "impl4",
+     "point": "Pure forbidden-digit skeleton is (pos,tight,leading); last few symbols can be packed as a small mask or base-4 state for local forbidden patterns.",
+     "weight": "extended",
+     "evidence_hint": "Cites Forbidden Digits skeleton and We Like AGC–style last-3 packing."
+    }
+   ],
+   "probes": [
+    "How do you keep digit-product state small, and what extra do you store for minimize-distinct-digits in [L,R]?"
+   ],
+   "hints": {
+    "1": "The memo key needs more than position and tight when the invariant is product or used digits.",
+    "2": "Compress reachable products/sums to dense IDs; for distinct-digit goals add a used-digit mask.",
+    "3": "Digit Products: map products to ≤ a few thousand IDs; Unlucky Numbers: tight + used-mask; thin grids: previous-column mask with 2×2 parity/run checks."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Justify that the chosen mask/digit/profile state fits the constraints named in the depth-pass pattern.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Classic fit check: brute subsets or 2^n·n^2 must fit the tiny universe before committing to mask DP.",
+     "weight": "core",
+     "evidence_hint": "Ties feasibility to 2^n·n^2 or subset enumeration on the stated tiny n/k."
+    },
+    {
+     "id": "cx2",
+     "point": "Medicine/disease-style graphs explore on the order of 2^n·m edges over cured-bit masks (Dijkstra/0-1 BFS).",
+     "weight": "extended",
+     "evidence_hint": "States shortest path over disease/medicine masks with 2^n·m edges."
+    },
+    {
+     "id": "cx3",
+     "point": "Prereq ladder already includes submask enumeration O(3^n); depth problems reuse that budget when transitions iterate submasks or small specials.",
+     "weight": "extended",
+     "evidence_hint": "Mentions O(3^n) submask work as the known budget when applicable."
+    }
+   ],
+   "probes": [
+    "Before coding, how do you argue the mask or digit state will finish under the given limits?"
+   ],
+   "hints": {
+    "1": "Count what the mask indexes: vertices, specials, bits, or column cells.",
+    "2": "Compare against 2^n·n^2 fit, 2^n·m edge walks, or digit DFS with compressed extras.",
+    "3": "Say: if subsets/2^n·n^2 fit, or specials are ≤10/k≤20 after APSP, or column mask is 2^n with n≤3, the depth state is justified."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Avoid depth-pass failure modes: full-answer DP instead of bit-greedy, uncompressed products, missing topo gates, or skipping the APSP reduction.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Do not DP the full numeric answer when bit-greedy + partition oracle can freeze MSB bits and only check realizability.",
+     "weight": "core",
+     "evidence_hint": "Corrects Bookshelves-style mistakes: MSB→LSB with feasibility DP, not value-as-state."
+    },
+    {
+     "id": "pit2",
+     "point": "Do not memoize raw digit products — compress reachable products (or digit-sums) to dense IDs first.",
+     "weight": "core",
+     "evidence_hint": "Flags product explosion and states ID mapping before memo."
+    },
+    {
+     "id": "pit3",
+     "point": "Topo mask transitions that omit the prerequisite-in-prior-mask check overcount linear extensions.",
+     "weight": "extended",
+     "evidence_hint": "Requires every prerequisite of v in mask^1<<v before adding ways."
+    },
+    {
+     "id": "pit4",
+     "point": "Hamiltonian mask DP on all vertices fails when only k specials matter — reduce with BFS/APSP among keys first.",
+     "weight": "extended",
+     "evidence_hint": "Insists on specials-then-TSP, not TSP on the full graph."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you put the numeric answer in the DP state for Bookshelves, or skip APSP before Magical Ornament’s mask DP?"
+   ],
+   "hints": {
+    "1": "Depth bugs are usually wrong reduction or wrong extra in the state, not missing the word mask.",
+    "2": "Check whether bits should be frozen greedily, products compressed, prereqs gated, or the graph reduced to keys.",
+    "3": "Bookshelves: MSB oracle not full-answer DP; Digit Products: dense IDs; Footrace: prereq gate; Magical Ornament: APSP on ≤10 keys then dp[mask][i]."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Specials-then-TSP vs Hamiltonian mask DP on the full vertex set",
+   "strong_answer": "When only k specials/POIs matter on a large graph, BFS/APSP among keys then dp[mask][i] on the complete digraph; masking all vertices is the wrong universe."
+  },
+  {
+   "topic": "Bit-greedy + partition oracle vs DP over the full numeric answer",
+   "strong_answer": "Decide answer bits MSB→LSB and only ask a segment/partition DP whether frozen high bits remain realizable; do not put the whole numeric answer in the DP state."
+  },
+  {
+   "topic": "Dense product/sum IDs vs memoizing raw digit products",
+   "strong_answer": "Raw product explodes; map every reachable product or digit-sum to a dense ID before memoizing (Digit Products / popcount-chain digit DP)."
+  },
+  {
+   "topic": "Thin-grid column profile vs cell-by-cell state",
+   "strong_answer": "When width w≤8 or n≤3, process the long direction with previous-column occupancy/color mask and reject incompatible 2×2 or run patterns."
+  },
+  {
+   "topic": "Iterate/binary-search OR or threshold candidates vs searching the full answer space",
+   "strong_answer": "Boboniu-style: iterate possible OR values and check each a_i hits some b_j under the candidate; Minimax-style: binary-search x, pack coords ≥x into masks, require OR cover of (1<<m)-1."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating Bookshelves as DP over the full numeric answer.",
+   "correction": "Fix bits from MSB to LSB; use partition DP only as an oracle that the frozen high-bit prefix is still achievable with k segments."
+  },
+  {
+   "trap": "Memoizing digit-product directly in Digit Products-style problems.",
+   "correction": "Compress every reachable product to a dense ID (≤ a few thousand) before including it in the digit-DP state."
+  },
+  {
+   "trap": "Adding a vertex to a topo mask without checking prerequisites.",
+   "correction": "Only transition dp[mask] from dp[mask^1<<v] when every prerequisite of v already lies in mask^1<<v."
+  },
+  {
+   "trap": "Running TSP mask DP on the entire map for k POIs.",
+   "correction": "BFS/APSP among the ≤10 (or k≤20) keys first, then Hamiltonian dp[mask][i] on that complete digraph."
+  },
+  {
+   "trap": "Forgetting that AND transitions only shrink bits.",
+   "correction": "new = old & a[i] (or checks against a candidate OR) keeps the state space inside 2^{bitwidth}; do not reinvent a larger combinatorial state."
+  },
+  {
+   "trap": "Minimizing distinct digits in [L,R] with only (pos,tight).",
+   "correction": "Carry a used-digit mask alongside tight so the distinct-digit invariant is in the state."
+  }
+ ]
+}

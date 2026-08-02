@@ -1,0 +1,221 @@
+{
+ "id": "dsa_s10_arrays",
+ "title": "Arrays",
+ "type": "FUND",
+ "relevance": "Array traversal and core patterns (two-pointers, prefix sums, sliding window, Kadane, Dutch-flag, Boyer–Moore) underpin most OA and SDE coding rounds.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish two-pointer, prefix-sum, and difference-array as the core array primitives.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Two-pointer uses two indices to process pairs or track distinct bounds in one array, often cutting time from O(n^2) to O(n).",
+     "weight": "core",
+     "evidence_hint": "Names two indices working together and states the O(n^2)→O(n) complexity win."
+    },
+    {
+     "id": "fund2",
+     "point": "If prefix[i] = A[0]+…+A[i], subarray sum A[L…R] is prefix[R] − prefix[L−1] in O(1).",
+     "weight": "core",
+     "evidence_hint": "States the prefix definition and the O(1) range-sum formula with L−1."
+    },
+    {
+     "id": "fund3",
+     "point": "A difference array is the inverse of a prefix-sum: D[i]=A[i]−A[i−1]; range-add V on [L,R] is D[L]+=V and D[R+1]−=V, then rebuild via prefix sums of D.",
+     "weight": "extended",
+     "evidence_hint": "Defines D from A, gives both range-update writes, and says final A is prefix of D."
+    },
+    {
+     "id": "fund4",
+     "point": "Prefix arrays are the primary tool for static subarray sum or XOR queries.",
+     "weight": "extended",
+     "evidence_hint": "Says prefix sums/XORs whenever the problem asks for static range aggregates."
+    }
+   ],
+   "probes": [
+    "What is a prefix-sum array, and how do you get any subarray sum from it in constant time?",
+    "How does a difference array let you apply many range additions cheaply?"
+   ],
+   "hints": {
+    "1": "Think about precomputing running totals so a range becomes two lookups.",
+    "2": "prefix[R] minus prefix[L−1]; difference array is the inverse—update endpoints then prefix to materialize.",
+    "3": "prefix[i]=sum(A[0..i]); sum(L..R)=prefix[R]−prefix[L−1]. For range add: D[L]+=V, D[R+1]−=V, then prefix(D)."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how the main array algorithms execute step-by-step on concrete problems.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Left-rotate by k with the reversal algorithm: reverse(0,k−1), reverse(k,n−1), reverse(0,n−1) for O(n) time and O(1) space.",
+     "weight": "core",
+     "evidence_hint": "Lists the three reverses in order and cites O(n)/O(1)."
+    },
+    {
+     "id": "mech2",
+     "point": "For positives-only longest subarray with sum K, expand right and shrink left while sum > K; update length when sum equals K.",
+     "weight": "core",
+     "evidence_hint": "Describes sliding-window expand/shrink and the equality check for max length."
+    },
+    {
+     "id": "mech3",
+     "point": "Dutch National Flag keeps [0..low−1]=0s, [low..mid−1]=1s, [mid..high] unsorted, [high+1..n−1]=2s while scanning mid.",
+     "weight": "core",
+     "evidence_hint": "States the three-pointer invariant and mid/low/high actions for 0/1/2."
+    },
+    {
+     "id": "mech4",
+     "point": "Boyer–Moore majority: when count is 0 pick candidate; match increments, else decrements—majority (> n/2) survives cancellation.",
+     "weight": "extended",
+     "evidence_hint": "Explains candidate/count rules and why > n/2 cannot be fully cancelled."
+    },
+    {
+     "id": "mech5",
+     "point": "Kadane keeps a running sum and resets it to 0 when it goes negative, tracking the maximum sum seen.",
+     "weight": "extended",
+     "evidence_hint": "Mentions running sum, reset on negative, and tracking global max."
+    }
+   ],
+   "probes": [
+    "Walk through Dutch National Flag on an array of 0s, 1s, and 2s.",
+    "How does Kadane's algorithm decide when to abandon the current prefix?"
+   ],
+   "hints": {
+    "1": "Name the pointers or the running quantity each algorithm maintains.",
+    "2": "DNF: three regions + mid scan; Kadane: drop a negative running sum.",
+    "3": "DNF: swap 0 with low++, leave 1 (mid++), swap 2 with high−−. Kadane: sum+=x; update max; if sum<0 then sum=0."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose the right array technique under positivity, index, and space constraints.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Sliding window needs a non-decreasing window sum (positives); with negatives/zeros, switch to prefix sums plus a hash map of first occurrences.",
+     "weight": "core",
+     "evidence_hint": "Says window fails without monotonicity and names prefix+map as the fix."
+    },
+    {
+     "id": "tr2",
+     "point": "Two Sum returning indices: hashmap is optimal at O(n) time and O(n) space; sorted two-pointers suit value-only checks after O(n log n) sort.",
+     "weight": "core",
+     "evidence_hint": "Separates index-preserving hashmap from sorted two-pointer for values."
+    },
+    {
+     "id": "tr3",
+     "point": "Rotate-by-k: shifting k times is O(n·k); temp buffer is O(n) time O(k) space; reversal is O(n) time O(1) space.",
+     "weight": "extended",
+     "evidence_hint": "Compares the three rotate approaches with their complexities from the file."
+    },
+    {
+     "id": "tr4",
+     "point": "Sort 0/1/2: counting needs two passes; Dutch National Flag partitions in one pass with three pointers and O(1) space.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts count-and-overwrite vs single-pass DNF."
+    }
+   ],
+   "probes": [
+    "When does sliding window break for longest subarray with sum K, and what replaces it?",
+    "For Two Sum, when do you prefer a hashmap over two pointers?"
+   ],
+   "hints": {
+    "1": "Ask whether the window sum is monotonic and whether original indices matter.",
+    "2": "Negatives destroy window monotonicity → prefix+map; indices → hashmap, values-only → sorted two-pointers.",
+    "3": "Positives: two-pointer window. Mixed signs: prefix S and look up S−K (first index). Two Sum indices: map complement; sorted values: left/right pointers."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Map a new array problem on sight to the right standard pattern.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Map static range sums/XORs to prefix arrays; contiguous maximum sum to Kadane; 0/1/2 sort to Dutch-flag.",
+     "weight": "core",
+     "evidence_hint": "Gives those three problem→pattern mappings from the interview probe."
+    },
+    {
+     "id": "app2",
+     "point": "Map space-optimized majority counting to Boyer–Moore; O(n^2) pair scans on sortable data to two-pointers; comparison pair-counts to merge sort.",
+     "weight": "core",
+     "evidence_hint": "Names Boyer–Moore, sorted two-pointers, and merge-sort counting as the targets."
+    },
+    {
+     "id": "app3",
+     "point": "Count subarrays with sum/XOR K via running prefix and a frequency map of prior prefixes (seed map with 0→1 for prefixes from index 0).",
+     "weight": "extended",
+     "evidence_hint": "Describes prefix frequency map and the 0→1 initialization for both sum and XOR variants."
+    },
+    {
+     "id": "app4",
+     "point": "For 3 Sum / 4 Sum, sort first so duplicates can be skipped and an inner two-pointer scan runs in O(n^2) / O(n^3).",
+     "weight": "extended",
+     "evidence_hint": "Mentions sort, skip duplicates, and the resulting O(n^2)/O(n^3) two-pointer nest."
+    }
+   ],
+   "probes": [
+    "I give you a problem: count subarrays with XOR equal to B. Which technique do you reach for and why?",
+    "How would you recognize that a pair-counting problem wants a merge-sort modification rather than nested loops?"
+   ],
+   "hints": {
+    "1": "Match the ask (range aggregate, max contiguous sum, k-sum, majority, pair count) to a named pattern.",
+    "2": "XOR/sum counts → prefix+map; max subarray sum → Kadane; inversions/reverse pairs → merge sort; k-sum → sort+two pointers.",
+    "3": "For XOR=B: maintain current_xor, look up frequency of current_xor^B, same as subarray-sum-k with XOR and map seeded at 0."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Sliding window vs prefix sum + hashmap",
+   "strong_answer": "Window works only when all elements are positive so the running sum is non-decreasing; with negatives or zeros, expand/shrink is invalid—use prefix sums and a map of first (or frequency of) earlier prefixes."
+  },
+  {
+   "topic": "Two Sum hashmap vs sorted two-pointers",
+   "strong_answer": "Hashmap finds index pairs in O(n) time with O(n) space. If the array can be sorted and only values matter, two pointers after O(n log n) sort use O(1) extra space; for original indices, hashmap stays optimal."
+  },
+  {
+   "topic": "Array rotate: repeated shift vs temp buffer vs reversal",
+   "strong_answer": "Shift-by-one k times is O(n·k). Storing first k then shifting is O(n) time but O(k) space. Reversal of [0..k−1], [k..n−1], then whole array is O(n) time and O(1) space."
+  },
+  {
+   "topic": "0/1/2 sort: counting vs Dutch National Flag",
+   "strong_answer": "Counting frequencies then overwriting is O(n) but two passes. Dutch National Flag maintains three regions with low/mid/high and finishes in one pass with O(1) space."
+  },
+  {
+   "topic": "Merge two sorted arrays: extra array vs gap method",
+   "strong_answer": "A third array of size n+m is simple but uses O(n+m) space. The gap method (Shell-sort style, starting gap ⌈(n+m)/2⌉) merges in-place in O((n+m) log(n+m)) time and O(1) space."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using sliding window for longest subarray with sum K when the array can contain negatives.",
+   "correction": "Negatives break monotonicity of the window sum; switch to prefix sums plus a hash map, storing the first occurrence of each prefix to maximize length."
+  },
+  {
+   "trap": "Returning Boyer–Moore candidates for majority > ⌊n/3⌋ without a verification pass.",
+   "correction": "At most two candidates exist; after the voting pass, recount frequencies and keep only those with count > n/3."
+  },
+  {
+   "trap": "Using matrix[0][0] alone as the marker for both first row and first column when setting zeroes in-place.",
+   "correction": "Keep an extra col0 flag for the first column; use the first row/column as markers, then zero the first row/column last."
+  },
+  {
+   "trap": "Counting reverse pairs during the same merge step as ordinary inversions.",
+   "correction": "Condition nums[i] > 2·nums[j] is not aligned with merge order—count valid pairs with two pointers on the sorted halves before merging."
+  },
+  {
+   "trap": "Sorting the suffix after the next-permutation break point.",
+   "correction": "That suffix is already monotonically decreasing, so reverse it to get the next lexicographic order in linear time."
+  },
+  {
+   "trap": "Starting a longest-consecutive streak from every number in the hash set.",
+   "correction": "Only start when num−1 is absent so each element is visited a constant number of times and total time stays O(n)."
+  }
+ ]
+}

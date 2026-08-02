@@ -1,0 +1,205 @@
+{
+ "id": "35_fft_ntt_polynomial",
+ "title": "FFT / NTT & polynomial multiplication (stretch)",
+ "type": "CP",
+ "relevance": "Medium — almost never a literal OA template (Striver omits this entirely); shows up only in hard screens as “count ways / match strings under large n” once you already know generating functions.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Almost never asked to code FFT in a timed OA; if it appears, it’s disguised as equal-sum/product halves with n small enough for DP—still recognize the generating-function shape. Harder OAs sometimes ask minimum Hamming/wildcard matches with n~10^5 (FFT convolution of indicators; hashing+BS may substitute). Unlimited knapsack / exactly k items under large sums → poly power; interviewers want GF insight more than butterflies. XOR/bitmask combine-by-index in researchy screens → FWHT.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Candidate spots a convolution / polynomial-multiply bottleneck instead of nested O(n^2) loops.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Bottleneck is convolution c_k = sum_{i+j=k} a_i b_j (multiply polys, raise a GF to a power, count alignments/Hamming mismatches, XOR/OR of masks).",
+     "weight": "core",
+     "evidence_hint": "They name convolution or poly multiply and map the sum-of-products-over-i+j=k shape to FFT/NTT."
+    },
+    {
+     "id": "rec2",
+     "point": "Signals: n ~ 10^5–10^6 and the formula looks like a sum of products over i+j=k; also pairwise products, digit-sum halves, subset color vectors, wildcard/multi-alphabet string matching.",
+     "weight": "core",
+     "evidence_hint": "They cite large n plus pairwise/i+j=k structure, or string-FFT / GF-counting flavors."
+    },
+    {
+     "id": "rec3",
+     "point": "Later toolkit siblings: XOR convolution via FWHT; online / divide-and-conquer FFT when DP transitions are convolutions.",
+     "weight": "extended",
+     "evidence_hint": "They mention FWHT for XOR or CDQ/online FFT for f[i] depending on earlier f via convolution."
+    }
+   ],
+   "probes": [
+    "What pattern in the formula or constraints makes you reach for FFT/NTT instead of nested loops?"
+   ],
+   "hints": {
+    "1": "Look for sums of products indexed by i+j=k.",
+    "2": "That sum is convolution—equivalent to multiplying two polynomials.",
+    "3": "Replace O(n^2) nested loops with FFT/NTT in O(n log n) when n is ~10^5–10^6 and the formula is that convolution."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Candidate chooses FFT vs NTT vs FWHT/online-FFT and sketches the right high-level plan.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "FFT = DFT over complex numbers (watch precision; round to nearest int); NTT = same butterfly over prime p = c·2^k+1 with a primitive 2^k-th root (no floats; default mod 998244353).",
+     "weight": "core",
+     "evidence_hint": "They contrast complex FFT + rounding vs modular NTT on an NTT-friendly prime like 998244353."
+    },
+    {
+     "id": "appr2",
+     "point": "Prefer NTT whenever the statement is mod an NTT-friendly prime; for arbitrary/non-NTT mod use split coeffs + CRT (3 NTT mods) or long double FFT with care.",
+     "weight": "core",
+     "evidence_hint": "They say NTT first under friendly mod, and CRT/long-double FFT when the modulus is not NTT-friendly."
+    },
+    {
+     "id": "appr3",
+     "point": "Poly power via binary expo of polys (P^k) for exactly k summands; string FFT reverses the pattern and uses 0/1 (or ±1) indicator arrays; XOR uses FWHT on length 2^k.",
+     "weight": "extended",
+     "evidence_hint": "They outline P^k, reverse-pattern indicator convolutions, or FWHT for XOR convolution."
+    }
+   ],
+   "probes": [
+    "When would you use NTT instead of complex FFT, and what changes for XOR convolution or string Hamming?"
+   ],
+   "hints": {
+    "1": "Check whether the modulus is NTT-friendly.",
+    "2": "Same butterflies: over C for FFT, over p = c·2^k+1 for NTT; XOR needs FWHT.",
+    "3": "Default NTT mod 998244353 with g=3; string matching reverses the pattern into indicator polys; XOR is c_k = sum_{i⊕j=k} a_i b_j via FWHT."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Candidate can describe a correct multiply / power / string-FFT pipeline, including padding and inverse scaling.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "FFT multiply: pad to length 2^{ceil(log_2(n+m-1))}, forward DFT both, pointwise multiply, inverse DFT, divide by n, round.",
+     "weight": "core",
+     "evidence_hint": "They list pad → DFT → pointwise → IDFT → divide by n → round."
+    },
+    {
+     "id": "impl2",
+     "point": "NTT multiply: same butterflies over mod p = c·2^k+1 (stock 998244353, g=3); precompute roots; no floating error.",
+     "weight": "core",
+     "evidence_hint": "They mention iterative butterflies, bit-reverse, precomputed roots under 998244353 with g=3."
+    },
+    {
+     "id": "impl3",
+     "point": "String FFT: reverse pattern; 0/1 indicators per alphabet symbol; wildcard/Hamming via sum (P_j - T_{i+j})^2 expanded into 2–3 convolutions; online/D&C FFT recurses mid, convolves left→right, then solves right.",
+     "weight": "extended",
+     "evidence_hint": "They describe reverse + indicators + a few convolutions, or mid-split online convolution for DP."
+    }
+   ],
+   "probes": [
+    "Walk through multiplying two polynomials with NTT, including length and the inverse step."
+   ],
+   "hints": {
+    "1": "You need a power-of-two length that fits the full product.",
+    "2": "Pad to 2^{ceil(log_2(n+m-1))}, transform both, multiply pointwise, invert.",
+    "3": "After inverse DFT divide by n and round for FFT; for NTT use roots mod 998244353 (g=3) with no floats."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Candidate states the asymptotic win of transforms over naive convolution.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Naive nested loops for convolution are O(n^2); FFT/NTT multiply is O(n log n).",
+     "weight": "core",
+     "evidence_hint": "They explicitly contrast O(n^2) with O(n log n)."
+    },
+    {
+     "id": "cx2",
+     "point": "FWHT does XOR convolution in O(n log n) on length 2^k.",
+     "weight": "extended",
+     "evidence_hint": "They give O(n log n) for FWHT on a power-of-two length."
+    }
+   ],
+   "probes": [
+    "What is the complexity of FFT/NTT polynomial multiplication versus the naive double loop?"
+   ],
+   "hints": {
+    "1": "Compare nested loops to a transform-based multiply.",
+    "2": "Naive convolution is quadratic in the degree/length.",
+    "3": "FFT/NTT (and FWHT for XOR) run in O(n log n)."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Candidate anticipates precision, modulus, and reachability mistakes that break FFT/NTT solutions.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Complex FFT needs careful precision and rounding to nearest int; prefer NTT when the mod is NTT-friendly to avoid floating error.",
+     "weight": "core",
+     "evidence_hint": "They warn about float error/rounding and switch to NTT under 998244353-style mods."
+    },
+    {
+     "id": "pit2",
+     "point": "For arbitrary/non-NTT modulus, precision can die with long double FFT—use split coeffs + CRT (3 NTT mods) or treat carefully as in cp-algo arbitrary modulus.",
+     "weight": "core",
+     "evidence_hint": "They name CRT with 3 NTT mods or acknowledge when float FFT precision fails."
+    },
+    {
+     "id": "pit3",
+     "point": "For poly power reachability-only problems, clamp nonzero coeffs to 1; ship a battle-tested iterative butterfly + bit-reverse template (or ACL atcoder::convolution / convolution_ll when allowed).",
+     "weight": "extended",
+     "evidence_hint": "They mention clamping support coeffs and relying on a known template/ACL convolution."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you use complex FFT under a modular statement, or forget clamping in a reachability poly-power?"
+   ],
+   "hints": {
+    "1": "Think about floating error versus modular butterflies.",
+    "2": "NTT-friendly primes avoid floats; arbitrary mods need CRT or careful FFT.",
+    "3": "Round/precision failures on C; use NTT/CRT instead; for reachability-only P^k clamp nonzero coeffs to 1."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "FFT vs NTT",
+   "strong_answer": "FFT is DFT over C—fast but needs precision care and rounding to nearest int. NTT uses the same butterflies over p = c·2^k+1 with a primitive 2^k-th root (stock 998244353, g=3)—no floats. Prefer NTT whenever the statement is mod an NTT-friendly prime."
+  },
+  {
+   "topic": "Own NTT template vs ACL convolution",
+   "strong_answer": "Implement your own iterative butterflies + bit-reverse once as a milestone, then allow ACL atcoder::convolution / convolution_ll in contests that permit the library."
+  },
+  {
+   "topic": "Interview GF insight vs coding butterflies",
+   "strong_answer": "For knapsack/exactly-k / lucky-ticket shapes, interviewers usually want the generating-function insight (poly power / halves) more than hand-rolled FFT butterflies; OAs almost never ask to code FFT literally."
+  },
+  {
+   "topic": "String FFT vs hashing + binary search",
+   "strong_answer": "Interview-friendly answer for large Hamming/wildcard matching is FFT convolution of indicators; some screens still accept hashing + BS as a substitute."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating FFT like exact arithmetic and skipping rounding / precision checks.",
+   "correction": "FFT is over C—watch precision and round to nearest int; prefer NTT when the mod is NTT-friendly."
+  },
+  {
+   "trap": "Using a single complex FFT under an arbitrary modulus and trusting the coeffs.",
+   "correction": "For non-NTT mods, split coeffs + CRT (3 NTT mods) or use long double FFT carefully; know when precision dies."
+  },
+  {
+   "trap": "Forgetting to pad before DFT so the product wraps or truncates.",
+   "correction": "Pad to length 2^{ceil(log_2(n+m-1))} before forward transforms."
+  },
+  {
+   "trap": "Leaving full multiplicities when only reachability of totals matters (e.g. Thief-style P^k).",
+   "correction": "Optionally power in frequency domain for support only, and clamp nonzero coeffs to 1."
+  },
+  {
+   "trap": "Using cyclic NTT for XOR-of-indices combination.",
+   "correction": "XOR convolution needs FWHT (Hadamard) on length 2^k, not ordinary cyclic NTT—Binary Table / Nim Counting family."
+  }
+ ]
+}

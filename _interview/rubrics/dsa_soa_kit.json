@@ -1,0 +1,245 @@
+{
+ "id": "dsa_soa_kit",
+ "title": "OA Survival Kit — Harnesses, stdin I/O, and Wrappers",
+ "type": "FUND",
+ "relevance": "Real company OAs often bury an easy algorithm behind stdin parsing, fixed harnesses, and exact stdout formatting that LeetCode never trains.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Cisco, Amazon, and D. E. Shaw OAs may use stdin/main or a locked provided harness; HackerRank, Codility, and CodeSignal commonly use function-stubs.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish how real OA wrappers differ from LeetCode method stubs and name the three harness styles.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "LeetCode calls a Solution method after handling I/O; many real OAs give a main that reads stdin, a provided struct/parser, or an empty file where you must read stdin and print stdout yourself.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts platform-managed function stubs with stdin/stdout or locked harness wrapping."
+    },
+    {
+     "id": "fund2",
+     "point": "The algorithm is usually easy; the wrapping—parsing raw text and formatting the exact expected output—is what fails under time pressure.",
+     "weight": "core",
+     "evidence_hint": "Says the wall is I/O/format fidelity, not inventing a hard algorithm."
+    },
+    {
+     "id": "fund3",
+     "point": "Three harness styles: function-stub (platform I/O; HackerRank/Codility/CodeSignal), provided full harness (struct, parse_input, format_output, fill solve; Cisco style), and bare main (empty file; competitive-programming style).",
+     "weight": "core",
+     "evidence_hint": "Names all three and maps each to who owns parsing/output."
+    },
+    {
+     "id": "fund4",
+     "point": "Identify the wrapper type in the first 30 seconds: stub means focus on logic; bare main means paste a fast-I/O template immediately.",
+     "weight": "extended",
+     "evidence_hint": "Mentions early wrapper triage and different first moves per style."
+    }
+   ],
+   "probes": [
+    "How does a real OA differ from a LeetCode Solution method, and what are the three harness styles you might see?",
+    "If the editor is blank versus a locked solve stub, what do you do in the first half-minute?"
+   ],
+   "hints": {
+    "1": "Think about who reads stdin and who prints the answer.",
+    "2": "Map LeetCode stubs to three OA styles: stub, provided harness, bare main.",
+    "3": "Algorithm is easy; parsing/format wrapping is the failure mode—triage wrapper in ~30 seconds."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show muscle-memory stdin idioms, the cin/getline trap, fast I/O rules, and how a provided harness is structured.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "cin >> reads whitespace-delimited tokens, skips leading spaces/tabs/newlines, and for string stops at the first whitespace.",
+     "weight": "core",
+     "evidence_hint": "Describes token extraction and whitespace skipping correctly."
+    },
+    {
+     "id": "mech2",
+     "point": "Common patterns: read N then N ints into a vector; read R and C then an R×C grid; read N vertices and M edges into an adjacency list; read T then loop T cases; or while (cin >> x) until EOF.",
+     "weight": "core",
+     "evidence_hint": "Recalls several of these stdin shapes without inventing formats."
+    },
+    {
+     "id": "mech3",
+     "point": "Classic bug: cin >> n leaves a trailing newline; immediate getline reads an empty line—flush with cin.ignore up to and including '\\n' (e.g. numeric_limits<streamsize>::max()).",
+     "weight": "core",
+     "evidence_hint": "Explains leftover newline and the ignore fix before getline."
+    },
+    {
+     "id": "mech4",
+     "point": "Fast I/O: ios_base::sync_with_stdio(false) and cin.tie(nullptr); after sync_with_stdio(false), never mix scanf/printf with cin/cout.",
+     "weight": "core",
+     "evidence_hint": "States both desync/untie and the no-mix rule."
+    },
+    {
+     "id": "mech5",
+     "point": "Provided harness pieces: InputData struct, parse_input, format_output, main, and solve—edit only solve; do not touch the rest or signatures.",
+     "weight": "core",
+     "evidence_hint": "Lists the pieces and states the golden rule of editing only solve."
+    },
+    {
+     "id": "mech6",
+     "point": "Struct fields document the input and can hint the algorithm (e.g. separate B and K in Drone imply state search); C++ solve may return a compound type while C uses out-parameter arrays filled by void solve.",
+     "weight": "extended",
+     "evidence_hint": "Mentions reading fields for algorithm hints and return vs out-params."
+    }
+   ],
+   "probes": [
+    "Walk through reading N then an array, then explain what goes wrong if you cin >> id and immediately getline a name.",
+    "In a Cisco-style harness, what may you edit, and what do parse_input and format_output do?"
+   ],
+   "hints": {
+    "1": "Start from cin >> token reading and the leftover-newline pitfall.",
+    "2": "Cover desync/untie, no mixing C I/O, then the five harness pieces.",
+    "3": "Only fill solve; use ignore after >> before getline; struct fields (like B vs K) hint state."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast output and API choices that trade correctness/latency under OA constraints.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "std::endl inserts a newline and flushes; in a loop of 100,000 iterations that flush alone can TLE—prefer \"\\n\".",
+     "weight": "core",
+     "evidence_hint": "Contrasts endl flush cost with plain newline."
+    },
+    {
+     "id": "tr2",
+     "point": "For massive output, avoid calling cout hundreds of thousands of times; build a large string (optionally reserve) and dump with fputs/fwrite.",
+     "weight": "core",
+     "evidence_hint": "Describes buffered string + C-style dump vs many cout calls."
+    },
+    {
+     "id": "tr3",
+     "point": "C++ can return vector of pairs from solve; C often has main pre-allocate answer arrays and pass pointers as out-parameters for void solve to fill.",
+     "weight": "extended",
+     "evidence_hint": "Compares return compound value vs out-parameter fills."
+    },
+    {
+     "id": "tr4",
+     "point": "For a FIFO bounded to 1000 tasks under tight latency: ring buffer gives true O(1) worst-case enqueue/dequeue; two-stack queue is O(1) amortized but can spike O(N) when dumping inbox to outbox.",
+     "weight": "extended",
+     "evidence_hint": "Picks ring buffer for deadline-sensitive paths and explains the dump spike."
+    }
+   ],
+   "probes": [
+    "Why prefer \"\\n\" over endl in tight loops, and when would you buffer output for fputs?",
+    "For a latency-sensitive bounded queue, ring buffer or two-stack—and why?"
+   ],
+   "hints": {
+    "1": "Think about flushing and how often you touch the OS write path.",
+    "2": "Compare endl vs \\n, then many cout vs one big string dump; then return vs out-params.",
+    "3": "endl flushes (100,000-loop TLE risk); ring buffer O(1) worst-case beats two-stack dump spikes."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply harness literacy to real OA problems and a concrete attack checklist.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Attack any OA: (1) read the struct or signature; (2) find the trivial logic behind jargon; (3) fill the stub without touching boilerplate; (4) match output character-for-character including -1 sentinels and newlines.",
+     "weight": "core",
+     "evidence_hint": "Recites the four-step attack in order."
+    },
+    {
+     "id": "app2",
+     "point": "Cisco Drone Delivery: shortest path with battery and voucher recharges—state-augmented 0-1 BFS on (row, col, battery_left, vouchers_left); adjacent moves weight 1, kiosk recharge weight 0.",
+     "weight": "core",
+     "evidence_hint": "Names augmented state and 0-1 BFS edge weights correctly."
+    },
+    {
+     "id": "app3",
+     "point": "On the 1x8 drone example with B = 4, K = 1, and kiosks at (0,1) and (0,4), expected minimum moves is 7.",
+     "weight": "extended",
+     "evidence_hint": "States expected output 7 for that scenario or walks the recharge-then-finish path."
+    },
+    {
+     "id": "app4",
+     "point": "Cisco Sniper Detector: variable sliding window over bids with a frequency map and ordered set of users at threshold K; watch long long constraints and window boundary t_i - t' <= W; dual output per line.",
+     "weight": "core",
+     "evidence_hint": "Describes window + freq + ordered set and format/type traps."
+    },
+    {
+     "id": "app5",
+     "point": "60-second checklist: identify wrapper; read input format/types; find trivial logic; write solve decoupled from parsing; match output byte-for-byte; test the provided example before submit.",
+     "weight": "extended",
+     "evidence_hint": "Hits the checklist steps without inventing extras."
+    }
+   ],
+   "probes": [
+    "How would you approach a locked Cisco harness on first open?",
+    "For Drone Delivery, why is plain (row,col) BFS wrong, and what technique replaces it?"
+   ],
+   "hints": {
+    "1": "Start from the struct/signature, not the story text.",
+    "2": "Map Drone to state+0-1 BFS and Sniper to sliding window + map/set.",
+    "3": "Edit only solve; augment state with battery/vouchers; match -1 and newlines; run the sample."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "endl vs \"\\n\"",
+   "strong_answer": "endl newline-flushes every time; in large loops that flush can TLE by itself—use \"\\n\" and let the buffer flush less often."
+  },
+  {
+   "topic": "Many cout calls vs string buffer + fputs/fwrite",
+   "strong_answer": "Huge line counts (e.g. sniper-style output) should append into one reserved string and print once with fputs/fwrite instead of hundreds of thousands of stream inserts."
+  },
+  {
+   "topic": "sync_with_stdio(true) safety vs fast desync",
+   "strong_answer": "Default sync/tie lets you mix C and C++ I/O safely but is slow; desync+untie is fast but forbids mixing scanf/printf with cin/cout."
+  },
+  {
+   "topic": "C++ return values vs C out-parameters",
+   "strong_answer": "C++ solve can return vector<pair<...>>; C often uses void solve writing into caller-allocated flag/smallest arrays."
+  },
+  {
+   "topic": "Ring buffer vs two-stack queue (bounded FIFO)",
+   "strong_answer": "Ring buffer: O(1) worst-case enqueue/dequeue via modulo indexing. Two-stack: O(1) amortized but O(N) dump spikes—prefer ring buffer under tight deadlines."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "cin >> then getline without ignore",
+   "correction": "Extraction leaves '\\n' in the stream; getline reads an empty line—call cin.ignore(..., '\\n') first."
+  },
+  {
+   "trap": "Mixing scanf/printf after ios_base::sync_with_stdio(false)",
+   "correction": "Buffers diverge; you get jumbled/incorrect I/O—stick to one I/O family after desync."
+  },
+  {
+   "trap": "Using endl in a hot output loop",
+   "correction": "Each endl flushes; prefer \"\\n\" to avoid TLE from flush overhead alone."
+  },
+  {
+   "trap": "Editing parse_input, format_output, main, struct, or signatures in a provided harness",
+   "correction": "Only implement solve; changing the rest breaks the hidden runner."
+  },
+  {
+   "trap": "Plain (row,col) BFS on Drone Delivery",
+   "correction": "Validity depends on battery and vouchers—augment state and use 0-1 BFS (move cost 1, recharge cost 0)."
+  },
+  {
+   "trap": "Sniper window boundary or int overflow on timestamps/IDs",
+   "correction": "Keep bids with long long; enforce t_i - t' <= W; use hash map not tiny arrays; emit flag and smallest sniper per line."
+  },
+  {
+   "trap": "Path-sum success on non-leaf when remaining equals node value",
+   "correction": "Require a leaf (no left/right) before accepting the target match."
+  },
+  {
+   "trap": "Merge-sorted only drains leftover A",
+   "correction": "Also drain leftover B after the main two-pointer loop."
+  },
+  {
+   "trap": "Unsigned/signed mix, post-increment *p++, or C++ negative modulo in MCQs",
+   "correction": "a+b with unsigned promotes -20 to a huge unsigned (\"Greater\"); *p++ yields old value then advances; a%b keeps dividend sign (e.g. -5%3 => -2)."
+  }
+ ]
+}

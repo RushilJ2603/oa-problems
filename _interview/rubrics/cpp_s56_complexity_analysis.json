@@ -1,0 +1,215 @@
+{
+ "id": "cpp_s56_complexity_analysis",
+ "title": "Complexity and Asymptotic Analysis",
+ "type": "FUND",
+ "relevance": "Interviewers and OAs use asymptotic complexity to judge whether a candidate can derive growth from code, distinguish worst/average/amortised costs, and reject algorithms that will TLE under given constraints.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that complexity is machine-independent growth rate, and that Big-O/Omega/Theta bound that growth with the usual dropping rules.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Asymptotic analysis asks how the number of elementary operations grows with input size n; it is deliberately independent of hardware, compiler, and wall-clock time.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts stopwatch timing with counting comparisons/arithmetic/accesses and says complexity is about growth rate in n."
+    },
+    {
+     "id": "fund2",
+     "point": "f(n) is O(g(n)) if there exist constants c > 0 and n0 such that for all n ≥ n0, 0 ≤ f(n) ≤ c · g(n) — an upper bound that need not be tight.",
+     "weight": "core",
+     "evidence_hint": "States the existential-c-and-n0 definition and notes that 2n+5 is O(n) and also (loosely) O(n²)."
+    },
+    {
+     "id": "fund3",
+     "point": "Big-Omega is a lower bound; Big-Theta is a tight bound meaning both O and Omega of the same g.",
+     "weight": "core",
+     "evidence_hint": "Says Ω means grows at least as fast as a constant times g, and Θ sandwiches from above and below."
+    },
+    {
+     "id": "fund4",
+     "point": "For f(n) = 5n² + 100n + 7, drop lower-order terms then the leading constant to get O(n²); interviews usually mean the tightest simple upper bound.",
+     "weight": "extended",
+     "evidence_hint": "Walks 5n² dominating 100n and 7, then drops the 5, and notes we usually mean tight Big-O even when we write O."
+    },
+    {
+     "id": "fund5",
+     "point": "For large n the ladder is O(1) < O(log n) < O(n) < O(n log n) < O(n²) < O(2ⁿ) < O(n!).",
+     "weight": "core",
+     "evidence_hint": "Orders the common classes correctly and gives one-line intuition per rung (halving, once-through, nested pairs, subsets, permutations)."
+    }
+   ],
+   "probes": [
+    "What does it mean to say an algorithm is O(n), and how is that different from measuring runtime in seconds?",
+    "Is every O(n) bound tight? How do Big-Omega and Big-Theta relate?"
+   ],
+   "hints": {
+    "1": "Think about what stays the same if you change machine or compiler.",
+    "2": "State the Big-O inequality with c and n0, then contrast upper vs lower vs tight.",
+    "3": "Growth in elementary ops vs n; O is eventually ≤ c·g; Θ is both O and Ω; drop lower terms and constants for the class."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to read C++ control flow into a complexity class: sequential vs nested work, halving, recurrences, and extra space including recursion depth.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Sequential costs add and the dominant term wins; independent nested Θ(n) loops multiply to Θ(n²), and a triangular inner bound still sums to O(n²).",
+     "weight": "core",
+     "evidence_hint": "Says O(n)+O(n log n)=O(n log n), nested full loops give Θ(n²), and 0+1+…+(n−1)=n(n−1)/2 = O(n²)."
+    },
+    {
+     "id": "mech2",
+     "point": "A loop that halves (or shrinks by a constant fraction) each step is O(log n); stepping by a constant like i += 2 is still O(n).",
+     "weight": "core",
+     "evidence_hint": "Explains n/2ᵏ ≈ 1 ⇒ k ≈ log₂ n for halving, and that n/2 iterations is only a constant factor so still O(n)."
+    },
+    {
+     "id": "mech3",
+     "point": "Merge sort satisfies T(n)=2T(n/2)+O(n) with T(1)=O(1); the recursion tree has Θ(log n) levels each costing cn, so T(n)=Θ(n log n).",
+     "weight": "core",
+     "evidence_hint": "Writes the recurrence, sketches levels summing to cn across log n levels, or uses Master-theorem intuition with a=2, b=2, d=1."
+    },
+    {
+     "id": "mech4",
+     "point": "Space complexity usually means extra memory beyond the input; recursion stack depth counts as space, and portable C++ must not rely on tail-call elimination.",
+     "weight": "core",
+     "evidence_hint": "Contrasts iterative O(1) extra space max with depth-n recursion using O(n) stack, and notes merge sort’s typical O(n) buffers plus O(log n) stack."
+    },
+    {
+     "id": "mech5",
+     "point": "std::vector push_back is O(1) amortised: capacity doubling makes total copy work across reallocations less than n, so n pushes cost less than 2n total.",
+     "weight": "extended",
+     "evidence_hint": "Describes geometric copies 1+2+4+…+n/2 < n plus n placements ⇒ < 2n total ⇒ O(1) per push across the sequence."
+    }
+   ],
+   "probes": [
+    "What is the time complexity of this code? Walk the loops or recursion aloud.",
+    "How do you get O(n log n) from the merge-sort recurrence T(n)=2T(n/2)+O(n)?"
+   ],
+   "hints": {
+    "1": "Identify n, then ask whether work is sequential, nested, or shrinking.",
+    "2": "Add sequential costs, multiply nested loops, write a recurrence for recursion, and name extra space including stack.",
+    "3": "Dominant term after add/multiply; halving ⇒ log n; merge-sort tree Θ(log n) levels × O(n); state extra space and that depth-n recursion is O(n) stack."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Separate worst/average/amortised meanings and explain when Big-O hides constants, locality, and small-n behavior.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Best, average, and worst case can differ for one algorithm: quicksort is best/average O(n log n) but worst O(n²) with a naive pivot; std::sort’s introsort guarantees O(n log n) worst case.",
+     "weight": "core",
+     "evidence_hint": "Names quicksort’s cases and that introsort (quicksort + heapsort fallback) restores worst-case O(n log n)."
+    },
+    {
+     "id": "tr2",
+     "point": "Hash tables are average O(1) lookup/insert but worst O(n) under pathological collisions; std::map/set are guaranteed O(log n).",
+     "weight": "core",
+     "evidence_hint": "Says average O(1)/worst O(n) for unordered containers and guaranteed O(log n) for map/set."
+    },
+    {
+     "id": "tr3",
+     "point": "Amortised O(1) for push_back is not worst-case O(1) for a single call and is not the same as average-case over a random input distribution.",
+     "weight": "core",
+     "evidence_hint": "One push_back can be O(n); amortised bounds sequences of operations; average-case is probabilistic over inputs."
+    },
+    {
+     "id": "tr4",
+     "point": "Same asymptotic class can differ sharply in practice: constant factors, small n, and cache locality (vector vs list) can dominate wall-clock even when both are O(n).",
+     "weight": "extended",
+     "evidence_hint": "Mentions 1000n vs n both O(n), small-n where n! or n² can win, and contiguous vs pointer-chasing locality."
+    }
+   ],
+   "probes": [
+    "For hash maps, what complexity do you quote — and for std::map?",
+    "Is amortised O(1) the same as every push_back being O(1)?"
+   ],
+   "hints": {
+    "1": "Ask whether the interviewer wants worst case, and whether cost is per operation or over a sequence.",
+    "2": "Separate single-op worst case, amortised sequence cost, and average over random inputs; then say what Big-O hides.",
+    "3": "unordered: avg O(1)/worst O(n); map: O(log n); one push_back may be O(n) though amortised O(1); same Big-O ≠ same wall-clock."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Turn constraints into a yes/no complexity budget and pick an algorithm class that fits.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Rule of thumb on typical online judges: about 10⁸ simple operations per second, so design for ≲ 10⁸ elementary steps in one second.",
+     "weight": "core",
+     "evidence_hint": "States the ~10⁸ ops/sec budget (noting judges may be closer to 10⁷–5·10⁸) and ties it to the time limit."
+    },
+    {
+     "id": "app2",
+     "point": "Map input size to an affordable class: e.g. n ≤ ~10⁵–10⁶ usually allows O(n log n); n ≤ ~5000 allows O(n²); n ≤ ~20–22 allows O(2ⁿ); n ≤ ~11 allows O(n!).",
+     "weight": "core",
+     "evidence_hint": "Recites the budget table qualitatively with the listed n bands and matching classes."
+    },
+    {
+     "id": "app3",
+     "point": "Given n ≤ 10⁵, you need O(n log n) or better; an O(n²) approach expects ~10¹⁰ ops and will TLE.",
+     "weight": "core",
+     "evidence_hint": "Explicitly rejects nested O(n²) at n=10⁵ via the ~10¹⁰ estimate and accepts sort-level O(n log n)."
+    },
+    {
+     "id": "app4",
+     "point": "Contests for n ∼ 10⁵ are almost always fought in the O(n)–O(n log n) band; prefer the slowest class that still fits, and watch large constants (map vs unordered_map, slow I/O).",
+     "weight": "extended",
+     "evidence_hint": "Picks simplest fitting class for n∼10⁵ and mentions hidden constant/I/O pitfalls."
+    }
+   ],
+   "probes": [
+    "Given n ≤ 10⁵, what complexity do you need?",
+    "How do you pick an algorithm from constraints n, m, and the time limit?"
+   ],
+   "hints": {
+    "1": "Estimate total elementary steps from n and the candidate class.",
+    "2": "Use the ~10⁸ ops/sec rule, then match n to the complexity ladder band.",
+    "3": "n≤10⁵ ⇒ O(n log n) or better; O(n²) → ~10¹⁰ → TLE; choose slowest class that still fits."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Amortised O(1) vs worst-case O(1) for vector push_back",
+   "strong_answer": "push_back is O(1) amortised over n pushes (total < 2n with doubling), but a single call may reallocate in O(n). Latency-sensitive code cannot treat amortised as every-call-fast; contest TLE cares about total work, where amortised bounds are the right tool."
+  },
+  {
+   "topic": "Same Big-O class vs wall-clock (e.g. vector vs list scan)",
+   "strong_answer": "Use Big-O to reject impossible classes and compare growth families. Within one class, constants, small n, and cache locality decide: contiguous vector scans often beat pointer-chasing list/tree walks despite identical O(n)."
+  },
+  {
+   "topic": "unordered_map average O(1) vs map guaranteed O(log n)",
+   "strong_answer": "Prefer unordered_map/set when average O(1) matters and adversarial hashing is not a threat; otherwise custom hash or fall back to map/set for order or guaranteed O(log n). Interviewers usually want worst-case unless they ask for average."
+  },
+  {
+   "topic": "Extra space vs faster time",
+   "strong_answer": "Always state extra space unless asked for total. Trading O(n) memory for a better time class (prefix sums, hash sets, Fenwick) is a standard move; recursion depth is part of that space cost."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating a loose Big-O as the algorithm’s true cost, or treating dropped constants as irrelevant to performance.",
+   "correction": "Big-O need not be tight (2n+5 is also O(n²)). Dropping constants is correct for asymptotic class but wrong as a prophecy when n is small or two algorithms share a class — e.g. 1000n and n are both O(n), and at n=10⁶ the heavier constant may TLE."
+  },
+  {
+   "trap": "Confusing amortised, average-case, and single-operation worst-case.",
+   "correction": "Amortised is a sequence accounting guarantee (n pushes total O(n)). Average-case is expectation over an input distribution. Worst-case single push_back can still be O(n) even when amortised O(1)."
+  },
+  {
+   "trap": "Quoting only average O(1) for hash tables, or forgetting recursion uses space.",
+   "correction": "Say average O(1), worst O(n) for unordered_map/set; map/set are guaranteed O(log n). Recursion stack depth is space — depth-n recursion is O(n) stack even with O(1) locals per frame."
+  },
+  {
+   "trap": "Assuming vector end-insert cheapness applies to middle insert/erase.",
+   "correction": "vector/string end-insert is amortised O(1); middle insert/erase is O(n). deque end ops are similarly cheap at both ends, not a license for middle edits."
+  }
+ ]
+}

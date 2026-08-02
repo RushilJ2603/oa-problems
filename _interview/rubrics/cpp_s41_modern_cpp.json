@@ -1,0 +1,264 @@
+{
+ "id": "cpp_s41_modern_cpp",
+ "title": "Modern C++ Essentials",
+ "type": "FUND",
+ "relevance": "Modern C++ features (auto, lambdas, smart pointers, brace init) are expected in SDE interviews as the baseline for writing safer, idiomatic C++.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what core modern C++ features exist and what problem each solves.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "auto deduces a variable's type from its initializer and by default strips references and const, producing an independent copy.",
+     "weight": "core",
+     "evidence_hint": "Says auto drops & and const unless you write auto& or const auto&."
+    },
+    {
+     "id": "fund2",
+     "point": "nullptr is a type-safe null pointer constant that converts to any pointer type but never to an integer, unlike NULL/0 which caused overload ambiguity.",
+     "weight": "core",
+     "evidence_hint": "Contrasts print(NULL) often calling print(int) with print(nullptr) unambiguously calling the pointer overload."
+    },
+    {
+     "id": "fund3",
+     "point": "A lambda is an anonymous inline function object with syntax [captures](parameters) -> return_type { body }; the compiler creates a unique unnamed closure type with operator() and members for captures.",
+     "weight": "core",
+     "evidence_hint": "Defines closure as the generated function object and notes each lambda expression has a distinct type."
+    },
+    {
+     "id": "fund4",
+     "point": "Smart pointers in <memory> codify RAII: unique_ptr is exclusive ownership, shared_ptr is shared ownership via a reference count, weak_ptr observes without owning.",
+     "weight": "core",
+     "evidence_hint": "States prefer smart pointers over raw new/delete and can sketch the three ownership roles."
+    },
+    {
+     "id": "fund5",
+     "point": "Uniform brace initialization prevents narrowing conversions that parentheses/equals initialization allow.",
+     "weight": "extended",
+     "evidence_hint": "Gives int a = 3.14 compiling vs int b{3.14} as an error."
+    },
+    {
+     "id": "fund6",
+     "point": "C++17 structured bindings unpack a tuple, pair, or struct into named variables in one declaration.",
+     "weight": "extended",
+     "evidence_hint": "Mentions for (const auto& [id, name] : users) style unpacking."
+    }
+   ],
+   "probes": [
+    "What does auto deduce when assigned from a const reference, and how do you avoid the copy?",
+    "Compare unique_ptr, shared_ptr, and weak_ptr at a high level."
+   ],
+   "hints": {
+    "1": "Think about what auto keeps versus what it drops from the initializer.",
+    "2": "Cover auto/decltype basics, nullptr vs NULL, lambda closures, and the three smart-pointer ownership models.",
+    "3": "auto strips const and & (need const auto&); nullptr never converts to int; lambdas become unique closures; unique/shared/weak map to exclusive, counted shared, and non-owning observe."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how deduction, captures, initialization, and ownership counting actually behave.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Plain auto return deduction drops references and top-level const/volatile; decltype(auto) (C++14) applies decltype rules to the return expression and preserves references and value category.",
+     "weight": "core",
+     "evidence_hint": "Contrasts auto by_value() copying g with decltype(auto) by_ref() yielding std::string&."
+    },
+    {
+     "id": "mech2",
+     "point": "std::vector<int> v1(5, 2) uses the size/value constructor producing five 2s; v2{5, 2} prefers the initializer_list constructor producing [5, 2].",
+     "weight": "core",
+     "evidence_hint": "Clearly distinguishes parentheses constructor overload from braced initializer_list."
+    },
+    {
+     "id": "mech3",
+     "point": "Lambda captures: [x, &y] mixed; [=] all by value; [&] all by reference; by-value captures are read-only unless the lambda is mutable, and mutable only mutates the closure's copy.",
+     "weight": "core",
+     "evidence_hint": "Explains [=]/[&]/mixed captures and that mutable does not change the original variable."
+    },
+    {
+     "id": "mech4",
+     "point": "In a member function, naming members captures this by pointer ([this] or [=]); [*this] (C++17) copies the object into the closure so the original can be destroyed safely.",
+     "weight": "core",
+     "evidence_hint": "Warns [=] does not snapshot the object and contrasts dangling [this] with [*this]."
+    },
+    {
+     "id": "mech5",
+     "point": "Init-capture [identifier = expression] (C++14) can compute a capture, rename, or move move-only types like unique_ptr into the closure.",
+     "weight": "extended",
+     "evidence_hint": "Gives [p = std::move(ptr)] or [n = x + 1] as patterns C++11 by-value capture cannot express cleanly."
+    },
+    {
+     "id": "mech6",
+     "point": "Only a capture-less lambda [] converts implicitly to a matching function pointer; any capture embeds state and makes that conversion ill-formed.",
+     "weight": "extended",
+     "evidence_hint": "Says a capturing closure is a class instance, not a bare code address."
+    },
+    {
+     "id": "mech7",
+     "point": "Prefer make_shared over constructing shared_ptr from a raw pointer because it allocates the object and reference counter in one contiguous block; weak_ptr.lock() temporarily upgrades to shared_ptr for access.",
+     "weight": "extended",
+     "evidence_hint": "Mentions single-block allocation/cache locality/exception safety and lock() before use."
+    }
+   ],
+   "probes": [
+    "How do auto and decltype(auto) differ for deduced return types?",
+    "What can a lambda capture, and when can it convert to a function pointer?",
+    "Why is make_shared preferred, and how does weak_ptr.lock() work?"
+   ],
+   "hints": {
+    "1": "Walk through what is preserved versus stripped, and who owns what.",
+    "2": "Hit return deduction, vector brace vs paren, capture rules including this/*this and init-capture, then shared_ptr counting and weak_ptr.lock().",
+    "3": "auto drops ref/const, decltype(auto) preserves them; (5,2) vs {5,2}; [=]/[&]/mutable/copy; [this] vs [*this]; only []→function pointer; make_shared one block; lock() to use weak_ptr."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose between closely related modern-C++ tools with clear costs and failure modes.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Use auto when you intentionally want a value (copy or moved temporary); use decltype(auto) when forwarding/returning an existing object and must not strip &.",
+     "weight": "core",
+     "evidence_hint": "States the intentional-copy vs preserve-reference rule and notes dangling still possible if a reference to a local is deduced."
+    },
+    {
+     "id": "tr2",
+     "point": "Prefer unique_ptr for single ownership; shared_ptr when multiple owners must keep the object alive; weak_ptr when you need observation without extending lifetime (especially to break cycles).",
+     "weight": "core",
+     "evidence_hint": "Maps exclusive vs shared vs non-owning observe and names cycles as the weak_ptr motivation."
+    },
+    {
+     "id": "tr3",
+     "point": "Prefer explicit captures [x, &y] over default [=]/[&] in production; defaults are fine for short immediately invoked lambdas.",
+     "weight": "extended",
+     "evidence_hint": "Says explicit lists document intent and make dangling-reference review easier."
+    },
+    {
+     "id": "tr4",
+     "point": "Prefer auto (or a function template parameter) over std::function when you do not need one concrete type; std::function type-erases at the cost of possible heap allocation and an indirect call.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts deduced closure type efficiency with std::function's stable erased type."
+    }
+   ],
+   "probes": [
+    "When would you pick decltype(auto) over auto for a return type?",
+    "When is std::function justified versus storing a lambda in auto?"
+   ],
+   "hints": {
+    "1": "Ask what must be preserved: value, reference, ownership, or a named type.",
+    "2": "Compare auto vs decltype(auto), unique vs shared vs weak, explicit vs default captures, and auto vs std::function.",
+    "3": "auto = want a value; decltype(auto) = preserve ref/category; unique/shared/weak by ownership need; explicit captures for longevity; std::function only when type erasure is required."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply modern C++ features safely in the lifetime and initialization situations interviews probe.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Prefer smart pointers over raw new and delete so RAII destroys resources when owners leave scope.",
+     "weight": "core",
+     "evidence_hint": "States the golden rule and describes automatic cleanup at scope exit."
+    },
+    {
+     "id": "app2",
+     "point": "If two objects hold shared_ptrs to each other, reference counts never reach zero; break the cycle with weak_ptr on one side.",
+     "weight": "core",
+     "evidence_hint": "Describes the mutual shared_ptr leak and weak_ptr as the fix."
+    },
+    {
+     "id": "app3",
+     "point": "A lambda stored, returned, or posted asynchronously must not hold &local, a reference into a returned stack frame, or bare [this]/[=] into an object that may die first; prefer by-value, move init-capture, or [*this].",
+     "weight": "core",
+     "evidence_hint": "Names dangling reference/this as a top lifetime bug and lists safer capture choices."
+    },
+    {
+     "id": "app4",
+     "point": "Use an immediately invoked lambda (IIFE) to initialize a const (or constexpr) object that needs multi-statement logic you cannot write as a single expression after =.",
+     "weight": "extended",
+     "evidence_hint": "Describes []{ ... }() so only the returned value lives on and const is preserved."
+    },
+    {
+     "id": "app5",
+     "point": "In range-based for, prefer const auto& for reading objects without copying; use auto& when you need to modify elements in place.",
+     "weight": "extended",
+     "evidence_hint": "Lists by-value copy vs const auto& preferred vs auto& for mutation."
+    }
+   ],
+   "probes": [
+    "How would you safely return a lambda from a member function that must outlive the object?",
+    "Show a case where shared_ptr leaks and how weak_ptr fixes it."
+   ],
+   "hints": {
+    "1": "Focus on lifetimes: who owns the resource, and what does the callable still refer to later?",
+    "2": "Apply RAII smart pointers, cycle-breaking weak_ptr, safe lambda captures/IIFE, and range-for reference choices.",
+    "3": "Smart pointers over new/delete; weak_ptr breaks shared cycles; no [&]/[this] that outlive; [*this]/move capture when needed; IIFE for complex const init; const auto& in range-for."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "auto vs decltype(auto) for returns",
+   "strong_answer": "auto applies variable-deduction rules and drops references/top-level const—good when you want a copy. decltype(auto) deduces via decltype on the return expression and preserves lvalue/rvalue reference form for perfect return-type deduction; returning a local still dangles if the deduced type is a reference."
+  },
+  {
+   "topic": "unique_ptr vs shared_ptr vs weak_ptr",
+   "strong_answer": "unique_ptr: exactly one owner, non-copyable, movable with std::move, auto-deletes at owner destruction. shared_ptr: many owners, heap reference count, destroy when last shared_ptr dies; prefer make_shared. weak_ptr: observes without owning, lock() to temporary shared_ptr, used to break shared_ptr cycles."
+  },
+  {
+   "topic": "explicit captures vs default [=]/[&]",
+   "strong_answer": "Explicit [x, &y] documents intent and makes dangling-reference review easier. [=]/[&] are acceptable for short immediately invoked lambdas but hide what is captured; [=] in a member function still captures this by pointer, not a deep object copy."
+  },
+  {
+   "topic": "auto/template parameter vs std::function for storing callables",
+   "strong_answer": "auto (or a template parameter) keeps the concrete closure type with no type erasure. std::function provides a named stable signature across boundaries but may heap-allocate and call indirectly."
+  },
+  {
+   "topic": "brace vs parentheses initialization for std::vector",
+   "strong_answer": "Parentheses select ordinary constructors (e.g. size/value). Braces often prefer initializer_list, so vector(5, 2) and vector{5, 2} mean different things."
+  },
+  {
+   "topic": "[this] vs [*this]",
+   "strong_answer": "[this] (and [=] in members) capture the object pointer and dangle if the object dies while the lambda lives. [*this] (C++17) copies the object into the closure so returning/shipping the lambda is safe relative to the original object."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming auto from a const object/reference keeps const or binds a reference.",
+   "correction": "auto drops const and & and copies the base type; write const auto& (or auto&) explicitly when you need a reference."
+  },
+  {
+   "trap": "decltype(auto) f() { int x = 1; return (x); }",
+   "correction": "Parenthesised id-expression makes an lvalue, so decltype(auto) deduces int& to a destroyed local—undefined behaviour. Prefer plain auto for locals unless deliberately returning a reference into a longer-lived object."
+  },
+  {
+   "trap": "Writing std::vector<int> v{5, 2} expecting five elements with value 2.",
+   "correction": "Braces call the initializer_list constructor → [5, 2]. Use v(5, 2) for size/value construction."
+  },
+  {
+   "trap": "Using NULL or 0 as a null pointer with overloaded print(int) and print(char*).",
+   "correction": "NULL is typically the integer 0, so the int overload is chosen. Use nullptr so only pointer overloads match."
+  },
+  {
+   "trap": "Two objects each holding a shared_ptr to the other.",
+   "correction": "Reference counts never reach zero (leak). Make one side a weak_ptr and lock() when access is needed."
+  },
+  {
+   "trap": "Returning or storing a lambda that captured locals with [&], or [this]/[=] into an object that is destroyed first.",
+   "correction": "Those create dangling references/this. Prefer by-value captures, init-capture with std::move, or [*this] when the callable must outlive its creator."
+  },
+  {
+   "trap": "Assuming [=] in a member function snapshots the whole object.",
+   "correction": "[=] still captures this by pointer; member access is this->member. Use [*this] for a by-value copy of the object."
+  },
+  {
+   "trap": "Assigning a capturing lambda to a function pointer.",
+   "correction": "Only capture-less [] lambdas convert to a matching function pointer; any capture makes the conversion ill-formed because the closure carries state."
+  }
+ ]
+}

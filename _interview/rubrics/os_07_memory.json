@@ -1,0 +1,220 @@
+{
+ "id": "os_07_memory",
+ "title": "Memory management",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs probe contiguous vs non-contiguous allocation, fragmentation, and page-table address translation to test whether candidates understand how the OS packs processes into main memory.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Cisco-style multi-selects on fixed partitioning often list that it suffers both internal and external fragmentation — the option candidates wrongly deselect.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish why the OS manages main memory, what degree of multiprogramming means, and how contiguous vs non-contiguous allocation families differ.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Memory management keeps many processes in main memory so the CPU stays busy; the CPU only fetches instructions and data from registers, cache, and main memory, while disk is far slower.",
+     "weight": "core",
+     "evidence_hint": "Candidate states the goal as efficient use of main memory / keeping enough processes resident, and places disk below the register–cache–RAM hierarchy in speed."
+    },
+    {
+     "id": "fund2",
+     "point": "Degree of multiprogramming is the number of processes held in main memory at once; raising it improves CPU utilization until memory pressure causes thrashing.",
+     "weight": "core",
+     "evidence_hint": "Candidate defines degree of multiprogramming and links a higher count to a ready process being available when one blocks, with thrashing as the overload limit."
+    },
+    {
+     "id": "fund3",
+     "point": "Contiguous allocation gives each process one continuous block (fixed/static or variable/dynamic partitioning); non-contiguous scatters a process via paging, multilevel/inverted paging, segmentation, or segmented paging.",
+     "weight": "core",
+     "evidence_hint": "Candidate names both families and at least the main members: fixed and variable partitioning vs paging/segmentation variants."
+    }
+   ],
+   "probes": [
+    "What is memory management trying to achieve, and what is degree of multiprogramming?",
+    "How do contiguous and non-contiguous allocation differ at a high level?"
+   ],
+   "hints": {
+    "1": "Start from where the CPU can actually fetch instructions and why more resident processes help utilization.",
+    "2": "Define degree of multiprogramming, then split techniques into one continuous block vs scattered pieces.",
+    "3": "Goal: efficient RAM use so the CPU stays busy. Degree of multiprogramming = processes in main memory. Contiguous = fixed/variable partitions; non-contiguous = paging, multilevel/inverted paging, segmentation, segmented paging."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain fixed and variable partitioning, how paging and the MMU translate addresses, page-table entry bits, multilevel and inverted tables, and segmentation translation.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Fixed partitioning divides memory into a fixed number of fixed-size partitions; each holds at most one process that must fit entirely in one partition, causing internal fragmentation, a hard process-size limit, a cap on multiprogramming, and external fragmentation.",
+     "weight": "core",
+     "evidence_hint": "Candidate states fixed count and sizes, one process per partition, and lists the four limitations including both fragmentation types."
+    },
+    {
+     "id": "mech2",
+     "point": "Variable partitioning creates a partition to fit each process exactly at load time, removing internal fragmentation and fixed size/count limits, but holes produce external fragmentation as processes come and go.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts exact-fit partitions with hole-based external fragmentation and may name compaction or paging as remedies."
+    },
+    {
+     "id": "mech3",
+     "point": "Paging divides physical memory into fixed-size frames and logical memory into equal-size pages; a per-process page table maps page number to frame, and the MMU translates on every access, so there is no external fragmentation and only bounded internal fragmentation in the last page.",
+     "weight": "core",
+     "evidence_hint": "Candidate equates page and frame size, describes non-contiguous frame placement via the page table/MMU, and states no external fragmentation with at most one partial last page."
+    },
+    {
+     "id": "mech4",
+     "point": "A logical address splits into page number and offset; the page table yields a frame number concatenated with the unchanged offset to form the physical address.",
+     "weight": "core",
+     "evidence_hint": "Candidate walks page-number → page-table → frame-number | offset without rewriting the offset."
+    },
+    {
+     "id": "mech5",
+     "point": "Each page-table entry holds a frame number plus control bits: valid/invalid (present/absent), protection, reference, dirty/modified, and caching.",
+     "weight": "extended",
+     "evidence_hint": "Candidate lists frame number plus several of those control bits with their roles (e.g., dirty avoids writing back clean pages)."
+    },
+    {
+     "id": "mech6",
+     "point": "Multilevel paging pages the page table so an outer table points to pages of the inner table and only needed portions stay in memory; an inverted page table has one system-wide entry per frame recording <process id, page number>, shrinking size but requiring search (sped up with hashing and the TLB).",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts one-entry-per-page (per process) with hierarchical paging and with one-entry-per-frame inverted lookup."
+    },
+    {
+     "id": "mech7",
+     "point": "Segmentation splits a process into variable-size logical segments; the segment table stores base and limit, and offset must be less than limit or hardware raises a segmentation-fault trap; physical address is base + offset.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes (segment number, offset) → base/limit check → base + offset or trap."
+    }
+   ],
+   "probes": [
+    "How do fixed and variable partitioning differ in fragmentation and limits on process size or count?",
+    "Walk a paging address translation from logical address through the page table to a physical address.",
+    "How does segmentation translate (segment number, offset), and what happens if the offset is out of range?"
+   ],
+   "hints": {
+    "1": "Separate pre-cut fixed partitions from exact-fit dynamic ones, then pages/frames from logical segments.",
+    "2": "For paging: page number indexes the table to a frame; offset is unchanged. For segments: base + offset with a limit check.",
+    "3": "Fixed: both fragmentations and hard caps. Variable: holes/external only. Paging: page|offset → frame|offset via MMU; PTE has frame + valid/protection/reference/dirty/caching. Multilevel pages the table; inverted is one entry per frame. Segmentation: base/limit, trap if offset ≥ limit."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare placement algorithms, compaction versus paging as external-fragmentation fixes, and paging versus segmentation (including segmented paging).",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Among hole-placement algorithms, first fit takes the first large enough hole (fast, good general choice); next fit resumes from the last placement (spreads usage, can be worse than first fit); best fit takes the smallest fitting hole (least waste now, many tiny useless holes, slow full scan); worst fit takes the largest hole (usable remainder, consumes big holes, slow).",
+     "weight": "core",
+     "evidence_hint": "Candidate states each rule and its main trade-off without inventing extra algorithms."
+    },
+    {
+     "id": "tr2",
+     "point": "Compaction merges holes by sliding allocated blocks together but is expensive because it must pause and relocate processes; non-contiguous paging is the stronger fix that sidesteps external fragmentation entirely.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts costly relocation/compaction with paging removing the need to find one large contiguous hole."
+    },
+    {
+     "id": "tr3",
+     "point": "Paging uses fixed-size pages, is invisible to the programmer, and has only minor internal fragmentation; segmentation uses variable logical segments visible to the programmer and matching program structure, but suffers external fragmentation; segmented paging combines both for logical structure without external fragmentation.",
+     "weight": "core",
+     "evidence_hint": "Candidate hits fixed vs variable, programmer visibility, fragmentation contrast, and segmented paging as the hybrid."
+    },
+    {
+     "id": "tr4",
+     "point": "A normal page table has one entry per page per process and grows huge for large address spaces; an inverted table has one entry per physical frame for the whole system, dramatically smaller but slower to look up without hashing/TLB help.",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts per-page indexing cost with per-frame search cost and the size win of inverted tables."
+    }
+   ],
+   "probes": [
+    "When several holes fit a process, how do first, next, best, and worst fit differ?",
+    "Paging versus segmentation: what does each optimize for, and what fragmentation does each suffer?"
+   ],
+   "hints": {
+    "1": "Think about which hole you pick now versus what leftover holes you leave behind.",
+    "2": "Pair placement-algorithm rules with compaction vs paging, then fixed invisible pages vs variable visible segments.",
+    "3": "First=first hole (fast); next=resume search; best=smallest hole (tiny leftovers); worst=largest hole. Compaction relocates; paging removes external fragmentation. Paging: minor internal; segmentation: external; segmented paging gets both benefits. Inverted: one entry per frame, search not index."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply fragmentation examples and the worked paging address-space numbers to check concrete understanding.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Under fixed partitioning, a 6 MB process in an 8 MB partition wastes 2 MB as internal fragmentation.",
+     "weight": "core",
+     "evidence_hint": "Candidate computes leftover inside the partition as internal waste of 2 MB."
+    },
+    {
+     "id": "app2",
+     "point": "With a 4 GB = 2^32 B logical space, 64 MB = 2^26 B physical space, and 4 KB = 2^12 B pages, the logical address is 32 bits, the physical address is 26 bits, and the offset is 12 bits.",
+     "weight": "core",
+     "evidence_hint": "Candidate derives address widths from the given spaces and page size without changing the figures."
+    },
+    {
+     "id": "app3",
+     "point": "In that worked example there are 2^20 pages and 2^14 frames; page-number bits are 20 and frame-number bits are 14; the page table has 2^20 entries and size 2^20 × 14 bits ≈ 2.5 MB.",
+     "weight": "core",
+     "evidence_hint": "Candidate states 2^20 / 2^14 / 20 / 14 and sizes the table as entries times frame-number bits ≈ 2.5 MB."
+    },
+    {
+     "id": "app4",
+     "point": "A page-table entry stores the frame number (14 bits in the example), not the full physical address — the offset is not stored — so table size is entries times frame-number width, not times page size.",
+     "weight": "extended",
+     "evidence_hint": "Candidate refuses to multiply entries by page size or store the full physical address in each PTE."
+    }
+   ],
+   "probes": [
+    "In fixed partitioning, what fragmentation occurs when a 6 MB process is placed in an 8 MB partition?",
+    "Given 4 GB logical, 64 MB physical, and 4 KB pages, how wide are page number, frame number, and the page table?"
+   ],
+   "hints": {
+    "1": "Internal waste is leftover space inside an allocated partition or last page.",
+    "2": "Offset bits come from page size; page/frame count bits are address bits minus offset; PTE width is frame-number bits only.",
+    "3": "6 MB in 8 MB → 2 MB internal. 32-bit logical, 26-bit physical, 12-bit offset → 2^20 pages, 2^14 frames, 20/14 bit fields, table ≈ 2.5 MB as 2^20 × 14 bits — not full physical addresses."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "First fit vs next fit vs best fit vs worst fit",
+   "strong_answer": "First fit: first hole large enough — fast and a good general choice. Next fit: resume from last placement — spreads usage but can be worse than first fit. Best fit: smallest fitting hole — least waste now but many tiny useless holes and a slow full scan. Worst fit: largest hole — leaves a usable remainder but consumes big holes and is slow."
+  },
+  {
+   "topic": "Compaction vs non-contiguous paging",
+   "strong_answer": "Compaction slides allocated blocks together to merge holes into one free region but must pause and relocate processes. Paging places pages in any free frames and sidesteps external fragmentation entirely."
+  },
+  {
+   "topic": "Paging vs segmentation",
+   "strong_answer": "Paging uses fixed-size pages, is invisible to the programmer, and suffers only minor internal fragmentation (last page). Segmentation uses variable-size logical segments visible to the programmer and matching code/stack/heap structure, but suffers external fragmentation. Segmented paging divides segments into pages to keep logical structure without external fragmentation."
+  },
+  {
+   "topic": "Normal page table vs inverted page table",
+   "strong_answer": "Normal tables have one entry per page per process and become huge for large address spaces. An inverted table has one system-wide entry per physical frame recording <process id, page number>, much smaller but lookup is a search rather than an index, so hashing and the TLB are used to speed it up."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Deselecting that fixed partitioning suffers both internal and external fragmentation on a multi-select.",
+   "correction": "Fixed partitioning has internal waste inside oversized partitions and external waste when a free partition is too small for any waiting process — both apply."
+  },
+  {
+   "trap": "Assuming variable partitioning eliminates all fragmentation.",
+   "correction": "It removes internal fragmentation and fixed size/count limits, but holes still cause external fragmentation."
+  },
+  {
+   "trap": "Thinking paging still has external fragmentation like contiguous allocation.",
+   "correction": "Equal page and frame sizes mean any free frame fits any page — no external fragmentation; only the last page may be partly empty."
+  },
+  {
+   "trap": "Storing a full physical address in each page-table entry, or sizing the table as entries × page size.",
+   "correction": "A PTE stores the frame number only (14 bits in the worked example); the offset is concatenated at translation time. Size is entries × frame-number width (≈ 2.5 MB for 2^20 × 14 bits)."
+  },
+  {
+   "trap": "Treating an inverted page table like an indexed per-page table.",
+   "correction": "Inverted tables have one entry per frame and must be searched for <process id, page number>; hashing and the TLB compensate for the slower lookup."
+  }
+ ]
+}

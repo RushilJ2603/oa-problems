@@ -1,0 +1,188 @@
+{
+ "id": "dsa_s24_data_interpretation",
+ "title": "Data Interpretation",
+ "type": "FUND",
+ "relevance": "SDE OAs and placement aptitude rounds use DI exhibits as a speed filter: extract the right numbers, approximate, and apply percentage/share/ratio without heavy arithmetic.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that DI is a reading-and-extraction skill with light arithmetic and a fixed drill before calculating.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Start every exhibit by reading the title, units, and legend first — half of all DI errors are unit slips (thousands vs lakhs, % vs absolute).",
+     "weight": "core",
+     "evidence_hint": "Candidate names title/units/legend as the first step and cites unit slips as the common failure mode."
+    },
+    {
+     "id": "fund2",
+     "point": "The three workhorse operations are percentage change ((new−old)/old)×100, share (part/total)×100, and ratio.",
+     "weight": "core",
+     "evidence_hint": "Candidate states all three formulas with the correct base for percentage change."
+    },
+    {
+     "id": "fund3",
+     "point": "For “which is largest / roughly what %” questions, approximate by rounding and comparing rather than computing to the last decimal.",
+     "weight": "extended",
+     "evidence_hint": "Candidate says exact figures are rarely needed for ranking or rough-percentage items and describes rounding before comparing."
+    },
+    {
+     "id": "fund4",
+     "point": "Compute a shared row or column total once and reuse it across sub-questions on the same exhibit.",
+     "weight": "extended",
+     "evidence_hint": "Candidate explains computing the total once and applying it to later questions instead of re-adding."
+    }
+   ],
+   "probes": [
+    "Walk me through your first 10 seconds looking at a new DI table or chart before you touch any option.",
+    "What three calculations should you have cold for almost every DI set?"
+   ],
+   "hints": {
+    "1": "Think about what goes wrong most often before any arithmetic starts.",
+    "2": "Name the pre-read checklist, then the three formulas, then when to approximate vs total once.",
+    "3": "Title/units/legend first (half of errors are unit slips); % change, share, ratio; approximate for largest/rough %; reuse one row/column total."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to pull answers from tables, bars, pies, lines, and prose caselets using the right lookup or conversion.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "On a table, many questions are answered by reading a printed column or row total directly rather than summing from scratch.",
+     "weight": "core",
+     "evidence_hint": "Candidate points to using the given year or product total when it is already in the table."
+    },
+    {
+     "id": "mech2",
+     "point": "Percentage change is always (new−old)/old×100 against the earlier base; a fall uses the same form with the earlier value in the denominator.",
+     "weight": "core",
+     "evidence_hint": "Candidate writes (new−old)/old×100 and refuses to put the later value in the denominator."
+    },
+    {
+     "id": "mech3",
+     "point": "On a pie chart, a sector’s central angle is its percentage of a full circle of 360°.",
+     "weight": "extended",
+     "evidence_hint": "Candidate maps share% × 360° (e.g. 25% → 90°) without inventing another scale."
+    },
+    {
+     "id": "mech4",
+     "point": "In a caselet, convert each nested percentage into absolute headcount (or amount) first, then add or take the final ratio — never chain “percentage of a percentage” in your head.",
+     "weight": "core",
+     "evidence_hint": "Candidate converts men/women and subgroup % to counts, then sums or forms the fraction from those counts."
+    }
+   ],
+   "probes": [
+    "How do you find a year total or a product’s three-year total from a sales table?",
+    "A pie says Food is 25% of the budget — how do you get the central angle?",
+    "Office of 300 with 60% male; 25% of men and 40% of women in Sales — how do you get total Sales headcount?"
+   ],
+   "hints": {
+    "1": "Decide whether the answer is already printed, needs a % formula, a pie angle, or absolute conversion.",
+    "2": "Table → read/reuse totals; change → divide by earlier base; pie → % of 360°; caselet → absolutes then combine.",
+    "3": "Read column/row totals when present; (new−old)/old×100; angle = share×360°; men/women counts then Sales counts before summing or taking Sales fraction."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Distinguish when to approximate vs compute exactly, and percentage vs absolute growth, under OA vs case-interview scoring.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "“Highest growth” almost always means highest percentage growth, not the largest absolute jump — the same absolute rise can yield different % rises when bases differ.",
+     "weight": "core",
+     "evidence_hint": "Candidate compares % rises year-to-year and notes identical absolute +30 rises can differ in % because bases differ."
+    },
+    {
+     "id": "tr2",
+     "point": "When a question says “approximately,” round aggressively before dividing so you can eliminate wrong options without long division.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes rounding numerator/denominator first to get a nearby simple fraction and match the closest option."
+    },
+    {
+     "id": "tr3",
+     "point": "In an OA, graders see only the answer so ruthless approximation and one exact shared total win; in a case interview, say assumptions and the base you divide by out loud because reasoning is scored.",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts OA speed/answer-only with case-interview need to narrate base and assumptions."
+    }
+   ],
+   "probes": [
+    "Two years both rose by the same absolute amount — how do you decide which had higher growth?",
+    "How does your approach change between a timed OA DI set and a spoken case-interview DI question?"
+   ],
+   "hints": {
+    "1": "Ask whether the stem wants percent or absolute, and who is scoring your work.",
+    "2": "Compare % with the earlier base; approximate when the stem says so; OA vs case changes what you optimize.",
+    "3": "Highest growth → % not absolute jump; approximate before dividing on “approximately”; OA = speed + shared totals, case = say base/assumptions aloud."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply DI drill and formulas to multi-question exhibits and OA-style target-growth projections under time pressure.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "DI in an OA is a speed filter: typically 4–6 questions on one exhibit in a couple of minutes, won by approximation and computing each shared total exactly once.",
+     "weight": "core",
+     "evidence_hint": "Candidate cites the 4–6 questions / couple-of-minutes pattern and the reuse-of-totals tactic."
+    },
+    {
+     "id": "app2",
+     "point": "Required growth to a future target is (target−current)/current×100 against the latest actual base — not the gap divided by an arbitrary number.",
+     "weight": "core",
+     "evidence_hint": "Candidate divides the gap by the current-year base (e.g. growth needed to a stated target from last year’s revenue)."
+    },
+    {
+     "id": "app3",
+     "point": "On dual line series, “first overtake” means the first month the trailing series exceeds the leader; combined peak means summing both series per period and picking the max.",
+     "weight": "extended",
+     "evidence_hint": "Candidate compares series month-by-month for crossover and adds both for the combined high."
+    }
+   ],
+   "probes": [
+    "A company earned 210 last year and targets 250 next year — how do you find the approximate % growth needed?",
+    "On a two-product line chart, how do you find when B first overtakes A and which month has the highest combined sales?"
+   ],
+   "hints": {
+    "1": "Name the base for target growth and what “overtake” vs “combined” each require.",
+    "2": "Target growth = gap over current base; overtake = first period B > A; combined = A+B per period.",
+    "3": "(250−210)/210×100 ≈ 19%; scan months until B exceeds A; sum A+B each month and take the peak."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Percentage growth vs absolute growth",
+   "strong_answer": "“Highest growth” almost always means percentage growth. Identical absolute rises (e.g. +30) can rank differently in % because each divides by a different earlier base — always check which the stem asks for."
+  },
+  {
+   "topic": "Aggressive approximation vs exact arithmetic",
+   "strong_answer": "When the stem says “approximately,” round before dividing to eliminate options fast; still compute a shared row/column total exactly once when many sub-questions reuse it."
+  },
+  {
+   "topic": "OA DI vs case-interview DI",
+   "strong_answer": "OA is answer-only under a couple of minutes for 4–6 questions on one exhibit — optimize for ruthless approximation and one shared total. Case interviews score reasoning, so state assumptions and the base you divide by out loud."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Carrying a running “percentage of a percentage” in your head for nested groups.",
+   "correction": "Convert each percentage to absolute values first, then take the final sum or ratio."
+  },
+  {
+   "trap": "Measuring percentage change against the later value instead of the earlier base.",
+   "correction": "Percentage change is always (new−old)/old against the earlier value — including for falls."
+  },
+  {
+   "trap": "Treating “highest growth” as the largest absolute jump.",
+   "correction": "Compare year-on-year percentage rises; same absolute rise can mean different % when bases differ."
+  },
+  {
+   "trap": "On a target-growth question, dividing the revenue gap by 100 or by some wrong prior year instead of by the current base.",
+   "correction": "Required % = (target−current)/current×100 using the latest actual revenue as the denominator."
+  }
+ ]
+}

@@ -1,0 +1,211 @@
+{
+ "id": "dbms_09_relational_algebra",
+ "title": "Relational Algebra and Joins",
+ "type": "FUND",
+ "relevance": "Tests whether candidates understand the procedural foundation of SQL—operators, composition, and join semantics that OAs and DBMS rounds probe with expression and join questions.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what relational algebra is, its closure property, and the basic vs derived operator split.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Relational algebra is a formal procedural query language: expressions specify not only what to retrieve but the order of operations (how).",
+     "weight": "core",
+     "evidence_hint": "Says procedural / sequence of ops / dictates how, not only what."
+    },
+    {
+     "id": "fund2",
+     "point": "Closure: every operator takes one or two relations and returns a new relation, so outputs compose as inputs to later operators.",
+     "weight": "core",
+     "evidence_hint": "Mentions relation-in/relation-out and seamless composition."
+    },
+    {
+     "id": "fund3",
+     "point": "Basic operators are atomic (π, σ, ×, ∪, −, ρ); derived ones (⋈, ∩, ÷) are expressible via basics—e.g. X ∩ Y = X − (X − Y).",
+     "weight": "core",
+     "evidence_hint": "Lists basic vs derived and gives the intersection identity or equivalent."
+    },
+    {
+     "id": "fund4",
+     "point": "Projection π picks columns (vertical slice, duplicates removed); selection σ picks rows matching a condition (horizontal slice).",
+     "weight": "core",
+     "evidence_hint": "Correctly maps π→columns and σ→rows; may note duplicate removal on π."
+    }
+   ],
+   "probes": [
+    "What is relational algebra, and how do basic operators differ from derived ones?",
+    "What does the closure property buy you when writing expressions?"
+   ],
+   "hints": {
+    "1": "Think about whether the language tells you only the result or also the steps.",
+    "2": "Name the six fundamental operators, then say which convenience ops are built from them.",
+    "3": "Procedural language with closure; basics are π σ × ∪ − ρ; derived include ⋈ ∩ ÷ with X ∩ Y = X − (X − Y)."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how unary/binary operators, union-compatibility, division, rename, and join variants actually work.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Cross product R1 × R2 pairs every tuple of R1 with every of R2: result has (m+n) columns and (X × Y) rows.",
+     "weight": "core",
+     "evidence_hint": "States column sum and row product rules for ×."
+    },
+    {
+     "id": "mech2",
+     "point": "Union/intersection/difference require union-compatibility: same degree (column count) and corresponding columns with the same domain.",
+     "weight": "core",
+     "evidence_hint": "States both degree and domain/type alignment left-to-right."
+    },
+    {
+     "id": "mech3",
+     "point": "Division A(x,y) ÷ B(y) returns x-values in A paired with every y-value in B—used for “every”/“all” queries.",
+     "weight": "extended",
+     "evidence_hint": "Links ÷ to universal quantification / Enrolled ÷ Course style."
+    },
+    {
+     "id": "mech4",
+     "point": "Rename ρ(T, R) is a query-only alias; disk schema unchanged; needed for self cross-product R × ρ(T, R).",
+     "weight": "core",
+     "evidence_hint": "Says temporary alias / unchanged on disk / required for self-×."
+    },
+    {
+     "id": "mech5",
+     "point": "A join is conceptually cross product then selection; natural join matches on all common attributes and drops the duplicate column; equi join is a theta join using only =.",
+     "weight": "core",
+     "evidence_hint": "× then σ; natural on common attrs + drop dup; equi = equality condition."
+    },
+    {
+     "id": "mech6",
+     "point": "Inner joins drop unmatched rows; outer joins keep unmatched rows from left/right/both and pad missing side with NULL (full = left ∪ right outer).",
+     "weight": "core",
+     "evidence_hint": "Contrasts discard vs keep+NULL; names left/right/full."
+    }
+   ],
+   "probes": [
+    "If R1 has m columns and X rows and R2 has n columns and Y rows, what is the shape of R1 × R2?",
+    "When are two relations union-compatible, and when do you need ρ?",
+    "How does a natural join differ from an equi join and from a left outer join?"
+   ],
+   "hints": {
+    "1": "Start from Cartesian product size, then add the compatibility rules for set ops.",
+    "2": "Walk × → join-as-filter → natural vs equi → outer NULL padding.",
+    "3": "× gives (m+n) cols and X×Y rows; union-compat = same degree + same domains; join ≈ × then σ; outer keeps unmatched with NULL."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast operator choices where semantics or convenience differ (basic/derived, set-difference order, inner vs outer).",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Derived operators are convenience only—they can be rewritten entirely with basic operators (e.g. intersection via double difference).",
+     "weight": "core",
+     "evidence_hint": "Says derived = sugar / expressible from fundamentals."
+    },
+    {
+     "id": "tr2",
+     "point": "Set difference is not commutative: A − B ≠ B − A (tuples in A absent from B vs the reverse).",
+     "weight": "core",
+     "evidence_hint": "Explicitly says order matters / not commutative."
+    },
+    {
+     "id": "tr3",
+     "point": "Choose outer over inner when unmatched rows must appear: left keeps all left rows, right all right rows, full both—with NULLs on the missing side.",
+     "weight": "core",
+     "evidence_hint": "Picks join flavor by whether unmatched rows should survive."
+    }
+   ],
+   "probes": [
+    "Why have derived operators if basics already suffice?",
+    "Why does A − B differ from B − A, and when would you pick a left outer join over an inner join?"
+   ],
+   "hints": {
+    "1": "Ask what stays expressible if you only keep the six fundamentals.",
+    "2": "Separate rewrite-power (derived) from semantic order (difference) and row retention (outer).",
+    "3": "Derived = convenience (∩ = X−(X−Y)); difference order matters; outer keeps unmatched with NULL vs inner drops them."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Compose multi-step expressions: σ/π nesting, set ops on projections, and self-× with rename for comparative queries.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "π_Name(σ_Rollno=2(Student)) on Student(Rollno,Name,Age) selects the Rollno=2 row then projects Name, yielding B.",
+     "weight": "core",
+     "evidence_hint": "Inner σ then outer π; final answer B."
+    },
+    {
+     "id": "app2",
+     "point": "π_Name(Student) ∪ π_Name(Employee) needs projected Name columns for union-compatibility and yields distinct names {A, B, C, E}; π_Name(Student) − π_Name(Employee) yields {B, C}.",
+     "weight": "core",
+     "evidence_hint": "Projects to one Name column first; union {A,B,C,E}; difference {B,C}."
+    },
+    {
+     "id": "app3",
+     "point": "Female employees earning more than some male: Emp × ρ(Emp1, Emp), then σ on F/M and Emp.Salary > Emp1.Salary, then π Emp.Eid → {3, 5}.",
+     "weight": "core",
+     "evidence_hint": "Self-× with ρ, gender/salary filter, project Eid; result {3, 5}."
+    },
+    {
+     "id": "app4",
+     "point": "Self join for students in ≥ 2 courses: alias Study as T1,T2 with T1.S_id=T2.S_id and T1.C_id≠T2.C_id.",
+     "weight": "extended",
+     "evidence_hint": "Same-table join via aliases; equal S_id, unequal C_id."
+    }
+   ],
+   "probes": [
+    "Write the algebra for name of the student with Rollno 2.",
+    "Find names that are students but not employees, then female Emp.Eids earning more than at least one male.",
+    "How do you express “enrolled in at least two courses” with a self join?"
+   ],
+   "hints": {
+    "1": "Compose inside-out: filter rows before projecting columns.",
+    "2": "For comparisons across rows of one table, introduce ρ (or SQL aliases) then ×/join and σ.",
+    "3": "π_Name(σ_Rollno=2(Student))→B; Student−Employee names→{B,C}; Emp×ρ(Emp1,Emp) with F>M salary filter→π Eid {3,5}."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Basic operators vs derived operators",
+   "strong_answer": "Basics (π, σ, ×, ∪, −, ρ) are atomic; derived (⋈, ∩, ÷) are convenience rewrites—e.g. X ∩ Y = X − (X − Y)—so expressive power sits in the fundamentals."
+  },
+  {
+   "topic": "Inner join vs outer join",
+   "strong_answer": "Inner join drops non-matching rows; outer joins keep unmatched rows from left, right, or both and pad the other side with NULL (full outer = left outer ∪ right outer)."
+  },
+  {
+   "topic": "A − B vs B − A",
+   "strong_answer": "Set difference is not commutative: A − B keeps tuples in A absent from B; reversing operands changes the result."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Confusing projection with selection (which picks rows vs columns).",
+   "correction": "Mnemonic from the notes: Projection = columns; Selection = rows."
+  },
+  {
+   "trap": "Treating set difference like union/intersection as order-independent.",
+   "correction": "Order matters: A − B ≠ B − A; A − B is tuples in A not in B (also A ∩ B′)."
+  },
+  {
+   "trap": "Assuming rename changes the stored relation.",
+   "correction": "ρ is a query-only alias; original data and schema on disk stay unchanged."
+  },
+  {
+   "trap": "Applying ∪ / ∩ / − without checking schema alignment.",
+   "correction": "Relations must be union-compatible: same number of columns and corresponding columns with the same domain."
+  },
+  {
+   "trap": "Expecting unmatched rows to survive an inner join.",
+   "correction": "Only outer joins keep unmatched rows (left/right/full), padding missing attributes with NULL."
+  }
+ ]
+}

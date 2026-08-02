@@ -1,0 +1,258 @@
+{
+ "id": "12_dp_knapsack_subsequence__deep",
+ "title": "DP III: Knapsack Variants & Subsequence (Depth Pass)",
+ "type": "CP",
+ "relevance": "High — post-ladder CF/AtCoder twists on 0/1, multiple, group, and contribution knapsacks plus subsequence-counting / LCS-with-constraints; this is the Div2 C–D / CM band after CSES coins + AtCoder D/E/F.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Promo pricing: pay for k items, get floor(k/m) free → K for the Price of One (ecommerce OA). Team/bug budget: assign lines to n people under a global bug cap → Writing Code (0/1 with two capacities). Nested inventory: each shelf/day local pack, choose under global k → Porcelain / Timetable. String analytics: count abc with wildcards, or LCS that must not contain a banned token → Number of Subsequences / Lucky Common Subsequence.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Confirm the candidate sees the same knapsack/LCS engines under contest wrappers that force a rewrite first.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Same engines as the base topic—fill a capacity, flip to value-dimension, or align two sequences—but statements force a rewrite first: free-every-k, huge W with few weight classes or n≤40, shelves/days/lessons groups, or subsequence asks with ?, forced length, or a virus string.",
+     "weight": "core",
+     "evidence_hint": "Names fill-capacity / value-flip / two-sequence engines and lists several rewrite skins (free-every-k, huge W, groups, subsequence constraints)."
+    },
+    {
+     "id": "rec2",
+     "point": "Spot it when a classic knapsack/LCS sits under a contest packing: deadlines, nested groups, or contribution over all subsets/segments.",
+     "weight": "core",
+     "evidence_hint": "Says classic knapsack/LCS under deadlines, nested groups, or contribution-over-subsets/segments."
+    },
+    {
+     "id": "rec3",
+     "point": "OA skins: promo pay-k-get-floor(k/m)-free (K for the Price of One); team lines with bug cap (Writing Code); nested shelf/day packs under global k (Porcelain / Timetable); abc with ? or LCS avoiding a banned token (Number of Subsequences / Lucky Common Subsequence).",
+     "weight": "extended",
+     "evidence_hint": "Maps the prompt to one of those four Where-it-appears skins."
+    }
+   ],
+   "probes": [
+    "What makes this depth-pass knapsack/subsequence DP rather than a plain Book Shop or LCS template?",
+    "If the statement hides free-every-k, nested shelves/days, contribution over subsets, or a virus-constrained LCS, what family do you reach for?"
+   ],
+   "hints": {
+    "1": "Ask whether the template is disguised even though the engine is still fill-capacity, value-flip, or two-sequence DP.",
+    "2": "Cue: free-every-k; W huge with few classes or n≤40; per-group bests then group knapsack; contribution over subsets/segments; subsequence with ? or forbidden pattern.",
+    "3": "Say: same engines as base; recognize under deadlines/nested groups/contribution; OA maps are K for the Price of One, Writing Code, Porcelain/Timetable, Number of Subsequences / Lucky Common Subsequence."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Pick the right rewrite—freebie accounting, weight-class/MITM, group best[t], binary multiple, contribution, or constrained subsequence—before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Free-every-k (K for the Price of One): sort ascending; paying for i items unlocks ⌊i/k⌋ free ones from the most expensive paid; hard version uses prefix sums + DP over how many paid blocks you buy.",
+     "weight": "core",
+     "evidence_hint": "States sort ascending, freebies from expensive end, and hard-version prefix + paid-block DP."
+    },
+    {
+     "id": "appr2",
+     "point": "Huge W, small structure: few distinct weights → knapsack only on weight classes (e.g. w_i ∈ [w1, w1+3] by count and extra-weight); n≤40 → split, enumerate 2^{n/2} subset sums, binary-search complements.",
+     "weight": "core",
+     "evidence_hint": "Separates weight-class DP from MITM split with sorted subset sums and upper_bound complements."
+    },
+    {
+     "id": "appr3",
+     "point": "Nested / group knapsack (Porcelain, Timetable): for each group compute best[t] = value of taking exactly t items from that group, then 0/1-knapsack the groups into the global budget.",
+     "weight": "core",
+     "evidence_hint": "States per-group best[t] then 0/1 over groups into global k/budget."
+    },
+    {
+     "id": "appr4",
+     "point": "Multiple knapsack (Book Shop II): binary-split counts into pseudo-items 1,2,4,…,remain and run ordinary 0/1—do not loop cnt naively. Contribution DP: each subset/segment adds f(sum); push updates that add contribution of newly formed sums (often mod a prime), not one optimum.",
+     "weight": "extended",
+     "evidence_hint": "Names binary grouping into 0/1 pseudo-items and/or contribution push updates instead of a single optimum."
+    },
+    {
+     "id": "appr5",
+     "point": "Subsequence: dp[i][j] consume/skip; with ? multiply three branches; with a forbidden pattern fold a KMP failure link into the LCS state so the virus never completes. Offset/signed knapsack: map difference d to index d+OFFSET.",
+     "weight": "extended",
+     "evidence_hint": "Mentions consume/skip, ? three branches, LCS+KMP virus state, and/or OFFSET for signed imbalance."
+    }
+   ],
+   "probes": [
+    "Before coding, is this free-every-k, weight-class/MITM, group best[t], binary multiple, contribution, or constrained subsequence?",
+    "For K for the Price of One vs Simple Knapsack / Programming Contest vs Porcelain / Timetable vs Book Shop II vs Lucky Common Subsequence, which rewrite do you pick?"
+   ],
+   "hints": {
+    "1": "Classify freebie rewrite vs huge-W structure vs nested groups vs binary multiples vs contribution vs string automaton.",
+    "2": "Free-every-k sorts and takes expensive freebies; few weights → class DP; n≤40 → MITM; groups → best[t] then group 0/1; multiples → 1,2,4,…; contribution pushes f(sum); virus LCS folds KMP.",
+    "3": "Say: sort + ⌊i/k⌋ freebies / prefix block DP; [w1,w1+3] or 2^{n/2} MITM; best[t] then group knapsack; binary-split multiples; contribution not one optimum; ? three branches or LCS+KMP; OFFSET for signed d."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Verify binary grouping, MITM half-sums, group best[t] fills, contribution pushes, OFFSET arrays, bitset shifts, and construction recovery.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Binary-group multiple copies into 1,2,4,…,remain pseudo-items and run ordinary 0/1; never for _ in cnt inside the capacity loop unless cnt is tiny.",
+     "weight": "core",
+     "evidence_hint": "Insists on binary grouping into 0/1 items and rejects naive cnt loops in the capacity pass."
+    },
+    {
+     "id": "impl2",
+     "point": "MITM when n≤40 and capacity/T is huge: split halves, keep sorted vectors of achievable sums per half, upper_bound complements.",
+     "weight": "core",
+     "evidence_hint": "Describes split, sorted half subset sums, and binary-search/upper_bound complements."
+    },
+    {
+     "id": "impl3",
+     "point": "Group/nested: precompute per-group best[t] (e.g. shelf prefix/suffix best for t cups; day best hours saved by skipping t lessons), then 0/1-knapsack groups into global k.",
+     "weight": "core",
+     "evidence_hint": "States per-group best[t] then knapsack groups into global budget/k."
+    },
+    {
+     "id": "impl4",
+     "point": "Contribution: update DP by adding f(sum) for newly formed subset/segment sums (All Subsets mod 998244353; All Segments by extending the right endpoint)—not a single optimum pack. Bitset reachability: dp |= dp<<w, then peel forced items or argue unique totals.",
+     "weight": "extended",
+     "evidence_hint": "Mentions contribution push updates (and/or mod 998244353) and bitset shift reachability."
+    },
+    {
+     "id": "impl5",
+     "point": "Offset arrays for signed imbalance (Coding Company: map d to d+OFFSET). Recover construction when needed (Checkout / Bookshelf): parent pointers or redo DP knowing the optimum budget. Lucky Common Subsequence: LCS state includes automaton position via KMP failure links.",
+     "weight": "extended",
+     "evidence_hint": "Names OFFSET indexing, parent/redo reconstruction, and/or LCS+automaton state."
+    }
+   ],
+   "probes": [
+    "How do you implement multiple knapsack without a naive cnt loop, and when do you switch to MITM?",
+    "Sketch group best[t] → global knapsack, a contribution push update, or bitset dp |= dp<<w."
+   ],
+   "hints": {
+    "1": "Think binary pseudo-items, half subset sums, per-group best[t], and contribution vs reachability bitsets.",
+    "2": "Multiples → 1,2,4,… then 0/1; n≤40 → sorted half sums + upper_bound; groups → best[t] then global 0/1; contribution adds f(sum); bitset shifts; OFFSET for signed d; parents for construction.",
+    "3": "Say: binary-group not cnt loop; MITM sorted halves; Porcelain/Timetable best[t] then knapsack; contribution not one optimum; dp |= dp<<w; d+OFFSET; KMP in LCS state; parents/redo for Checkout/Bookshelf."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State when MITM, weight-class DP, or binary grouping replace a full-capacity knapsack because W or T is huge.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "When n≤40 and capacity/T is huge, MITM: enumerate 2^{n/2} subset sums per half, keep sorted vectors, binary-search complements—do not DP the full capacity.",
+     "weight": "core",
+     "evidence_hint": "Quotes n≤40, 2^{n/2} half enumeration, and sorted-complement search instead of full-capacity DP."
+    },
+    {
+     "id": "cx2",
+     "point": "When W is 10^9 but weights have small structure (few distinct classes, e.g. w_i ∈ [w1, w1+3]), DP by (count, extra-weight) or weight classes instead of indexing the full W.",
+     "weight": "core",
+     "evidence_hint": "Cites W is 10^9 with few classes / [w1, w1+3] and rejects full-W indexing."
+    },
+    {
+     "id": "cx3",
+     "point": "Multiple knapsack: binary-split counts into 1,2,4,…,remain pseudo-items so the 0/1 pass stays over log-grouped items; naive looping cnt inside capacity is the wrong scaling. Bitset dp |= dp<<w when only reachability or uniqueness of a sum matters.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts binary grouping with naive cnt loops, and names bitset reachability when values are not needed."
+    }
+   ],
+   "probes": [
+    "When do n≤40 / W is 10^9 force MITM or weight-class DP instead of a full-capacity table?",
+    "What changes about the knapsack pass when you binary-group multiples or switch to bitset reachability?"
+   ],
+   "hints": {
+    "1": "Separate the n≤40 MITM fit check from few-weight-class and binary-grouping rewrites.",
+    "2": "n≤40 + huge T → 2^{n/2} sorted halves; W is 10^9 + few classes → (count, extra-weight); multiples → 1,2,4,…; reachability → bitset shifts.",
+    "3": "Say: MITM when n≤40; class DP when W is 10^9 with [w1, w1+3]-style structure; binary-group multiples; bitset when only yes/no or uniqueness matters."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch naive cnt loops, missing freebie/group rewrites, optimizing one pack when contribution is required, and broken ? / virus / OFFSET handling.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Looping cnt naively inside the capacity loop for multiple knapsack instead of binary-splitting into 1,2,4,…,remain pseudo-items.",
+     "weight": "core",
+     "evidence_hint": "Corrects to binary grouping into ordinary 0/1 items unless cnt is tiny."
+    },
+    {
+     "id": "pit2",
+     "point": "Treating free-every-k or nested shelves/days as a plain item knapsack without the rewrite (sort + expensive freebies / paid-block DP; or per-group best[t] then group-knapsack).",
+     "weight": "core",
+     "evidence_hint": "Insists on the freebie rewrite or best[t]-then-groups rewrite before the 0/1 pass."
+    },
+    {
+     "id": "pit3",
+     "point": "Computing one optimal pack when the problem is contribution over all subsets/segments (Knapsack for All Subsets / All Segments)—must push f(sum) updates, often mod a prime.",
+     "weight": "core",
+     "evidence_hint": "Rejects single-optimum framing; states contribution push over subsets/segments."
+    },
+    {
+     "id": "pit4",
+     "point": "With ?: mishandling the three letter branches; with a virus string: plain LCS without KMP automaton state; signed imbalance without OFFSET; forgetting parent/redo construction when Checkout/Bookshelf need the actual pack.",
+     "weight": "extended",
+     "evidence_hint": "Names careful ? transitions, LCS+KMP, d+OFFSET, and construction recovery."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you nest a cnt loop in capacity, skip the freebie/group rewrite, or optimize one pack on a contribution problem?",
+    "How do ?, virus-KMP, OFFSET, and parent reconstruction save you on the stretch string/signed/construction items?"
+   ],
+   "hints": {
+    "1": "Check binary grouping, whether a rewrite happened, and contribution vs optimum.",
+    "2": "Multiples need 1,2,4,…; free-every-k needs sort/freebies or prefix blocks; groups need best[t]; contribution pushes f(sum); ? has three branches; virus needs KMP in LCS; signed needs OFFSET.",
+    "3": "List: binary-group not cnt; rewrite shop/group story first; contribution not one optimum; careful ? / LCS+KMP; d+OFFSET; parents or redo DP for construction."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "One 0/1 pass vs per-group best[t] then group-knapsack vs contribution over all subsets/segments",
+   "strong_answer": "Rewrite the shop/deadline/group story into either (a) one 0/1 pass, (b) per-group best[t] then group-knapsack, or (c) contribution over all subsets/segments—do not force a single optimum when every subset/segment adds f(sum)."
+  },
+  {
+   "topic": "Binary-grouped multiples vs naive cnt loop",
+   "strong_answer": "Binary-split counts into 1,2,4,…,remain pseudo-items and run ordinary 0/1; never for _ in cnt inside the capacity loop unless cnt is tiny."
+  },
+  {
+   "topic": "Full-capacity DP vs weight-class DP vs MITM",
+   "strong_answer": "When W is 10^9 but few weight classes (e.g. w_i ∈ [w1, w1+3]), DP on classes/(count, extra-weight); when n≤40 and T is huge, split halves, enumerate 2^{n/2} subset sums, binary-search complements."
+  },
+  {
+   "topic": "One optimum pack vs contribution DP",
+   "strong_answer": "Contribution problems (All Subsets / All Segments) add f(sum) for every subset/segment via push updates (often mod a prime such as 998244353), not a single optimal packing."
+  },
+  {
+   "topic": "Plain LCS vs LCS + KMP virus automaton",
+   "strong_answer": "Lucky Common Subsequence folds a KMP failure link into the LCS state so the forbidden virus string never completes—plain LCS length/alignment is not enough."
+  },
+  {
+   "topic": "Value/count DP vs bitset reachability",
+   "strong_answer": "When only reachability or uniqueness of a sum matters (Coin Troubles, Unbearable Lightness), use bitset dp |= dp<<w then peel forced items or argue unique totals; keep full DP when values, ways, or reconstruction are needed."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Looping cnt naively inside the capacity loop for multiple knapsack.",
+   "correction": "Binary-split counts into 1,2,4,…,remain pseudo-items and run ordinary 0/1 unless cnt is tiny."
+  },
+  {
+   "trap": "Coding free-every-k or nested shelves/days as a plain item list without rewriting.",
+   "correction": "Free-every-k: sort ascending, take freebies from the expensive end (hard: prefix sums + paid-block DP). Nested: per-group best[t], then 0/1-knapsack groups into the global budget."
+  },
+  {
+   "trap": "Returning one optimal knapsack answer on All Subsets / All Segments.",
+   "correction": "Push contribution updates that add f(sum) for newly formed subset/segment sums (All Subsets often mod 998244353)."
+  },
+  {
+   "trap": "Full-capacity DP when W is 10^9 or n≤40 with huge T.",
+   "correction": "Few weight classes → DP by class/(count, extra-weight); n≤40 → MITM with sorted 2^{n/2} half sums and complement search."
+  },
+  {
+   "trap": "Mishandling ? transitions or ignoring the virus automaton on constrained subsequence/LCS.",
+   "correction": "With ?, multiply/add the three letter branches carefully under mod; with a forbidden pattern, fold KMP failure into the LCS state so the virus never completes."
+  },
+  {
+   "trap": "Signed imbalance without OFFSET, or needing the pack but only computing the optimum value.",
+   "correction": "Map difference d to d+OFFSET; recover construction with parent pointers or redo DP knowing the optimum budget (Checkout / Bookshelf)."
+  }
+ ]
+}

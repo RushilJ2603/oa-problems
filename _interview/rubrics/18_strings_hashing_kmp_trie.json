@@ -1,0 +1,240 @@
+{
+ "id": "18_strings_hashing_kmp_trie",
+ "title": "Strings: Hashing, KMP / Z-function, Trie",
+ "type": "CP",
+ "relevance": "High (pattern matching, tries, and rolling hashes show up constantly in OAs; KMP/Z are the standard upgrade from naive search)",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Dictionary/autocomplete APIs: Trie insert/search/startsWith, sometimes with '.' wildcards (LC 208 / 211 style — Amazon, Google phone screens). Needle in haystack / period checks: first index of pattern, repeated block, shortest palindrome by prepending — KMP or hashing in timed OAs. Grid word hunt: Word Search II — trie + backtracking. Contest-style CP OAs: overlapping word compression, good-substring counts, max-XOR multiset queries (CF hashing / binary-trie, Div. 2 C/D ideas).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Map wording to rolling hash, KMP/Z matching-borders-periods, dictionary trie, binary-trie XOR, or trie+grid search.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Signals like find/count pattern occurrences, longest border/period, merge on overlapping prefix-suffix, or distinct substrings under constraints point to hashing and/or KMP/Z.",
+     "weight": "core",
+     "evidence_hint": "Lists those string-search/border/period/merge/distinct-substring cues and ties them to hash or π/Z tools."
+    },
+    {
+     "id": "rec2",
+     "point": "Autocomplete / dictionary queries with insert, search, and startsWith (sometimes '.' wildcards) signal a trie, not a flat map scan.",
+     "weight": "core",
+     "evidence_hint": "Names Trie API shape and optional wildcard DFS (LC 208 / 211 style)."
+    },
+    {
+     "id": "rec3",
+     "point": "Maximize XOR with inserts/deletes signals a binary trie, not a sorted-array scan per query.",
+     "weight": "core",
+     "evidence_hint": "Says bit-by-bit trie for max XOR under live insert/delete."
+    },
+    {
+     "id": "rec4",
+     "point": "Find all dictionary words on a board (Word Search II) signals trie + grid backtracking as the expected optimal path.",
+     "weight": "extended",
+     "evidence_hint": "Recognizes board multi-word hunt pruned by a dictionary trie, not one DFS per word alone."
+    }
+   ],
+   "probes": [
+    "What wording makes this rolling-hash compares, KMP/Z borders-periods, a dictionary trie, binary-trie XOR, or trie+board search?",
+    "Would you reach for hash, KMP/Z, or a trie here—and why?"
+   ],
+   "hints": {
+    "1": "Listen for pattern find/count, border/period/overlap merge, autocomplete, max XOR with updates, or board dictionary hunt.",
+    "2": "Occurrences/borders/periods/overlap → hash or KMP/Z; insert/search/startsWith or '.' → trie; max XOR insert/delete → binary trie; board words → trie+DFS.",
+    "3": "Say: find/count/border/period/prefix-suffix merge/distinct constrained substrings → hashing/KMP/Z; autocomplete insert/search/startsWith (± '.') → trie; max XOR with inserts/deletes → binary trie; Word Search II → trie + backtracking."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "State the near-linear string plan: prefix hashes, π/Z matching, trie dictionary, or binary-trie XOR before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Treat strings as sequences searchable in near-linear time: rolling hash turns any substring into an O(1) fingerprint after prefix-hash precompute (double-hash on CF).",
+     "weight": "core",
+     "evidence_hint": "Plans prefix hashes then O(1) substring fingerprints, mentioning double-hash for CF."
+    },
+    {
+     "id": "appr2",
+     "point": "KMP’s π-array / Z-function answer longest prefix that is also a suffix / matches at i, unlocking matching, borders, and periods in O(n).",
+     "weight": "core",
+     "evidence_hint": "States π/Z meanings and that they unlock matching, borders, and periods linearly."
+    },
+    {
+     "id": "appr3",
+     "point": "A trie stores a dictionary by shared prefixes for insert/search/startsWith, multi-pattern search, and XOR-maximization via a binary trie.",
+     "weight": "core",
+     "evidence_hint": "Plans prefix-sharing trie for dictionary ops and binary trie for max XOR."
+    },
+    {
+     "id": "appr4",
+     "point": "Prefer hash for flexible compares / binary search on length; KMP/Z for exact linear matching with no collision worry; trie when many patterns or prefixes dominate.",
+     "weight": "extended",
+     "evidence_hint": "Picks among hash vs KMP/Z vs trie with those preference rules."
+    }
+   ],
+   "probes": [
+    "Walk through how you would search or compare substrings here—hash, KMP/Z, or trie?",
+    "When do you prefer rolling hash over KMP/Z, and when is a trie the right structure?"
+   ],
+   "hints": {
+    "1": "Separate fingerprint compares, linear π/Z tools, and prefix-dictionary / XOR tries.",
+    "2": "Prefix hashes → O(1) substring hash; π/Z → matching/borders/periods; shared-prefix trie or binary XOR trie for dictionary/XOR.",
+    "3": "Say: rolling hash = prefix hashes + O(1) fingerprint (double-hash on CF); π/Z unlock matching, borders, periods in O(n); trie for insert/search/startsWith / multi-pattern / binary max-XOR; prefer hash for flexible compares/BS on length, KMP/Z for exact linear no-collision, trie for many patterns/prefixes."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Code rolling-hash, π/Z templates, border/period recovery, and trie / binary-trie mechanics from memory.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Rolling-hash template: prefix hashes, O(1) substring hash, two mods (or 2^61-1), base > |Σ|, map 'a' ↦ 1 (never 0).",
+     "weight": "core",
+     "evidence_hint": "Recites prefix hashes, dual mod / 2^61-1, base above alphabet, and non-zero 'a' mapping."
+    },
+    {
+     "id": "impl2",
+     "point": "Write the π-array (KMP failure) and Z-function from memory; convert matching into a single concatenated string with a sentinel.",
+     "weight": "core",
+     "evidence_hint": "Sketches π and Z builders and pattern+sentinel+text concatenation for matching."
+    },
+    {
+     "id": "impl3",
+     "point": "Recover all borders by repeatedly jumping π[i]-1; detect periods from Z / borders (i is a period iff i+z[i] ≥ n).",
+     "weight": "core",
+     "evidence_hint": "Walks the border chain via π jumps and states the Z period rule."
+    },
+    {
+     "id": "impl4",
+     "point": "Trie node: next[26] / map + isEnd (+ optional cnt); DFS for '.' wildcards; prune Word-Search-style board DFS through the trie.",
+     "weight": "core",
+     "evidence_hint": "Codes children array/map, end flag, wildcard branching, and board DFS pruned by trie edges."
+    },
+    {
+     "id": "impl5",
+     "point": "Binary trie for max-XOR with insert/delete and path counts.",
+     "weight": "extended",
+     "evidence_hint": "Maintains bit-path counts so insert/delete keep max-XOR queries correct."
+    }
+   ],
+   "probes": [
+    "Write the rolling-hash and π/Z templates you actually use in contests.",
+    "How do you recover all borders, detect periods, and structure a trie or binary-trie node?"
+   ],
+   "hints": {
+    "1": "Start from prefix hashes and the π/Z builders, then borders/periods and trie fields.",
+    "2": "Hash: two mods or 2^61-1, 'a'→1; matching via sentinel concat; borders = π jumps; periods from Z; trie next[26]+isEnd; binary trie with counts.",
+    "3": "Spell: prefix hashes + O(1) substring hash, dual mod/2^61-1, base>|Σ|, 'a'↦1; π and Z from memory with sentinel concat; borders via π[i]-1 jumps; period iff i+z[i]≥n; trie next[26]/map+isEnd(+cnt), '.' DFS, board prune; binary trie insert/delete path counts for max XOR."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Confirm O(1) substring hashes after precompute and O(n) KMP/Z matching versus naive quadratic search.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "After prefix-hash precompute, any substring fingerprint is O(1); matching, borders, and periods via π/Z run in O(n).",
+     "weight": "core",
+     "evidence_hint": "Separates O(1) hash queries from linear π/Z passes for matching/borders/periods."
+    },
+    {
+     "id": "cx2",
+     "point": "Needle-in-haystack must get past naive O(nm) using KMP, Z, or Rabin–Karp-style hashing.",
+     "weight": "core",
+     "evidence_hint": "Rejects nested scan as the intended OA solution and names a linear or hash matcher."
+    }
+   ],
+   "probes": [
+    "What is the cost of a substring hash after prefix precompute, and of π/Z matching?",
+    "Why is naive double-loop search not enough for first-occurrence / string-matching drills?"
+   ],
+   "hints": {
+    "1": "Separate precompute from per-query hash cost, and naive search from linear tools.",
+    "2": "Prefix hashes → O(1) fingerprint; π/Z → O(n); naive first occurrence is O(nm).",
+    "3": "Say: O(1) substring hash after prefix hashes; matching/borders/periods in O(n) via π/Z; upgrade from naive O(nm) with KMP, Z, or Rabin–Karp."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch zero-mapped alphabet hashes, missing double-hash, broken border/period recovery, and wrong tool choice.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Mapping 'a' ↦ 0 in a rolling hash collapses leading-a prefixes and breaks substring fingerprints; use 'a' ↦ 1.",
+     "weight": "core",
+     "evidence_hint": "Calls out never-zero alphabet mapping as a hard hash template rule."
+    },
+    {
+     "id": "pit2",
+     "point": "Single-mod hashing on CF invites collisions; use two mods (or 2^61-1) when compares must be trusted.",
+     "weight": "core",
+     "evidence_hint": "Insists on double-hash or 2^61-1 for contest substring equality."
+    },
+    {
+     "id": "pit3",
+     "point": "Forgetting the sentinel when concatenating pattern and text corrupts π/Z matching across the boundary.",
+     "weight": "core",
+     "evidence_hint": "Requires a separator so failure links / Z boxes cannot cross pattern into text spuriously."
+    },
+    {
+     "id": "pit4",
+     "point": "Skipping the π border chain or the Z period test (i+z[i] ≥ n) misses Finding Borders / Finding Periods style answers.",
+     "weight": "extended",
+     "evidence_hint": "Recovers all borders by π jumps and checks periods with the Z inequality."
+    }
+   ],
+   "probes": [
+    "What goes wrong if the hash alphabet maps 'a' to 0 or you trust a single mod on CF?",
+    "How do you safely run KMP/Z matching and recover every border or period?"
+   ],
+   "hints": {
+    "1": "Check alphabet base mapping, collision policy, sentinel, and border/period recovery.",
+    "2": "'a'→1 never 0; double-hash or 2^61-1 on CF; sentinel between pattern and text; walk π for borders; i+z[i]≥n for periods.",
+    "3": "Say: never map 'a' to 0; double-hash (or 2^61-1) on CF; concatenate with a sentinel; recover borders by jumping π[i]-1; i is a period iff i+z[i]≥n."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Rolling hash vs KMP/Z",
+   "strong_answer": "Prefer hash for flexible substring compares and binary search on length; prefer KMP/Z when you need exact linear matching, borders, and periods with no collision worry."
+  },
+  {
+   "topic": "Hash or KMP/Z vs trie",
+   "strong_answer": "Hash/KMP/Z excel at single-pattern search, borders, periods, and overlap merges; a trie is better when many patterns or shared-prefix dictionary queries (insert/search/startsWith, wildcards, board multi-word hunt) dominate."
+  },
+  {
+   "topic": "Dictionary trie vs binary trie",
+   "strong_answer": "A character trie stores words by shared prefixes for autocomplete and multi-pattern board search; a binary trie stores numbers bit-by-bit for max-XOR queries with insert/delete and path counts."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Mapping 'a' to 0 in the rolling-hash alphabet.",
+   "correction": "Map 'a' ↦ 1 (never 0); keep base > |Σ|, use two mods or 2^61-1, and precompute prefix hashes for O(1) substring fingerprints."
+  },
+  {
+   "trap": "Trusting a single-mod hash for equality on CF.",
+   "correction": "Double-hash (two mods) or use 2^61-1 so substring compares are contest-safe."
+  },
+  {
+   "trap": "Running KMP/Z matching on a raw pattern+text concat without a sentinel.",
+   "correction": "Insert a sentinel so π/Z cannot falsely match across the pattern–text boundary."
+  },
+  {
+   "trap": "Computing only π[n]-style one border and stopping.",
+   "correction": "Recover all borders by repeatedly jumping π[i]-1; detect periods from Z/borders (period iff i+z[i] ≥ n)."
+  },
+  {
+   "trap": "Solving Word Search II with per-word board DFS and no dictionary structure.",
+   "correction": "Build a trie over the dictionary and prune board DFS through trie edges (expected optimal path)."
+  },
+  {
+   "trap": "Answering max-XOR with inserts/deletes via a static sorted list.",
+   "correction": "Maintain a binary trie with insert/delete and path counts so each query walks the opposite bits."
+  }
+ ]
+}

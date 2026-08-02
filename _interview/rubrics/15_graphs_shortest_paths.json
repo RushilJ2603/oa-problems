@@ -1,0 +1,247 @@
+{
+ "id": "15_graphs_shortest_paths",
+ "title": "Graphs II: Shortest Paths (0-1 BFS, State/Implicit Dijkstra, Multi-source, k-shortest)",
+ "type": "CP",
+ "relevance": "High — grid/maze races, one coupon / one free edge, multi-source infection, and state-augmented shortest paths dominate mid OA + Div2 C/D; stretch covers k-shortest and potentials mindset toward CM.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "One free upgrade / coupon: cheapest route if you may halve or zero exactly one edge — Flight Discount clones in delivery/ride-share OAs. Infection / facility placement: multi-source BFS/Dijkstra from all hospitals, Wi-Fi routers, or ACs; answer min time or best spot (Air Conditioners / Christmas Trees). State-augmented travel: pick up one bike / key / discount → dist[u][have] Dijkstra (Bicycles / elevator-vs-stairs). Maze with asymmetric moves: limited left/right presses or teleporters — 0-1 BFS / hub nodes rather than plain BFS (Labyrinth / Third Avenue).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Establish that the candidate maps the prompt to 0-1 edges, implicit/state graphs, multi-source, coupon, or k-shortest rather than named Dijkstra.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Contest shortest-path prompts rarely say run Dijkstra; edges are often 0/1, the graph is implicit (grid, residues, portals), or the vertex is a state (node, resource).",
+     "weight": "core",
+     "evidence_hint": "Names 0/1 edges, implicit grid/residues/portals, or state (node, resource) as the modeling cue."
+    },
+    {
+     "id": "rec2",
+     "point": "Multi-source means seed every source at dist 0, or reverse the graph and start from all sinks.",
+     "weight": "core",
+     "evidence_hint": "Says enqueue all sources at 0 or reverse edges and BFS/Dijkstra from all sinks."
+    },
+    {
+     "id": "rec3",
+     "point": "One coupon / one free edge is state Dijkstra (layer) or the two-Dijkstra coupon trick on every edge.",
+     "weight": "core",
+     "evidence_hint": "Maps halve/zero exactly one edge to a coupon layer or fwd+bwd try-on-every-edge."
+    },
+    {
+     "id": "rec4",
+     "point": "k-shortest keeps the first k pops per node; Potentials/Johnson is for many SSSP queries when negatives may exist but there is no neg-cycle.",
+     "weight": "extended",
+     "evidence_hint": "Mentions ≤k pops per node and/or Bellman-Ford potentials then Dijkstra APSP."
+    }
+   ],
+   "probes": [
+    "Does this look like 0-1 BFS, state Dijkstra, multi-source, a coupon trick, or k-shortest—and what wording tipped you off?"
+   ],
+   "hints": {
+    "1": "Ask whether edge weights are only two values, whether the vertex needs extra state, and how many sources start at once.",
+    "2": "0/1 → deque 0-1 BFS; (node, resource) → state SP; many starts → multi-source; one special edge → coupon; first k arrivals → k-shortest.",
+    "3": "Say: rarely named Dijkstra; 0/1, implicit, or state (node, resource); multi-source seeds all at dist 0 (or reverse from sinks); coupon = layer or two Dijkstras; k-shortest = first k pops; Johnson when many SSSP with possible negatives and no neg-cycle."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Choose 0-1 BFS, state Dijkstra, multi-source seeding, the coupon two-Dijkstra pattern, or k-shortest pops before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "0-1 BFS uses a deque: push_front on weight 0, push_back on weight 1.",
+     "weight": "core",
+     "evidence_hint": "States deque with front for 0-cost and back for 1-cost edges."
+    },
+    {
+     "id": "appr2",
+     "point": "State Dijkstra stores dist[node][extra…] (or a hashed state) and relaxes transitions, not only original edges.",
+     "weight": "core",
+     "evidence_hint": "Names dist indexed by node plus coupon/bike/dir/streak and transitions on that state."
+    },
+    {
+     "id": "appr3",
+     "point": "Multi-source: initialize the queue/PQ with all sources at 0; reverse edges when asking nearest source to each node.",
+     "weight": "core",
+     "evidence_hint": "Seeds every source at 0 and mentions reversing for nearest-source queries."
+    },
+    {
+     "id": "appr4",
+     "point": "Two-Dijkstra coupon: fwd from s, bwd from t on the reversed graph; try the special op on every edge (e.g. fwd[u]+floor(w/2)+bwd[v]).",
+     "weight": "extended",
+     "evidence_hint": "Describes fwd/bwd pair and evaluating the discount on each edge."
+    },
+    {
+     "id": "appr5",
+     "point": "k-shortest: keep ≤k distances per node; the i-th pop is the i-th best under nonnegative weights.",
+     "weight": "extended",
+     "evidence_hint": "Allows up to k pops/distances per node and prints k costs."
+    }
+   ],
+   "probes": [
+    "Walk through which algorithm you pick and how you initialize distances for this prompt.",
+    "For a one-coupon route, do you use a state layer or the two-Dijkstra try-every-edge trick?"
+   ],
+   "hints": {
+    "1": "Separate weight pattern (0/1 vs general), state extras, and how many sources you seed.",
+    "2": "0/1 → deque front/back; extra resource → dist[node][extra]; all starts at 0 or reverse; coupon → fwd/bwd or layer; k → ≤k pops.",
+    "3": "Say: deque push_front(0)/push_back(1); state Dijkstra on transitions; multi-source all at 0 (reverse for nearest); fwd from s + bwd from t + special op per edge; ≤k distances / i-th pop is i-th best."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Verify deque pushes, Dijkstra stale-entry skip, path aggregates on relax, and hub/portal modeling details.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Implement 0-1 BFS with a deque: push_front on weight 0, push_back on weight 1.",
+     "weight": "core",
+     "evidence_hint": "Codes or narrates front/back pushes keyed by edge weight 0 vs 1."
+    },
+    {
+     "id": "impl2",
+     "point": "Dijkstra hygiene: if (d > dist[u]) continue; before relaxing (USACO Guide TLE trap).",
+     "weight": "core",
+     "evidence_hint": "Skips outdated PQ entries before neighbor relaxations."
+    },
+    {
+     "id": "impl3",
+     "point": "Path aggregates on the shortest DAG: while running Dijkstra, update count / min-edges / max-edges on == and < relaxations.",
+     "weight": "extended",
+     "evidence_hint": "On strict improvement resets aggregates; on equal distance updates count or min/max edges."
+    },
+    {
+     "id": "impl4",
+     "point": "Grid portals: use virtual letter/hub nodes with 0/1 edges instead of a naïve teleport clique.",
+     "weight": "extended",
+     "evidence_hint": "Attaches cells to hub nodes rather than connecting every portal pair."
+    }
+   ],
+   "probes": [
+    "Show the 0-1 BFS enqueue rule and where you put the Dijkstra d > dist[u] continue.",
+    "How do you update path count or min/max edges when a relaxation ties versus improves?"
+   ],
+   "hints": {
+    "1": "Check the deque push side and whether stale PQ distances still relax.",
+    "2": "Weight 0 → front, weight 1 → back; skip if d > dist[u]; on < reset aggregates, on == merge counts/min/max; portals via hubs.",
+    "3": "Say: push_front(0)/push_back(1); if (d > dist[u]) continue before relax; ==/< update count and min/max edges; virtual letter hubs with 0/1 edges beat a teleport clique."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State 0-1 BFS linear cost and when Johnson needs Bellman-Ford plus n Dijkstras.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "0-1 BFS runs in O(V+E).",
+     "weight": "core",
+     "evidence_hint": "Cites O(V+E) for deque 0-1 BFS."
+    },
+    {
+     "id": "cx2",
+     "point": "Potentials / Johnson: Bellman-Ford from a super-source gives potentials p[v]; reweight w'(u,v)=w(u,v)+p[u]-p[v] ≥ 0; then n Dijkstras for APSP; restore dist = dist' - p[u] + p[v].",
+     "weight": "extended",
+     "evidence_hint": "Sketches BF potentials, nonnegative reweight, n Dijkstras, and dist restore."
+    }
+   ],
+   "probes": [
+    "What is the time for 0-1 BFS, and when do you reach for Johnson instead of one Dijkstra?",
+    "After reweighting with potentials, how do you recover original distances?"
+   ],
+   "hints": {
+    "1": "Compare linear 0-1 BFS to needing many SSSP on a graph that may have negatives.",
+    "2": "0-1 BFS is O(V+E); Johnson = BF potentials, reweight ≥ 0, then n Dijkstras, then restore.",
+    "3": "Say: 0-1 BFS O(V+E); BF super-source → p[v]; w'=w+p[u]-p[v] ≥ 0; n Dijkstras; dist = dist' - p[u] + p[v]."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch stale Dijkstra entries, single-source seeding, clique teleports, and relaxing only original edges.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Omitting if (d > dist[u]) continue; before relaxing is the USACO Guide Dijkstra TLE trap.",
+     "weight": "core",
+     "evidence_hint": "Names skipping outdated PQ pops as required hygiene."
+    },
+    {
+     "id": "pit2",
+     "point": "Seeding only one source instead of all sources at dist 0 breaks multi-source shortest paths.",
+     "weight": "core",
+     "evidence_hint": "Insists every source starts in the queue/PQ at 0."
+    },
+    {
+     "id": "pit3",
+     "point": "Building a naïve teleport clique instead of virtual hub nodes with 0/1 edges blows the model.",
+     "weight": "extended",
+     "evidence_hint": "Prefers letter/hub nodes over all-pairs portal edges."
+    },
+    {
+     "id": "pit4",
+     "point": "State Dijkstra must relax transitions on dist[node][extra…], not only the original graph edges.",
+     "weight": "extended",
+     "evidence_hint": "Says neighbors are state transitions (coupon/bike/dir), not just raw edges."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you skip the Dijkstra stale-distance continue, or seed only one multi-source start?",
+    "Why are portal hubs safer than connecting every teleport pair?"
+   ],
+   "hints": {
+    "1": "Check PQ skip, how many sources you enqueue, and whether portals densify the graph.",
+    "2": "Stale d > dist[u] → TLE; multi-source needs all at 0; hubs not cliques; relax state transitions.",
+    "3": "Say: always if (d > dist[u]) continue; seed every source at dist 0; virtual hubs with 0/1 edges; state Dijkstra relaxes dist[node][extra…] transitions."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "0-1 BFS vs Dijkstra",
+   "strong_answer": "When every edge weight is 0 or 1, use a deque (push_front on 0, push_back on 1) for O(V+E); use Dijkstra when weights are general nonnegative."
+  },
+  {
+   "topic": "State-layer coupon vs two-Dijkstra coupon",
+   "strong_answer": "Layer/state Dijkstra tracks whether the coupon is used in dist[node][have]; the two-Dijkstra trick runs fwd from s and bwd from t on the reversed graph and tries the special op on every edge."
+  },
+  {
+   "topic": "Portal hubs vs naïve teleport clique",
+   "strong_answer": "Attach cells to virtual letter/hub nodes with 0/1 edges instead of connecting all portal pairs into a dense clique."
+  },
+  {
+   "topic": "Multi-source seed vs reverse-from-sinks",
+   "strong_answer": "Seed every source at dist 0 for simultaneous starts; reverse edges and start from all sinks when the ask is nearest source to each node."
+  },
+  {
+   "topic": "Repeated Dijkstra vs Potentials/Johnson APSP",
+   "strong_answer": "For many SSSP queries on a graph that may have negatives but no neg-cycle: Bellman-Ford potentials, reweight to nonnegative, run n Dijkstras, restore distances."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Running Dijkstra without if (d > dist[u]) continue; before relaxing.",
+   "correction": "Skip outdated PQ entries before neighbor relaxations — the USACO Guide TLE trap."
+  },
+  {
+   "trap": "Starting multi-source BFS/Dijkstra from a single source.",
+   "correction": "Initialize the queue/PQ with all sources at dist 0 (or reverse and start from all sinks)."
+  },
+  {
+   "trap": "Using plain BFS on a maze with asymmetric 0/1 move costs.",
+   "correction": "Use 0-1 BFS: deque, push_front on weight 0, push_back on weight 1."
+  },
+  {
+   "trap": "Materializing all-pairs teleports for portals.",
+   "correction": "Add virtual letter/hub nodes with 0/1 edges (Third Avenue style)."
+  },
+  {
+   "trap": "Relaxing only original edges when the vertex is a state (coupon, best bike, direction streak).",
+   "correction": "Store dist[node][extra…] and relax state transitions."
+  },
+  {
+   "trap": "Keeping only one distance per node for k-shortest paths.",
+   "correction": "Keep ≤k distances per node; the i-th pop is the i-th best under nonnegative weights."
+  }
+ ]
+}

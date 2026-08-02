@@ -1,0 +1,175 @@
+{
+ "id": "dsa_s21_ranking_data_sufficiency",
+ "title": "Ranking, Ordering & Data Sufficiency",
+ "type": "FUND",
+ "relevance": "Ranking, ordering, and data-sufficiency items are staples of campus aptitude OAs and early SDE screens because they test careful end-to-end reasoning under incomplete information.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the core rank↔total conversion formulas and the five standard Data Sufficiency answer choices.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "In a linear sequence, Total equals (rank from top) + (rank from bottom) − 1 (equivalently Left + Right − 1).",
+     "weight": "core",
+     "evidence_hint": "States Total = Left + Right − 1 or Top + Bottom − 1 and can apply it to get 14 + 23 − 1 = 36."
+    },
+    {
+     "id": "fund2",
+     "point": "For two sorted indices A < B, the number of people strictly between them is B − A − 1.",
+     "weight": "core",
+     "evidence_hint": "Quotes Between = B − A − 1 for non-overlapping positions."
+    },
+    {
+     "id": "fund3",
+     "point": "Data Sufficiency questions use five fixed options: (a) I alone, (b) II alone, (c) both together necessary, (d) each alone sufficient, (e) both together still insufficient.",
+     "weight": "extended",
+     "evidence_hint": "Correctly restates what (a)–(e) mean without inventing extra choices."
+    }
+   ],
+   "probes": [
+    "How do you convert a person’s ranks from both ends of a row into the total length of the row?",
+    "What are the five standard Data Sufficiency answer choices, and what does each one claim?"
+   ],
+   "hints": {
+    "1": "Think about how one person is counted once from each end.",
+    "2": "Write Total in terms of the two end-ranks, then list what (a) through (e) each assert about statements I and II.",
+    "3": "Total = Left + Right − 1; Between = B − A − 1; and (a)–(e) are I alone / II alone / both needed / each alone / still insufficient."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to apply rank formulas under swaps and overlaps, build comparison chains, and evaluate DS statements for uniqueness.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "After two people interchange, the swapped position can be known from both ends at once, so Total = that Left rank + that Right rank − 1.",
+     "weight": "core",
+     "evidence_hint": "Explains that after the swap, Q’s original spot is 25th from left and 21st from right, so Total = 25 + 21 − 1 = 45."
+    },
+    {
+     "id": "mech2",
+     "point": "When Left + Right > Total, the two people cross; people strictly between them equal (Left + Right) − Total − 2.",
+     "weight": "core",
+     "evidence_hint": "Flags the overlap case (e.g. 22 + 26 = 48 > 40) and applies 48 − 40 − 2 = 6."
+    },
+    {
+     "id": "mech3",
+     "point": "Comparison and finish-order puzzles are solved by inserting each clue into one strict chain before naming tallest, median, heaviest, or last.",
+     "weight": "extended",
+     "evidence_hint": "Builds a single order such as C > D > A > E > B, X > V > W > Y > Z, Q > S > T > R > P, or R > P > Q > S > T."
+    },
+    {
+     "id": "mech4",
+     "point": "For Data Sufficiency, test I alone, then II alone, then both; data is sufficient only if exactly one unique answer remains.",
+     "weight": "core",
+     "evidence_hint": "Shows cases like digits 7 and 2 leaving both 72 and 27, so I+II are still insufficient, versus mother–son ages where together k = 10 and M = 50."
+    }
+   ],
+   "probes": [
+    "If Left + Right exceeds Total, how do you count people sitting between the two persons?",
+    "Walk me through how you decide among (a)–(e) when each statement may or may not pin down a unique value."
+   ],
+   "hints": {
+    "1": "Check whether the two end-ranks can describe the same person after a swap, and whether the positions overlap.",
+    "2": "For DS, never combine early: finish I alone, finish II alone, then intersect; reject any case that still has multiple values.",
+    "3": "Overlap between-count is (Left + Right) − Total − 2; sufficiency requires a single answer (multiple survivors ⇒ insufficient)."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast which formula or DS verdict applies under overlapping ranks, independent statements, and yes/no questions.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Non-overlap uses B − A − 1 style between-counts; overlap (Left + Right > Total) switches to (Left + Right) − Total − 2.",
+     "weight": "core",
+     "evidence_hint": "Explicitly compares the two regimes and when Left + Right exceeding Total forces the overlap formula."
+    },
+    {
+     "id": "tr2",
+     "point": "(c) both-together necessary is not the same as (d) each alone sufficient: if I and II each independently yield a unique answer, the choice is (d).",
+     "weight": "core",
+     "evidence_hint": "Cites the pattern where Rahul’s rank is 30th from I alone and 15th from II alone, so the answer is each alone, not both-together."
+    },
+    {
+     "id": "tr3",
+     "point": "For yes/no Data Sufficiency, a definitive NO is as sufficient as a definitive YES; only ambiguity fails.",
+     "weight": "extended",
+     "evidence_hint": "States that settling “Is C High Value?” with NO (lifetime spending 4750 does not exceed 5000) still makes the combined data sufficient."
+    }
+   ],
+   "probes": [
+    "How do you choose between the ordinary between-formula and the overlap formula?",
+    "If statement I alone works, why must you still test statement II before picking (c) versus (d)?"
+   ],
+   "hints": {
+    "1": "Compare Left + Right to Total, and remember to finish both statement tests.",
+    "2": "Overlap flips the between formula; independent unique answers from I and from II mean (d), not (c).",
+    "3": "Left + Right > Total ⇒ (Left + Right) − Total − 2; each-alone ⇒ (d); a clear NO still counts as answering a yes/no DS item."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply ranking and DS reasoning to OA-style product-ranking and High-Value classification prompts.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Inserting new products ranked above X worsens X’s top rank but leaves X’s bottom rank unchanged, because the set of worse performers is unchanged.",
+     "weight": "core",
+     "evidence_hint": "States that after 35 products are added above X, bottom rank stays 428th even though top rank becomes 112 + 35 = 147th."
+    },
+    {
+     "id": "app2",
+     "point": "Partial purchase averages can be combined to answer a High-Value yes/no even when the answer is NO, as long as the truth value is unique.",
+     "weight": "core",
+     "evidence_hint": "Combines 10 × 350 = 3500 and 5 × 250 = 1250 into 4750, notes 4750 does not exceed 5000, and concludes both together suffice with a definitive NO."
+    }
+   ],
+   "probes": [
+    "New higher-ranked products are added above X—what happens to X’s rank from the bottom, and why?",
+    "In a yes/no High-Value DS question, is a definitive NO enough to call the data sufficient?"
+   ],
+   "hints": {
+    "1": "Ask which side of X the new items land on, and what “sufficient” means for a yes/no.",
+    "2": "Items above X only change the count of better performers; for High Value, sum known purchase blocks and compare to the threshold.",
+    "3": "Bottom rank stays 428th; 3500 + 1250 = 4750 < 5000 ⇒ definitive NO ⇒ combined statements are sufficient."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Ordinary between-count vs overlap between-count",
+   "strong_answer": "If the positions do not cross, people between follow B − A − 1; if Left + Right > Total, they overlap and the count is (Left + Right) − Total − 2 (the −2 excludes the two people themselves)."
+  },
+  {
+   "topic": "Both statements together (c) vs each statement alone (d)",
+   "strong_answer": "Always finish testing I alone and II alone; if each independently produces a unique answer, choose (d). Choose (c) only when neither alone works but the pair together does."
+  },
+  {
+   "topic": "Top-rank change vs bottom-rank stability when better items are inserted",
+   "strong_answer": "Adding items ranked above X increases X’s rank-from-top, but the number of worse performers is unchanged, so rank-from-bottom stays the same."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "When Left + Right > Total, forgetting the −2 while counting people between the two positions.",
+   "correction": "People strictly between equal (Left + Right) − Total − 2; the −2 removes the two people themselves."
+  },
+  {
+   "trap": "Calling Data Sufficiency “sufficient” when more than one value still fits (e.g. 72 and 27).",
+   "correction": "Sufficient means exactly one unique answer; multiple surviving values mean the data is insufficient."
+  },
+  {
+   "trap": "Stopping after statement I works and selecting (c) without testing statement II alone.",
+   "correction": "Test II separately; if II also answers alone, the correct choice is (d) each alone is sufficient."
+  },
+  {
+   "trap": "Assuming a yes/no Data Sufficiency item is sufficient only if the answer is YES.",
+   "correction": "A definitive NO is also sufficient; you need one unambiguous truth value, not specifically YES."
+  }
+ ]
+}

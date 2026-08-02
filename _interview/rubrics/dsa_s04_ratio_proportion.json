@@ -1,0 +1,191 @@
+{
+ "id": "dsa_s04_ratio_proportion",
+ "title": "Ratio, Proportion & Variation",
+ "type": "FUND",
+ "relevance": "Campus SDE OAs and aptitude rounds routinely test ratio combining, proportion identities, and direct/inverse variation on coins, mixtures, ages, and resource-scaling word problems.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish core ratio, proportion, and variation definitions and formulas.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A ratio compares two quantities as a:b or a/b; to combine A:B and B:C, equalize the shared B via LCM or cross-multiply to form A:B:C.",
+     "weight": "core",
+     "evidence_hint": "Candidate states ratio as a:b or a/b and explains aligning the common middle term before writing a three-part ratio."
+    },
+    {
+     "id": "fund2",
+     "point": "A proportion a:b = c:d means the product of extremes equals the product of means (ad = bc).",
+     "weight": "core",
+     "evidence_hint": "Candidate recalls ad = bc as the defining cross-product rule for a proportion."
+    },
+    {
+     "id": "fund3",
+     "point": "Mean proportional of a and c is b = √(ac); third proportional of a and b is c with a:b = b:c; fourth proportional of a, b, c is d with a:b = c:d.",
+     "weight": "extended",
+     "evidence_hint": "Candidate distinguishes mean (geometric middle), third (extends a:b to b:c), and fourth (completes a:b = c:d)."
+    },
+    {
+     "id": "fund4",
+     "point": "Direct variation means y ∝ x so y = kx; inverse variation means y ∝ 1/x so xy = k.",
+     "weight": "core",
+     "evidence_hint": "Candidate writes y = kx for direct and xy = k (or y = k/x) for inverse."
+    },
+    {
+     "id": "fund5",
+     "point": "Componendo–Dividendo: if a/b = c/d, then (a+b)/(a-b) = (c+d)/(c-d).",
+     "weight": "extended",
+     "evidence_hint": "Candidate states the (a±b)/(a−b) transformation from an equal ratio."
+    }
+   ],
+   "probes": [
+    "Define proportion and state the product-of-extremes rule. What are mean, third, and fourth proportionals? How do direct and inverse variation differ algebraically?"
+   ],
+   "hints": {
+    "1": "Start from what a ratio is, then what it means for two ratios to be equal.",
+    "2": "Separate definitions: combining ratios, ad=bc, mean/third/fourth proportional, then y=kx vs xy=k, then componendo–dividendo.",
+    "3": "Say: combine A:B and B:C by LCM of B; proportion ⇒ ad=bc; mean proportional b=√(ac); direct y=kx, inverse xy=k; if a/b=c/d then (a+b)/(a−b)=(c+d)/(c−d)."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to manipulate and combine ratios and solve standard proportion setups without messy algebra when shortcuts apply.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "When equal amounts are added and both ratio parts rise by the same step (e.g. 3:4 → 4:5), that common unit step equals the added quantity, so the original smaller number is its part times that unit.",
+     "weight": "core",
+     "evidence_hint": "For 3:4 becoming 4:5 after adding 5, candidate says 1 unit = 5 and smaller number = 3×5 = 15."
+    },
+    {
+     "id": "mech2",
+     "point": "To chain A:B, B:C, C:D, multiply across branches (A = product of first terms, D = product of second terms, B and C from the shared columns), then simplify the compound ratio.",
+     "weight": "core",
+     "evidence_hint": "From 2:3, 4:5, 6:7 candidate builds 48:72:90:105 and reduces by 3 to 16:24:30:35."
+    },
+    {
+     "id": "mech3",
+     "point": "Equalize a shared term by scaling each pairwise ratio before allocating a total: e.g. P:Q=5:4 and Q:R=9:10 → P:Q:R = 45:36:40, then R gets its part over the sum times the total.",
+     "weight": "extended",
+     "evidence_hint": "Candidate multiplies first ratio by 9 and second by 4 to get 45:36:40, sum 121, and R = (40/121)×2420 = 800."
+    },
+    {
+     "id": "mech4",
+     "point": "For a homogeneous ratio expression, substitute the given ratio parts directly (e.g. x/y=3/4 → use x=3, y=4), or rewrite into a form ready for componendo–dividendo.",
+     "weight": "extended",
+     "evidence_hint": "Candidate gets (3y+2x)/(3y−2x)=3 either by substituting x=3,y=4 or by reducing to (2+1)/(2−1) after isolating 3y:2x."
+    }
+   ],
+   "probes": [
+    "Walk through combining A:B=2:3, B:C=4:5, C:D=6:7 into A:B:C:D. How would you solve a 3:4 → 4:5 after-adding-equal problem without full algebra?"
+   ],
+   "hints": {
+    "1": "Think about aligning the common middle letter before writing a longer ratio.",
+    "2": "For chains, multiply first-column terms for A and second-column terms for D; for equal additions when parts each grow by 1, map that 1 unit to the added amount.",
+    "3": "Compute A=2×4×6=48, B=3×4×6=72, C=3×5×6=90, D=3×5×7=105 → 16:24:30:35; for 3:4→4:5 with +5, 1 unit=5 so smaller=15."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast modeling choices and solution tactics the file emphasizes when several valid approaches exist.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Direct variation places the variable in a product with k (y=kx), while inverse places it in the denominator (xy=k); mixing them up flips the model.",
+     "weight": "core",
+     "evidence_hint": "Candidate explicitly contrasts y=kx vs xy=k and warns that 'varies inversely' must put the variable in the denominator."
+    },
+    {
+     "id": "tr2",
+     "point": "For homogeneous forms like (3y+2x)/(3y−2x), substitution of ratio parts and componendo–dividendo are interchangeable; pick the one that needs less algebra.",
+     "weight": "extended",
+     "evidence_hint": "Candidate notes both methods yield 3 and when each is cleaner."
+    },
+    {
+     "id": "tr3",
+     "point": "For 'what number added makes them proportional' MCQs, plugging options avoids a quadratic from cross-multiplication.",
+     "weight": "core",
+     "evidence_hint": "Candidate tests x=2 on 6,14,18,38 and shows both sides become 1/2 instead of expanding the cross-product equation."
+    }
+   ],
+   "probes": [
+    "When would you use componendo–dividendo versus just substituting ratio values? Why is plugging options preferred for add-to-make-proportional questions?"
+   ],
+   "hints": {
+    "1": "Compare modeling of 'varies as' vs 'varies inversely', and algebra vs option-checking.",
+    "2": "Name three contrasts: direct vs inverse placement of the variable; substitution vs componendo–dividendo; option plug-in vs solving a quadratic.",
+    "3": "Inverse means multiply by 1/x; for (3y+2x)/(3y−2x) either set x=3,y=4 or apply componendo–dividendo after forming 3y:2x; for 6,14,18,38 try x=2 first."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply ratios, proportion, and joint/square variation to coins, alloys, ages, mixtures, and OA-style scaling/cost problems.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "In coin-ratio problems, convert the total to the smallest denomination units and write denomination×count equations from the ratio parts.",
+     "weight": "core",
+     "evidence_hint": "For 5x,9x,4x of 50c,25c,10c totaling $206, candidate uses 20600c and gets 515x=20600 so x=40 and 50c coins=200."
+    },
+    {
+     "id": "app2",
+     "point": "Equal quantities of alloys with different part totals are mixed by taking LCM of the part sums as a common volume, then summing gold and silver separately.",
+     "weight": "extended",
+     "evidence_hint": "From 3:2 and 5:4 with LCM(5,9)=45, candidate gets gold 27+25=52 and silver 18+20=38 → 26:19."
+    },
+    {
+     "id": "app3",
+     "point": "Joint variation such as t ∝ V and t ∝ 1/w is modeled as t=kV/w; square variation uses y=kx² (or cost ∝ weight²) and loss is original squared cost minus sum of piece squared costs.",
+     "weight": "core",
+     "evidence_hint": "Candidate solves wall time with t=kV/w to get 8 days, or stone breakage loss 22kx²=11000 from original 36kx² vs pieces 14kx²."
+    },
+    {
+     "id": "app4",
+     "point": "In OA scaling problems, apply percentage increases as multipliers on ratio terms (e.g. 50% → ×1.50, 25% → ×1.25), renormalize the new ratio, then allocate the given total.",
+     "weight": "extended",
+     "evidence_hint": "From 2:8:5 with CPU×1.50 and memory×1.25, candidate gets 3:10:5, 18x=360, memory=200 GB."
+    }
+   ],
+   "probes": [
+    "Model time varying directly with wall volume and inversely with workers, then solve a two-scenario problem. How do you handle a ratio of resources after percentage scale-ups in an OA?"
+   ],
+   "hints": {
+    "1": "Translate the English 'varies directly/inversely' into a single equation with k before plugging numbers.",
+    "2": "For coins use cents and ratio multiples; for equal alloy melt use LCM of part totals; for % scale use multipliers on each term then sum to the given total.",
+    "3": "Write t=kV/w (or C=F+kV²); for 2:8:5 after ×1.50 and ×1.25 get 3x+10x+5x=18x=360 so memory=10x=200."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Direct variation vs inverse variation",
+   "strong_answer": "Direct means y=kx; inverse means xy=k (variable in the denominator). Treating inverse as direct reverses how the quantity scales and yields wrong joint-variation models."
+  },
+  {
+   "topic": "Substitution vs Componendo–Dividendo",
+   "strong_answer": "For homogeneous expressions of a known ratio, substituting the ratio parts (e.g. x=3,y=4) is often fastest; componendo–dividendo is preferable once the expression is rewritten as (a+b)/(a−b) from equal ratios."
+  },
+  {
+   "topic": "Plug options vs algebraic cross-multiply",
+   "strong_answer": "When asked what number must be added/subtracted to make four numbers proportional, testing MCQ options avoids expanding a quadratic from cross-multiplication."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating an inverse variation as a direct one when building the model.",
+   "correction": "'Varies inversely as x' means multiply by 1/x—put that variable in the denominator (xy=k), not as y=kx."
+  },
+  {
+   "trap": "Leaving percentage resource changes as verbal '50% more' instead of multipliers on ratio parts.",
+   "correction": "Translate percentage shifts into multipliers on the ratio terms (50% increase → ×1.50, 25% increase → ×1.25), form the new integer ratio, then allocate the given total."
+  },
+  {
+   "trap": "Cross-multiplying immediately on 'add the same number to make proportional' questions.",
+   "correction": "Plug the given options into both sides of the proportion first; a matching pair (as with adding 2 to 6,14,18,38) solves it without the quadratic."
+  }
+ ]
+}

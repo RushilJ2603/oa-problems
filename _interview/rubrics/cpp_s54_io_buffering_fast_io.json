@@ -1,0 +1,205 @@
+{
+ "id": "cpp_s54_io_buffering_fast_io",
+ "title": "I/O buffering and fast I/O",
+ "type": "FUND",
+ "relevance": "Explains classic cin/getline bugs, flush/TLE pitfalls, and the contest fast-I/O boilerplate interviewers expect.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what stream buffers are, why they exist, and when output is flushed.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "An I/O buffer is an in-memory block owned by the stream (via streambuf) that batches characters so many cheap memory ops replace expensive OS transfers.",
+     "weight": "core",
+     "evidence_hint": "Mentions batching/system-call cost and streambuf as the in-memory character store."
+    },
+    {
+     "id": "fund2",
+     "point": "Data path is program ↔ stream buffer ↔ OS kernel buffer ↔ device; cout writes into the stream buffer until flush; cin fills the input buffer in chunks then extractions consume from memory.",
+     "weight": "core",
+     "evidence_hint": "Walks the layered path and that input/output hit the kernel only on flush/fill."
+    },
+    {
+     "id": "fund3",
+     "point": "cout is line-buffered on a terminal and fully buffered when redirected; cerr is unbuffered; clog is buffered like cout; cin is fully buffered (often a line at a time from a terminal).",
+     "weight": "extended",
+     "evidence_hint": "States the per-stream buffering policies, especially cout terminal vs redirect and cerr unbuffered."
+    },
+    {
+     "id": "fund4",
+     "point": "Output flushes when the buffer is full, on newline for line-buffered streams, on explicit flush/endl, on program exit, or when reading from a tied stream (cin tied to cout by default).",
+     "weight": "core",
+     "evidence_hint": "Lists several flush triggers and that cin→cout tie flushes prompts before blocking."
+    }
+   ],
+   "probes": [
+    "What is a stream buffer, and why don't cin/cout talk to the OS on every character?",
+    "When does cout actually flush, and how does cin being tied to cout affect prompts?"
+   ],
+   "hints": {
+    "1": "Think about why a system call per character would be slow.",
+    "2": "Name the in-memory layer between your program and the kernel, then list flush triggers.",
+    "3": "Buffer = streambuf batching; flush on full, newline (line-buffered), flush/endl, exit, or tied cin read."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how >> and getline consume the input buffer differently, including the leftover-newline trap and stream-state loops.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "operator>> skips leading whitespace, stops at the next whitespace without consuming it, and for string reads one whitespace-delimited word.",
+     "weight": "core",
+     "evidence_hint": "States skip-leading, leave-trailing-whitespace, and word-not-line for string."
+    },
+    {
+     "id": "mech2",
+     "point": "After cin >> x, the terminating newline stays in the buffer; the next getline consumes that leftover newline, stores an empty string, and does not wait for the intended line.",
+     "weight": "core",
+     "evidence_hint": "Explains leftover '\\n' after >> and empty-string getline as the classic trap."
+    },
+    {
+     "id": "mech3",
+     "point": "Fix by discarding the rest of the line with ignore(max, '\\n') or by getline(cin >> ws, s); ignore is preferred when you must clear the current line even if more content followed the token.",
+     "weight": "core",
+     "evidence_hint": "Gives ignore with streamsize max and newline, or ws, and when each fits."
+    },
+    {
+     "id": "mech4",
+     "point": "getline clears then fills the string until delim/EOF/error; consumes but does not store the delimiter; returns the stream so while (getline(...)) works via operator bool as !fail().",
+     "weight": "extended",
+     "evidence_hint": "Covers delimiter consume-not-store and stream-as-bool loop idiom."
+    },
+    {
+     "id": "mech5",
+     "point": "A failed >> sets failbit and leaves bad characters in the buffer; further I/O is a no-op until clear() then ignore residual input.",
+     "weight": "extended",
+     "evidence_hint": "Says clear then ignore after bad extraction; mentions fail/eof bits for EOF loops."
+    }
+   ],
+   "probes": [
+    "Why does getline read an empty string right after cin >> n, and how do you fix it?",
+    "How do you read until EOF with cin, and what do you do after a failed extraction?"
+   ],
+   "hints": {
+    "1": "Ask what characters >> leaves behind versus what getline treats as end-of-line.",
+    "2": "Trace buffer after reading a number then Enter; recall stream bool means !fail().",
+    "3": ">> leaves '\\n'; getline takes it as empty line — ignore(max,'\\n') or >> ws; EOF loops use while(cin>>x)/getline; recover with clear+ignore."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast flush and sync choices that trade correctness/interactivity for throughput.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "endl writes a newline and flushes every time; in tight loops or large line counts those flushes dominate and can TLE — prefer '\\n' and flush once at the end if needed.",
+     "weight": "core",
+     "evidence_hint": "Contrasts endl (newline+flush) with '\\n' and warns about contest TLE from repeated flushes."
+    },
+    {
+     "id": "tr2",
+     "point": "Default sync_with_stdio keeps C++ streams coordinated with C stdio for safe mixing; sync_with_stdio(false) decouples buffers for speed but you must not mix cin/cout with scanf/printf.",
+     "weight": "core",
+     "evidence_hint": "Explains sync purpose, speed win when false, and no-mix caveat."
+    },
+    {
+     "id": "tr3",
+     "point": "cin.tie(nullptr) removes automatic cout flush before each input — faster for bulk I/O, but interactive prompts need an explicit flush yourself.",
+     "weight": "core",
+     "evidence_hint": "States default tie vs nullptr and interactivity vs speed."
+    }
+   ],
+   "probes": [
+    "endl versus '\\n' — when does the difference matter?",
+    "What do sync_with_stdio(false) and cin.tie(nullptr) buy you, and what do you give up?"
+   ],
+   "hints": {
+    "1": "One choice is about flushing; the other two are contest speed knobs.",
+    "2": "Separate flush-every-line cost from C-stdio sync and cin↔cout tie.",
+    "3": "Prefer '\\n'; turn off sync and untie for speed; never mix with scanf/printf; flush prompts yourself if untied."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply buffer knowledge to contest fast I/O and correct mixed >>/getline or failed-input handling.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Standard contest boilerplate at start of main before any I/O: ios_base::sync_with_stdio(false); cin.tie(nullptr); then use cin/cout heavily without scanf/printf.",
+     "weight": "core",
+     "evidence_hint": "Recites both calls, before-I/O placement, and pick-one-style rule."
+    },
+    {
+     "id": "app2",
+     "point": "getline still works after sync_with_stdio(false); desync/untie change performance and flush coupling, not the meaning of >> or getline — still need ignore/ws when mixing them.",
+     "weight": "extended",
+     "evidence_hint": "Says getline remains valid; mixing >> and getline still needs the leftover-newline fix."
+    },
+    {
+     "id": "app3",
+     "point": "Interactive problems may still need ties or explicit flush so the judge sees output before the next read; extreme sizes may use custom readers but the two-liner comes first.",
+     "weight": "extended",
+     "evidence_hint": "Separates interactive flush needs from bulk contest boilerplate."
+    }
+   ],
+   "probes": [
+    "How do you speed up C++ I/O in contests, and what caveats apply?",
+    "After turning on fast I/O, how do you still correctly read a full line after a formatted >>?"
+   ],
+   "hints": {
+    "1": "Name the two calls people put at the top of main.",
+    "2": "Explain sync (C++↔C) and tie (flush cout before cin), plus when prompts need flush.",
+    "3": "sync_with_stdio(false)+tie(nullptr) before I/O; no scanf/printf; '\\n' not endl; still ignore/ws before getline after >>."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "endl vs '\\n'",
+   "strong_answer": "endl is newline plus flush; repeated endl in large output loops can dominate runtime and TLE. Prefer '\\n' (or \"\\n\") and an optional single flush at the end."
+  },
+  {
+   "topic": "sync_with_stdio true vs false",
+   "strong_answer": "Default sync keeps cin/cout coordinated with scanf/printf so mixing is safe. false decouples buffers for a large speed win but forbids mixing C and C++ I/O on the same streams; call before any I/O."
+  },
+  {
+   "topic": "cin tied to cout vs cin.tie(nullptr)",
+   "strong_answer": "Default tie flushes cout before every cin read so prompts appear; untie removes that cost for bulk contest I/O but you must flush yourself when interactivity requires it."
+  },
+  {
+   "topic": ">> tokens vs getline lines",
+   "strong_answer": "Use >> for whitespace-separated tokens/numbers (skips leading whitespace, leaves trailing). Use getline when the unit is a whole line including spaces; after >> before getline, discard the leftover newline with ignore or ws."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Calling getline immediately after cin >> x and getting an empty string.",
+   "correction": ">> left the terminating newline; getline consumed it as an empty line. Discard with cin.ignore(numeric_limits<streamsize>::max(), '\\n') or use getline(cin >> ws, s)."
+  },
+  {
+   "trap": "Using endl in a tight output loop and getting TLE.",
+   "correction": "endl flushes every iteration. Prefer '\\n' and flush once at the end if needed."
+  },
+  {
+   "trap": "After sync_with_stdio(false), still mixing cin/cout with scanf/printf.",
+   "correction": "Buffers diverge and I/O can be lost, reordered, or corrupted. Pick one style for the whole program."
+  },
+  {
+   "trap": "Calling sync_with_stdio(false) after the first I/O operation.",
+   "correction": "Call it before any I/O; calling after first cin/cout/printf is implementation-defined and may be ignored."
+  },
+  {
+   "trap": "cin.tie(nullptr) then printing a prompt without flushing before reading.",
+   "correction": "Untying stops automatic cout flush before cin; flush prompts yourself when the user or judge must see output before the next read."
+  },
+  {
+   "trap": "Failed >> leaves the stream unusable and bad characters still buffered.",
+   "correction": "clear() to reset fail/eof bits, then ignore the rest of the line (or residual bad token) before continuing."
+  }
+ ]
+}

@@ -1,0 +1,181 @@
+{
+ "id": "dsa_s23_critical_reasoning",
+ "title": "Critical Reasoning & Truth-Teller Puzzles",
+ "type": "FUND",
+ "relevance": "Campus OAs and SDE screens routinely test whether candidates can isolate assumptions, strengthen or weaken causal links, and solve knights/knaves and syllogism puzzles under time pressure.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the premise–conclusion–assumption framework and the Negation Test for required assumptions.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Every argument has a premise (stated facts), a conclusion (the claim), and an assumption (the unstated link connecting them).",
+     "weight": "core",
+     "evidence_hint": "Candidate names all three parts and describes the assumption as the missing bridge, not a restated premise."
+    },
+    {
+     "id": "fund2",
+     "point": "Use the Negation Test: if negating a candidate assumption destroys the argument, that assumption is logically required.",
+     "weight": "core",
+     "evidence_hint": "Candidate applies negate-and-check: destruction of the plan or claim means the assumption was necessary."
+    },
+    {
+     "id": "fund3",
+     "point": "To strengthen or weaken an argument, support or attack the assumption link so a new fact makes the conclusion more or less likely to follow from the evidence.",
+     "weight": "extended",
+     "evidence_hint": "Candidate says you target the reasoning bridge, not merely restate or deny the given facts."
+    }
+   ],
+   "probes": [
+    "What are the three parts of an argument, and how do you check whether a statement is a required assumption?"
+   ],
+   "hints": {
+    "1": "Think about what is stated versus what must be true but never said.",
+    "2": "Name premise, conclusion, and assumption, then try flipping the assumed link and see if the argument collapses.",
+    "3": "Negation Test: negate the candidate assumption; if the argument is destroyed, that assumption is required. Strengthen/weaken by supporting or attacking that link."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to solve statement–assumption, strengthen/weaken, cause–effect, knights/knaves, and syllogism problems with the right check.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "For a pollution-reduction plan that raises parking fees, only the assumption that people will switch to public transport or carpool is implicit; assuming people still drive despite paying more undermines the plan.",
+     "weight": "core",
+     "evidence_hint": "Candidate picks only the deterrence/switch assumption and explains why continued driving kills the pollution goal."
+    },
+    {
+     "id": "mech2",
+     "point": "Weaken a causal claim (e.g., heavy breakfast caused 15% higher exam scores) by giving an alternative cause such as skippers studying late and sleeping less; strengthen a causal claim with a clear before-and-after after the claimed mechanism was introduced.",
+     "weight": "core",
+     "evidence_hint": "Candidate cites alternative cause for weaken and before/after improvement for strengthen, not out-of-scope side facts."
+    },
+    {
+     "id": "mech3",
+     "point": "Solve knights/knaves by case-splitting: assume a speaker’s type; if contradiction follows, flip. No one can claim “I am a liar.”",
+     "weight": "extended",
+     "evidence_hint": "Candidate tries Knight vs Knave cases and recalls that neither type can say they are a liar."
+    },
+    {
+     "id": "mech4",
+     "point": "For syllogisms, translate All/Some/No into Venn relations; a conclusion follows only if it holds in every valid diagram.",
+     "weight": "extended",
+     "evidence_hint": "Candidate draws or describes nested/overlapping/disjoint circles and rejects conclusions that are merely possible."
+    }
+   ],
+   "probes": [
+    "How would you weaken a principal’s claim that a heavy breakfast caused higher exam scores, and how do you decide whether a syllogism conclusion follows?"
+   ],
+   "hints": {
+    "1": "For cause claims, ask what else could explain the effect; for sets, ask what must be true in every diagram.",
+    "2": "Weaken via alternative cause; strengthen via before-and-after on the claimed mechanism; use case splits for knights/knaves and Venns for All/Some/No.",
+    "3": "Breakfast→scores is weakened if late studying/sleep explains low scores; All computers are machines and some machines are robots does not force any computer–robot overlap."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Distinguish attacking the premise or scope from attacking the reasoning link, and choose the move that actually strengthens or weakens the argument.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "When asked to weaken, attacking the premise (e.g., calling data fake) or picking a generally true but out-of-scope fact fails; you must attack the reasoning that connects premise to conclusion.",
+     "weight": "core",
+     "evidence_hint": "Candidate rejects premise-bashing and off-topic truths and instead breaks the causal or inferential bridge."
+    },
+    {
+     "id": "tr2",
+     "point": "For LED bills that rose after a switch, critics blaming hungrier bulbs are weakened by more fixtures being added; for low lost-luggage claims, direct flights or fewer bags offer rival causes that weaken a scanning-system explanation, while a worst-to-best shift after installing the system strengthens it.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts alternative causes that break a causal story with before-and-after evidence that supports the claimed cause."
+    }
+   ],
+   "probes": [
+    "On a weaken question, why is attacking the premise or picking an out-of-scope true fact usually wrong, and what should you attack instead?"
+   ],
+   "hints": {
+    "1": "Separate “this fact is true” from “this fact breaks the author’s logic.”",
+    "2": "Premise attacks and off-topic truths leave the link intact; alternative causes or missing bridges break it.",
+    "3": "Weaken by hitting the assumption/causal link (more lights, sleep deprivation, Friday deadlines); strengthen by closing rival explanations or showing before-and-after on the claimed mechanism."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the framework to OA-style assumption, weaken, inference, two-guard, and multi-statement syllogism items.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "If an AI assistant reduces syntax errors by 40% and the claim is that overall development time will fall, it must be true that syntax errors currently account for a significant portion of development time; otherwise the 40% cut barely moves overall time.",
+     "weight": "core",
+     "evidence_hint": "Candidate applies Negation Test to the significant-share assumption and rejects free deployment or faster writing as the necessary link."
+    },
+    {
+     "id": "app2",
+     "point": "A 30% Thursday commit rise after a no-meetings policy is weakened if a mandatory Friday morning code-review deadline forced rushed Thursday commits.",
+     "weight": "core",
+     "evidence_hint": "Candidate names the Friday-deadline alternative cause and dismisses morale, other companies, or bug counts as off-metric."
+    },
+    {
+     "id": "app3",
+     "point": "From intermittency of solar/wind plus the need for massive battery investment for a 100% renewable grid, infer that without large-scale storage a grid relying entirely on wind and solar would be unstable—not that solar beats wind or that batteries are too expensive.",
+     "weight": "extended",
+     "evidence_hint": "Candidate sticks to text-entailed instability without storage and rejects reliability comparisons and cost claims."
+    },
+    {
+     "id": "app4",
+     "point": "In the two-door, two-guard puzzle, ask what the other guard would say is the freedom door; both types point to doom, so take the opposite door. With All anomalies are alerts, no alert is a false positive, and some false positives are user errors, both “no anomaly is a false positive” and “some user errors are not anomalies” follow.",
+     "weight": "extended",
+     "evidence_hint": "Candidate explains the double-negative doom answer and the chained Venn: anomalies inside alerts, alerts disjoint from false positives, so some false-positive user errors cannot be anomalies."
+    }
+   ],
+   "probes": [
+    "For the AI 40% syntax-error argument and the Thursday no-meetings 30% commit claim, what must be true or what weakens the conclusion?"
+   ],
+   "hints": {
+    "1": "Ask what link turns a narrow metric change into the broad claimed outcome.",
+    "2": "Negate “syntax errors take significant time”; for commits, hunt a rival Thursday cause like a Friday deadline.",
+    "3": "Necessary: syntax errors are a significant time share. Weaken: Friday review deadline drives Thursday commits. Two-guards: ask what the other would say, then pick the opposite door."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Attacking the premise vs attacking the assumption link",
+   "strong_answer": "Weaken/strengthen items are decided on the reasoning bridge. Calling data fake or citing a true but out-of-scope fact leaves the argument’s link intact; a new fact must make the conclusion more or less likely given the same evidence."
+  },
+  {
+   "topic": "Alternative cause vs outlier or off-scope fact when weakening causation",
+   "strong_answer": "A rival cause for the same effect (sleep loss instead of skipped breakfast; more fixtures instead of power-hungry LEDs; Friday deadlines instead of no-meeting deep work) breaks causation. Outliers that leave the average intact, or facts about cost, morale, lunch, or other companies, usually do not."
+  },
+  {
+   "topic": "Possible Venn overlap vs necessary conclusion",
+   "strong_answer": "In syllogisms, a conclusion follows only if every valid diagram forces it. Some machines are robots does not force robots to meet computers inside machines; some erasers are pencils does follow from all pencils are erasers."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Picking an option that attacks the premise or is generally true but out of scope when asked to weaken.",
+   "correction": "Attack the reasoning that connects premise to conclusion—typically an alternative cause or a broken assumption link."
+  },
+  {
+   "trap": "Treating “engineers may introduce new logical errors” as necessary to block “less syntax error → less development time.”",
+   "correction": "Even with some new errors, overall time can still fall if syntax savings are large; what is necessary is that syntax errors currently take a significant share of time."
+  },
+  {
+   "trap": "Assuming a character can say “I am a liar,” or stopping after one case without checking contradiction.",
+   "correction": "Neither Knight nor Knave can claim to be a liar. Case-split: assume a type, derive contradiction, flip; e.g., “at least one Knave” forces A Knight and B Knave."
+  },
+  {
+   "trap": "Accepting a syllogism conclusion that might be true in some diagrams but not all (e.g., some robots are computers from All computers are machines + Some machines are robots).",
+   "correction": "Require truth in every valid Venn; possible overlap is not enough. Conversely, all pencils are erasers does force some erasers are pencils."
+  },
+  {
+   "trap": "Overreaching from “longer battery life” to “older phones had poor battery life,” or comparing solar vs wind reliability when the passage does not.",
+   "correction": "Only force what the text requires: other components must not wipe out battery/processor gains; without storage, a 100% wind/solar grid would be unstable."
+  }
+ ]
+}

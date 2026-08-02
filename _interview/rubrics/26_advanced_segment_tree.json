@@ -1,0 +1,242 @@
+{
+ "id": "26_advanced_segment_tree",
+ "title": "Advanced segment tree: lazy propagation, segtree-beats, merge-sort tree",
+ "type": "CP",
+ "relevance": "Medium — plain range-add / range-assign + range-sum shows up in harder OAs and Div2 D; beats and merge-sort tree are almost pure CF rating-builders (CM stretch) Striver never covers.",
+ "difficulty": "mid",
+ "prereqs": [
+  "20_range_queries"
+ ],
+ "company_notes": "Support range increment and range sum on n,q≤10^5 → CSES Range Updates and Sums / Horrible Queries shape (backend analytics / spreadsheet cell ranges). Flip/XOR a range then query sum → CF 242E / Danil-style; bitset or 20 parallel trees. Count inversions / how many values in [L,R] are ≤x → Fenwick or merge-sort tree (Enemy is weak / Tufurama; interview cousin of LC 315). Full segtree-beats (range mod / chmin) almost never in placement OAs — CF Div1 / Div2 D–E stretch after lazy is automatic.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Map the prompt to lazy tags, segtree beats, or merge-sort tree from update/query shape and signal words.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "When updates touch a range (not a point), use lazy tags and only push when you descend — signal words: range add/set then range sum/min, range XOR/flip.",
+     "weight": "core",
+     "evidence_hint": "Says range update → lazy with push-on-descend, and cites add/set+sum/min or XOR/flip wording."
+    },
+    {
+     "id": "rec2",
+     "point": "When the update is not a clean monoid action (range a_i mod x, range chmin/chmax, replace by d(a_i)), reach for segtree beats with max / 2nd-max (or min).",
+     "weight": "core",
+     "evidence_hint": "Names mod/chmin/chmax/d(a_i) as non-monoid and picks beats with max/max2."
+    },
+    {
+     "id": "rec3",
+     "point": "Order-statistic / count-of-values on a static index range (how many a_i ≤ x on [L,R], k-th, 2D dominance) → merge-sort tree (sorted vector or Fenwick of compressed values per node).",
+     "weight": "core",
+     "evidence_hint": "Maps ≤x-on-[L,R] / k-th / dominance to MST or per-node sorted values / compressed Fenwick."
+    },
+    {
+     "id": "rec4",
+     "point": "OA disguises: range increment + range sum; flip/XOR range then sum; count inversions / values ≤x on a subarray (LC 315 cousin) — full beats almost never in placement OAs.",
+     "weight": "extended",
+     "evidence_hint": "Maps at least one of those OA shapes to lazy or Fenwick/MST and treats full beats as CF stretch."
+    }
+   ],
+   "probes": [
+    "Does this need lazy tags, segtree beats, or a merge-sort tree — and which words tipped you off?",
+    "Would you treat range mod / chmin the same way as range add?"
+   ],
+   "hints": {
+    "1": "Ask whether the update is a range (not a point) and whether the query is aggregate, order-statistic, or non-monoid.",
+    "2": "Range add/set/XOR → lazy; mod/chmin/d(a_i) → beats; count ≤x / k-th on [L,R] → merge-sort tree.",
+    "3": "Say: range update → lazy push-on-descend; non-monoid mod/chmin/d(a_i) → beats with max/max2; ≤x/k-th on index range → MST; OA = add+sum / XOR+sum / inversions (LC 315), not full beats."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Choose tag composition, beats break/tag/recurse, or MST vs Fenwick-offline before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Tag algebra: identity + compose(new, old) + apply(tag, node, len); assign overrides everything; add stacks; affine (b1,c1)∘(b2,c2)=(b1b2, b1c2+c1).",
+     "weight": "core",
+     "evidence_hint": "States compose/apply and that assign kills adds, with the affine compose formula."
+    },
+    {
+     "id": "appr2",
+     "point": "Beats rule of thumb: store max (and often max2 / cnt_max); break if the update cannot change the node; tag if the update is uniform on the node; else recurse.",
+     "weight": "core",
+     "evidence_hint": "Lists break / tag / recurse with max (and max2/cnt_max) stored on the node."
+    },
+    {
+     "id": "appr3",
+     "point": "Merge-sort tree: each node holds sorted values of its range; count ≤x by binary-search on O(log n) nodes → O(log^2 n); prefer Fenwick+offline when it fits — same answers, lighter constants.",
+     "weight": "core",
+     "evidence_hint": "Describes sorted vectors per node, binary-search across O(log n) nodes, and Fenwick-offline preference."
+    },
+    {
+     "id": "appr4",
+     "point": "Euler tour + lazy: subtree = contiguous [tin, tout) — flip/assign/color problems reduce to 1D lazy (Danil, New Year Tree family).",
+     "weight": "extended",
+     "evidence_hint": "Maps subtree update/query to [tin,tout) and a 1D lazy tree."
+    }
+   ],
+   "probes": [
+    "How do you compose assign vs add vs affine tags?",
+    "When do you break vs tag vs recurse in beats, and when is Fenwick-offline better than a merge-sort tree?"
+   ],
+   "hints": {
+    "1": "Write the tag operations and decide if the update is a clean monoid action.",
+    "2": "Compose with assign overriding add; beats break/tag/recurse on max/max2; MST sorted nodes or Fenwick offline; subtree → [tin,tout).",
+    "3": "Say: compose(new,old)+apply; assign kills adds; affine (b1b2, b1c2+c1); beats break/tag/recurse; MST O(log^2 n) count ≤x, else Fenwick offline; subtree = [tin,tout)."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Code the lazy push/pull skeleton, associative custom nodes, and push-on-descent walks.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Lazy skeleton: on update/query, if fully covered apply tag + return; else push, recurse, pull — never read a child without pushing the parent first.",
+     "weight": "core",
+     "evidence_hint": "States fully-cover apply-return, else push/recurse/pull, and push-before-child."
+    },
+    {
+     "id": "impl2",
+     "point": "Node payloads beyond sum/min: (sum, len), (sum, best_pref), (zeros, ones, inv), (pref_ones, suf_ones, best, len) — merge must be associative.",
+     "weight": "core",
+     "evidence_hint": "Names at least two of those structs and insists merge is associative."
+    },
+    {
+     "id": "impl3",
+     "point": "Walk / descent to the first index with prefix sum ≥ x still works with lazy if you push on the way down (Restore Permutation / Hotel-style).",
+     "weight": "core",
+     "evidence_hint": "Describes descending for first prefix ≥ x while pushing lazy along the path."
+    },
+    {
+     "id": "impl4",
+     "point": "Range XOR + range sum can use 20 bit-segtrees or lazy XOR that flips bit-counts; range flip + inversions uses custom node (zeros, ones, inv) where flip swaps and remaps inv.",
+     "weight": "extended",
+     "evidence_hint": "Picks 20 bit trees or bit-count flip for XOR+sum, or zeros/ones/inv with flip remap."
+    }
+   ],
+   "probes": [
+    "Walk through update/query when the node is only partially covered — when do you push?",
+    "What do you store in the node for range sum under affine tags, or for flip + inversions?"
+   ],
+   "hints": {
+    "1": "Write the fully-covered vs partial-cover control flow first.",
+    "2": "Fully covered → apply+return; else push, recurse, pull; pick a struct like (sum,len) or (zeros,ones,inv); push while walking.",
+    "3": "Say: apply-return or push/recurse/pull; never read child without push; nodes (sum,len)/(sum,best_pref)/(zeros,ones,inv)/(pref,suf,best,len); walk first prefix ≥ x with push; XOR via 20 bit-segtrees or bit-count flip."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State merge-sort tree costs and why n,q≤10^5 forces logarithmic lazy structures.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Merge-sort tree build is O(n log n) memory/time; count ≤x binary-searches O(log n) nodes ⇒ O(log^2 n) query.",
+     "weight": "core",
+     "evidence_hint": "Quotes O(n log n) build and O(log^2 n) from O(log n) binary searches."
+    },
+    {
+     "id": "cx2",
+     "point": "Range increment + range sum with n,q≤10^5 needs a lazy segment tree (log-per-op), not a naive scan.",
+     "weight": "core",
+     "evidence_hint": "Ties n,q≤10^5 range-add+sum to lazy logarithmic updates/queries."
+    },
+    {
+     "id": "cx3",
+     "point": "Prefer Fenwick+offline over merge-sort tree when it fits — same answers, lighter constants.",
+     "weight": "extended",
+     "evidence_hint": "Says Fenwick offline matches MST answers with better constants when applicable."
+    }
+   ],
+   "probes": [
+    "What are the build and count-≤x costs of a merge-sort tree?",
+    "Why is a lazy tree required when n and q are up to 10^5?"
+   ],
+   "hints": {
+    "1": "Ask how many nodes a range query touches and what each stores.",
+    "2": "MST: O(n log n) build, O(log n) nodes each binary-searched → O(log^2 n); large n,q need log lazy.",
+    "3": "Say: MST build O(n log n), count ≤x in O(log^2 n); n,q≤10^5 range-add+sum → lazy; Fenwick offline when it fits for lighter constants."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch forgotten pushes, assign/add compose bugs, sum overflow, and ACL vs CSES range conventions.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Forgetting push before recurse (or reading a child without pushing the parent) leaves stale lazy on parents and wrong child values.",
+     "weight": "core",
+     "evidence_hint": "Calls out push-before-child as the default WA."
+    },
+    {
+     "id": "pit2",
+     "point": "Wrong assign/add priority: assign must override everything / kill prior adds; add only stacks when no assign supersedes it.",
+     "weight": "core",
+     "evidence_hint": "States assign overrides add when composing tags."
+    },
+    {
+     "id": "pit3",
+     "point": "int overflow on sum is a default WA — sums under range add/assign need a wide enough integer type.",
+     "weight": "core",
+     "evidence_hint": "Names int overflow on sum as a concrete failure mode."
+    },
+    {
+     "id": "pit4",
+     "point": "Off-by-one on half-open ACL ranges vs inclusive CSES/CF bounds.",
+     "weight": "extended",
+     "evidence_hint": "Distinguishes ACL half-open from inclusive CSES/CF indexing."
+    }
+   ],
+   "probes": [
+    "What happens if you recurse without pushing?",
+    "How should assign and add compose, and which range convention are you using?"
+   ],
+   "hints": {
+    "1": "Check push, tag compose, sum type, and inclusive vs half-open bounds.",
+    "2": "Push before every child read; assign kills adds; widen sum type; match ACL vs CSES/CF ranges.",
+    "3": "List: push before recurse; assign overrides add; avoid int overflow on sum; half-open ACL vs inclusive CSES/CF."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Lazy monoid tags vs segtree beats",
+   "strong_answer": "Clean range actions (add, assign, affine, XOR/flip) use lazy tags with compose/apply; non-monoid updates (range mod, chmin/chmax, replace by d(a_i)) need beats — store max/max2, break if unchanged, tag if uniform, else recurse."
+  },
+  {
+   "topic": "Merge-sort tree vs Fenwick + offline",
+   "strong_answer": "Both answer count ≤x / order-statistic on index ranges; MST stores sorted vectors per node with O(n log n) build and O(log^2 n) queries; prefer Fenwick+offline when it fits for the same answers with lighter constants."
+  },
+  {
+   "topic": "Placement lazy vs full beats",
+   "strong_answer": "Plain range-add / range-assign + range-sum is the OA/Div2 D skill; full segtree-beats (range mod / chmin) almost never appears in placement OAs — treat as CF Div1 / Div2 D–E stretch after lazy is automatic."
+  },
+  {
+   "topic": "Plain sum/min node vs custom associative payload",
+   "strong_answer": "Sum/min suffice for basic RURQ; affine needs (sum, len); prefix-max needs (sum, best_pref); flip+inversions need (zeros, ones, inv); longest run of 1s needs (pref_ones, suf_ones, best, len) — merge must stay associative."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Forgetting push before recurse, or reading a child without pushing the parent first.",
+   "correction": "On partial cover: push, recurse, pull — never inspect children until the parent's lazy is pushed."
+  },
+  {
+   "trap": "Composing add and assign in the wrong order so old adds survive an assign.",
+   "correction": "Assign overrides everything (kills prior adds); add stacks; affine composes as (b1,c1)∘(b2,c2)=(b1b2, b1c2+c1)."
+  },
+  {
+   "trap": "Using int for node sums under range add/assign.",
+   "correction": "Watch int overflow on sum — use a wide enough integer type for aggregated sums."
+  },
+  {
+   "trap": "Mixing half-open ACL segment bounds with inclusive CSES/CF ranges.",
+   "correction": "Match the platform: half-open ACL ranges vs inclusive CSES/CF — off-by-one here is a default WA."
+  },
+  {
+   "trap": "Treating range mod / chmin like a normal lazy monoid tag and always applying.",
+   "correction": "Use beats: store max (and often max2 / cnt_max); break if the update cannot change the node (e.g. max < mod); tag only if uniform; else recurse."
+  }
+ ]
+}

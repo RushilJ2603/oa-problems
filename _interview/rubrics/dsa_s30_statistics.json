@@ -1,0 +1,231 @@
+{
+ "id": "dsa_s30_statistics",
+ "title": "Statistics & Data Analysis",
+ "type": "FUND",
+ "relevance": "Analyst and quant rounds probe statistical intuition—on-the-fly estimates, why a metric misleads, and Bayes base-rate problems—more than memorizing distribution PDFs.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish core descriptive measures, variance/SD identities, linear-transform rules, correlation, the empirical rule, Bayes, and binomial moments.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Mean is the average and is sensitive to outliers; median is the middle value and is robust to outliers (skewed data); mode is the most frequent value.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts mean vs median under skew and states mode as most frequent."
+    },
+    {
+     "id": "fund2",
+     "point": "Variance is σ² = E[X²] − (E[X])² and standard deviation is σ = √Variance.",
+     "weight": "core",
+     "evidence_hint": "States the E[X²]−(E[X])² identity and that SD is the square root of variance."
+    },
+    {
+     "id": "fund3",
+     "point": "For Y = aX + b: E[Y] = aE[X] + b, Var(Y) = a² Var(X), and SD becomes |a|σ_X; adding a constant shifts the mean but does not change variance.",
+     "weight": "core",
+     "evidence_hint": "Separates affine effect on mean from scale-only effect on variance/SD."
+    },
+    {
+     "id": "fund4",
+     "point": "Cov(X,Y) = E[XY] − E[X]E[Y]; correlation ρ = Cov(X,Y)/(σ_X σ_Y) with −1 ≤ ρ ≤ 1 measures linear relationship strength.",
+     "weight": "extended",
+     "evidence_hint": "Gives the covariance formula, the ρ definition, the [−1,1] range, and linear-strength meaning."
+    },
+    {
+     "id": "fund5",
+     "point": "The 68-95-99.7 rule: ≈68% of normal data within μ ± 1σ, 95% within μ ± 2σ, and 99.7% within μ ± 3σ.",
+     "weight": "core",
+     "evidence_hint": "Recalls the three percentages tied to 1σ, 2σ, and 3σ bands."
+    },
+    {
+     "id": "fund6",
+     "point": "Binomial with n trials and success probability p has mean = np and variance = np(1−p).",
+     "weight": "extended",
+     "evidence_hint": "States both np and np(1−p) without conflating them."
+    }
+   ],
+   "probes": [
+    "What happens to mean and variance under Y = aX + b, and how does the 68-95-99.7 rule read for a normal?",
+    "How are covariance and correlation defined, and what do binomial mean and variance equal?"
+   ],
+   "hints": {
+    "1": "Start with mean/median/mode under outliers, then variance from moments.",
+    "2": "Write E[Y] and Var(Y) for an affine transform; then ρ = Cov/(σ_X σ_Y) and the empirical-rule percentages.",
+    "3": "Y = aX + b → mean aE[X]+b, Var a²Var(X), SD |a|σ_X; Var = E[X²]−(E[X])²; 68%/95%/99.7% at 1σ/2σ/3σ; binomial mean np, variance np(1−p)."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show they can recompute means under updates/weights, apply affine SD rules, diagnose skew, recover SD from moments, combine constant groups, and evaluate z-scores, binomial, and Poisson probabilities.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "New mean after adding a point equals (old sum + new value) / (n+1); e.g. 10 numbers mean 40 plus 62 → sum 462 over 11 → mean 42.",
+     "weight": "core",
+     "evidence_hint": "Rebuilds sum as n×mean, adds the new value, divides by n+1."
+    },
+    {
+     "id": "mech2",
+     "point": "Combined mean is a weighted average of group means (or baseline-plus-excess deviations); e.g. 20 men at 60000 and 30 women at 50000 → overall 54000.",
+     "weight": "core",
+     "evidence_hint": "Uses total salary / 50 or spreads the men's 10000 excess across 50 employees to get +4000."
+    },
+    {
+     "id": "mech3",
+     "point": "After Y = 1.2X + 5 on scores with mean 60 and SD 8, new mean is 77 and new SD is 9.6 (the +5 does not change spread).",
+     "weight": "core",
+     "evidence_hint": "Computes 1.2(60)+5 = 77 and 1.2(8) = 9.6."
+    },
+    {
+     "id": "mech4",
+     "point": "If mean is significantly greater than median (e.g. median 15, mean 45 on a skewed metric), the distribution is positively skewed (right-tailed).",
+     "weight": "extended",
+     "evidence_hint": "Links mean ≫ median to right-tail outliers pulling the average."
+    },
+    {
+     "id": "mech5",
+     "point": "From E[X]=4 and E[X²]=25: Var = 25−16 = 9 so SD = 3; two zero-variance groups of ten 5s and ten 15s combine to mean 10 and variance 25.",
+     "weight": "core",
+     "evidence_hint": "Applies Var = E[X²]−(E[X])² both for the single RV and for the pooled constant groups."
+    },
+    {
+     "id": "mech6",
+     "point": "z = (x−μ)/σ; e.g. x=85, μ=70, σ=5 → z=3.0; binomial P(X=3) for n=5, p=0.6 is 0.3456; Poisson P(X=0) with λ=3 is e^{-3}.",
+     "weight": "extended",
+     "evidence_hint": "States the z formula and at least one of the binomial or Poisson evaluations correctly."
+    }
+   ],
+   "probes": [
+    "Scores have mean 60 and SD 8; after multiplying by 1.2 and adding 5, what are the new mean and SD?",
+    "Given E[X]=4 and E[X²]=25, what is SD(X)? What is the variance of ten 5s combined with ten 15s?"
+   ],
+   "hints": {
+    "1": "For means, think totals (n×mean) and weighted sums; for spread, remember only the multiplier scales SD.",
+    "2": "Use Var = E[X²]−(E[X])²; for affine transforms only |a| hits SD; for skew compare mean to median.",
+    "3": "1.2(60)+5=77 and 1.2(8)=9.6; Var=25−16=9 → SD=3; pooled constants → E[X²]=125, Var=25; z=(85−70)/5=3."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast absolute correlation strength vs sign, correlation vs causation, LLN vs CLT roles, and the frequentist meaning of a confidence interval versus naive probability talk.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Linear-relationship strength is |ρ|; e.g. −0.85 is stronger than 0.75 because the negative sign only marks an inverse direction.",
+     "weight": "core",
+     "evidence_hint": "Picks −0.85 over 0.75 by comparing absolute values."
+    },
+    {
+     "id": "tr2",
+     "point": "Correlation does not imply causation: strong ice-cream/shark-attack correlation is best explained by a confounding variable such as summer weather.",
+     "weight": "core",
+     "evidence_hint": "Rejects causal stories and names a shared lurking cause."
+    },
+    {
+     "id": "tr3",
+     "point": "Law of Large Numbers: as n grows, the sample mean converges to the true expected value (location); Central Limit Theorem describes the shape of the sampling distribution of the mean.",
+     "weight": "core",
+     "evidence_hint": "Separates LLN (mean → expectation) from CLT (sampling-distribution shape)."
+    },
+    {
+     "id": "tr4",
+     "point": "A 95% confidence interval like [1.2 s, 2.8 s] means that in repeated sampling, 95% of such intervals would contain the true mean—not that the fixed mean has a 95% probability of lying in this one interval.",
+     "weight": "extended",
+     "evidence_hint": "States the long-run coverage of the procedure and rejects the single-interval probability claim."
+    }
+   ],
+   "probes": [
+    "Which correlation is stronger, 0.75 or −0.85, and does ice-cream/shark correlation prove causation?",
+    "A die average moves from 4.5 after 10 rolls toward 3.5 after 10000 rolls—LLN or CLT? How do you interpret a 95% CI?"
+   ],
+   "hints": {
+    "1": "Strength uses magnitude of ρ; causation needs more than association.",
+    "2": "Compare |ρ|; name a confounder; split LLN (location) vs CLT (shape); CI coverage is about the procedure.",
+    "3": "|−0.85| > |0.75|; summer weather confounder; LLN explains convergence to 3.5; 95% of repeated CIs cover the true mean."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply Bayes base-rate reasoning, empirical-rule tail/band percentages, standard error, and regression-to-the-mean to concrete interview scenarios.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Rare disease 1%, test 90% sensitive with 10% false positive rate → P(disease | positive) ≈ 8.3% via Bayes; base-rate neglect wrongly treats this as ~90%.",
+     "weight": "core",
+     "evidence_hint": "Sets up P(D|+)=0.009/0.108 ≈ 8.3% and explains false positives from the 99% healthy swamp true positives."
+    },
+    {
+     "id": "app2",
+     "point": "Spam prior 20%, P(viagra|spam)=50%, P(viagra|not spam)=1% → P(spam|viagra) ≈ 92.6%.",
+     "weight": "extended",
+     "evidence_hint": "Computes 0.10/(0.10+0.008) ≈ 92.6%."
+    },
+    {
+     "id": "app3",
+     "point": "Heights N(170 cm, 10 cm): share between 160 cm and 190 cm is about 81.5% (34% left of μ plus 47.5% up to +2σ); data strictly above z=2 is 2.5%.",
+     "weight": "core",
+     "evidence_hint": "Combines half of 68% with half of 95%, and splits the 5% outside ±2σ into two 2.5% tails."
+    },
+    {
+     "id": "app4",
+     "point": "SE of the sample mean is σ/√n; with μ=100, σ=20, n=25 → SE=4. Extreme first-review scores improving later without intervention is regression to the mean.",
+     "weight": "extended",
+     "evidence_hint": "Gives SE=20/5=4 and names regression to the mean for extreme-then-closer retests."
+    }
+   ],
+   "probes": [
+    "Disease prevalence 1%, sensitivity 90%, false positive rate 10%: given a positive test, what is P(disease)?",
+    "What percent of a normal lies above z=2, and what is SE for σ=20 with n=25?"
+   ],
+   "hints": {
+    "1": "Write Bayes with prior × likelihood over total positive probability; use the empirical rule for tails.",
+    "2": "P(+)=0.90×0.01 + 0.10×0.99; above z=2 is half of the 5% outside ±2σ; SE=σ/√n.",
+    "3": "0.009/0.108 ≈ 8.3%; above z=2 → 2.5%; SE=20/√25=4; spam Bayes → ≈92.6%."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Absolute correlation strength vs sign of ρ",
+   "strong_answer": "Strength of linear association is |ρ|; −0.85 beats 0.75 because the sign only indicates inverse direction, not weakness."
+  },
+  {
+   "topic": "Correlation vs causation",
+   "strong_answer": "A strong positive link (e.g. ice cream sales and shark attacks) does not imply one causes the other; a confounder such as summer weather can drive both."
+  },
+  {
+   "topic": "Law of Large Numbers vs Central Limit Theorem",
+   "strong_answer": "LLN says the sample mean converges to the true expectation as n grows (location); CLT describes the shape of the sampling distribution of the mean."
+  },
+  {
+   "topic": "Mean vs median under skew",
+   "strong_answer": "Mean is pulled by outliers; median is robust. Mean much larger than median (e.g. 45 vs 15) signals a positively skewed, right-tailed distribution."
+  },
+  {
+   "topic": "Variance vs standard deviation (interpretation)",
+   "strong_answer": "Variance is in squared units; SD is in the original units and is what we usually interpret—always take √variance to get SD."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Reporting variance when asked for standard deviation (or treating them as interchangeable).",
+   "correction": "Variance is squared units; SD = √variance is in original units—e.g. from Var=9 you must report SD=3."
+  },
+  {
+   "trap": "Base-rate neglect: treating a 90% sensitive test as implying ~90% disease probability after a positive result.",
+   "correction": "With 1% prevalence and 10% false positives, Bayes yields ≈8.3%; false positives from the 99% healthy dominate true positives."
+  },
+  {
+   "trap": "Reading a 95% CI as '95% probability the true mean lies in this interval' or as covering 95% of individual observations.",
+   "correction": "The parameter is fixed; 95% is the long-run fraction of intervals from the same procedure that contain the true mean."
+  },
+  {
+   "trap": "Choosing the correlation with larger algebraic value (e.g. 0.75) over a more negative one (e.g. −0.85) as 'stronger'.",
+   "correction": "Compare |ρ|; −0.85 is the strongest linear association among the usual MCQ options."
+  }
+ ]
+}

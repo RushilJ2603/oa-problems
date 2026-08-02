@@ -1,0 +1,280 @@
+{
+ "id": "17_trees",
+ "title": "Trees CF-style beyond Striver (LCA / binary lifting, Euler tour, rerooting, DSU-on-tree)",
+ "type": "CP",
+ "relevance": "Medium-High — OAs rarely need full LCA templates, but tree DFS/DP, subtree aggregates, and “answer for every root” show up constantly; the CF stretch (binary lifting, Euler+BIT, small-to-large) is the path from “knows trees” to Candidate Master tree problems.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Org-chart / manager queries (k-th boss, lowest common manager) → Company Queries I/II binary lifting, rarely full CF LCA casework. Subtree metrics after updates (sum/count in department rooted at X) → Euler flatten + Fenwick (Subtree Queries / Ki), same shape as org HR dashboards. Answer for every capital/warehouse (best root to minimize distance/rewires) → rerooting DP (Tree Distances II, Choosing Capital). Path feasibility (“nodes on one path?”, distance with one extra cable) → ancestor checks + LCA (Tree Queries, 1-Trees and Queries).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Map signal wording to binary lifting/LCA, Euler+BIT subtree/path queries, rerooting, or small-to-large / DSU-on-tree.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Signal words: company hierarchy / boss queries, subtree sum after updates, path through an extra edge, “for each vertex as capital/root”, dominant color in subtree.",
+     "weight": "core",
+     "evidence_hint": "Lists those signal phrases and ties each to the matching tree template."
+    },
+    {
+     "id": "rec2",
+     "point": "Org-chart “k-th boss” / “lowest common manager” points to binary lifting (Company Queries I/II), not a full CF LCA casework grind.",
+     "weight": "core",
+     "evidence_hint": "Names k-th ancestor / LCA via binary lifting as the OA shape."
+    },
+    {
+     "id": "rec3",
+     "point": "“Sum/count in the department rooted at X” after updates → Euler flatten + Fenwick (Subtree Queries / Ki).",
+     "weight": "core",
+     "evidence_hint": "Says subtree = tour range and Fenwick/segtree on indices."
+    },
+    {
+     "id": "rec4",
+     "point": "“Best root / capital to minimize total distance or rewires” → rerooting DP (Tree Distances II, Choosing Capital).",
+     "weight": "core",
+     "evidence_hint": "Recognizes all-roots / capital choice as rerooting, not n separate rooted DFS from scratch."
+    },
+    {
+     "id": "rec5",
+     "point": "Dominant color / frequency bag per subtree → small-to-large merge or DSU-on-tree (Distinct Colors / Lomsat gelral).",
+     "weight": "extended",
+     "evidence_hint": "Names merge-by-size bags or sack for subtree frequency answers."
+    }
+   ],
+   "probes": [
+    "What wording makes this k-th boss/LCA, subtree updates, answer-for-every-root, or dominant-color-in-subtree?",
+    "Would you reach for binary lifting, Euler+BIT, rerooting, or small-to-large here—and why?"
+   ],
+   "hints": {
+    "1": "Listen for bosses/managers, department/subtree aggregates, capital/root for every vertex, or colors in a subtree.",
+    "2": "Boss/LCA → binary lifting; department sum after updates → Euler+Fenwick; every capital → rerooting; dominant color → small-to-large/sack.",
+    "3": "Say: hierarchy/boss → Company Queries binary lifting; subtree sum/count → Euler+[tin,tout]+Fenwick; for-each-root/capital → rerooting; dominant color → small→large or DSU-on-tree; extra-edge/path cover → LCA/ancestor checks."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "State the rooted plan: Euler flatten, binary-lifting LCA, small→large bags, or two-DFS rerooting before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Root the tree (or try every root via rerooting); flatten with an Euler/DFS tour so a subtree is a contiguous [tin, tout] range for Fenwick/segtree subtree and root→node path queries.",
+     "weight": "core",
+     "evidence_hint": "Says root, assign tin/tout, then DS on the tour for subtree/path."
+    },
+    {
+     "id": "appr2",
+     "point": "Precompute up[k][v] = 2^k-th ancestor for k-th ancestor and LCA; distance = dep[u]+dep[v]-2·dep[lca].",
+     "weight": "core",
+     "evidence_hint": "States binary-lifting table and the depth-based distance formula via LCA."
+    },
+    {
+     "id": "appr3",
+     "point": "When every subtree needs a frequency bag, merge small→large (DSU-on-tree / sack).",
+     "weight": "core",
+     "evidence_hint": "Plans size-ordered merges or heavy-child keep for per-subtree bags."
+    },
+    {
+     "id": "appr4",
+     "point": "When the answer must be reported for every choice of root: one downward DP, then a second DFS that transfers the root across each edge (rerooting).",
+     "weight": "core",
+     "evidence_hint": "Describes DFS1 subtree DP then DFS2 edge-transfer, not n independent roots."
+    },
+    {
+     "id": "appr5",
+     "point": "Path covers / extra-edge distances: use ancestor checks with tin/tout or lift, and for one added edge check the three path combinations (1-Trees and Queries).",
+     "weight": "extended",
+     "evidence_hint": "Mentions LCA/ancestor tests and three-path distance with an extra edge."
+    }
+   ],
+   "probes": [
+    "How do you turn subtree or root→node queries into array range work?",
+    "If the answer is needed for every root, what are the two DFS passes?"
+   ],
+   "hints": {
+    "1": "Separate: flatten for ranges, jump table for ancestors/LCA, bags for frequencies, transfer for all-roots.",
+    "2": "Euler [tin,tout] + BIT/segtree; up[k][v] jumps + depth distance; small→large or sack; DFS1 then DFS2 reroot transfer.",
+    "3": "Say: root and Euler-flatten so subtree=[tin,tout]; up[k][v]=2^k ancestor, dist via dep[u]+dep[v]-2·dep[lca]; frequency bags → small→large/sack; every root → downward DP then transfer across edges; extra edge → three LCA path combos."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Code binary-lifting LCA, Euler tin/tout queries, path-to-root BIT, rerooting transfer, and sack from the checklist.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Binary lifting table: up[0][v]=parent, up[k][v]=up[k-1][up[k-1][v]]; k-th ancestor by bits; sentinel when jump leaves the tree.",
+     "weight": "core",
+     "evidence_hint": "Writes the doubling recurrence, bit jumps, and out-of-tree sentinel."
+    },
+    {
+     "id": "impl2",
+     "point": "LCA: lift deeper node to same depth → joint lift while up[k] differ → parent is LCA.",
+     "weight": "core",
+     "evidence_hint": "Walks equalize-depth then joint binary lift to the LCA parent."
+    },
+    {
+     "id": "impl3",
+     "point": "Euler tour: tin/tout so subtree of v is contiguous; ancestor test tin[u]≤tin[v]≤tout[u].",
+     "weight": "core",
+     "evidence_hint": "Defines tin/tout ranges and the ancestor inequality."
+    },
+    {
+     "id": "impl4",
+     "point": "Subtree PURS: point update at tin[v], range query [tin[v], tout[v]] on Fenwick/segtree.",
+     "weight": "core",
+     "evidence_hint": "Places values at tin and queries the closed tour range."
+    },
+    {
+     "id": "impl5",
+     "point": "Path-to-root via BIT: add +x at tin[v], −x at tout[v]+1; prefix to tin[u] = root→u; combine with LCA for u–v.",
+     "weight": "extended",
+     "evidence_hint": "Uses range-update/point-query on the tour and LCA to stitch u–v."
+    },
+    {
+     "id": "impl6",
+     "point": "DSU-on-tree (sack): process light children and clear; keep heavy child’s bag; add lights; answer; clear if not kept.",
+     "weight": "extended",
+     "evidence_hint": "Orders light→clear, keep heavy, add lights, answer, conditional clear."
+    },
+    {
+     "id": "impl7",
+     "point": "Rerooting template: DFS1 subtree DP → DFS2 transfer using sz / contribution deltas; CSES Distances II uses ans[child] = ans[parent] + n − 2·sz[child].",
+     "weight": "extended",
+     "evidence_hint": "States the two-DFS transfer and the Distances II formula as the model."
+    }
+   ],
+   "probes": [
+    "Write the up table recurrence and the LCA equalize-then-joint-lift steps.",
+    "How do subtree point-update range-sum and root→node path sums differ on the Euler tour BIT?"
+   ],
+   "hints": {
+    "1": "Start from parent links → doubling; then tin/tout bookkeeping; then BIT signs.",
+    "2": "up[0]=parent, up[k]=up[k-1][up[k-1]]; LCA equalize+joint lift; PURS at tin vs +x/−x at tin and tout+1; sack keep heavy; reroot with sz deltas.",
+    "3": "Say: up[0][v]=parent, up[k][v]=up[k-1][up[k-1][v]], bit k-th ancestor with sentinel; LCA lift deeper then joint while up[k] differ; tin/tout subtree + ancestor tin[u]≤tin[v]≤tout[u]; PURS update tin query [tin,tout]; path BIT +x at tin −x at tout+1; sack light-clear keep-heavy; ans[child]=ans[parent]+n−2·sz[child]."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State the grounded costs for binary-lifting LCA, small-to-large merges, and sack.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "With up[k][v] = 2^k-th ancestors precomputed, k-th ancestor and LCA run in O(log n).",
+     "weight": "core",
+     "evidence_hint": "Cites O(log n) ancestor/LCA after binary-lifting preprocess."
+    },
+    {
+     "id": "cx2",
+     "point": "Small-to-large: always merge smaller map/set into larger; each element moves O(log n) times → O(n log^2 n) or O(n log n) with sack.",
+     "weight": "core",
+     "evidence_hint": "States per-element O(log n) moves and the two total bounds."
+    },
+    {
+     "id": "cx3",
+     "point": "When every subtree needs a frequency bag, DSU-on-tree / sack merges in O(n log n).",
+     "weight": "core",
+     "evidence_hint": "Gives O(n log n) for sack/DSU-on-tree frequency bags."
+    }
+   ],
+   "probes": [
+    "What is the query time for k-th ancestor / LCA after binary lifting?",
+    "Why does merging smaller into larger beat naive bag unions, and when does sack improve the bound?"
+   ],
+   "hints": {
+    "1": "Separate jump-table query cost from bag-merge cost.",
+    "2": "Binary lifting queries O(log n); small→large moves each element O(log n) times; sack keeps heavy to reach O(n log n).",
+    "3": "Say: LCA/k-th ancestor O(log n) via 2^k ups; small→large each element moves O(log n) times → O(n log^2 n), or O(n log n) with sack; frequency bags via DSU-on-tree in O(n log n)."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch binary-lifting sentinels, tour BIT sign errors, wrong merge direction, and sack clear mistakes.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Binary lifting must use a sentinel when a jump leaves the tree; otherwise k-th ancestor / LCA jumps read invalid parents.",
+     "weight": "core",
+     "evidence_hint": "Mentions sentinel/out-of-tree guard on up jumps."
+    },
+    {
+     "id": "pit2",
+     "point": "Path-to-root BIT must add −x at tout[v]+1 (not only +x at tin[v]); otherwise prefixes are not root→node sums.",
+     "weight": "core",
+     "evidence_hint": "States the +tin / −(tout+1) pair for range updates."
+    },
+    {
+     "id": "pit3",
+     "point": "Small-to-large must always merge the smaller map/set into the larger; arbitrary merge loses the move bound.",
+     "weight": "core",
+     "evidence_hint": "Insists on smaller-into-larger by size."
+    },
+    {
+     "id": "pit4",
+     "point": "DSU-on-tree: process light children and clear; after answering, clear if the bag is not kept—forgetting the clear pollutes the parent.",
+     "weight": "extended",
+     "evidence_hint": "Describes light clear, keep heavy, and clear-if-not-kept."
+    },
+    {
+     "id": "pit5",
+     "point": "Ancestor checks need tin[u]≤tin[v]≤tout[u] (or lift); path-cover casework like Tree Queries fails if you only compare depths.",
+     "weight": "extended",
+     "evidence_hint": "Uses Euler ancestor test or lift, not depth alone."
+    }
+   ],
+   "probes": [
+    "What breaks if an up jump walks off the root with no sentinel?",
+    "In sack, when must you clear the bag after answering a subtree?"
+   ],
+   "hints": {
+    "1": "Check jump validity, BIT endpoint signs, merge-by-size, and sack keep/clear.",
+    "2": "Sentinel off-tree; −x at tout+1; smaller into larger; clear lights and clear if not kept; ancestor via tin/tout.",
+    "3": "Say: sentinel when jump leaves the tree; path BIT +x at tin[v] and −x at tout[v]+1; always merge smaller into larger; sack process lights+clear, keep heavy, clear if not kept; ancestor tin[u]≤tin[v]≤tout[u]."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Small-to-large set merge vs DSU-on-tree (sack)",
+   "strong_answer": "Merge smaller map/set into larger so each element moves O(log n) times → O(n log^2 n); sack/DSU-on-tree keeps the heavy child’s bag and clears lights to answer frequency bags in O(n log n) (Distinct Colors gateway → Lomsat gelral)."
+  },
+  {
+   "topic": "Naive recompute-per-root vs rerooting",
+   "strong_answer": "Instead of restarting DP for every capital/root, do one downward subtree DP then a second DFS that transfers the answer across each edge using sz/contribution deltas (CSES Distances II: ans[child] = ans[parent] + n − 2·sz[child]; same shape as Choosing Capital / Tree Painting)."
+  },
+  {
+   "topic": "Euler tin/tout ancestor test vs binary lifting for path queries",
+   "strong_answer": "Subtree aggregates and many ancestor checks use Euler [tin,tout] with Fenwick/segtree; k-th boss and LCA distances use up[k][v] jumps; Tree Queries-style path cover can use either Euler tin/tout or lift under the LCA child."
+  },
+  {
+   "topic": "Subtree PURS vs path-to-root BIT on the same tour",
+   "strong_answer": "Subtree Queries: point update at tin[v], range sum [tin[v], tout[v]]. Path Queries: range update via +x at tin[v] and −x at tout[v]+1 so prefix to tin[u] is root→u, then combine with LCA for u–v."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Binary-lifting jump with no sentinel when the ancestor walk leaves the tree.",
+   "correction": "Use a sentinel when the jump leaves the tree; build up[0][v]=parent and up[k][v]=up[k-1][up[k-1][v]] carefully."
+  },
+  {
+   "trap": "Implementing path-to-root sums with only +x at tin[v].",
+   "correction": "Add +x at tin[v] and −x at tout[v]+1 so the prefix to tin[u] equals root→u; combine with LCA for u–v."
+  },
+  {
+   "trap": "Merging frequency bags in arbitrary order.",
+   "correction": "Always merge the smaller map/set into the larger so each element moves O(log n) times."
+  },
+  {
+   "trap": "Keeping light-child bags or forgetting to clear when the sack bag is not kept.",
+   "correction": "Process light children and clear; keep the heavy child’s bag; add lights; answer; clear if not kept."
+  },
+  {
+   "trap": "Computing u–v distance without LCA depths.",
+   "correction": "Distance = dep[u]+dep[v]-2·dep[lca] after equalize-depth + joint binary lift."
+  },
+  {
+   "trap": "Treating path-cover / “nodes on one path” as a depth-only check.",
+   "correction": "Use ancestor tests tin[u]≤tin[v]≤tout[u] or lift; Tree Queries needs all nodes under one child of the LCA (or equivalent)."
+  }
+ ]
+}

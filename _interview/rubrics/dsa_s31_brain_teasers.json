@@ -1,0 +1,230 @@
+{
+ "id": "dsa_s31_brain_teasers",
+ "title": "Classic Brain Teasers & Puzzles",
+ "type": "FUND",
+ "relevance": "In quant and tech interviews the final answer matters less than narrating invariants, base-case checks, and logical deductions out loud.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the puzzle-solver toolkit: invariants, working backwards, extremes, symmetry, and information framing.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Look for invariants and parity—quantities that never change, such as odd/even counts, total mass, or total time.",
+     "weight": "core",
+     "evidence_hint": "Candidate names invariants/parity as a first-pass tool before proposing a solution."
+    },
+    {
+     "id": "fund2",
+     "point": "Work backwards from the desired end state by reversing operations.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes starting from the goal and reversing steps rather than only forward search."
+    },
+    {
+     "id": "fund3",
+     "point": "A balance scale has 3 states (left down, right down, balanced), so k weighings can distinguish up to 3^k possibilities.",
+     "weight": "core",
+     "evidence_hint": "Candidate states the three outcomes per weighing and the 3^k information bound."
+    },
+    {
+     "id": "fund4",
+     "point": "In weighing/testing puzzles, reframe around how much information each test provides (bits or base-3 states), not just the items themselves.",
+     "weight": "extended",
+     "evidence_hint": "Candidate talks about encoding outcomes or information capacity of each test."
+    }
+   ],
+   "probes": [
+    "What general techniques do you reach for before diving into a specific brain teaser?",
+    "Why is a balance scale more powerful than a simple yes/no test per weighing?"
+   ],
+   "hints": {
+    "1": "Think about what stays the same across moves, and what each experiment tells you.",
+    "2": "Name tools: invariants/parity, work backwards, edge cases, symmetry, and information per test.",
+    "3": "A balance has three outcomes per weighing, so k weighings distinguish up to 3^k cases; also check extremes like 1, 0, or infinity items."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how classic weighing, transport, timing, and encoding puzzles actually resolve.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "With 9 balls and one heavier, split into groups of 3; two weighings suffice and are optimal because 3^2 = 9.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes 3-vs-3 then 1-vs-1 on the suspect trio, and cites the 3^k bound."
+    },
+    {
+     "id": "mech2",
+     "point": "Bridge crossing with times 1, 2, 5, and 10: send the two slowest together so slow times overlap, shuttle with the two fastest; minimum is 17 minutes.",
+     "weight": "core",
+     "evidence_hint": "Candidate gives the 1+2 cross, 1 back, 5+10 cross, 2 back, 1+2 cross sequence totaling 17."
+    },
+    {
+     "id": "mech3",
+     "point": "Irregular 60-minute ropes: lighting both ends finishes a rope in 30 minutes; then lighting the second rope’s other end yields 15 more minutes for 45 total.",
+     "weight": "core",
+     "evidence_hint": "Candidate explains both-ends = 30 regardless of irregularity, then dual-light the remainder for 15."
+    },
+    {
+     "id": "mech4",
+     "point": "100 prisoners / 100 boxes: each follows the cycle starting at their own box number; they succeed iff no cycle is longer than 50 (~31% chance).",
+     "weight": "extended",
+     "evidence_hint": "Candidate describes open box k → follow slip to next box, and states the no-cycle-over-50 win condition."
+    }
+   ],
+   "probes": [
+    "How do you find the heavy ball among 9 with a balance in the minimum weighings?",
+    "Walk through the minimum-time bridge strategy for people taking 1, 2, 5, and 10 minutes.",
+    "How do you measure 45 minutes with two irregular 60-minute ropes?"
+   ],
+   "hints": {
+    "1": "For weighing, think in equal-sized groups; for the bridge, avoid sending the fastest back every time.",
+    "2": "9 balls: 3-vs-3 then refine the heavy trio. Bridge: overlap 5 and 10, use 1 and 2 as shuttle. Ropes: both ends first.",
+    "3": "Answer shapes: 2 weighings for 9 balls; bridge total 17; ropes give 30 then 15 for 45; prisoners follow cycles capped at length 50."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast naive strategies with invariant- or encoding-based strategies the file highlights.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Bridge: the common strategy of always sending the fastest person back is worse than overlapping the two slowest crossings and using both fast people to ferry the light.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts always-return-with-1 against the 5+10 together / 2 returns plan."
+    },
+    {
+     "id": "tr2",
+     "point": "With 2 eggs and 100 floors you cannot binary-search; space first-egg drops so remaining linear search keeps worst-case drops constant—d(d+1)/2 ≥ 100 gives d = 14.",
+     "weight": "core",
+     "evidence_hint": "Candidate rejects pure binary search and derives triangular spacing ending at 14."
+    },
+    {
+     "id": "tr3",
+     "point": "Identical ants that bounce and reverse are macroscopically the same as passing through; max time is one ant walking the full rod length.",
+     "weight": "extended",
+     "evidence_hint": "Candidate says bounce ≈ ghost-through, so max is 100 seconds on a 100 cm rod at 1 cm/s."
+    },
+    {
+     "id": "tr4",
+     "point": "For fair change with 2 cuts on a 7-segment bar, binary pieces 1, 2, and 4 beat arbitrary splits because they can form every total from 1 to 7.",
+     "weight": "extended",
+     "evidence_hint": "Candidate chooses cuts yielding 1, 2, 4 and explains make-change in binary."
+    }
+   ],
+   "probes": [
+    "Why is always sending the fastest person back on the bridge suboptimal?",
+    "With only two eggs, why isn’t binary search the right worst-case plan?",
+    "How does the bounce-vs-pass-through view change the ant-on-a-rod problem?"
+   ],
+   "hints": {
+    "1": "Compare the obvious greedy plan to one that uses an invariant or equalizes worst case.",
+    "2": "Bridge: overlap slow crossings. Eggs: keep remaining drops equal after a break. Ants: treat collisions as identity-preserving pass-through.",
+    "3": "Bridge optimum 17; eggs need d=14 because 13·14/2=91 < 100 and 14·15/2=105 ≥ 100; ants max 100 seconds; gold pieces 1, 2, 4."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply toolkit ideas to information encoding, impossibility proofs, surface paths, and common-knowledge puzzles.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Poisoned bottle among 1000 with 10 prisoners in 24 hours: map bottles to binary; each prisoner is a bit and drinks where that bit is 1; deaths encode the bottle (2^10 = 1024 ≥ 1000).",
+     "weight": "core",
+     "evidence_hint": "Candidate assigns bit positions to prisoners and reads the death pattern as the bottle number."
+    },
+    {
+     "id": "app2",
+     "point": "Mutilated 8×8 board (two opposite corners removed, 62 squares): every domino covers one black and one white, but opposite corners are the same color, so black/white counts differ and tiling is impossible.",
+     "weight": "core",
+     "evidence_hint": "Candidate cites the coloring invariant and unequal color counts after removing same-color corners."
+    },
+    {
+     "id": "app3",
+     "point": "Shortest surface path on a cube of edge s between opposite corners: unfold two faces into a 2s×s rectangle; straight-line length is s√5.",
+     "weight": "extended",
+     "evidence_hint": "Candidate unfolds to 2s×s and computes √((2s)^2+s^2)=s√5, rejecting through-cube s√3."
+    },
+    {
+     "id": "app4",
+     "point": "Blue-eyed islanders: the visitor’s “at least one has blue eyes” creates common knowledge; if exactly n have blue eyes, all n leave on night n.",
+     "weight": "extended",
+     "evidence_hint": "Candidate inducts from n=1 leaving night 1 up to all n leaving on night n."
+    }
+   ],
+   "probes": [
+    "How do 10 taste testers identify 1 poisoned bottle among 1000 in one 24-hour wait?",
+    "Can a chessboard with two opposite corners removed be tiled with dominoes—and why?",
+    "What is the shortest surface path for an ant between opposite corners of a cube?"
+   ],
+   "hints": {
+    "1": "Think encoding for testers, invariants for tiling, and unfolding for surface distance.",
+    "2": "Bottles ↔ binary bits on prisoners; dominoes preserve black−white=0; cube path = straight line on an unfolding.",
+    "3": "2^10=1024 covers 1000 bottles; same-color corners leave unequal colors so no tiling; unfold to 2s×s giving s√5; n blue-eyed leave on night n."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Always send fastest back vs overlap two slowest (bridge)",
+   "strong_answer": "Sending person 1 back every time fails to overlap the expensive 5 and 10 crossings; instead 1 and 2 shuttle while 5 and 10 cross together, totaling 17 minutes."
+  },
+  {
+   "topic": "Measure rope time by length vs light both ends",
+   "strong_answer": "Irregular burn rates make length meaningless; lighting both ends consumes the whole rope in 30 minutes regardless, which unlocks the 45-minute construction."
+  },
+  {
+   "topic": "Binary search vs constant worst-case drops (2 eggs, 100 floors)",
+   "strong_answer": "After the first egg breaks you must go linearly, so space first-egg drops at d, d+(d-1), … with d(d+1)/2 ≥ 100; minimum guaranteed drops is 14."
+  },
+  {
+   "topic": "Model ant collisions as bounces vs as pass-through",
+   "strong_answer": "Identical ants reversing on collision are equivalent to ghosts passing through; the max time is walking the full 100 cm rod at 1 cm/s = 100 seconds."
+  },
+  {
+   "topic": "Arbitrary gold cuts vs binary 1-2-4 pieces",
+   "strong_answer": "With exactly 2 cuts on 7 segments, pieces of 1, 2, and 4 can form every daily payment from 1 to 7 via make-change."
+  },
+  {
+   "topic": "Think about items vs think about information per test",
+   "strong_answer": "A balance’s 3 outcomes mean k weighings separate up to 3^k cases; binary live/die testers map items to bit positions (e.g., 10 prisoners → 1024 bottles)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "On the bridge, always sending the fastest person back with the flashlight.",
+   "correction": "That wastes slow crossings; send 5 and 10 together and use 1 and 2 to ferry so the minimum is 17 minutes."
+  },
+  {
+   "trap": "Trying to measure time by rope length when burn rates are irregular.",
+   "correction": "Length is useless; only whole-rope facts hold—both ends finish in 30 minutes, enabling the 45-minute method."
+  },
+  {
+   "trap": "Trying to derive the exact ~31% survival probability for the 100 prisoners in your head.",
+   "correction": "Explain cycle-following clearly and state success hinges on no cycle longer than 50; do not compute the sum on the spot."
+  },
+  {
+   "trap": "Tracking every bounce on the ant-on-a-rod problem.",
+   "correction": "The bounce is a distraction; identical elastic reversals equal pass-through, so max time is end-to-end travel (100 seconds)."
+  },
+  {
+   "trap": "Dismissing the blue-eyes announcement as redundant because everyone already sees blue eyes.",
+   "correction": "The announcement creates common knowledge, which starts the induction so all n leave on night n."
+  },
+  {
+   "trap": "Using s√3 as the ant’s path on the cube surface.",
+   "correction": "s√3 is the straight path through the interior; on the surface, unfold to a 2s×s rectangle and take s√5."
+  },
+  {
+   "trap": "Assuming two eggs allow binary search of 100 floors.",
+   "correction": "One break forces linear search with the last egg; equalize worst case with triangular spacing, giving 14 drops."
+  },
+  {
+   "trap": "Claiming the mutilated chessboard can be tiled if rotations are allowed.",
+   "correction": "Coloring is the invariant: opposite corners are the same color, leaving unequal black and white counts, so no domino tiling exists."
+  }
+ ]
+}

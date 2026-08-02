@@ -1,0 +1,206 @@
+{
+ "id": "dsa_s27_range_queries",
+ "title": "Range Queries & Advanced Data Structures",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs repeatedly test choosing and implementing the right precomputed structure so many range queries beat naive linear scans.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the precompute-once trade-off and the decision guide for which range-query structure to reach for.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A recurring trade-off is precomputing a structure once so many queries answer in O(log n) or O(1) instead of naive O(n) per query.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts one-time build cost against repeated linear scans over the same array."
+    },
+    {
+     "id": "fund2",
+     "point": "Decision guide: immutable + associative query → prefix sums; immutable + idempotent query (min/max/gcd) → sparse table; point update + prefix/range sum → Fenwick Tree; range update + range query → Segment Tree with lazy propagation.",
+     "weight": "core",
+     "evidence_hint": "Candidate maps immutability, update type, and query type to the four structures without conflating them."
+    },
+    {
+     "id": "fund3",
+     "point": "For an immutable array, range sum [L, R] is the prefix sum up to R minus the prefix sum up to L-1.",
+     "weight": "core",
+     "evidence_hint": "Candidate states the prefix[R] − prefix[L−1] identity (or equivalent 1-based indexing)."
+    },
+    {
+     "id": "fund4",
+     "point": "Difference-array trick: to add v on [L, R], add v at diff[L] and subtract v at diff[R+1], then one prefix-sum pass yields final values.",
+     "weight": "extended",
+     "evidence_hint": "Candidate describes O(1) range updates on an initially empty array followed by a single reconstruction via prefix sums."
+    }
+   ],
+   "probes": [
+    "When would you reach for prefix sums versus a Fenwick Tree versus a Segment Tree for range queries?",
+    "How do you answer a range sum on an immutable array after a linear preprocess?"
+   ],
+   "hints": {
+    "1": "Think about whether the array changes and what kind of updates you need.",
+    "2": "Match immutability and associative vs idempotent queries to the lightest structure, then escalate to BIT or segment tree when updates appear.",
+    "3": "Immutable associative → prefix; immutable idempotent min/max/gcd → sparse table; point update + sum → BIT; range update + range query → lazy segment tree."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Check that the candidate can explain how sparse tables, BITs, and segment trees (including lazy propagation) actually answer queries and updates.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A sparse table stores answers for every power-of-two length; for length L, RMQ uses two overlapping blocks of size 2^k with 2^k ≤ L, which is valid because min is idempotent, giving O(1) query with no updates.",
+     "weight": "core",
+     "evidence_hint": "Candidate mentions power-of-two blocks, overlapping mins, and that sparse tables do not support updates."
+    },
+    {
+     "id": "mech2",
+     "point": "In a 1-indexed BIT, bit[i] stores the sum of a range ending at i whose length equals the lowest set bit of i; update does i += i & (-i) and prefix query does i -= i & (-i).",
+     "weight": "core",
+     "evidence_hint": "Candidate names the low-bit trick and the opposite jump directions for update versus prefix sum."
+    },
+    {
+     "id": "mech3",
+     "point": "For i = 12 (binary 1100), the lowest set bit is 4 (0100), so bit[12] covers the sum of 4 elements ending at 12 (indices 9, 10, 11, 12).",
+     "weight": "extended",
+     "evidence_hint": "Candidate walks the binary example or an equivalent lowest-set-bit coverage explanation."
+    },
+    {
+     "id": "mech4",
+     "point": "A segment tree is a full binary tree of intervals; the root is [0, n-1], children split at mid, leaves are single elements, commonly stored in an array of size 4n; query returns a node value when fully inside the range, a neutral value when fully outside, else combines both children.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes recursive interval splitting, the 4n backing array, and the three query cases."
+    },
+    {
+     "id": "mech5",
+     "point": "Lazy propagation: on a fully covered node, update the node immediately and store the pending update in lazy[node] without visiting children; push the lazy value down only when children must be visited later, restoring O(log n) for both range updates and range queries.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts updating every leaf versus deferring with lazy and push."
+    }
+   ],
+   "probes": [
+    "How does a sparse table answer a range minimum in constant time?",
+    "Walk through how a Fenwick Tree uses i & (-i) for update and prefix sum.",
+    "What does lazy propagation store, and when do you push?"
+   ],
+   "hints": {
+    "1": "Start from what each node or table entry stores, then how a query walks those entries.",
+    "2": "Sparse table: two overlapping power-of-two mins; BIT: jump by lowest set bit; segment tree: fully in / fully out / split; lazy: mark and push on demand.",
+    "3": "st[L][k] and st[R−2^k+1][k] for RMQ; BIT update adds then i += i&(-i), query subtracts i -= i&(-i); lazy updates the covered node, writes lazy[node], and push applies pending adds to children before descending."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Force an explicit comparison of build/query/update cost and when the heavier structure is actually justified.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefix sums: O(n) build, O(1) query, but updates are not supported in the immutable setting; BIT balances point update and prefix/range sum to O(log n) each.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts O(1) immutable prefix queries against O(n) rebuild/update cost versus BIT’s O(log n) for both."
+    },
+    {
+     "id": "tr2",
+     "point": "Sparse table builds in O(n log n) and queries in O(1); it is strictly superior to segment trees for immutable RMQ when query volume is massive, but does not support updates.",
+     "weight": "core",
+     "evidence_hint": "Candidate prefers sparse table over segment tree for static RMQ and notes the no-update limitation."
+    },
+    {
+     "id": "tr3",
+     "point": "A BIT needs only an array of size n+1 and has smaller constant factors than a segment tree; a segment tree commonly uses about 4n space but is more versatile across operations.",
+     "weight": "extended",
+     "evidence_hint": "Candidate cites BIT space n+1 versus segment tree ~4n and versatility of changing the combine operation."
+    },
+    {
+     "id": "tr4",
+     "point": "Without lazy propagation, a range update on a segment tree would take O(n log n) by touching leaves; use lazy segment tree only when you truly need both arbitrary range updates and arbitrary range queries.",
+     "weight": "core",
+     "evidence_hint": "Candidate explains why lazy exists and when to avoid reaching for it."
+    }
+   ],
+   "probes": [
+    "When is a sparse table better than a segment tree for RMQ?",
+    "Why prefer a BIT over a segment tree for point-update range sums?",
+    "When is lazy propagation actually necessary?"
+   ],
+   "hints": {
+    "1": "Compare whether the array is immutable and whether you need range updates.",
+    "2": "Immutable idempotent RMQ favors sparse table; point updates favor BIT for sums; both range update and range query need lazy segment tree.",
+    "3": "Sparse table: O(n log n) build, O(1) query, no updates; BIT: size n+1, O(log n) update/query; lazy only when both range update and range query are required."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the structures to a non-obvious problem shape and to interview tool-selection discipline.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Count of Smaller Numbers After Self: iterate right to left; query the BIT for how many seen values are strictly smaller, then add 1 at the current value’s index.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes right-to-left processing with query-then-update on a frequency BIT."
+    },
+    {
+     "id": "app2",
+     "point": "Values may be negative or extremely large (e.g. 10^4 or 10^9), so they cannot be BIT indices directly; coordinate-compress unique sorted values to dense ranks starting at 1.",
+     "weight": "core",
+     "evidence_hint": "Candidate insists on coordinate compression before indexing the BIT."
+    },
+    {
+     "id": "app3",
+     "point": "In interviews, pick the lightest tool that fits: prefix sums before BIT before segment tree; many hard OA stories are a standard structure (e.g. BIT for counting inversions) behind verbose wording.",
+     "weight": "extended",
+     "evidence_hint": "Candidate maps requested operations to the lightest structure rather than defaulting to a full segment tree."
+    }
+   ],
+   "probes": [
+    "How would you count smaller elements to the right of each index using a BIT?",
+    "What goes wrong if you use raw array values as Fenwick indices?",
+    "Given a verbose OA story, how do you decide among prefix sums, BIT, and segment tree?"
+   ],
+   "hints": {
+    "1": "Process elements in an order that turns “to the right” into “already seen.”",
+    "2": "Right-to-left: query rank−1 for count of smaller, then add 1 at the compressed rank; compress because values may be negative or huge.",
+    "3": "Sort unique values, map to 1..m, walk i from n−1 to 0, result[i]=query(rank−1), add(rank,1); prefer prefix → BIT → segment tree, and lazy only for true range update + range query."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Prefix sums vs Fenwick Tree",
+   "strong_answer": "Prefix sums give O(n) build and O(1) range sum on an immutable array, but a point change forces an O(n) rebuild; a BIT makes both point update and prefix/range sum O(log n)."
+  },
+  {
+   "topic": "Sparse table vs Segment Tree for RMQ",
+   "strong_answer": "For immutable RMQ, a sparse table builds in O(n log n) and answers in O(1) via two overlapping power-of-two mins because min is idempotent, and is strictly superior when query volume is massive; a segment tree supports point updates in O(log n) but is slower per static query and needs roughly 4n space."
+  },
+  {
+   "topic": "Fenwick Tree vs Segment Tree",
+   "strong_answer": "A BIT uses an array of size n+1 with small constants and shines for point update + prefix/range sum; a segment tree uses about 4n space but adapts to min/max/gcd and, with lazy propagation, to range updates plus range queries."
+  },
+  {
+   "topic": "Difference array vs Lazy Segment Tree",
+   "strong_answer": "Difference arrays give O(1) range adds when all updates come before a single reconstruction via prefix sums; if you interleave arbitrary range updates with arbitrary range queries, you need a segment tree with lazy propagation for O(log n) per operation."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using a sparse table (or plain prefix sums) when the array must support updates.",
+   "correction": "Sparse tables and immutable prefix structures do not support updates; switch to a BIT for point-update sums or a segment tree (with lazy if range updates are required)."
+  },
+  {
+   "trap": "Using raw nums values—possibly negative or as large as 10^4 or 10^9—directly as BIT indices.",
+   "correction": "Coordinate-compress: map the smallest unique value to 1, the next to 2, and so on, so ranks fit a dense array of size ≤ n."
+  },
+  {
+   "trap": "Reaching for a segment tree with lazy propagation when only point updates or only a final-query-after-updates pattern is needed.",
+   "correction": "Prefer prefix sums, then BIT, then a plain segment tree; use lazy only when you truly need both arbitrary range updates and arbitrary range queries."
+  },
+  {
+   "trap": "Assuming two overlapping sparse-table blocks work for non-idempotent queries like sum.",
+   "correction": "Overlapping power-of-two blocks are safe for idempotent ops such as min/max/gcd; for associative but non-idempotent ops like sum, use prefix sums (immutable) or a tree that combines disjoint segments."
+  }
+ ]
+}

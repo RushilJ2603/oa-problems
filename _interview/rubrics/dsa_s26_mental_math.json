@@ -1,0 +1,181 @@
+{
+ "id": "dsa_s26_mental_math",
+ "title": "Mental Math and Rapid Calculation",
+ "type": "FUND",
+ "relevance": "Speed-based OAs and interview screens use this to test fast, accurate numeric reasoning and pattern recognition without a calculator.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Mentions Optiver \"80 in 8\" and Jane Street interview formats.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that the candidate knows core mental-math identities and conversion shortcuts used in timed rounds.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "States the multiply-by-11 method: keep outer digits and use adjacent digit sums for inner digits.",
+     "weight": "core",
+     "evidence_hint": "Explains 432 x 11 as outer 4 and 2, with inner sums 3+2 and 4+3, yielding 4752."
+    },
+    {
+     "id": "fund2",
+     "point": "Explains multiply-by-5, 25, 125 as scaling by 10, 100, 1000 then dividing by 2, 4, 8.",
+     "weight": "core",
+     "evidence_hint": "Shows 28 x 25 as 28 x 100 / 4 and 32 x 125 as 32 x 1000 / 8."
+    },
+    {
+     "id": "fund3",
+     "point": "Knows the ending-in-5 square rule: (10n+5)^2 = 100n(n+1) + 25.",
+     "weight": "extended",
+     "evidence_hint": "Uses n=8 for 85^2, computes 8 x 9, then appends 25 to get 7225."
+    },
+    {
+     "id": "fund4",
+     "point": "Uses percent/fraction equivalences, including x% of y = y% of x and 12.5% = 1/8, 11.11% = 1/9.",
+     "weight": "extended",
+     "evidence_hint": "Converts 16% of 25 via 25% of 16, and 11.11% of 279 via 1/9 of 279."
+    }
+   ],
+   "probes": [
+    "What shortcut set do you rely on first for 432 x 11, 28 x 25, and 16% of 25 without writing long steps?"
+   ],
+   "hints": {
+    "1": "Name the core rules before solving anything.",
+    "2": "Cover one multiplication identity and one percent/fraction conversion.",
+    "3": "Use 432 x 11 and 12.5% = 1/8 as your anchor examples."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Verify the candidate can execute multi-step mental calculations cleanly under time pressure.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Applies near-base expansion correctly, such as (100-4)(100+7) for 96 x 107.",
+     "weight": "core",
+     "evidence_hint": "Expands to 10000 + 700 - 400 - 28 and lands on 10272."
+    },
+    {
+     "id": "mech2",
+     "point": "Uses difference of squares when factors are symmetric around a base, e.g., (40-3)(40+3) = 40^2 - 3^2.",
+     "weight": "core",
+     "evidence_hint": "Computes 37 x 43 as 1600 - 9 = 1591 instead of long multiplication."
+    },
+    {
+     "id": "mech3",
+     "point": "Chains fractions/percents in the right order, converting 60% to 3/5 when needed.",
+     "weight": "extended",
+     "evidence_hint": "Evaluates 3/7 of 60% of 140 as (3/7) x (3/5) x 140, then simplifies via 140/35."
+    },
+    {
+     "id": "mech4",
+     "point": "Combines bounds with exact checks for roots and powers, using known anchors like 2^10 = 1024, 80^2, 90^2.",
+     "weight": "extended",
+     "evidence_hint": "Places sqrt(7500) between 80^2 and 90^2, compares 86^2 and 87^2, and picks 87."
+    }
+   ],
+   "probes": [
+    "Walk through 96 x 107 and the closest integer to sqrt(7500), including your intermediate checks."
+   ],
+   "hints": {
+    "1": "Recenter numbers around friendly bases like 100 or 40.",
+    "2": "Write the algebra form first, then simplify in a low-error order.",
+    "3": "For 96 x 107 use (100-4)(100+7); for sqrt(7500) compare 86^2 and 87^2 after bounding with 80^2 and 90^2."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Assess strategic judgment on speed versus accuracy in negatively scored timed tests.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Explicitly adapts attempt strategy to negative marking (+1 for correct, -1 or -2 for incorrect).",
+     "weight": "core",
+     "evidence_hint": "Says they skip low-confidence items and prioritize high-certainty solves to protect expected score."
+    },
+    {
+     "id": "tr2",
+     "point": "Prefers pattern spotting over brute force when both are possible, especially identities like (a+b)(a-b).",
+     "weight": "core",
+     "evidence_hint": "Chooses difference-of-squares or base expansion first instead of full column arithmetic."
+    },
+    {
+     "id": "tr3",
+     "point": "Uses quick sanity checks before committing, such as casting out 9s and last-digit cycle lengths 2 or 4.",
+     "weight": "extended",
+     "evidence_hint": "Checks divisibility by 9 via digit sums and resolves 3^47 last digit by cycle remainder."
+    }
+   ],
+   "probes": [
+    "In an \"80 in 8\" format with +1 and -1 or -2 scoring, when do you attempt, skip, or verify twice?"
+   ],
+   "hints": {
+    "1": "Start from the scoring rule, not just raw speed.",
+    "2": "Describe a first-pass solve and a fast confidence check.",
+    "3": "State that negative penalties make selective skipping rational, then cite one check like digit-sum-by-9 or last-digit cycles."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Confirm the candidate can solve mixed OA-style mental-math items accurately with concise reasoning.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Executes mixed arithmetic using decomposition, e.g., 18 x 14 via tens-plus-units and 384 + 297 via +300 then -3.",
+     "weight": "core",
+     "evidence_hint": "Produces 252 and 681 with short mental steps rather than long form."
+    },
+    {
+     "id": "app2",
+     "point": "Handles successive percentage changes multiplicatively, not additively, e.g., 20% down then 25% up gives net factor 1.",
+     "weight": "core",
+     "evidence_hint": "Uses 0.8 x 1.25 = 1 and concludes final equals starting price."
+    },
+    {
+     "id": "app3",
+     "point": "Simplifies products of fractions early by dividing before multiplying, as in 13/50 of 450.",
+     "weight": "extended",
+     "evidence_hint": "Does 450/50 = 9 first, then 13 x 9 = 117."
+    },
+    {
+     "id": "app4",
+     "point": "Applies rapid number-sense filters in multiple-choice settings, including divisibility-by-9 elimination and exponent last-digit cycles.",
+     "weight": "extended",
+     "evidence_hint": "Finds 72531 divisible by 9 and identifies last digit of 3^47 as 7."
+    }
+   ],
+   "probes": [
+    "Solve a mixed set aloud: 37 x 43, 13/50 of 450, and last digit of 3^47, then explain how you error-check each."
+   ],
+   "hints": {
+    "1": "Keep each intermediate step mentally reversible.",
+    "2": "Pick the shortest valid pattern for each item: identity, cancellation, or cycle.",
+    "3": "For 13/50 of 450 divide first; for 3^47 use the 3,9,7,1 cycle and remainder by 4."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Pattern spotting vs brute-force arithmetic",
+   "strong_answer": "Prefers identities like (a+b)(a-b), base-centered expansion, and factor cancellation because timed rounds reward throughput and low cognitive load."
+  },
+  {
+   "topic": "Speed vs accuracy under negative marking",
+   "strong_answer": "Uses the +1, -1, -2 scoring context to attempt high-confidence questions first, skip weak ones, and run quick sanity checks before submitting."
+  },
+  {
+   "topic": "Approximation vs exact refinement",
+   "strong_answer": "Starts with bounds (80^2 and 90^2 for sqrt(7500)) and only computes nearby exact values (86^2, 87^2) when the choice is close."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming square roots scale linearly by powers of 10, e.g., treating sqrt(1000) like 10.",
+   "correction": "Use factorization: sqrt(1000) = sqrt(100 x 10) = 10sqrt(10) approx 31.6, not 10."
+  },
+  {
+   "trap": "Adding successive percentage changes directly, e.g., 20% drop then 25% rise as net +5%.",
+   "correction": "Multiply factors: 0.80 x 1.25 = 1.00, so net change is 0 in that example."
+  }
+ ]
+}

@@ -1,0 +1,212 @@
+{
+ "id": "dbms_05_advanced",
+ "title": "Advanced Querying & Syntaxes",
+ "type": "FUND",
+ "relevance": "SDE interviews and OAs routinely test subqueries, CTEs, window functions, and conditional aggregation as the leap from basic SELECT/JOIN to analytical SQL.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what subqueries, CTEs, and window functions are and how they differ from basic retrieval and GROUP BY aggregation.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A subquery is a query nested inside another query; non-correlated ones can be evaluated independently, while correlated ones reference the outer query.",
+     "weight": "core",
+     "evidence_hint": "Says nested query, and contrasts independent (run once) vs outer-row-dependent evaluation."
+    },
+    {
+     "id": "fund2",
+     "point": "A CTE (WITH) is a temporary named result set that exists only for the duration of the query, used to replace deeply nested subqueries with readable top-to-bottom code.",
+     "weight": "core",
+     "evidence_hint": "Mentions WITH, temporary/named result, query-scoped lifetime, readability over nested subqueries."
+    },
+    {
+     "id": "fund3",
+     "point": "A window function computes over a related set of rows via OVER but retains every input row, unlike GROUP BY which collapses rows.",
+     "weight": "core",
+     "evidence_hint": "Contrasts meat-grinder GROUP BY collapse vs magnifying-glass window that keeps row identity."
+    },
+    {
+     "id": "fund4",
+     "point": "Subqueries can appear in WHERE, FROM (derived table), and SELECT (scalar: exactly one row and one column).",
+     "weight": "extended",
+     "evidence_hint": "Lists clause placements and notes SELECT-list subqueries must be scalar."
+    }
+   ],
+   "probes": [
+    "What is a CTE, and how is a window function different from a GROUP BY aggregate?"
+   ],
+   "hints": {
+    "1": "Think about whether rows survive in the result and whether the inner query can stand alone.",
+    "2": "CTE = WITH named temp result; window = OVER calculation without collapsing rows.",
+    "3": "Non-correlated subquery runs independently; correlated references outer columns; window keeps every row while attaching a partition-scoped value."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain correlated execution, recursive CTE iteration, OVER anatomy, ranking ties, navigation functions, and default frames.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A correlated subquery has a row-by-row dependency: the inner query cannot run independently and must conceptually execute once per outer candidate row.",
+     "weight": "core",
+     "evidence_hint": "Walks outer row → substitute outer key into inner AVG → compare → repeat for next row."
+    },
+    {
+     "id": "mech2",
+     "point": "A recursive CTE needs RECURSIVE, an anchor member, and a recursive member combined with UNION or UNION ALL; the self-reference uses only the immediately preceding iteration's working set until an iteration returns zero rows.",
+     "weight": "core",
+     "evidence_hint": "Describes anchor (e.g. CEO), then join previous working set for next level, stop when nothing new."
+    },
+    {
+     "id": "mech3",
+     "point": "OVER may include PARTITION BY (resets per group), ORDER BY (sequence; required for ranking and running totals), and a frame clause (sliding boundary within the partition).",
+     "weight": "core",
+     "evidence_hint": "Names all three OVER sub-clauses and what each controls."
+    },
+    {
+     "id": "mech4",
+     "point": "For tied salaries like 100k, 100k, 90k: ROW_NUMBER gives 1, 2, 3; RANK gives 1, 1, 3; DENSE_RANK gives 1, 1, 2.",
+     "weight": "core",
+     "evidence_hint": "States the three tie behaviors with those exact rank sequences."
+    },
+    {
+     "id": "mech5",
+     "point": "With ORDER BY in OVER, the default frame becomes ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW (running total); without ORDER BY the frame is the entire partition.",
+     "weight": "extended",
+     "evidence_hint": "Explains why SUM(... ORDER BY hire_date) is cumulative and cites the default frame."
+    },
+    {
+     "id": "mech6",
+     "point": "LAG and LEAD pull values from offset rows relative to the current row; FIRST_VALUE pulls the first value in the window.",
+     "weight": "extended",
+     "evidence_hint": "Gives prev/next salary via LAG/LEAD and top earner via FIRST_VALUE."
+    }
+   ],
+   "probes": [
+    "Walk through how a correlated subquery runs row by row, then how a recursive OrgChart CTE iterates from the anchor.",
+    "For salaries 100k, 100k, 90k, what do ROW_NUMBER, RANK, and DENSE_RANK return, and what is the default frame when ORDER BY is in OVER?"
+   ],
+   "hints": {
+    "1": "Start with one outer employee, then the anchor vs recursive member of WITH RECURSIVE.",
+    "2": "Correlated = re-run inner per outer row; recursive = previous working set only; ranking = gaps vs no gaps; ORDER BY shrinks the default frame to current row.",
+    "3": "Inner AVG uses outer dept_id each time; OrgChart grows CEO→VPs→Directors until empty; ties: 1,2,3 / 1,1,3 / 1,1,2; default frame with ORDER BY is UNBOUNDED PRECEDING to CURRENT ROW."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare EXISTS vs IN, correlated rewrites, and portable CASE vs Postgres FILTER for pivots.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "EXISTS checks whether a subquery returns any rows and can short-circuit on the first match; IN checks membership against a fully generated list.",
+     "weight": "core",
+     "evidence_hint": "Contrasts short-circuit existence vs building the full ID list for membership."
+    },
+    {
+     "id": "tr2",
+     "point": "When performance matters, a correlated subquery should usually be rewritten as a JOIN or a window function because it may re-execute the inner query once per outer row (e.g. on a table with 10 million rows).",
+     "weight": "core",
+     "evidence_hint": "Flags row-by-row cost and names JOIN / window rewrite as the usual fix."
+    },
+    {
+     "id": "tr3",
+     "point": "Postgres has no native PIVOT keyword; everyday pivoting uses conditional aggregation—portable SUM(CASE WHEN ...) or cleaner SUM(...) FILTER (WHERE ...).",
+     "weight": "extended",
+     "evidence_hint": "Says no PIVOT, then CASE vs FILTER; may mention crosstab as extension-only alternative."
+    }
+   ],
+   "probes": [
+    "When would you prefer EXISTS over IN, and when would you rewrite a correlated subquery?",
+    "How do you pivot quarters into columns in PostgreSQL without a PIVOT keyword?"
+   ],
+   "hints": {
+    "1": "Think short-circuit existence vs full lists, and rewrite cost of correlation.",
+    "2": "EXISTS stops early; correlated often becomes JOIN/window; pivot = aggregate + condition per column.",
+    "3": "EXISTS short-circuits; avoid correlated on huge tables—use JOIN/window; use SUM(CASE...) or SUM() FILTER (WHERE quarter = 'Q1') etc."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply advanced syntax to common interview tasks: above-dept-average employees, org charts, rankings, running/moving aggregates, null-safe defaults, and crosstabs.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Find employees above their own department average with a correlated subquery on matching dept_id, or equivalently with a window AVG(... PARTITION BY dept_id).",
+     "weight": "core",
+     "evidence_hint": "Describes salary > dept AVG via correlation or OVER (PARTITION BY dept_id)."
+    },
+    {
+     "id": "app2",
+     "point": "Build an org chart from manager_id with a recursive CTE: anchor where manager_id IS NULL, then join employees to the prior OrgChart level and track depth.",
+     "weight": "core",
+     "evidence_hint": "Names RECURSIVE, anchor (no manager), recursive join on manager_id, depth increment."
+    },
+    {
+     "id": "app3",
+     "point": "Use COALESCE for first non-null defaults (e.g. COALESCE(bonus, 0)) and NULLIF to avoid divide-by-zero (e.g. total / NULLIF(count, 0)).",
+     "weight": "extended",
+     "evidence_hint": "States first-non-null COALESCE and NULLIF equal-args → NULL for safe division."
+    },
+    {
+     "id": "app4",
+     "point": "Express a moving average with an explicit frame such as ROWS BETWEEN 2 PRECEDING AND CURRENT ROW.",
+     "weight": "extended",
+     "evidence_hint": "Writes or describes AVG over ORDER BY with that 2-preceding frame."
+    }
+   ],
+   "probes": [
+    "Write or outline SQL for employees above department average, a recursive org chart, and a quarter revenue pivot.",
+    "How would you default null bonuses and safely divide totals by counts that might be zero?"
+   ],
+   "hints": {
+    "1": "Pick correlated or window for dept average; WITH RECURSIVE for hierarchy; CASE/FILTER for pivot.",
+    "2": "Outer salary vs inner AVG on same dept_id; anchor CEO then children; SUM with CASE/FILTER per quarter; COALESCE/NULLIF for nulls.",
+    "3": "Correlated AVG by dept_id or AVG() OVER (PARTITION BY dept_id); RECURSIVE OrgChart; SUM(revenue) FILTER (WHERE quarter = 'Q1'); COALESCE(bonus, 0) and total / NULLIF(count, 0)."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Correlated subquery vs JOIN or Window Function",
+   "strong_answer": "Correlated subqueries are clear for per-row comparisons (e.g. salary vs own dept average) but imply re-running the inner query per outer row and can grind to a halt on large tables (e.g. 10 million rows); prefer a JOIN to pre-aggregated stats or a window function when performance matters."
+  },
+  {
+   "topic": "EXISTS vs IN",
+   "strong_answer": "IN builds a membership list from the subquery then checks values; EXISTS only cares that any matching row exists and can short-circuit on the first match, which is especially efficient with correlated existence checks."
+  },
+  {
+   "topic": "GROUP BY aggregation vs Window Functions",
+   "strong_answer": "GROUP BY collapses many rows into one aggregated result; window functions attach aggregate-like values over a partition/frame while keeping every input row in the result."
+  },
+  {
+   "topic": "CASE conditional aggregation vs FILTER",
+   "strong_answer": "Both pivot row labels into columns via conditional aggregation; SUM(CASE WHEN ...) is portable standard SQL, while SUM(...) FILTER (WHERE ...) is the cleaner modern PostgreSQL form; crosstab() can pivot dynamically but needs the tablefunc extension."
+  },
+  {
+   "topic": "ROW_NUMBER vs RANK vs DENSE_RANK",
+   "strong_answer": "ROW_NUMBER always assigns distinct sequential positions (ties broken arbitrarily); RANK shares rank on ties but leaves gaps; DENSE_RANK shares rank on ties with no gaps—e.g. for 100k, 100k, 90k → (1,2,3), (1,1,3), (1,1,2)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using NOT IN when the subquery can return NULL (e.g. parent_id).",
+   "correction": "If even one subquery value is NULL, NOT IN becomes UNKNOWN (treated as false for filtering) and the query can return zero rows; use NOT EXISTS when NULLs are possible."
+  },
+  {
+   "trap": "Expecting LAST_VALUE() with ORDER BY to return the last row of the partition.",
+   "correction": "With ORDER BY, the default frame ends at CURRENT ROW, so LAST_VALUE often returns the current row; set ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING for the true partition end."
+  },
+  {
+   "trap": "Assuming SUM(...) OVER (ORDER BY ...) still averages/sums the entire partition.",
+   "correction": "Adding ORDER BY changes the default frame to UNBOUNDED PRECEDING through CURRENT ROW, producing a running total unless you override the frame."
+  },
+  {
+   "trap": "Leaving a correlated subquery on a very large outer table for production.",
+   "correction": "Row-by-row re-execution (conceptually once per outer row, e.g. 10 million times) can destroy performance; rewrite with a JOIN or window function."
+  }
+ ]
+}

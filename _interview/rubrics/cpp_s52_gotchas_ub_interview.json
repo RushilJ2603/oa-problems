@@ -1,0 +1,217 @@
+{
+ "id": "cpp_s52_gotchas_ub_interview",
+ "title": "C++ Gotchas and Undefined Behaviour",
+ "type": "FUND",
+ "relevance": "Interviewers use UB and gotchas to separate candidates who can ship production C++ from those who only know the happy path.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the standard's three categories of incompletely rigid behaviour and what each allows the compiler to do.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Undefined behaviour means the standard imposes no requirements: the program may crash, output garbage, or appear to work, and the optimiser may assume UB never happens and delete that code path.",
+     "weight": "core",
+     "evidence_hint": "Candidate names UB as the red zone with no guaranteed outcome and notes that optimisers may erase UB-containing paths."
+    },
+    {
+     "id": "fund2",
+     "point": "Unspecified behaviour means the standard allows two or more valid outcomes and the compiler need not document which it chooses, such as function-argument evaluation order.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts unspecified with UB and cites argument evaluation order (e.g. f(i++, ++i)) as an example."
+    },
+    {
+     "id": "fund3",
+     "point": "Implementation-defined behaviour varies by compiler or platform, but the implementation must choose one outcome and document it, such as sizeof(int) or whether char is signed.",
+     "weight": "extended",
+     "evidence_hint": "Candidate says the choice must be documented and gives sizeof(int) or char signedness as examples."
+    }
+   ],
+   "probes": [
+    "What is the difference between undefined, unspecified, and implementation-defined behaviour in C++?"
+   ],
+   "hints": {
+    "1": "The standard splits 'not fully rigidly defined' into three named categories.",
+    "2": "Think about what the compiler may assume, what it may leave undocumented, and what it must document.",
+    "3": "UB: no requirements and optimisers may delete paths; unspecified: multiple valid outcomes, no documentation required (e.g. argument order); implementation-defined: must pick and document (e.g. sizeof(int))."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show that the candidate can instantly spot classic UB and well-defined but counter-intuitive gotchas in code.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Out-of-bounds array or vector operator[] access, null/dangling dereference, double free, reading an uninitialised primitive, and signed integer overflow are all undefined behaviour.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists several of these and correctly labels each as UB, not merely a runtime error."
+    },
+    {
+     "id": "mech2",
+     "point": "Unsigned integer arithmetic wraps with modulo arithmetic, whereas signed overflow is UB and optimisers routinely exploit that to delete bounds checks.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts defined unsigned wraparound with signed overflow as UB exploited by optimisers."
+    },
+    {
+     "id": "mech3",
+     "point": "Data races (concurrent access with at least one write and no synchronisation), strict-aliasing violations via incompatible pointer types, invalid static_cast downcasts, modifying an originally const object through const_cast, and returning a reference or pointer to a local are UB.",
+     "weight": "extended",
+     "evidence_hint": "Candidate identifies at least a couple of these less-common UB forms with the right reason."
+    },
+    {
+     "id": "mech4",
+     "point": "Gotchas that are often well-defined but surprising include the most vexing parse (Widget w() declares a function), integer division truncation (3 / 2 yields 1.0 when assigned to double), floating-point == unreliability, object slicing on by-value base copies, virtual calls in constructors dispatching to the current class, the static initialisation order fiasco across TUs, and member-initialiser order following declaration order not list order.",
+     "weight": "extended",
+     "evidence_hint": "Candidate names several gotchas and distinguishes them from UB where appropriate."
+    }
+   ],
+   "probes": [
+    "Walk this snippet and say which lines are undefined behaviour versus merely surprising but defined behaviour."
+   ],
+   "hints": {
+    "1": "Scan first for lifetime, bounds, and signed overflow before tracing 'normal' logic.",
+    "2": "Separate the UB catalogue (OOB, null, double free, uninit, signed overflow, races, aliasing, bad downcast, const_cast mutate, local return) from gotchas like most vexing parse and slicing.",
+    "3": "Call out UB with the standard's 'no requirements' framing, then name a defined gotcha such as Widget w() being a function declaration or 3 / 2 truncating."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Connect language rules to intentional API and design choices that trade safety for performance or clarity.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "vector operator[] skips bounds checks for performance; use at() when you want a guaranteed std::out_of_range on invalid access.",
+     "weight": "core",
+     "evidence_hint": "Candidate explains unchecked [] versus throwing at() and ties it to performance."
+    },
+    {
+     "id": "tr2",
+     "point": "Passing a derived object by value into a base parameter slices off derived members and dynamic type; pass Base& or Base* to preserve polymorphism.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes slicing and the reference/pointer fix."
+    },
+    {
+     "id": "tr3",
+     "point": "If a lambda escapes its scope, capture-by-reference on locals dangles; capture by value or return owning values instead.",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts [&] escape bugs with [=]/[local] or returning std::string by value."
+    }
+   ],
+   "probes": [
+    "Why might a library expose unchecked operator[] and a checked at(), and when would you choose each?"
+   ],
+   "hints": {
+    "1": "Think about what the call site pays for on every access.",
+    "2": "Contrast performance of no bounds check with a guaranteed exception API.",
+    "3": "operator[] maximises performance without checks; at() throws std::out_of_range—use at() when invalid indices must be diagnosed."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Demonstrate interview craft: spot UB before tracing output, cite production tooling, and state pre-/post-conditions.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "When asked what a snippet outputs, first scan for UB, uninitialised variables, or missing virtual destructors; if UB is present, say the standard guarantees nothing rather than inventing an output.",
+     "weight": "core",
+     "evidence_hint": "Candidate refuses to invent a print result under UB and names the reason."
+    },
+    {
+     "id": "app2",
+     "point": "Production readiness includes compiling with -Wall -Wextra -Werror, running AddressSanitizer (-fsanitize=address) and UndefinedBehaviorSanitizer (-fsanitize=undefined), and using Valgrind when sanitizers are unavailable.",
+     "weight": "core",
+     "evidence_hint": "Candidate names compiler warning flags and at least one sanitizer or Valgrind with what it catches."
+    },
+    {
+     "id": "app3",
+     "point": "Before coding, state invariants such as assuming a pointer is non-null (assert) or early-returning when a vector is empty.",
+     "weight": "extended",
+     "evidence_hint": "Candidate verbalises preconditions and a defensive check rather than silently assuming valid input."
+    }
+   ],
+   "probes": [
+    "This function returns a pointer—how would you review it in an interview, and what tools would you mention to catch related bugs?"
+   ],
+   "hints": {
+    "1": "Do not start by simulating output; scan ownership and lifetime first.",
+    "2": "If it returns a reference or pointer, trace who owns the data; then mention warnings and sanitizers.",
+    "3": "Flag returning a local or c_str() of a temporary as UB/dangling, state that formally nothing is guaranteed, and cite -Wall/-Wextra/-Werror plus ASan/UBSan or Valgrind."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Signed integer overflow vs unsigned wraparound",
+   "strong_answer": "Signed overflow is UB and optimisers may delete bounds checks that assume it cannot happen; unsigned arithmetic is defined to wrap using modulo arithmetic."
+  },
+  {
+   "topic": "vector operator[] vs at()",
+   "strong_answer": "operator[] does not check bounds to maximise performance; at() guarantees std::out_of_range on invalid access when safety matters more than the check cost."
+  },
+  {
+   "topic": "Polymorphic pass-by-value vs reference or pointer",
+   "strong_answer": "Copying into a Base by value slices away derived members and dynamic type (e.g. print shows Base); pass Base& or Base* so virtual dispatch still reaches the derived override."
+  },
+  {
+   "topic": "Escaping lambda capture by reference vs by value",
+   "strong_answer": "[&] on a local that dies when the function returns leaves a dangling capture; capture by value [=] or [local], and prefer returning owning objects such as std::string instead of pointers into temporaries."
+  },
+  {
+   "topic": "Most vexing parse: Widget w() vs Widget w / Widget w{}",
+   "strong_answer": "Parentheses make the declaration parse as a function returning Widget; omit them or use uniform initialisation so you get an object (same pitfall as std::mutex m() vs std::mutex m)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating vector operator[] like a checked accessor and expecting a clean error on OOB.",
+   "correction": "v[i] does not bounds-check; use v.at(i) for a guaranteed std::out_of_range."
+  },
+  {
+   "trap": "Assuming a double free fails immediately at the second delete.",
+   "correction": "Double free typically corrupts heap-manager structures and may crash much later, which makes it hard to diagnose."
+  },
+  {
+   "trap": "Writing std::mutex m() (or Widget w()) thinking you default-constructed an object.",
+   "correction": "That declares a function; use std::mutex m; or Widget w2{}."
+  },
+  {
+   "trap": "Mixing signed and unsigned in comparisons or downward-counting loops without warnings.",
+   "correction": "The signed value converts to unsigned (e.g. u + s with u=10 and s=-20 can make u + s > 0 true); compile with -Wsign-compare."
+  },
+  {
+   "trap": "Comparing floats or doubles with == after decimal arithmetic.",
+   "correction": "Precision means 0.1 + 0.2 == 0.3 is usually false; compare std::abs(a - b) against a small epsilon."
+  },
+  {
+   "trap": "Returning temp.c_str() or capturing locals by [&] in a lambda that escapes.",
+   "correction": "The temporary or local is destroyed and the pointer/reference dangles; return by value and capture by value if the callable outlives the scope."
+  },
+  {
+   "trap": "Calling virtual functions from a constructor or destructor expecting the most-derived override.",
+   "correction": "Only the current class's implementation runs because the derived part does not exist yet (or is already destroyed); use a separate init or pass config into the base constructor."
+  },
+  {
+   "trap": "Depending on initialisation order of globals or statics across translation units.",
+   "correction": "Order is undefined across TUs; wrap in function-local statics (construct on first use), e.g. getDependency() returning a static."
+  },
+  {
+   "trap": "Deleting a derived object through a non-virtual base destructor.",
+   "correction": "That is UB and typically only the base destructor runs; polymorphic bases need virtual ~Base() = default."
+  },
+  {
+   "trap": "Using iterators after push_back or erase without updating them.",
+   "correction": "Reallocation or erase can invalidate iterators; re-assign after modification, prefer indices where appropriate, and use it = v.erase(it)."
+  },
+  {
+   "trap": "Managing a raw pointer with only a destructor and relying on the default copy constructor (Rule of 3/5).",
+   "correction": "The default copy shares the pointer, so destruction double-frees; implement destructor, copy constructor, and copy assignment (and move operations as needed)."
+  },
+  {
+   "trap": "Ordering member-initialiser-list entries differently from member declaration order.",
+   "correction": "Members initialise in declaration order regardless of list order, so y(x) can read uninitialised x; list initialisers in declaration order."
+  }
+ ]
+}

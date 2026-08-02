@@ -1,0 +1,193 @@
+{
+ "id": "py_13_lists",
+ "title": "Lists in Python",
+ "type": "FUND",
+ "relevance": "Lists are the default mutable sequence in Python OAs and SDE interviews; candidates must know storage, mutation APIs, and comprehension patterns.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a Python list is and the core properties that distinguish it from fixed arrays.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A list stores multiple items under one name and behaves as a dynamic array that can grow as items are added.",
+     "weight": "core",
+     "evidence_hint": "Says lists hold many values under one variable and can resize when you add items."
+    },
+    {
+     "id": "fund2",
+     "point": "Lists are ordered, mutable, allow heterogeneous types and duplicates, can be nested, and support indexing/slicing.",
+     "weight": "core",
+     "evidence_hint": "Lists key traits: order preserved, editable after creation, mixed types OK, duplicates OK, nesting OK, index/slice access."
+    },
+    {
+     "id": "fund3",
+     "point": "Compared to arrays: lists are dynamic and heterogeneous; arrays are fixed-size and homogeneous, and arrays are faster with contiguous allocation while lists use referential arrays.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts size, data types, speed, and memory layout between arrays and lists."
+    }
+   ],
+   "probes": [
+    "What is a Python list, and how does it differ from a traditional array on size and element types?"
+   ],
+   "hints": {
+    "1": "Start from the idea of one name holding many values.",
+    "2": "Contrast fixed vs dynamic size and same-type vs mixed-type storage.",
+    "3": "Lists are dynamic heterogeneous referential arrays; classical arrays are fixed, homogeneous, contiguous, and faster."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain referential storage, resize-on-growth, and the main mutation/access APIs.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Python lists are referential arrays: each slot holds a memory address to an object, not the object's value inline, which is why heterogeneous contents work.",
+     "weight": "core",
+     "evidence_hint": "Describes pointers/addresses in the list pointing to objects elsewhere; addresses are fixed-size so types can differ."
+    },
+    {
+     "id": "mech2",
+     "point": "When a list runs out of space, Python allocates a larger block (usually double), copies existing references, adds the new item, then deletes the old array.",
+     "weight": "core",
+     "evidence_hint": "Walks the grow steps: bigger block, copy refs, append, free old storage."
+    },
+    {
+     "id": "mech3",
+     "point": "append adds one item at the end (a passed list becomes one nested element); extend adds each item from an iterable; insert places one item at a given index.",
+     "weight": "core",
+     "evidence_hint": "Distinguishes append nesting vs extend flattening vs insert-at-index."
+    },
+    {
+     "id": "mech4",
+     "point": "Deletion uses del (index/slice/whole variable), remove (first matching value), pop (by index, returns item; last if no index), and clear (empties to []).",
+     "weight": "extended",
+     "evidence_hint": "Names the four removal tools and what each targets."
+    },
+    {
+     "id": "mech5",
+     "point": "sort and reverse mutate in place; sorted returns a new sorted list without modifying the original; copy returns a shallow copy.",
+     "weight": "extended",
+     "evidence_hint": "Separates in-place methods from sorted()/copy() that produce another list."
+    }
+   ],
+   "probes": [
+    "How is a Python list stored in memory, and what happens internally when it needs to grow?",
+    "How do append, extend, and insert differ when adding items?"
+   ],
+   "hints": {
+    "1": "Think locker maps versus stuffing values directly in the lockers.",
+    "2": "Cover referential slots, then the allocate-copy-add-delete resize path, then the three add APIs.",
+    "3": "List holds addresses; growth usually doubles then copies refs; append nests a whole list, extend unpacks an iterable, insert takes an index."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Surface flexibility costs of lists versus arrays and versus safer copying patterns.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Lists trade speed and memory for flexibility: slower than arrays, and they use extra reserved space plus references rather than packing raw values.",
+     "weight": "core",
+     "evidence_hint": "Mentions slower execution and higher memory from over-allocation and reference storage."
+    },
+    {
+     "id": "tr2",
+     "point": "Arbitrary insertion/deletion on lists is O(n), so lists are flexible but costly for middle-of-list edits.",
+     "weight": "core",
+     "evidence_hint": "Calls out O(n) for arbitrary insert/delete as a downside."
+    },
+    {
+     "id": "tr3",
+     "point": "Mutability plus aliasing is risky: assignment like b = a shares one list object, so mutating through one name changes the other.",
+     "weight": "extended",
+     "evidence_hint": "Explains shared identity after assignment and that append on one name shows up on the other."
+    }
+   ],
+   "probes": [
+    "What are the main disadvantages of Python lists compared with arrays or more careful sharing?"
+   ],
+   "hints": {
+    "1": "Flexibility usually costs something in speed or memory.",
+    "2": "Tie costs to over-allocation, references, and O(n) middle edits, plus shared mutable aliases.",
+    "3": "Lists are slower and memory-heavier; middle insert/delete is O(n); b = a aliases so both see the same mutations."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply list building, comprehensions, membership nuance, and multi-list iteration in concrete snippets.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "List comprehension replaces an empty-list-plus-append loop with [expression for item in iterable if condition], and is described as more time- and space-efficient than an equivalent Python loop.",
+     "weight": "core",
+     "evidence_hint": "Shows bracket form with optional filter and says it beats the manual append loop on efficiency."
+    },
+    {
+     "id": "app2",
+     "point": "Membership checks the top-level list only: for L2 = [1, 2, 3, 4, [5, 6]], [5, 6] in L2 is True but 5 in L2 is False.",
+     "weight": "core",
+     "evidence_hint": "Uses nested-list membership example: whole sublist found, bare 5 not found."
+    },
+    {
+     "id": "app3",
+     "point": "zip pairs items from multiple lists so you can operate indexwise, e.g. [i + j for i, j in zip(L1, L2)].",
+     "weight": "extended",
+     "evidence_hint": "Describes zip aggregating iterables into pairs used in a comprehension."
+    }
+   ],
+   "probes": [
+    "Rewrite a loop that appends values into a list comprehension, and explain when membership fails on a nested value.",
+    "How would you add two lists indexwise with zip?"
+   ],
+   "hints": {
+    "1": "Compress the create-empty-list then append pattern into one bracket expression.",
+    "2": "Mention the if-filter form, then nested membership, then zip for parallel lists.",
+    "3": "[expr for x in it if cond]; 5 is not in a list that only nests [5, 6] at top level; zip(L1, L2) then combine pair elements."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Arrays vs Lists",
+   "strong_answer": "Arrays are fixed-size, homogeneous, contiguous, and faster; lists are dynamic, heterogeneous, referential, and slower but far more flexible for mixed data and growth."
+  },
+  {
+   "topic": "List comprehension vs for-loop + append",
+   "strong_answer": "Both build lists the same way logically; comprehension is a compressed form optimized at the C level and is more time- and space-efficient with fewer lines."
+  },
+  {
+   "topic": "append vs extend",
+   "strong_answer": "append adds one object (a list argument becomes one nested element); extend iterates an iterable and adds each element individually—including characters if given a string."
+  },
+  {
+   "topic": "Assignment alias vs copy",
+   "strong_answer": "b = a shares one mutable list so edits via a appear on b; copy() makes a shallow separate list object to avoid that aliasing side effect."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming append([6, 7, 8]) flattens those numbers onto the list.",
+   "correction": "append adds the whole list as a single nested element; use extend to add 6, 7, and 8 individually."
+  },
+  {
+   "trap": "Thinking extend('delhi') adds the string 'delhi' as one item.",
+   "correction": "extend walks the string and appends each character separately."
+  },
+  {
+   "trap": "Expecting 5 in [1, 2, 3, 4, [5, 6]] to be True.",
+   "correction": "in only checks top-level elements; 5 lives inside a nested list, so the check is False while [5, 6] in that list is True."
+  },
+  {
+   "trap": "Assuming b = a copies the list so later appends on a leave b unchanged.",
+   "correction": "Assignment aliases the same list object; both names see the mutation unless you copy."
+  },
+  {
+   "trap": "Confusing sort()/reverse() with sorted().",
+   "correction": "sort and reverse mutate in place; sorted returns a new sorted list and leaves the original unchanged."
+  }
+ ]
+}

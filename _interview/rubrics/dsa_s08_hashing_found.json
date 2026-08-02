@@ -1,0 +1,179 @@
+{
+ "id": "dsa_s08_hashing_found",
+ "title": "Hashing Foundations",
+ "type": "FUND",
+ "relevance": "Hashing underpins lightning-fast lookups and is a cornerstone of array and string interview/OA problems via frequency maps, seen sets, grouping, and prefix-sum patterns.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a hash is and when array-based number/character hashing vs library hash tables apply.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A hash maps a key directly to an index or bucket so retrieval is amortized O(1).",
+     "weight": "core",
+     "evidence_hint": "Candidate says hash turns a key into a bucket/index for amortized constant-time access."
+    },
+    {
+     "id": "fund2",
+     "point": "When keys are small non-negative integers, a plain frequency array is number hashing; e.g. keys in 0..10^5 use cnt[100005] with index as key and value as frequency for strict O(1) cache-friendly access.",
+     "weight": "core",
+     "evidence_hint": "Mentions frequency array / cnt sized for the key range, index equals key."
+    },
+    {
+     "id": "fund3",
+     "point": "Character hashing uses cnt[256] for any ASCII character, or size 26 for lowercase via ch - 'a'.",
+     "weight": "extended",
+     "evidence_hint": "Gives 256 for general chars or 26 with ch-'a' for a-z only."
+    },
+    {
+     "id": "fund4",
+     "point": "unordered_map and unordered_set are hash tables (O(1) average, can degrade to O(n)); map and set are red-black trees with strictly O(log n) and sorted keys.",
+     "weight": "core",
+     "evidence_hint": "States hash-table vs red-black-tree implementations and average vs strict bounds."
+    }
+   ],
+   "probes": [
+    "What is a hash, and when would you use a frequency array versus unordered_map?"
+   ],
+   "hints": {
+    "1": "Think about mapping a key to where it lives, not scanning.",
+    "2": "Small dense integer keys vs large/sparse/negative/string keys.",
+    "3": "Amortized O(1) bucket map; cnt[100005] or cnt[256]/26 for chars; else unordered_map/set (hash) vs map/set (red-black, O(log n))."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how collisions are handled and why performance can fall from O(1) to O(n).",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A collision is when multiple keys map to the same bucket.",
+     "weight": "core",
+     "evidence_hint": "Defines collision as same-bucket mapping for different keys."
+    },
+    {
+     "id": "mech2",
+     "point": "Chaining stores a linked list per bucket and appends on collision; search walks that list.",
+     "weight": "core",
+     "evidence_hint": "Describes per-bucket linked list and list traversal on lookup."
+    },
+    {
+     "id": "mech3",
+     "point": "Open addressing probes for the next free slot (e.g. sequential or secondary hash) when a bucket is full.",
+     "weight": "extended",
+     "evidence_hint": "Mentions probing another slot instead of chaining."
+    },
+    {
+     "id": "mech4",
+     "point": "Load factor is elements/buckets; tables resize past a threshold, but too many collisions still degrade O(1) to O(n).",
+     "weight": "core",
+     "evidence_hint": "Names load factor, auto-resize, and O(1)→O(n) under heavy collisions."
+    }
+   ],
+   "probes": [
+    "What happens on a collision, and what is load factor?"
+   ],
+   "hints": {
+    "1": "Two keys landing in one place is the issue.",
+    "2": "Contrast chaining lists vs probing empty slots; relate density to buckets.",
+    "3": "Chaining = list per bucket; open addressing = probe; load factor = elements/buckets; excess collisions → O(n)."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose between unordered containers, ordered map/set, and array hashes for speed, order, and adversarial cases.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Default to unordered_map/unordered_set for O(1) speed; switch to map/set when you need ordered keys, lower_bound, or adversarial cases that force worst-case O(n).",
+     "weight": "core",
+     "evidence_hint": "Prefers unordered for speed; names order, bounds, or anti-hash as reasons to use map/set."
+    },
+    {
+     "id": "tr2",
+     "point": "For frequency queries: if max element is small, array hash; if max is large (e.g. 10^9), an array that size is impossible so use unordered_map.",
+     "weight": "core",
+     "evidence_hint": "Contrasts compact array hash vs map when keys are huge like 10^9."
+    },
+    {
+     "id": "tr3",
+     "point": "Array-hash frequency queries: time O(n + Q), space O(max(arr)); map-hash: time O(n + Q) average, space O(n) for unique keys.",
+     "weight": "extended",
+     "evidence_hint": "States O(n+Q) both ways and space as max(arr) vs O(n) uniques."
+    }
+   ],
+   "probes": [
+    "When do you pick unordered_map over map, or a frequency array over either?"
+   ],
+   "hints": {
+    "1": "Speed vs ordering vs key range.",
+    "2": "Need sorted keys/lower_bound/anti-hash? Max key small or ~10^9?",
+    "3": "unordered for O(1); map/set for order/bounds/adversarial O(n); array if keys fit, else unordered_map (not 10^9-sized array)."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply pre-compute-then-query and standard hashing interview patterns to frequency and lookup problems.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Pre-compute-then-query: populate the hash once, then answer any number of queries instantly instead of brute O(Q × n).",
+     "weight": "core",
+     "evidence_hint": "Describes one pass to build counts, then O(1)-style per query vs rescanning."
+    },
+    {
+     "id": "app2",
+     "point": "Highest/lowest frequency: one pass to count with unordered_map, second pass over pairs; on equal frequency pick the smaller element.",
+     "weight": "extended",
+     "evidence_hint": "Two-phase count then scan; tie-break with smaller key."
+    },
+    {
+     "id": "app3",
+     "point": "Core patterns: frequency counting; seen unordered_set / complement lookups; grouping (e.g. unordered_map<string, vector<string>> for anagrams); prefix-sum + hashmap for subarrays with a given sum.",
+     "weight": "core",
+     "evidence_hint": "Lists frequency, seen/two-sum complements, grouping, prefix-sum+map."
+    }
+   ],
+   "probes": [
+    "Given an array and Q frequency queries, how do you answer them efficiently, and what other hashing patterns should you spot?"
+   ],
+   "hints": {
+    "1": "Avoid scanning the whole array per query.",
+    "2": "Build counts first; then name other map/set patterns beyond frequencies.",
+    "3": "Precompute → answer queries; patterns: frequency, seen/complements, anagram groups, prefix-sum + hashmap."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "unordered_map/unordered_set vs map/set",
+   "strong_answer": "Use unordered_* by default for average O(1). Prefer map/set when you need sorted keys, lower_bound, or protection from adversarial collisions that make unordered degrade to O(n) (strict O(log n) red-black trees)."
+  },
+  {
+   "topic": "Frequency array vs unordered_map",
+   "strong_answer": "Array hash when keys are small non-negative integers in a tight range (strict O(1), cache-friendly, space O(max(arr))). For large/sparse keys (e.g. up to 10^9) use unordered_map: average O(n+Q) time and O(n) space for uniques."
+  },
+  {
+   "topic": "Chaining vs open addressing",
+   "strong_answer": "Chaining appends colliding entries to a per-bucket linked list and searches by walking it. Open addressing probes another slot (sequential or secondary hash) when the bucket is full. Either path slows toward O(n) if too many keys share few buckets."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming unordered_map is always O(1) in contests/interviews.",
+   "correction": "Average O(1), but collisions can force O(n); competitive tests often ship anti-hash cases against default unordered_map<int,int> causing TLE—fall back to map, or custom hash with random seed (chrono::steady_clock) plus reserve() to limit resizing."
+  },
+  {
+   "trap": "Allocating a frequency array sized to a huge maximum like 10^9.",
+   "correction": "That allocation is impossible; use unordered_map for large keys and keep array hashing only when the max key is small enough (e.g. around 10^5 / cnt[100005])."
+  },
+  {
+   "trap": "Using unordered_map when ordered keys or bounds queries are required.",
+   "correction": "Switch to map/set for sorted order and lower_bound; unordered containers do not maintain key order."
+  }
+ ]
+}

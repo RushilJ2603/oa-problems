@@ -1,0 +1,201 @@
+{
+ "id": "dsa_s09_time_speed_distance",
+ "title": "Time, Speed & Distance",
+ "type": "FUND",
+ "relevance": "Core aptitude topic in campus OAs and assessment centers; relative-speed reasoning is often disguised as trains, boats, races, patrols, or shuttling drones.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Assessment centers such as Cisco, Microsoft, or Optiver often hide standard relative-speed formulas behind patrol agents, clock hands, or data packets.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the core speed–distance–time relations, unit conversion, average speed, and relative speed.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Speed equals distance divided by time.",
+     "weight": "core",
+     "evidence_hint": "States Speed = Distance / Time as the defining relation."
+    },
+    {
+     "id": "fund2",
+     "point": "1 km/h equals 5/18 m/s; convert m/s to km/h by multiplying by 18/5.",
+     "weight": "core",
+     "evidence_hint": "Gives both conversion directions with the 5/18 and 18/5 factors."
+    },
+    {
+     "id": "fund3",
+     "point": "Average speed is total distance over total time; for two equal distances at speeds a and b it is 2ab/(a+b).",
+     "weight": "core",
+     "evidence_hint": "Rejects arithmetic averaging of speeds and cites the equal-distance formula 2ab/(a+b)."
+    },
+    {
+     "id": "fund4",
+     "point": "Relative speed is S1+S2 in opposite directions and |S1−S2| in the same direction.",
+     "weight": "core",
+     "evidence_hint": "States both opposite-direction sum and same-direction absolute difference."
+    },
+    {
+     "id": "fund5",
+     "point": "If new speed is a/b of usual speed, new time is b/a of usual time; delay is (b/a − 1)T.",
+     "weight": "extended",
+     "evidence_hint": "Uses inverse proportion of speed and time and the delay formula (b/a − 1)T."
+    }
+   ],
+   "probes": [
+    "What is average speed when you cover equal distances at two different speeds?",
+    "How do you convert between km/h and m/s, and when do you add versus subtract speeds?"
+   ],
+   "hints": {
+    "1": "Start from Speed = Distance / Time and say what average speed actually means.",
+    "2": "Separate unit conversion, equal-distance average speed, and relative speed by direction.",
+    "3": "State 1 km/h = 5/18 m/s, average = 2ab/(a+b) for equal distances, and opposite/same relative speeds S1+S2 and |S1−S2|."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Apply relative speed and length rules to trains, boats/streams, races, and circular tracks.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A train passing a man or pole covers its own length; passing a platform covers train length plus platform length.",
+     "weight": "core",
+     "evidence_hint": "Uses train length alone for a pole/man and train+platform for a platform, with relative speed if the man moves."
+    },
+    {
+     "id": "mech2",
+     "point": "Two equal-length trains passing in the same direction cover 2L at relative speed |S1−S2|.",
+     "weight": "core",
+     "evidence_hint": "Says distance to pass is sum of lengths (2L when equal) at same-direction relative speed."
+    },
+    {
+     "id": "mech3",
+     "point": "Downstream speed is u+v and upstream is u−v; still-water and stream speeds are (D+U)/2 and (D−U)/2.",
+     "weight": "core",
+     "evidence_hint": "Writes D=u+v, U=u−v and recovers u and v from the averages of D and U."
+    },
+    {
+     "id": "mech4",
+     "point": "In a race, when A finishes, B's distance at that time gives how far A beats B; 'beats by metres or seconds' links the loser's leftover distance to that time gap.",
+     "weight": "extended",
+     "evidence_hint": "Computes B's position when A finishes, or converts 'beats by m or s' into B's speed and A's time."
+    },
+    {
+     "id": "mech5",
+     "point": "On a circular track, the k-th meeting occurs when relative distance covered is k times track length; same-direction distinct meeting points are |A−B| and opposite are A+B when A,B are coprime integers.",
+     "weight": "extended",
+     "evidence_hint": "Uses k×L / relative speed for the k-th meeting and states the |A−B| / A+B meeting-point counts."
+    }
+   ],
+   "probes": [
+    "How far does a train travel to pass a platform versus a standing person?",
+    "Given upstream and downstream speeds, how do you find boat and stream speeds?",
+    "When do two runners on a circular track meet for the k-th time?"
+   ],
+   "hints": {
+    "1": "Ask what distance must be covered for the objects to clear each other.",
+    "2": "Trains: length (or sum of lengths) over relative speed; boats: with/against the current; circular: relative distance equals multiples of L.",
+    "3": "Platform pass uses L_train+L_platform; boats use u=(D+U)/2, v=(D−U)/2; k-th circular meeting when relative distance is k×L."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose the right averaging and shortcut methods instead of tempting but wrong shortcuts.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "For equal distances, harmonic-style average 2ab/(a+b) is correct; arithmetic mean of the two speeds is wrong because more time is spent at the slower speed.",
+     "weight": "core",
+     "evidence_hint": "Contrasts 2ab/(a+b) with (a+b)/2 and explains the slower-speed time bias."
+    },
+    {
+     "id": "tr2",
+     "point": "For a shuttling fly or drone between closing objects, multiply continuous flight speed by total time to intercept instead of summing the infinite zig-zag series.",
+     "weight": "core",
+     "evidence_hint": "Names the Von Neumann fly / drone shortcut: distance = flyer speed × time until the hosts meet."
+    },
+    {
+     "id": "tr3",
+     "point": "On an up-escalator, walking faster makes you count more visible steps because you spend less time on it and the escalator contributes fewer steps.",
+     "weight": "extended",
+     "evidence_hint": "Explains why the faster walker can report a larger step count on the same moving escalator."
+    }
+   ],
+   "probes": [
+    "Why is the average of two speeds often wrong for a round trip?",
+    "Should you sum every leg of a shuttling fly, or is there a better approach?"
+   ],
+   "hints": {
+    "1": "Think about what is held constant: distance, time, or continuous motion.",
+    "2": "Equal-distance journeys need harmonic averaging; infinite shuttles collapse to time × flyer speed.",
+    "3": "Use 2ab/(a+b) not (a+b)/2; for the fly, find collision time then multiply by fly speed."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Map disguised OA stories and classic puzzles back onto relative-speed and escalator models.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "OA wording with patrol robots, packets, or similar agents still maps to relative speed and joint distance covered between meetings.",
+     "weight": "core",
+     "evidence_hint": "Strips the story to closing/joint distance and relative speed, including reflection corridors when walls reverse direction."
+    },
+    {
+     "id": "app2",
+     "point": "For a fly or drone shuttling until one vehicle catches another, total distance is flyer speed times the catch-up time from the head-start gap.",
+     "weight": "core",
+     "evidence_hint": "Computes head-start gap, catch-up time at relative speed, then flyer_speed × that time."
+    },
+    {
+     "id": "app3",
+     "point": "Escalator visible steps equal walker steps plus escalator steps during that time; equate two walkers' expressions for N to solve for the step-rate ratio.",
+     "weight": "extended",
+     "evidence_hint": "Sets N = steps_taken + escalator contribution and equates two rates to find N when the escalator is off."
+    }
+   ],
+   "probes": [
+    "Two robots bounce between ends of a corridor—how do you find when they cross the second time?",
+    "A drone zig-zags between two trains until they meet—what distance does it fly?",
+    "How do you find how many escalator steps are visible when it is switched off?"
+   ],
+   "hints": {
+    "1": "Ignore the story dressing and identify gap, relative speed, and what 'meeting' means.",
+    "2": "Corridor reflections often mean the n-th meeting corresponds to an odd multiple of corridor length in joint distance; shuttles use time × speed; escalators equate two expressions for N.",
+    "3": "Second corridor crossing uses joint distance 3D at relative speed; drone distance = drone speed × catch-up time; escalator N from equating the two walkers' N equations."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Arithmetic mean of speeds vs 2ab/(a+b) for equal distances",
+   "strong_answer": "Equal distances require average speed 2ab/(a+b). Averaging the speeds as (a+b)/2 overcounts the faster leg because more time is spent at the slower speed."
+  },
+  {
+   "topic": "Summing infinite zig-zag legs vs flyer speed × intercept time",
+   "strong_answer": "Do not sum the infinite series of shuttle segments. Find the time until the hosts meet (or one catches the other), then multiply by the flyer's constant speed."
+  },
+  {
+   "topic": "Faster vs slower walking on an up-escalator (steps counted)",
+   "strong_answer": "Walking faster shortens time on the escalator, so the escalator contributes fewer steps and you must supply more—hence a faster walker can count more steps, not fewer."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Averaging equal-distance speeds as (40+60)/2 = 50 instead of using 2ab/(a+b).",
+   "correction": "Use average speed = 2ab/(a+b); more time is spent at the slower speed, so the true average is pulled toward it."
+  },
+  {
+   "trap": "Summing an infinite geometric series of drone or fly zig-zags between closing trains.",
+   "correction": "Compute total time until intercept from the head-start gap and relative speed, then multiply by the flyer’s constant speed."
+  },
+  {
+   "trap": "Assuming walking faster on an up-escalator means you count fewer steps.",
+   "correction": "Faster walking means less time on the escalator, so it lifts you fewer steps and you count more of your own steps."
+  },
+  {
+   "trap": "Treating average speed as the mean of segment speeds when distances (or times) are unequal without computing total distance over total time.",
+   "correction": "Always use total distance / total time; only the equal-distance two-speed case collapses neatly to 2ab/(a+b)."
+  }
+ ]
+}

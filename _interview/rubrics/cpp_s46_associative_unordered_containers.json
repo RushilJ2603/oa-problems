@@ -1,0 +1,199 @@
+{
+ "id": "cpp_s46_associative_unordered_containers",
+ "title": "Associative and unordered containers",
+ "type": "FUND",
+ "relevance": "Staple C++ interview topic covering map vs unordered_map, complexity guarantees, operator[] pitfalls, custom keys, and when to prefer trees vs hash tables in SDE interviews and OAs.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the two associative families, their four containers each, and how keys drive placement versus sequence containers.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Associative containers arrange elements by key for fast retrieval; unlike sequence containers, the programmer does not place elements at a chosen position.",
+     "weight": "core",
+     "evidence_hint": "Contrasts key-based placement with vector/list positional placement and names the ordered vs unordered families."
+    },
+    {
+     "id": "fund2",
+     "point": "Ordered containers (set, multiset, map, multimap in <set>/<map>) are backed by a balanced BST (typically red-black), keep keys sorted via Compare defaulting to std::less, and support search/insert/erase in O(log n).",
+     "weight": "core",
+     "evidence_hint": "Names all four types, unique vs multi, tree backing, default comparator, and O(log n)."
+    },
+    {
+     "id": "fund3",
+     "point": "Unordered containers (unordered_set/multiset/map/multimap in <unordered_set>/<unordered_map>) are hash tables needing Hash and KeyEqual, with average O(1) search/insert/erase and worst-case O(n) under many collisions.",
+     "weight": "core",
+     "evidence_hint": "Names the four unordered types, hash+equality requirements, and average vs worst-case complexity."
+    },
+    {
+     "id": "fund4",
+     "point": "std::map stores std::pair<const Key, T>; the key is const because changing it would break the tree ordering invariant—erase and re-insert to change a key (or use extract in C++17).",
+     "weight": "extended",
+     "evidence_hint": "Mentions pair<const Key,T> and why the key cannot be mutated in place while in the container."
+    }
+   ],
+   "probes": [
+    "What associative containers does the Standard Library provide, and what is the difference between the ordered and unordered families?"
+   ],
+   "hints": {
+    "1": "Think about how elements are placed—by key versus by programmer-chosen position—and what data structures back each family.",
+    "2": "List the four ordered and four unordered types, then state tree vs hash table and the usual Big-O for lookup.",
+    "3": "Ordered: set/multiset/map/multimap on a red-black tree, O(log n), sorted by Compare; unordered_*: hash table, avg O(1)/worst O(n); map holds pair<const Key,T>."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain red-black and hash-table internals, core lookup/insert/erase APIs, ordered range queries, and iterator invalidation rules.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A red-black tree is a BST with red/black node colours obeying root/leaf black, no red-red parent-child, and equal black-height on every path to a leaf—forcing height O(log n) so map/set find/insert/erase/lower_bound are O(log n) worst-case.",
+     "weight": "core",
+     "evidence_hint": "States BST + colour invariants and that they prove O(log n) height/operations, not merely average-case."
+    },
+    {
+     "id": "mech2",
+     "point": "Unordered containers hash the key to a bucket (size_t modulated by bucket_count); collisions chain in a linked list; when load_factor exceeds max_load_factor the table rehashes—one such insert is O(n) and invalidates all iterators.",
+     "weight": "core",
+     "evidence_hint": "Describes hash→bucket, chaining, load_factor/max_load_factor, rehash cost and iterator invalidation."
+    },
+    {
+     "id": "mech3",
+     "point": "For unique-key set/map, insert/emplace return pair<iterator,bool> (bool false if key existed); multi-variants always insert and return iterator; emplace constructs in-place; try_emplace/insert_or_assign (C++17) clarify insert-if-absent vs overwrite for map.",
+     "weight": "extended",
+     "evidence_hint": "Distinguishes unique vs multi return types and mentions emplace vs insert and C++17 map helpers."
+    },
+    {
+     "id": "mech4",
+     "point": "Ordered-only: lower_bound is first >= k, upper_bound first > k, equal_range is that pair—all O(log n); equal_range is the idiomatic way to visit all values for a key in multimap/multiset.",
+     "weight": "core",
+     "evidence_hint": "Defines the three range ops and ties equal_range to multi-containers."
+    },
+    {
+     "id": "mech5",
+     "point": "Ordered insert never invalidates iterators/references; erase invalidates only the erased element. Unordered insert invalidates all iterators iff rehash occurs, but pointers/references to elements remain valid; erase invalidates only the erased element.",
+     "weight": "extended",
+     "evidence_hint": "Contrasts ordered vs unordered invalidation, especially rehash vs surviving references."
+    }
+   ],
+   "probes": [
+    "How is std::map implemented under the hood, and why can unordered_map operations become O(n)?"
+   ],
+   "hints": {
+    "1": "Start from the backing structure of each family—tree colours vs buckets and chains.",
+    "2": "For map: name red-black invariants and O(log n). For unordered_map: walk hash → bucket → chain, then load factor/rehash and adversarial collisions.",
+    "3": "map/set: RB-tree (root/leaves black, no red-red, equal black-height) → O(log n). unordered_*: hash to bucket, chain collisions; long chains or rehash → O(n); rehash invalidates iterators."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose ordered vs unordered based on ordering needs, complexity guarantees, key requirements, and memory/iterator behaviour.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer unordered_map/unordered_set for pure key-value / presence lookups when average O(1) is enough and order is unspecified; prefer ordered map/set when you need sorted iteration, predecessor/successor, or range queries via lower_bound/upper_bound, or hard O(log n) ceilings.",
+     "weight": "core",
+     "evidence_hint": "States the default-to-unordered rule and the ordered fallbacks (sorted order, range queries, worst-case guarantees)."
+    },
+    {
+     "id": "tr2",
+     "point": "Ordered keys need a strict weak ordering (operator< or Compare); unordered keys need Hash plus equality (operator== / KeyEqual)—and Hash must agree with equality (equal keys must hash equal).",
+     "weight": "core",
+     "evidence_hint": "Contrasts comparator vs hash+equality requirements and the Hash/KeyEqual consistency rule."
+    },
+    {
+     "id": "tr3",
+     "point": "Memory: ordered nodes typically carry higher overhead (about 3 pointers per node); unordered nodes are lighter per node but pay bucket-array overhead; unordered iteration order is unspecified and changes on rehash.",
+     "weight": "extended",
+     "evidence_hint": "Mentions the 3-pointers-per-node note, bucket array cost, and unspecified/changing iteration order."
+    }
+   ],
+   "probes": [
+    "When would you choose std::map over std::unordered_map, and what key requirements does each impose?"
+   ],
+   "hints": {
+    "1": "Ask what the caller needs after lookup—sorted walk, a range of keys, or just “is this key present?”.",
+    "2": "Tie each need to complexity: guaranteed O(log n) and lower_bound vs average O(1)/worst O(n), plus Compare vs Hash+==.",
+    "3": "Ordered for sorted iteration, lower/upper_bound, hard O(log n); unordered for average-O(1) dictionaries on trusted/custom hashes; Compare vs Hash+KeyEqual with equal⇒same hash."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply safe lookup patterns, custom key wiring, transparent heterogeneous lookup, and C++17 node-handle key moves.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "map/unordered_map operator[] silently inserts a default-constructed mapped value if the key is missing and requires DefaultConstructible T; for pure lookup use find, at (throws out_of_range), count, or C++20 contains—multimap/multiset have no operator[]/at.",
+     "weight": "core",
+     "evidence_hint": "Names the silent-insert trap, DefaultConstructible requirement, and safer APIs including that multi* lack []."
+    },
+    {
+     "id": "app2",
+     "point": "Custom ordered keys: overload operator< or pass a Compare functor with strict weak ordering (equivalence is !comp(a,b)&&!comp(b,a)). Custom unordered keys: provide == and a Hash (or specialise std::hash); std::hash is not defined for std::pair so pair keys need an explicit Hash.",
+     "weight": "core",
+     "evidence_hint": "Gives both paths for ordered and unordered custom keys and notes pair has no std::hash."
+    },
+    {
+     "id": "app3",
+     "point": "Transparent comparators (C++14): if Compare::is_transparent is valid (e.g. std::less<>), find/count/contains/lower_bound/upper_bound/equal_range/erase accept types comparable to Key without converting to Key—e.g. map<string,…,less<>> find(string_view) without allocating a temporary string.",
+     "weight": "extended",
+     "evidence_hint": "Mentions is_transparent / std::less<> and heterogeneous lookup avoiding string temporaries."
+    },
+    {
+     "id": "app4",
+     "point": "C++17 node handles: extract removes a node into a node_type; you can mutate nh.key() then insert(move(nh)) or merge compatible containers to splice without copying the element—clean way to change a map key without copy-erase-reinsert.",
+     "weight": "extended",
+     "evidence_hint": "Describes extract, key mutation on the handle, insert/merge splicing, and the change-key use case."
+    }
+   ],
+   "probes": [
+    "How do you look up a map<string,…> with a string_view without allocating, and what goes wrong if you use operator[] for a read?"
+   ],
+   "hints": {
+    "1": "Separate “read if present” from “insert or assign,” and think about temporary Key construction on lookup.",
+    "2": "operator[] inserts defaults; prefer find/at/contains. For string_view lookup, mention transparent Compare.",
+    "3": "Use find/at/count/contains—not []. Use map<string,T,less<>> (or custom is_transparent Compare) so heterogeneous find/contains take string_view without a temporary string."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "std::map/std::set vs std::unordered_map/std::unordered_set",
+   "strong_answer": "Ordered: red-black tree, guaranteed O(log n), sorted iteration, lower_bound/upper_bound/equal_range, needs Compare/strict weak ordering, insert never invalidates iterators, higher per-node pointer overhead. Unordered: hash table with buckets+chains, average O(1) / worst O(n), unspecified iteration that changes on rehash, needs Hash+equality, insert may rehash and invalidate all iterators (references survive). Default to unordered for pure dictionary/presence lookups; use ordered for sorted traversal, range queries, or hard worst-case ceilings (or untrusted hashes without a strong custom hash)."
+  },
+  {
+   "topic": "operator[] vs at/find/contains for map lookup",
+   "strong_answer": "operator[] inserts a default-mapped value if missing and requires DefaultConstructible mapped type—unsafe for read-only checks. Prefer find (iterator or end), at (throws out_of_range), count, or C++20 contains; for insert-if-absent / overwrite semantics prefer try_emplace / insert_or_assign on map."
+  },
+  {
+   "topic": "insert/emplace vs try_emplace/insert_or_assign (map, C++17)",
+   "strong_answer": "Raw insert/emplace on unique maps return pair<iterator,bool> and do not overwrite an existing mapped value. try_emplace inserts only if the key is missing without overwriting; insert_or_assign inserts or replaces the mapped value—clearer than operator[] when you want explicit insert-or-update behaviour."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using map::operator[] or unordered_map::operator[] to “check” a key.",
+   "correction": "It silently inserts a default-constructed value if missing (and needs DefaultConstructible T). Use find, at, count, or C++20 contains for lookup."
+  },
+  {
+   "trap": "Treating unordered_map as always faster / always O(1) than map.",
+   "correction": "Collisions are chained; a weak hash or adversarial keys can make a bucket O(n) (even O(n^2) over n inserts). Rehash also makes a single insert O(n). Use a strong custom hash on untrusted input or fall back to map for O(log n)."
+  },
+  {
+   "trap": "Holding unordered container iterators across insert/rehash/reserve.",
+   "correction": "A rehash invalidates all iterators (references/pointers to elements stay valid). Call reserve(expected_size) up front, or look up by key again after growth."
+  },
+  {
+   "trap": "Inconsistent Compare (or Hash vs KeyEqual) with equality.",
+   "correction": "Ordered: keys are equivalent when !comp(a,b)&&!comp(b,a)—mismatch with == causes silent lookup bugs. Unordered: equal keys must hash equal, or elements are lost / lookups fail; weak combines like plain XOR on pair members also collide on swaps."
+  },
+  {
+   "trap": "Trying to mutate a map key in place, or using operator[]/at on multimap.",
+   "correction": "Keys in the container are const; erase+reinsert, or C++17 extract then mutate nh.key() and insert. multimap/multiset have no operator[]/at—use equal_range."
+  }
+ ]
+}

@@ -1,0 +1,218 @@
+{
+ "id": "dsa_s36_reasoning_formats",
+ "title": "Additional OA Reasoning Formats",
+ "type": "FUND",
+ "relevance": "Campus OAs test set syllogistic Venn reading, courses of action, assertion-reason links, arrangement machines, eligibility rules, and quantity comparison under fixed option formats.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "PrepInsta cites Input/Output and Decision Making among company OA formats for AMCAT, Infosys, and TCS.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the fixed conventions for each OA reasoning format and what the candidate must decide.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Logical Venn: given three categories and four diagrams, judge whether sets are disjoint, partially overlapping (some A are B), or fully contained (all A are B).",
+     "weight": "core",
+     "evidence_hint": "States the three relationship types and that the task is to pick the diagram that matches them."
+    },
+    {
+     "id": "fund2",
+     "point": "Course of Action: an action follows only if it is a proper, feasible, practical response that reduces or solves the stated problem.",
+     "weight": "core",
+     "evidence_hint": "Defines follow as proper/feasible/practical mitigation, not any related suggestion."
+    },
+    {
+     "id": "fund3",
+     "point": "Assertion-Reason options are exactly: both true and R explains A; both true but R does not explain A; A true R false; A false R true.",
+     "weight": "core",
+     "evidence_hint": "Lists the four (a)–(d) truth/explanation outcomes without inventing extra options."
+    },
+    {
+     "id": "fund4",
+     "point": "Input–Output machine: deduce a fixed rule by comparing Input→Step I→Step II… then apply that exact rule to a new input.",
+     "weight": "extended",
+     "evidence_hint": "Emphasizes step-to-step rule discovery then transfer to a fresh string."
+    },
+    {
+     "id": "fund5",
+     "point": "Eligibility: decide Selected, Rejected, or Referred strictly from stated criteria plus stated exceptions.",
+     "weight": "extended",
+     "evidence_hint": "Names the three statuses and that exceptions only apply as written."
+    },
+    {
+     "id": "fund6",
+     "point": "Quantitative Comparison: compute/deduce Quantity I and II, then choose among I>II, I<II, I≥II, I≤II, or equal/cannot determine.",
+     "weight": "extended",
+     "evidence_hint": "Recalls the five standard comparison choices."
+    }
+   ],
+   "probes": [
+    "What is the decision task in each of: Venn diagrams, course of action, assertion-reason, machine I/O, eligibility, and quantity comparison?"
+   ],
+   "hints": {
+    "1": "Name each format’s input and what you must output.",
+    "2": "Venn = set relation; CoA = follows or not; A&R = truth plus explanation; machine = rule from steps; eligibility = select/reject/refer; QC = compare two quantities.",
+    "3": "Quote the follow definition for CoA and the four A&R options; for the others, state diagram choice, rule transfer, status from criteria, and the five QC options."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to evaluate set containment/overlap, check CoA/A&R links, run machine steps, and apply eligibility exceptions.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Venn containment vs overlap: e.g. all dogs and pets are animals so both sit inside Animal, while Dog and Pet partially overlap; all fathers are men so Father ⊂ Man, and Doctor intersects both and extends outside Man.",
+     "weight": "core",
+     "evidence_hint": "Gives at least one full-containment and one partial-overlap/intersect pattern from the Dog/Animal/Pet or Doctor/Man/Father type examples."
+    },
+    {
+     "id": "mech2",
+     "point": "A&R test: insert “because” between A and R to check whether R explains A, not merely whether both statements are true.",
+     "weight": "core",
+     "evidence_hint": "Uses the because-link test; may cite white clothes/heat reflection as explains, or diamond hardness vs refractive index as does not."
+    },
+    {
+     "id": "mech3",
+     "point": "Machine rule example: alternate moving highest remaining number then earliest alphabetical word to the left of the unprocessed suffix, one element per step; if already correct for that step, skip and bring the next needed element.",
+     "weight": "core",
+     "evidence_hint": "Describes alternating number/word left-placement and the skip-when-already-correct behavior (as in Step III for 64/fall)."
+    },
+    {
+     "id": "mech4",
+     "point": "Eligibility walk: check each primary rule; if a failed rule has a matching exception and all other rules hold, refer (e.g. M.Tech ≥65% → GM; deposit ≥ Rs. 25,000 plus bond → HR Head); a failed hard rule with no exception rejects even if another exception would apply.",
+     "weight": "extended",
+     "evidence_hint": "Walks primary checks then exception routing, including that test-fail without exception rejects despite deposit exception."
+    }
+   ],
+   "probes": [
+    "Walk through how the arrangement machine decides what moves on each step, and how eligibility exceptions change Selected vs Referred vs Rejected."
+   ],
+   "hints": {
+    "1": "Compare consecutive machine steps; for eligibility, tick criteria then exceptions.",
+    "2": "Machine: one left-side placement per step, alternating max number and earliest word, skip if already placed. Eligibility: fail-with-exception → refer; fail-without-exception → reject.",
+    "3": "State the 90/base/85/cold… alternating rule, the already-at-front skip for 64 bringing fall, and Rahul rejected on test <70% despite deposit exception (B)."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Separate valid follow/explain/refer outcomes from extreme, non-explanatory, or irreversible cases.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Course of Action: measured relief or root-cause enforcement follows; forced mass migration, total highway vehicle bans, or shutting a division after one bad quarter do not.",
+     "weight": "core",
+     "evidence_hint": "Contrasts I-follows drought relief / speed cameras / market research against extreme II or I actions that do not follow."
+    },
+    {
+     "id": "tr2",
+     "point": "Both A and R true is not enough: R may be true yet fail to explain A (diamond cuts glass from hardness, not high refractive index).",
+     "weight": "core",
+     "evidence_hint": "States option (b) case where R is factually true but not the cause of A."
+    },
+    {
+     "id": "tr3",
+     "point": "Machine extraction to the front is not reversible, so original Input cannot be recovered from a later Step (e.g. from Step II).",
+     "weight": "extended",
+     "evidence_hint": "Says prior positions of extracted elements are unknown → cannot be determined."
+    }
+   ],
+   "probes": [
+    "When does a true Reason still fail, and when does a suggested action fail to follow?",
+    "Why can’t you recover the original machine Input from Step II?"
+   ],
+   "hints": {
+    "1": "Ask whether the action is proportionate and whether R causes A.",
+    "2": "CoA fails on extremes/secondary harm; A&R (b) fails the because-link; machine front-extraction loses prior order.",
+    "3": "Cite drought I vs forced migration II; diamond refractive index vs hardness; Step II → original Input cannot be determined."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the formats to concrete items and produce the keyed answers with supporting checks.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Venn answers: Dog/Animal/Pet → large Animal with two smaller overlapping circles; Doctor/Man/Father and Table/Furniture/Wood → one circle inside another with a third intersecting both.",
+     "weight": "core",
+     "evidence_hint": "Gives those three diagram choices with the containment/overlap rationale."
+    },
+    {
+     "id": "app2",
+     "point": "For Input 64 toll 22 fall 38 ask 75 mass: Step III is 75 ask 64 fall toll 22 38 mass; arrangement completes in 6 steps.",
+     "weight": "core",
+     "evidence_hint": "States Step III string (b) and total steps 6."
+    },
+    {
+     "id": "app3",
+     "point": "Eligibility: Amit (all primary met) Selected; Priya (B.Tech 55% but M.Tech 68% and otherwise OK) Refer to GM; Rahul (test 65%, no exception for rule 3) Rejected.",
+     "weight": "core",
+     "evidence_hint": "Assigns Selected / Refer to GM / Rejected with the failing or exception rule named."
+    },
+    {
+     "id": "app4",
+     "point": "QC: roots 6 or 7 vs 8 or 9 ⇒ I<II; first 50 even and first 51 odd averages both 51 ⇒ equal; circle area 154 vs square 121 ⇒ I>II; A’s age 20 equals Quantity II 20.",
+     "weight": "extended",
+     "evidence_hint": "Gives the four comparison outcomes using only those figures from the file."
+    }
+   ],
+   "probes": [
+    "Solve the Dog/Animal/Pet Venn, the 64…mass Step III and step count, Amit/Priya/Rahul status, and one Quantity I vs II comparison."
+   ],
+   "hints": {
+    "1": "Apply containment first, then overlap; for machine, move one element per step.",
+    "2": "Eligibility: check 60%/21–30/70%/Rs. 50,000 then exceptions (A)/(B). QC: solve or average then pick the option letter.",
+    "3": "Dog/Pet inside Animal overlapping; Step III 75 ask 64 fall toll 22 38 mass in 6 steps; Amit Selected, Priya GM, Rahul Rejected; e.g. 154>121 or ages both 20."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Practical course of action vs extreme overreaction",
+   "strong_answer": "An action follows only if it is proper, feasible, and practical and reduces the problem; extremes that ignore rights, destroy utility, or overreact to a minor/single-period issue do not follow (e.g. drought relief yes / forced migration no; speed cameras yes / ban all private vehicles no; market research yes / shut smartphone division after one quarter no)."
+  },
+  {
+   "topic": "Reason true vs Reason explains Assertion",
+   "strong_answer": "Both A and R can be true while R still fails to explain A; insert because between them—white clothes comfort because they are bad absorbers and good reflectors of heat (explains), but diamond’s high refractive index does not explain cutting glass (hardness does)."
+  },
+  {
+   "topic": "Selected vs Referred vs Rejected under eligibility exceptions",
+   "strong_answer": "Meet all primary criteria → Selected; fail a rule that has a matching exception and meet all else → Refer (M.Tech ≥65% → GM; ≥ Rs. 25,000 plus bond → HR Head); fail a hard rule with no exception → Rejected even if another exception would have applied."
+  },
+  {
+   "topic": "Forward machine arrangement vs recovering prior Input",
+   "strong_answer": "You can apply the deduced left-extraction rule forward to new inputs, but because elements are pulled from unknown prior positions, a later Step does not determine the original Input."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating any related or partial response as a course of action that follows.",
+   "correction": "It does not follow if it only partly addresses the issue while ignoring the main problem, creates a larger secondary problem, or is an extreme overreaction to a minor issue."
+  },
+  {
+   "trap": "Choosing “both true and R explains A” whenever both statements sound true.",
+   "correction": "For option (b), R can be factually correct alone yet fail to explain A—always insert because between A and R."
+  },
+  {
+   "trap": "Asserting atmospheric pressure is higher at higher altitudes to explain lower boiling point.",
+   "correction": "A is true but R is false: atmospheric pressure decreases at higher altitudes, which is why the boiling point drops."
+  },
+  {
+   "trap": "Saying silver is unused for domestic wires because it is a bad conductor.",
+   "correction": "A is true (cost; copper/aluminum used) but R is false—silver is the best metallic conductor of electricity."
+  },
+  {
+   "trap": "Assuming the original machine Input can be reconstructed from a later Step.",
+   "correction": "Front-extraction is not reversible; prior locations are unknown, so the Input cannot be determined."
+  },
+  {
+   "trap": "Referring a candidate who fails a hard criterion just because they qualify for a different exception.",
+   "correction": "No exception for the failed rule means immediate Rejected; deposit exception (B) cannot rescue a failed online-test rule."
+  },
+  {
+   "trap": "Forcing a move every step even when the needed element is already at the front of the unprocessed suffix.",
+   "correction": "If it is already in the correct position for that step, take no action on it and bring the next required element instead."
+  }
+ ]
+}

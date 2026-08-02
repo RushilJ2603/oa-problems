@@ -1,0 +1,241 @@
+{
+ "id": "cpp_s49_data_structures_stl",
+ "title": "Data Structures and STL Mapping",
+ "type": "FUND",
+ "relevance": "Interviewers and OAs probe whether you map abstract structures to the right C++ STL container, quote Big-O correctly (including amortised vs worst-case), and justify the choice under cache, ordering, and iterator constraints.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Map abstract structures to STL types and recall the Big-O that interviews actually ask about.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Python list/dict/set broadly map to C++ std::vector, std::unordered_map, and std::unordered_set.",
+     "weight": "core",
+     "evidence_hint": "States the three Python↔STL pairs without swapping ordered vs unordered."
+    },
+    {
+     "id": "fund2",
+     "point": "std::vector is the default sequence: index access O(1), end insert/delete amortised O(1), middle insert/delete O(n).",
+     "weight": "core",
+     "evidence_hint": "Gives all three costs and names vector as the default reach-for container."
+    },
+    {
+     "id": "fund3",
+     "point": "Contiguous containers (vector/array/string; deque in blocks) store adjacent elements; node-based ones (list/forward_list/set/map/unordered_*) allocate per-element heap nodes linked by pointers.",
+     "weight": "core",
+     "evidence_hint": "Contrasts contiguous vs node-based and names representative types on each side."
+    },
+    {
+     "id": "fund4",
+     "point": "std::set/map (balanced BST) search/insert/delete are O(log n) with sorted iteration; unordered_set/map are average O(1) and worst-case O(n) on severe collisions.",
+     "weight": "core",
+     "evidence_hint": "Separates tree O(log n)+order from hash average O(1)/worst O(n)+no order."
+    },
+    {
+     "id": "fund5",
+     "point": "std::priority_queue is a binary heap (default max-heap on vector): push/pop O(log n), top O(1).",
+     "weight": "extended",
+     "evidence_hint": "States default max-heap, underlying vector, and the three operation costs."
+    }
+   ],
+   "probes": [
+    "What is the complexity of vector::push_back?",
+    "Map each of dynamic array, hash table, and balanced BST to its STL type and the Big-O of the operations that matter."
+   ],
+   "hints": {
+    "1": "Start from the abstract structure, then name the STL type before quoting costs.",
+    "2": "For push_back, separate amortised end growth from a single reallocation spike.",
+    "3": "Say amortised O(1), worst-case O(n) on reallocation; vector=[]; unordered_map/set=hash; set/map=tree O(log n)."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show the signatures and behavioral rules that change correctness: invalidation, adaptor APIs, map lookup, heap/list quirks.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "vector push_back/insert/reserve that reallocates invalidates all iterators, references, and pointers; erase invalidates at/after the erase point.",
+     "weight": "core",
+     "evidence_hint": "Mentions full invalidation on growth and partial invalidation on erase; suggests holding indices or re-getting iterators."
+    },
+    {
+     "id": "mech2",
+     "point": "stack/queue/priority_queue pop() returns void — read with top()/front() first, then pop().",
+     "weight": "core",
+     "evidence_hint": "Names the void return and the two-step read-then-pop pattern across adaptors."
+    },
+    {
+     "id": "mech3",
+     "point": "map::operator[] default-inserts a missing key; pure queries should use find, at, or contains (C++20); at throws if absent.",
+     "weight": "core",
+     "evidence_hint": "Warns that [] mutates the map on miss and names the read-only alternatives."
+    },
+    {
+     "id": "mech4",
+     "point": "Min-heap priority_queue needs the three-argument form with std::vector and std::greater; default less yields largest on top.",
+     "weight": "extended",
+     "evidence_hint": "Writes priority_queue<T, vector<T>, greater<T>> and contrasts with the default max-heap."
+    },
+    {
+     "id": "mech5",
+     "point": "forward_list has no size() or push_back; insert_after/erase_after need the iterator before the victim (use before_begin() to insert at front).",
+     "weight": "extended",
+     "evidence_hint": "Lists the missing APIs and the before-iterator / before_begin pattern."
+    }
+   ],
+   "probes": [
+    "How do you get a min-heap from std::priority_queue?",
+    "What happens to iterators when a vector grows, and how do you safely look up in a map without inserting?"
+   ],
+   "hints": {
+    "1": "Think about what the adaptor does not return and what map[] does on a miss.",
+    "2": "Contrast growth invalidation on vector with read-only map lookup APIs.",
+    "3": "top()/front() then pop(); map find/at/contains; min-heap = vector + greater; forward_list uses insert_after/before_begin."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Explain when Big-O misleads and how order, worst-case, and cache locality drive the real choice.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Amortised O(1) (e.g. vector::push_back, end ops on deque/string) averages O(1) over a long sequence but a single call may be O(n) on reallocation; map insert O(log n) and list splice O(1) are true worst-case.",
+     "weight": "core",
+     "evidence_hint": "Defines amortised vs guaranteed worst-case and names examples of each."
+    },
+    {
+     "id": "tr2",
+     "point": "Do not pick std::list only because insert is O(1): without a pre-held iterator, finding the spot is still O(n), same asymptotic as vector::insert but with worse constants and locality.",
+     "weight": "core",
+     "evidence_hint": "Requires the iterator precondition and compares find+splice cost to vector middle insert."
+    },
+    {
+     "id": "tr3",
+     "point": "Prefer vector unless you need stable iterators under middle insert/erase and already hold the iterator (splice-heavy / LRU-style); contiguous memmove often beats pointer-chasing list nodes.",
+     "weight": "core",
+     "evidence_hint": "States vector-default with the narrow list exceptions tied to held iterators and locality."
+    },
+    {
+     "id": "tr4",
+     "point": "Choose unordered_map/set for average O(1) when order does not matter; choose map/set for sorted iteration, lower_bound, or hard O(log n) worst-case against adversarial keys.",
+     "weight": "extended",
+     "evidence_hint": "Frames the decision as order-needed? and worst-case-needed? with the matching container."
+    }
+   ],
+   "probes": [
+    "When would you use std::list over std::vector?",
+    "map vs unordered_map — what do you optimize for?",
+    "When is amortised O(1) unacceptable?"
+   ],
+   "hints": {
+    "1": "Ask whether you already hold an iterator and whether you need sorted order or hard latency.",
+    "2": "Separate Big-O operation counts from wall-clock/cache behavior and amortised spikes.",
+    "3": "list only with held iterator/splice/stability; unordered for average speed; map for order or O(log n) worst-case; pre-reserve or true worst-case structures when amortised spikes hurt."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Pick a container from requirements and know how to build structures the STL does not ship.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Decision axes: need sorted/insertion/no order? duplicates? random index? insert at end / both ends / middle with iterator? worst-case vs amortised? cache locality? Unsure → vector.",
+     "weight": "core",
+     "evidence_hint": "Walks the axes in order and defaults to vector when nothing forces another type."
+    },
+    {
+     "id": "app2",
+     "point": "Typical picks: append+index → vector; sliding window push back/pop front → deque (or queue if no index); sorted predecessor → map/set; word frequencies → unordered_map; highest priority → priority_queue; undo → stack; fixed-width flags → bitset; O(1) erase of a known LRU node → list plus map to iterators.",
+     "weight": "core",
+     "evidence_hint": "Maps several concrete requirements to one STL type each without inventing extras."
+    },
+    {
+     "id": "app3",
+     "point": "C++ has no built-in graph: represent with an adjacency list such as vector<vector<int>> (or unordered_map to vector for non-int IDs).",
+     "weight": "extended",
+     "evidence_hint": "States no graph container and gives the adjacency-list construction."
+    },
+    {
+     "id": "app4",
+     "point": "Prefer std::bitset<N> (or manual vector of uint64_t) over vector<bool>; deque is not contiguous so do not pass &dq[0] to a C API expecting one block—use vector::data().",
+     "weight": "extended",
+     "evidence_hint": "Rejects vector<bool> for bit packs and rejects deque for contiguous C buffers."
+    }
+   ],
+   "probes": [
+    "Which container and why for a sliding window that needs push back, pop front, and occasional indexing?",
+    "How would you represent a graph in C++?",
+    "Why might deque be wrong for a C-style buffer API?"
+   ],
+   "hints": {
+    "1": "Name the requirement that rules containers out before naming the winner.",
+    "2": "Both-ends growth plus indexing points to deque; contiguous C APIs point to vector.",
+    "3": "Sliding window with index → deque; graph → vector of vectors adjacency list; C buffer → vector::data(), not deque."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "std::vector vs std::list",
+   "strong_answer": "vector middle insert is O(n) element moves but tight contiguous memmove and great locality; list insert/erase is O(1) only with a held iterator, finding the position is O(n), and each node is a separate allocation. Prefer vector unless you need stable middle iterators, splice, or already hold the position."
+  },
+  {
+   "topic": "amortised O(1) vs guaranteed worst-case",
+   "strong_answer": "vector::push_back and end ops on deque/string are amortised O(1) but may spike to O(n) on reallocation; map insert O(log n) and list splice O(1) never surprise with a linear spike. For hard real-time, prefer true worst-case bounds or pre-reserve."
+  },
+  {
+   "topic": "std::map/set vs std::unordered_map/set",
+   "strong_answer": "unordered_* win on average O(1) when order is irrelevant but risk worst-case O(n) under collisions and need hashable keys; map/set give guaranteed O(log n), sorted iteration, and lower_bound/range queries."
+  },
+  {
+   "topic": "std::deque vs std::vector",
+   "strong_answer": "Prefer vector if you only grow at the back (cache-friendly, contiguous, data() for C APIs). Prefer deque when you need fast push/pop at both ends plus occasional O(1) indexing; deque is not guaranteed contiguous."
+  },
+  {
+   "topic": "std::bitset vs std::vector<bool>",
+   "strong_answer": "For fixed-width bit algebra use bitset<N>; for runtime-sized packs prefer vector of uint64_t. Avoid vector<bool>—it is a specialisation with proxy references and nonstandard container semantics."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Answering that vector::push_back is simply O(1).",
+   "correction": "It is amortised O(1); worst-case O(n) on reallocation. Say which bound you mean."
+  },
+  {
+   "trap": "Choosing std::list because middle insert is O(1).",
+   "correction": "O(1) only if you already hold an iterator to the splice point; otherwise finding the spot is O(n), usually slower than vector in practice."
+  },
+  {
+   "trap": "Calling pop() on stack/queue/priority_queue expecting the removed value.",
+   "correction": "pop() returns void; call top() or front() first, then pop()."
+  },
+  {
+   "trap": "Using map::operator[] for a read-only lookup.",
+   "correction": "[] default-inserts if the key is missing; use find, at, or contains for pure queries."
+  },
+  {
+   "trap": "Assuming priority_queue is a min-heap / supports decrease-key.",
+   "correction": "Default is max-heap (less); min-heap needs vector + greater. No iterators, no erase-by-value, no true decrease-key—use lazy deletion or a custom heap."
+  },
+  {
+   "trap": "Passing &dq[0] (or assuming deque is one contiguous block) to a C API.",
+   "correction": "deque is not guaranteed contiguous; use vector and data()."
+  },
+  {
+   "trap": "Comparing string::find's result to -1 as a signed int.",
+   "correction": "On failure find returns string::npos; compare against npos."
+  },
+  {
+   "trap": "Treating std::array like a dynamic container or mixing different N as the same type.",
+   "correction": "N is part of the type; no push_back; array<int,5> and array<int,6> are different types."
+  },
+  {
+   "trap": "Expecting forward_list::size or list-style insert at an iterator to the victim.",
+   "correction": "No size()/push_back; insert_after/erase_after take the iterator before the position; use before_begin() for the front."
+  }
+ ]
+}

@@ -1,0 +1,226 @@
+{
+ "id": "cpp_s48_comparators_sorting",
+ "title": "Custom Comparators and Sorting",
+ "type": "FUND",
+ "relevance": "OAs and SDE interviews constantly ask for custom-key sorts, multi-key tie-breakers, stable vs unstable choice, and avoiding <= comparators that cause undefined behaviour.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a comparator answers, how it differs from a Python key=, and that it must induce a strict weak ordering.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A comparator takes two elements a and b and returns whether a should be placed strictly before b; true means a goes first, false means b goes first or they are treated as tied.",
+     "weight": "core",
+     "evidence_hint": "Candidate states the single question 'should a come strictly before b?' and maps true/false to order vs tie."
+    },
+    {
+     "id": "fund2",
+     "point": "Default algorithms use operator< via std::less; a comparator is a callable returning whether the first argument is strictly less than the second under the desired order.",
+     "weight": "core",
+     "evidence_hint": "Candidate names std::less / operator< as the default ordering predicate."
+    },
+    {
+     "id": "fund3",
+     "point": "Python sorting often uses key= to project a sortable value; in C++ you supply a comparator that directly compares two elements.",
+     "weight": "extended",
+     "evidence_hint": "Candidate contrasts key= projection with a two-argument C++ comparator (or mentions C++20 projections as the later analog)."
+    },
+    {
+     "id": "fund4",
+     "point": "A valid comparator must implement a strict weak ordering: irreflexive (comp(x,x) is always false), asymmetric, transitive, and with transitive incomparability (equivalence classes consistent).",
+     "weight": "core",
+     "evidence_hint": "Candidate names strict weak ordering and at least irreflexivity / never precede yourself; may list the four properties."
+    }
+   ],
+   "probes": [
+    "What question does a custom comparator answer for two elements a and b?",
+    "What is strict weak ordering, and why must a sort comparator never return true for equal elements?"
+   ],
+   "hints": {
+    "1": "Start from 'should a come strictly before b?' rather than from a full ranking table.",
+    "2": "Map the answer to true/false, then ask what happens if an element is allowed to precede itself.",
+    "3": "Answer shape: comparator = strict-before predicate (default std::less); must be strict weak ordering; comp(x,x) false; never <= / >=."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show the concrete syntax for supplying comparators and how the main sorting algorithms and ordered containers consume them.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Custom comparators come in three forms: free/static function (function pointer), functor with operator(), and lambda; a non-static member function cannot be passed directly to std::sort.",
+     "weight": "core",
+     "evidence_hint": "Candidate lists the three forms and rejects non-static member pointers for std::sort."
+    },
+    {
+     "id": "mech2",
+     "point": "std::sort fully sorts unstably in O(N log N); std::stable_sort preserves tie order at O(N log N) with enough memory or up to O(N log^2 N) otherwise; std::partial_sort puts the K smallest in sorted order in roughly O(N log K); std::nth_element places the n-th order statistic with average O(N) without fully sorting either side.",
+     "weight": "core",
+     "evidence_hint": "Candidate maps each algorithm to full/partial/n-th guarantees, stability, and the stated complexities."
+    },
+    {
+     "id": "mech3",
+     "point": "Descending order can use std::greater<> without a hand-written comparator; C++14 transparent functors (std::less<>, std::greater<>) enable heterogeneous lookup on associative containers.",
+     "weight": "extended",
+     "evidence_hint": "Candidate uses std::greater for descending and may mention is_transparent / string vs string_view lookup."
+    },
+    {
+     "id": "mech4",
+     "point": "Multi-key sort pattern: if primary keys differ, return the primary strict comparison; only on a tie fall through to the secondary (and further) keys—every branch uses strict < or >, never <= or >=.",
+     "weight": "core",
+     "evidence_hint": "Candidate writes if (a.x != b.x) return ...; return ...; with strict comparisons only."
+    },
+    {
+     "id": "mech5",
+     "point": "std::sort takes a comparator instance as a run-time function argument; std::set, std::map, and std::priority_queue take a comparator type as a template parameter (typically a functor or decltype of a lambda plus an instance).",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts function-argument vs template-argument wiring and may show decltype(cmp) for a set."
+    }
+   ],
+   "probes": [
+    "Name the three ways to pass a custom comparator to std::sort, and why a non-static member does not work.",
+    "When would you use partial_sort versus nth_element versus stable_sort?",
+    "How do you wire a comparator into std::set or std::priority_queue differently from std::sort?"
+   ],
+   "hints": {
+    "1": "Think function pointer, functor object, and inline lambda—then ask who owns the 'this' for a member function.",
+    "2": "Separate full order, tie-order preservation, top-K sorted, and K-th partition; then contrast call-site argument vs type parameter.",
+    "3": "Answer shape: free/static, functor, lambda; sort(comp) vs set/map/priority_queue<..., Comp>; multi-key = primary then secondary with strict < />."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose among sort variants, comparator representations, and where expensive work belongs relative to the O(N log N) comparison budget.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer std::sort when ties may shuffle; use std::stable_sort when original relative order among equivalent elements must survive, or for multi-pass key sorts (secondary key first, then primary).",
+     "weight": "core",
+     "evidence_hint": "Candidate picks stable_sort only when stability or multi-pass composition is required and notes it is slower and needs extra memory."
+    },
+    {
+     "id": "tr2",
+     "point": "Need top K ranked in sorted order → partial_sort; need the k-th value or an unordered top-K partition → nth_element (cheaper average O(N)); need full order → sort / stable_sort.",
+     "weight": "core",
+     "evidence_hint": "Candidate selects from the required guarantee rather than always calling full sort."
+    },
+    {
+     "id": "tr3",
+     "point": "Pass a concrete lambda or functor by value so the compiler can inline into introsort; reach for std::function only when you must store or swap heterogeneous comparators behind a uniform type (type erasure blocks inlining).",
+     "weight": "extended",
+     "evidence_hint": "Candidate rejects std::function in hot sort loops unless type erasure is required."
+    },
+    {
+     "id": "tr4",
+     "point": "std::sort guarantees O(N log N) comparisons, but total time is O(N log N) times the cost of one comparator call—so an O(1) comparator stays O(N log N), while an O(K) string compare becomes O(K · N log N); heavy work should be precomputed once in O(N) then sorted with O(1) compares.",
+     "weight": "core",
+     "evidence_hint": "Candidate states Total Time = O(N log N) × comparator cost and describes precomputing expensive keys."
+    }
+   ],
+   "probes": [
+    "Is std::sort always O(N log N) wall-clock time? What changes if the comparator is expensive?",
+    "When is stable_sort worth its extra cost over sort?",
+    "Why avoid wrapping a sort comparator in std::function in a hot path?"
+   ],
+   "hints": {
+    "1": "Separate 'number of comparisons' from 'work inside each comparison'.",
+    "2": "Ask what guarantee you need (tie order, top K sorted, only K-th) and whether the callable type is concrete or type-erased.",
+    "3": "Answer shape: comparisons O(N log N) but total = that × comparator cost; stable when ties must keep input order; lambda/functor inlined, std::function only for storage."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply comparator patterns to interview staples: multi-key structs, projections/index sorts, ordered containers, and C++20 ranges projections.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Classic interview ask: sort by X then Y—if primary keys differ return the primary strict comparison, else the secondary; example pattern includes score descending then age ascending, or events by start then end ascending.",
+     "weight": "core",
+     "evidence_hint": "Candidate writes a layered strict comparator without <= and can state a concrete X-then-Y example."
+    },
+    {
+     "id": "app2",
+     "point": "Prefer a lambda for one-off algorithm calls; prefer a named functor type when the same ordering is a template argument of set/map/priority_queue or reused across many call sites.",
+     "weight": "core",
+     "evidence_hint": "Candidate chooses lambda vs named Comp type based on one-off vs type-parameter reuse."
+    },
+    {
+     "id": "app3",
+     "point": "For expensive projections (e.g. distance to a target), precompute keys once into pairs and sort on the stored key with an O(1) comparator rather than recomputing inside each comparison—when N is 100,000 the heavy math otherwise runs roughly 1.6 million times.",
+     "weight": "core",
+     "evidence_hint": "Candidate describes keyed pairs / decorate-sort-undecorate and cites the N is 100,000 / roughly 1.6 million times cost story if discussing the distance trap."
+    },
+    {
+     "id": "app4",
+     "point": "Index (argsort) sorting: leave the data array untouched, iota an index array, and sort indices by vals[i] < vals[j] when you need original positions, parallel arrays, or to avoid moving heavy objects.",
+     "weight": "extended",
+     "evidence_hint": "Candidate sketches idx with iota and a capturing comparator over vals."
+    },
+    {
+     "id": "app5",
+     "point": "C++20 std::ranges::sort accepts the collection directly and supports projections (e.g. &Student::score)—the C++20 equivalent of Python's key=: project then compare projected values with std::less<> by default.",
+     "weight": "extended",
+     "evidence_hint": "Candidate shows ranges::sort(students, std::less<>{}, &Student::score) or equivalent projection wording."
+    }
+   ],
+   "probes": [
+    "Write a comparator that sorts students by score descending, then age ascending on ties.",
+    "How would you sort points by distance to a target without blowing up the comparator cost?",
+    "How do you sort a std::set in descending order or by a custom distance functor?"
+   ],
+   "hints": {
+    "1": "Layer primary then secondary with != checks and strict < / > only.",
+    "2": "If the key is expensive, compute it once per element before sort; for containers, remember the comparator is a type.",
+    "3": "Answer shape: if scores differ return a.score > b.score else a.age < b.age; precompute {distance, point} then sort on .first; set/map/pq take Comp as template arg, optionally decltype(lambda)(instance)."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "std::sort vs std::stable_sort",
+   "strong_answer": "Use sort for a fast full sort when relative order among ties may shuffle. Use stable_sort when tie order must match input order, or for multi-pass sorts (stable_sort by secondary key, then by primary). stable_sort is slower and needs extra memory."
+  },
+  {
+   "topic": "partial_sort vs nth_element vs full sort",
+   "strong_answer": "Full order → sort/stable_sort. Top K in sorted order → partial_sort (~O(N log K)). Only the k-th / median / unordered top-K partition → nth_element (average O(N)), optionally sorting just the K prefix afterward."
+  },
+  {
+   "topic": "lambda/functor vs std::function as comparator",
+   "strong_answer": "Pass a concrete lambda or functor by value so introsort can inline. Use std::function only when you must store or swap heterogeneous callables behind one type; type erasure blocks inlining and may allocate."
+  },
+  {
+   "topic": "work inside comparator vs precomputation",
+   "strong_answer": "Total sort time is O(N log N) times comparator cost. Keep comparators O(1) when possible; for O(K) string compares accept O(K · N log N); for heavy math (distances), precompute keys in O(N) then sort with O(1) compares."
+  },
+  {
+   "topic": "comparator as function argument vs template parameter",
+   "strong_answer": "Algorithms like std::sort take a comparator instance at the call site. Ordered containers and priority_queue bake the comparator into the type as a template parameter, so you supply a functor type (or decltype of a lambda plus an instance), not just a free function pointer."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Writing a comparator with <= or >= so equal elements (or an element vs itself) return true.",
+   "correction": "That breaks irreflexivity of strict weak ordering. Always use strict < or >. On libstdc++, this can make introsort walk past end()—out-of-bounds access, heap corruption, or an apparent infinite loop (undefined behaviour)—and the same trap hits stable_sort, partial_sort, nth_element, set/map, and priority_queue."
+  },
+  {
+   "trap": "Passing a non-static member function directly to std::sort.",
+   "correction": "std::sort has no object instance to call it on. Use a free function, a static member, a functor, or a lambda."
+  },
+  {
+   "trap": "Default-constructing std::set<T, decltype(cmp)> without passing a capturing lambda instance.",
+   "correction": "Stateless lambdas/functors can default-construct; a capturing closure typically is not default-constructible before C++20, and you usually must pass the lambda instance so captures are present."
+  },
+  {
+   "trap": "Putting == inside a sort comparator, or treating equality as a third return path.",
+   "correction": "Equality under a comparator means neither precedes the other (!comp(a,b) && !comp(b,a)). Ordering only needs a strict < -style test."
+  },
+  {
+   "trap": "Recomputing expensive distances (sqrt/pow) inside every comparator call when sorting by closeness to a target.",
+   "correction": "With O(N log N) comparisons, the same distances are recomputed repeatedly (when N is 100,000, roughly 1.6 million times). Precompute distance once per point, store keyed pairs, then sort with an O(1) comparator on the stored key."
+  }
+ ]
+}

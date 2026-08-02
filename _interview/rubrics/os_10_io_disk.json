@@ -1,0 +1,175 @@
+{
+ "id": "os_10_io_disk",
+ "title": "I/O systems and disk scheduling",
+ "type": "FUND",
+ "relevance": "Tests whether candidates understand disk access costs, seek-time scheduling, and CPU–device I/O models that show up in OS interviews and systems OAs.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish disk geometry and the three components of disk access time.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A magnetic disk stacks platters with two surfaces each; surfaces hold concentric tracks divided into sectors (smallest addressable unit), and tracks at the same radius across platters form a cylinder, with a read/write head per surface on a moving arm.",
+     "weight": "core",
+     "evidence_hint": "Names platters, surfaces, tracks, sectors, cylinders, and heads/arm correctly."
+    },
+    {
+     "id": "fund2",
+     "point": "Disk access time equals seek time plus rotational latency plus transfer time.",
+     "weight": "core",
+     "evidence_hint": "States the three-term sum explicitly."
+    },
+    {
+     "id": "fund3",
+     "point": "Seek time is usually the dominant, most-variable cost and is what disk scheduling optimizes; average rotational latency is half a rotation.",
+     "weight": "extended",
+     "evidence_hint": "Identifies seek as the scheduling target and rotational latency as half a rotation on average."
+    }
+   ],
+   "probes": [
+    "What are the parts of a hard disk, and what makes up disk access time?"
+   ],
+   "hints": {
+    "1": "Think about how data is laid out physically and what the arm and platter must do before bytes move.",
+    "2": "Break access into arm movement, waiting for the sector to arrive, then copying the data.",
+    "3": "Access time = seek + rotational latency + transfer; scheduling reorders requests mainly to cut seek."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how common disk schedulers reorder requests and how the CPU learns device readiness via polling, interrupts, or DMA.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "For requests 82,170,43,140,24,16,190 starting at track 50 on a 200-track disk (0–199), FCFS order is 82,170,43,140,24,16,190 with total head movement 642.",
+     "weight": "core",
+     "evidence_hint": "Recalls FCFS arrival order and total movement 642 from the worked example."
+    },
+    {
+     "id": "mech2",
+     "point": "SSTF serves nearest first: 43,24,16,82,140,170,190 with total movement 208; SCAN sweeps to an end then reverses (82,140,170,190,→199,43,24,16, total 332); LOOK reverses at the last request (total 314); C-SCAN jumps to 0 after the end (total 391); C-LOOK jumps between extreme requests (total 341).",
+     "weight": "core",
+     "evidence_hint": "Can state each algorithm’s rule and the example totals/orders without inventing different numbers."
+    },
+    {
+     "id": "mech3",
+     "point": "Polling busy-waits on the status register; interrupt-driven I/O lets the device interrupt when ready with fixed handler overhead on the order of a microsecond or two; DMA moves a whole block between device and memory without the CPU per word, interrupting once at completion.",
+     "weight": "core",
+     "evidence_hint": "Contrasts busy-wait, per-event interrupt, and one-interrupt-per-block DMA."
+    }
+   ],
+   "probes": [
+    "Walk through SSTF vs SCAN on the example queue starting at 50, then contrast polling, interrupts, and DMA."
+   ],
+   "hints": {
+    "1": "Scheduling reorders pending track requests to cut total head movement; I/O paths differ in how the CPU learns the device is ready.",
+    "2": "Name FCFS/SSTF/SCAN/LOOK/C-SCAN/C-LOOK rules, then map CPU cost: busy-wait vs interrupt per event vs setup-and-one-interrupt for a block.",
+    "3": "SSTF nearest-first yields 208; SCAN to end and back yields 332; DMA transfers without CPU per word."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare scheduling fairness/uniformity and when polling, interrupts, or DMA is the right I/O model.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "SSTF and SCAN-family cut movement versus FCFS, but SSTF can starve a far request if closer ones keep arriving; SCAN-family avoids starvation by sweeping steadily.",
+     "weight": "core",
+     "evidence_hint": "Names SSTF starvation risk and SCAN-family’s steady sweep as the fix."
+    },
+    {
+     "id": "tr2",
+     "point": "C-SCAN/C-LOOK give more uniform waiting time by always servicing in one direction, at the cost of the return jump; on SSDs with no heads or rotation, seek vanishes and this scheduling largely loses its point.",
+     "weight": "extended",
+     "evidence_hint": "Mentions uniform wait vs jump cost, and SSD irrelevance of seek scheduling."
+    },
+    {
+     "id": "tr3",
+     "point": "Polling wastes CPU when idle but is cheap per check; interrupts suit sparse events but have ~µs overhead each; DMA is best for bulk transfers with near-zero per-event CPU cost after setup.",
+     "weight": "core",
+     "evidence_hint": "Matches each model to idle cost, per-event cost, and best-fit workload from the comparison."
+    }
+   ],
+   "probes": [
+    "When would you pick SSTF over SCAN, or interrupts over polling or DMA?"
+   ],
+   "hints": {
+    "1": "Lower total movement is not the only goal—fairness and device type matter too.",
+    "2": "Contrast starvation under SSTF with SCAN sweeps, then match event rate and transfer size to polling/interrupt/DMA.",
+    "3": "SSTF can starve; circular variants trade a return jump for uniform waits; sparse→interrupts, bulk→DMA, SSDs make seek scheduling moot."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply event-rate reasoning to interrupt livelock, hybrid NAPI-style drivers, and latency-sensitive bounded queues.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "At very high rate (e.g. a 100 Gbps NIC at ~10 million packets/second), interrupts melt down: at 10^7 events/s and ~2 µs each, interrupt servicing alone would need 20 seconds of CPU per second—interrupt livelock; the fix is to switch to polling once packets stream in.",
+     "weight": "core",
+     "evidence_hint": "States livelock with the 10^7 × ~2 µs → 20 s/s impossibility and polling as the escape."
+    },
+    {
+     "id": "app2",
+     "point": "Linux NAPI-style hybrid: take the first interrupt, disable it and poll while the queue stays busy, re-arm the interrupt only when a poll finds the queue empty; interrupt coalescing is a simpler hardware relative (one interrupt per batch).",
+     "weight": "core",
+     "evidence_hint": "Describes interrupt-when-idle, poll-when-busy, and optional coalescing."
+    },
+    {
+     "id": "app3",
+     "point": "A fixed-capacity ring buffer is O(1) worst-case enqueue/dequeue and rejects when full; a two-stack queue is O(1) amortized dequeue but O(n) worst-case when transferring inbox to outbox—so on a tight deadline path prefer the ring buffer to avoid tail-latency spikes.",
+     "weight": "extended",
+     "evidence_hint": "Distinguishes amortized O(1) from worst-case O(1) and picks ring buffer for predictable latency."
+    }
+   ],
+   "probes": [
+    "What is interrupt livelock, how does NAPI avoid it, and why prefer a ring buffer over a two-stack queue on a latency-critical path?"
+   ],
+   "hints": {
+    "1": "Think about what happens when events arrive faster than interrupt handlers can finish.",
+    "2": "High packet rates force polling; real drivers hybridize interrupt kickoff with busy-path polling; amortized vs worst-case matters for queues.",
+    "3": "10^7 × ~2 µs ⇒ 20 s CPU per second = livelock; NAPI polls until empty then re-arms; ring buffer’s O(1) worst case beats two-stack O(n) transfer spikes."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "SSTF vs SCAN-family",
+   "strong_answer": "Both beat FCFS on total head movement, but SSTF can starve distant requests under continuous nearer arrivals; SCAN/LOOK avoid starvation by sweeping steadily in one direction then reversing."
+  },
+  {
+   "topic": "C-SCAN/C-LOOK vs SCAN/LOOK",
+   "strong_answer": "Circular variants always service in one direction for more uniform waiting time, paying the cost of a return jump to the other end (or between extreme requests for C-LOOK)."
+  },
+  {
+   "topic": "Polling vs interrupt-driven vs DMA",
+   "strong_answer": "Polling: high idle CPU, very low per-event cost, best when events arrive back-to-back. Interrupts: low idle cost, ~µs overhead per event, best for sparse events. DMA: lowest CPU involvement for bulk transfers—CPU sets up once and gets one completion interrupt."
+  },
+  {
+   "topic": "Ring buffer vs two-stack queue",
+   "strong_answer": "Ring buffer gives O(1) worst-case enqueue/dequeue and rejects when full—no tail-latency spike. Two-stack is O(1) amortized but can O(n) transfer on a single dequeue, which can blow a tight deadline."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming SSTF is always best because it has the lowest total movement in the example (208).",
+   "correction": "SSTF can starve far requests if closer ones keep arriving; SCAN-family trades some movement for fairness."
+  },
+  {
+   "trap": "Thinking disk scheduling still dominates on SSDs the same way as on HDDs.",
+   "correction": "SSDs have no heads or rotation, so seek time vanishes and this scheduling largely loses its point."
+  },
+  {
+   "trap": "Believing interrupts always beat polling for high-rate devices.",
+   "correction": "At ~10 million packets/s with ~2 µs overhead each, interrupts alone need 20 s of CPU per second—interrupt livelock; switch to polling (or NAPI hybrid) when the device stays busy."
+  },
+  {
+   "trap": "Equating amortized O(1) with safe worst-case latency.",
+   "correction": "Amortized O(1) is an average over a sequence; the two-stack queue’s empty-outbox transfer is O(n) worst case and can spike tail latency—use a ring buffer on deadline-sensitive paths."
+  }
+ ]
+}

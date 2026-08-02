@@ -1,0 +1,240 @@
+{
+ "id": "28_sparse_table_rmq",
+ "title": "Sparse table & RMQ (idempotent range queries, LCA via RMQ)",
+ "type": "CP",
+ "relevance": "Medium — static min/max/GCD queries are the “no updates” twin of Fenwick/segtree in OAs; writing an O(1) RMQ template is a common CF Div2 D skill. LCA-via-Euler+RMQ is mostly a rating stretch (binary lifting alone covers most interviews).",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Many range min/max queries on an immutable array → CSES Static RMQ / NumArray-without-updates; interviewers accept sparse table or segtree, sparse is sharper. Range GCD/AND after preprocessing → 2050F / 1547F shape, sometimes “largest modulus where all equal.” First index where running GCD becomes 1 / array stabilizes under neighbor GCD → 1632D / 1547F. Lowest common manager / org-chart distance with 10^5 queries → CSES Company/Distance Queries; Euler+RMQ OK if the reduction is explained.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Map static idempotent range aggregates and huge-q LCA/distance wording to sparse table (not prefix or Fenwick/segtree).",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Array never changes and many range aggregates of an idempotent op (min, max, GCD, AND, OR, LCM) → sparse table.",
+     "weight": "core",
+     "evidence_hint": "Names static array + idempotent op family and reaches for sparse table, not a general segtree-first answer."
+    },
+    {
+     "id": "rec2",
+     "point": "Signal words: static array, n,q≤2·10^5, range min/max/GCD, “no modifications,” binary search + range check, tree distance / lowest common ancestor with huge q.",
+     "weight": "core",
+     "evidence_hint": "Lists those signals and ties them to ST / RMQ rather than naive scans."
+    },
+    {
+     "id": "rec3",
+     "point": "Do not use the two-block trick for sum/XOR (use prefix); if updates appear, switch to Fenwick/segtree.",
+     "weight": "core",
+     "evidence_hint": "Separates sum/XOR→prefix and updates→Fenwick/segtree from static idempotent→ST."
+    },
+    {
+     "id": "rec4",
+     "point": "“Many range minimum / maximum queries, array immutable” or “lowest common manager / distance in org chart with 10^5 queries” are core OA/interview shapes for sparse RMQ / Euler+RMQ.",
+     "weight": "extended",
+     "evidence_hint": "Names immutable RMQ or org-chart LCA/distance and prefers sparse (or Euler+RMQ) as the sharp answer."
+    }
+   ],
+   "probes": [
+    "Static range min vs static range sum vs point updates—what structure do you pick, and why?",
+    "What wording makes you reach for sparse table instead of prefix or Fenwick/segtree?"
+   ],
+   "hints": {
+    "1": "Ask whether the array changes and whether the op is idempotent (min/max/GCD/…) or sum/XOR.",
+    "2": "Static idempotent → sparse; static sum/XOR → prefix; updates → Fenwick/segtree; huge-q LCA/distance can be Euler+RMQ.",
+    "3": "Say: immutable min/max/GCD/AND/OR/LCM ranges → sparse table; sum/XOR → prefix; updates → Fenwick/segtree; signals include static array, n,q≤2·10^5, no modifications, BS+range check, org-chart LCA with 10^5 queries."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "State the sparse-table covering idea, when overlap is legal, and the Euler-tour RMQ reduction for LCA.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Precompute st[k][i] = op on [i, i+2^k), then answer [L,R] with two overlapping blocks of length 2^⌊log2(R−L+1)⌋.",
+     "weight": "core",
+     "evidence_hint": "Describes power-of-two table layers and the two-block query cover."
+    },
+    {
+     "id": "appr2",
+     "point": "Overlap is legal exactly because op(x,x)=x (idempotence); that is why the two-block trick fails for sum/XOR.",
+     "weight": "core",
+     "evidence_hint": "Ties overlapping blocks to idempotence and contrasts sum/XOR."
+    },
+    {
+     "id": "appr3",
+     "point": "LCA via RMQ: Euler tour of nodes + depth array + first[v]; LCA(u,v)=euler[rmq_argmin(first[u], first[v])] — argmin depth between first occurrences.",
+     "weight": "core",
+     "evidence_hint": "States Euler + first occurrences + argmin on depths for LCA."
+    },
+    {
+     "id": "appr4",
+     "point": "Binary search + ST check for monotone length/threshold/shots predicates (1709D, 514D, 1547F); prefer ST LCA when q is huge or Euler already exists (else binary lifting is equivalent).",
+     "weight": "extended",
+     "evidence_hint": "Mentions BS+ST check patterns and when Euler+RMQ is preferred over binlift."
+    }
+   ],
+   "probes": [
+    "How do you answer a range min with a sparse table in constant query time?",
+    "How does Euler tour + RMQ turn LCA into an array RMQ?"
+   ],
+   "hints": {
+    "1": "Think power-of-two blocks and when overlapping ranges are safe.",
+    "2": "Build st[k][i] on [i,i+2^k); query with two blocks of length 2^⌊log2(len)⌋; LCA = argmin depth on Euler between first[u], first[v].",
+    "3": "Say: st[k][i]=op on [i,i+2^k); query op of two overlapping 2^k blocks because op(x,x)=x; not for sum/XOR; LCA via Euler+depths+first then euler[rmq_argmin(...)]; BS+ST for monotone checks; ST when q huge / Euler ready."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Code sparse-table build/query (and optional Euler+RMQ LCA) with consistent indexing and log precompute.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Build: st[0][i]=a[i]; st[k][i]=op(st[k-1][i], st[k-1][i+2^{k-1}]) for all i+2^k≤n.",
+     "weight": "core",
+     "evidence_hint": "Writes the layer-0 init and the doubling recurrence with the i+2^k≤n bound."
+    },
+    {
+     "id": "impl2",
+     "point": "Query [L,R]: k=floor(log2(R-L+1)); op(st[k][L], st[k][R-2^k+1]). Precompute lg[] or use __builtin_clz.",
+     "weight": "core",
+     "evidence_hint": "States that exact k and two-index query, plus lg/clz."
+    },
+    {
+     "id": "impl3",
+     "point": "LCA via RMQ: Euler tour of nodes + depth array + first[v]; LCA(u,v)=euler[rmq_argmin(first[u], first[v])].",
+     "weight": "core",
+     "evidence_hint": "Implements or narrates first[], Euler, depth RMQ argmin, then map back via euler[]."
+    },
+    {
+     "id": "impl4",
+     "point": "Indexing: be consistent 0- vs 1-based; empty range / L>R guard; long long when combining values, int fine for indices.",
+     "weight": "extended",
+     "evidence_hint": "Calls out base consistency, L>R guard, and long long for combined values."
+    }
+   ],
+   "probes": [
+    "Write the sparse-table build recurrence and the two-block query formula.",
+    "How do you wire Euler tour, first[], and argmin RMQ for LCA?"
+   ],
+   "hints": {
+    "1": "Start from st[0], then doubling layers, then the query k and two indices.",
+    "2": "st[k][i]=op(st[k-1][i], st[k-1][i+2^{k-1}]); k=floor(log2(R-L+1)); op(st[k][L], st[k][R-2^k+1]); LCA uses euler[rmq_argmin(first[u],first[v])].",
+    "3": "Spell: st[0][i]=a[i]; st[k][i]=op(st[k-1][i], st[k-1][i+2^{k-1}]) for i+2^k≤n; query with k=floor(log2(R-L+1)) and op(st[k][L], st[k][R-2^k+1]) via lg[]/__builtin_clz; LCA=euler[rmq_argmin(first[u],first[v])]; guard L>R; long long for values."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Anchor sparse-table preprocess/query costs and the static n,q regimes stated in the topic.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Sparse table build uses space/time O(n log n).",
+     "weight": "core",
+     "evidence_hint": "States O(n log n) preprocess space and time."
+    },
+    {
+     "id": "cx2",
+     "point": "Idempotent two-block RMQ answers in O(1) after preprocessing (including O(1) GCD / O(1) LCA when using ST).",
+     "weight": "core",
+     "evidence_hint": "States O(1) query for the two-block / ST-backed RMQ or LCA."
+    },
+    {
+     "id": "cx3",
+     "point": "Signal / interview scale: static array with n,q≤2·10^5; org-chart distance / LCA with 10^5 queries.",
+     "weight": "extended",
+     "evidence_hint": "Mentions n,q≤2·10^5 static RMQ signals and 10^5 LCA/distance queries."
+    }
+   ],
+   "probes": [
+    "What are the preprocess and query costs of a sparse table?",
+    "What n,q scales does the topic treat as the usual static-RMQ / LCA interview regime?"
+   ],
+   "hints": {
+    "1": "Separate build cost from per-query cost, then name the stated constraints.",
+    "2": "Build O(n log n); query O(1) via two blocks; typical signals n,q≤2·10^5 or 10^5 LCA queries.",
+    "3": "Say: space/time O(n log n) to build; O(1) two-block query for idempotent ops; static RMQ often signaled with n,q≤2·10^5; org-chart LCA/distance with 10^5 queries."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch non-idempotent two-block misuse, rebuild-under-updates, and indexing/empty-range bugs.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Using the two-block sparse query for sum/XOR — overlap double-counts; use prefix instead.",
+     "weight": "core",
+     "evidence_hint": "Rejects two-block ST for sum/XOR and names prefix."
+    },
+    {
+     "id": "pit2",
+     "point": "Rebuilding the sparse table per query, or keeping ST when point/range updates appear — switch to Fenwick/segtree.",
+     "weight": "core",
+     "evidence_hint": "Insists ST is static preprocess once; updates force Fenwick/segtree."
+    },
+    {
+     "id": "pit3",
+     "point": "Inconsistent 0- vs 1-based indexing, or missing empty-range / L>R guards on queries.",
+     "weight": "core",
+     "evidence_hint": "Flags base mismatch and L>R / empty range handling."
+    },
+    {
+     "id": "pit4",
+     "point": "Forgetting long long when combining values (int is fine for indices only).",
+     "weight": "extended",
+     "evidence_hint": "Uses long long for combined ST values while keeping int indices."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you answer a range sum with the two overlapping sparse blocks?",
+    "Which bugs show up first: updates on an ST, indexing, or empty ranges?"
+   ],
+   "hints": {
+    "1": "Check op idempotence, update model, and index/empty-range hygiene.",
+    "2": "Sum/XOR → prefix not two-block; never rebuild ST under updates—use Fenwick/segtree; consistent bases; guard L>R; long long for values.",
+    "3": "Say: two-block only if op(x,x)=x—sum/XOR need prefix; no updates→sparse, updates→Fenwick/segtree, never rebuild ST per query; consistent 0/1-based with L>R guard; long long for combined values."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Sparse table vs Fenwick/segtree",
+   "strong_answer": "No updates and an idempotent op → sparse table; point/range updates → Fenwick/segtree. Never rebuild ST per query."
+  },
+  {
+   "topic": "Two-block sparse query vs prefix sums",
+   "strong_answer": "Idempotent ops (min, max, GCD, AND, OR, LCM) may use two overlapping power-of-two blocks because op(x,x)=x. Sum/XOR must not—use prefix (or a disjoint sparse table as stretch)."
+  },
+  {
+   "topic": "Euler+RMQ LCA vs binary lifting",
+   "strong_answer": "Same RMQ on an Euler tour of depths turns LCA into argmin depth between first occurrences; equivalent to binary lifting. Prefer ST when q is huge or you already have Euler; binary lifting alone covers most interviews."
+  },
+  {
+   "topic": "Tree path aggregates: lift vs Euler/HLD/segtree",
+   "strong_answer": "Distance via depths (dep[u]+dep[v]-2·dep[lca]); max/GCD on path → lift with stored op, or Euler+HLD/segtree (609E / Ant colony style)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Answering range sum or XOR with the two overlapping sparse-table blocks.",
+   "correction": "Overlap is legal only for idempotent ops; for sum/XOR use prefix (not the two-block trick)."
+  },
+  {
+   "trap": "Using a sparse table when the array must support updates, or rebuilding ST every query.",
+   "correction": "Static only: preprocess once; if updates appear, switch to Fenwick/segtree."
+  },
+  {
+   "trap": "Mixing 0- and 1-based indices or querying when L>R / the range is empty.",
+   "correction": "Pick one indexing convention and stick to it; guard empty ranges / L>R; int is fine for indices."
+  },
+  {
+   "trap": "Combining ST values in int on problems where aggregates can overflow.",
+   "correction": "Use long long when combining values; int remains fine for indices."
+  },
+  {
+   "trap": "Treating LCA-via-Euler+RMQ as mandatory in interviews.",
+   "correction": "It is mostly a rating stretch; binary lifting alone covers most interviews, though Euler+RMQ is acceptable if you can explain the reduction."
+  }
+ ]
+}

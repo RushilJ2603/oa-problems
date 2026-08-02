@@ -1,0 +1,240 @@
+{
+ "id": "09_recursion_backtracking",
+ "title": "Recursion & Backtracking",
+ "type": "CP",
+ "relevance": "High | Foundational for nearly all OA graph/matrix pathfinding and combination generation.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Word Search–style string pathfinding on 2D grids with obstacles (Amazon/Microsoft). Distributing items into K buckets / equal partitions (Matchsticks to Square style). Valid combinations under an exact budget without duplicates (Capital One). OAs with N ≤ 20 or N ≤ 15 that look like DP but are pruned backtracking.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Establish when the candidate recognizes backtracking from tiny N, generate-all wording, or small-matrix path search.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Extremely small constraints like N ≤ 20 signal exploring all states via recursion/backtracking rather than heavy DP.",
+     "weight": "core",
+     "evidence_hint": "Points at N ≤ 20 (or similarly tiny N) as the cue for a searchable state tree."
+    },
+    {
+     "id": "rec2",
+     "point": "Keywords like \"find all valid combinations\", \"generate\", or \"how many ways\" without a modulo mark combination/permutation generation.",
+     "weight": "core",
+     "evidence_hint": "Names generate-all / combinations / ways-without-modulo as the trigger."
+    },
+    {
+     "id": "rec3",
+     "point": "Searching for an explicit path on a small matrix (Word Search–style) is classic 2D grid DFS backtracking.",
+     "weight": "core",
+     "evidence_hint": "Maps path-on-grid wording to matrix DFS with undo."
+    },
+    {
+     "id": "rec4",
+     "point": "An OA with N ≤ 20 or N ≤ 15 that looks like DP is often a simple backtracking tree with pruning, not DP.",
+     "weight": "extended",
+     "evidence_hint": "Says don't default to DP; try pruned exhaustive search under those bounds."
+    }
+   ],
+   "probes": [
+    "What in the statement makes you reach for backtracking instead of DP or greedy?",
+    "When do tiny N and \"generate all\" / path-on-grid cues point to recursion with undo?"
+   ],
+   "hints": {
+    "1": "Look at constraint size and whether the ask is generate-all, count ways, or find a path.",
+    "2": "N ≤ 20 plus combinations/generate/ways-without-modulo, or a small matrix path, usually means build-and-abandon search.",
+    "3": "Say: N ≤ 20 / N ≤ 15 → searchable tree; \"generate\"/combinations/ways → backtracking; small-grid path → DFS with undo; don't assume DP."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Get the candidate to state incremental candidate building, abandon-on-invalid, and the main generation templates before coding.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Explore subsets, permutations, or paths by building a candidate incrementally and abandoning it the moment it cannot yield a valid solution.",
+     "weight": "core",
+     "evidence_hint": "States build-then-backtrack / prune-invalid as the core idea."
+    },
+    {
+     "id": "appr2",
+     "point": "Subsets use take-it-or-leave-it recursion; size-K combinations and Combination Sum add reuse or start-index constraints in the tree.",
+     "weight": "core",
+     "evidence_hint": "Describes include/exclude subsets and start-index / reuse rules for combinations."
+    },
+    {
+     "id": "appr3",
+     "point": "Permutations are the O(N!) generation template; constrained generation (e.g. Generate Parentheses) prunes with state parameters like open vs closed counts.",
+     "weight": "core",
+     "evidence_hint": "Names O(N!) perms and parameter-based pruning for invalid branches."
+    },
+    {
+     "id": "appr4",
+     "point": "Prune early when a branch exceeds limits (e.g. sum > target) or sort largest-first (Matchsticks to Square) so bad partitions fail faster.",
+     "weight": "extended",
+     "evidence_hint": "Mentions sum>target cutoffs and descending sort for K-partition pruning."
+    }
+   ],
+   "probes": [
+    "How do you describe the backtracking loop before you write code?",
+    "Which template do you pick for subsets vs permutations vs constrained generation, and where do you prune?"
+   ],
+   "hints": {
+    "1": "Think in terms of growing a partial answer and undoing when it breaks.",
+    "2": "Separate take-it-or-leave-it subsets, O(N!) perms, and state-parameter pruning.",
+    "3": "Say: build candidate, abandon when invalid; subsets include/exclude; perms O(N!); prune with open/closed or sum>target; largest-first for Matchsticks."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Confirm the candidate can write the standard subset, permutation, duplicate-skip, partition, grid, and N-Queens templates from memory.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Write clean take-it-or-leave-it subset generation; optionally map masks from 0 to 2^N-1 as an iterative subset alternate.",
+     "weight": "core",
+     "evidence_hint": "Sketches include/exclude recursion and/or loop masks 0..2^N-1."
+    },
+    {
+     "id": "impl2",
+     "point": "Write O(N!) permutations both via swap-based logic and via a boolean visited array.",
+     "weight": "core",
+     "evidence_hint": "Shows swap-in-place and visited-array variants."
+    },
+    {
+     "id": "impl3",
+     "point": "Skip duplicates after sorting with if (i > start && nums[i] == nums[i-1]) continue; for subsets/permutations/combination-sum variants.",
+     "weight": "core",
+     "evidence_hint": "States sort plus that adjacent-equal skip idiom."
+    },
+    {
+     "id": "impl4",
+     "point": "String partitioning: iterate cut lengths and recurse on suffixes; 2D grid DFS marks visited or sets board[i][j] = '*' then undoes; N-Queens diagonals use row + col and row - col + n - 1 for O(1) checks.",
+     "weight": "extended",
+     "evidence_hint": "Mentions suffix recursion, grid mark/undo, and those two diagonal index formulas."
+    }
+   ],
+   "probes": [
+    "Write the subset include/exclude skeleton and the duplicate-skip line after sorting.",
+    "How do you implement permutations (swap vs visited), grid mark/undo, and O(1) N-Queens diagonal checks?"
+   ],
+   "hints": {
+    "1": "Start from the subset template, then layer perms and undo.",
+    "2": "Add the sort + adjacent skip; for grids mark then restore; for queens track diagonals in arrays.",
+    "3": "Say: include/exclude or masks 0..2^N-1; swap or visited for O(N!); if (i > start && nums[i] == nums[i-1]) continue; suffix cuts; board[i][j]='*' undo; diagonals row+col and row-col+n-1."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State the exponential regimes that make these templates feasible only under tiny N.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Full permutation generation is O(N!); it is a building-block cost, not something you run for large N.",
+     "weight": "core",
+     "evidence_hint": "Quotes O(N!) for the permutations template."
+    },
+    {
+     "id": "cx2",
+     "point": "Subset enumeration via recursion or masks over 0..2^N-1 is feasible when N ≤ 20 (or similarly N ≤ 15 in OAs).",
+     "weight": "core",
+     "evidence_hint": "Ties 2^N-style subset search to N ≤ 20 / N ≤ 15."
+    },
+    {
+     "id": "cx3",
+     "point": "N-Queens diagonal tracking arrays give O(1) validity checks per placement attempt instead of scanning the board.",
+     "weight": "extended",
+     "evidence_hint": "States O(1) diagonal checks via the linear index arrays."
+    }
+   ],
+   "probes": [
+    "What complexity do you quote for permutations versus full subset enumeration?",
+    "Why do N ≤ 20 constraints make 2^N-style search acceptable, and what does O(1) diagonal tracking buy you?"
+   ],
+   "hints": {
+    "1": "Separate permutation blow-up from subset 2^N search.",
+    "2": "O(N!) for perms; masks/subsets when N ≤ 20; queens want O(1) diagonal tests.",
+    "3": "Say: perms O(N!); subsets/masks 0..2^N-1 under N ≤ 20 or N ≤ 15; diagonals row+col / row-col+n-1 → O(1) checks."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Surface mislabeling as DP, missing undo, broken duplicate skipping, and weak pruning.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Seeing N ≤ 20 or N ≤ 15 and defaulting to DP when a pruned backtracking tree is enough.",
+     "weight": "core",
+     "evidence_hint": "Corrects the DP reflex and names simple backtracking with pruning."
+    },
+    {
+     "id": "pit2",
+     "point": "Generating subsets/permutations with duplicates without sorting and skipping adjacent equals via if (i > start && nums[i] == nums[i-1]) continue;.",
+     "weight": "core",
+     "evidence_hint": "States sort + that continue guard as the fix."
+    },
+    {
+     "id": "pit3",
+     "point": "Forgetting to undo grid marks (visited / board[i][j] = '*') or other candidate state after returning from a recursive call.",
+     "weight": "core",
+     "evidence_hint": "Emphasizes restore-after-recurse as the \"back\" in backtracking."
+    },
+    {
+     "id": "pit4",
+     "point": "Continuing branches that already exceed limits (e.g. sum > target) instead of pruning, or skipping largest-first ordering on K-partition problems like Matchsticks to Square.",
+     "weight": "extended",
+     "evidence_hint": "Mentions early terminate on over-limit and descending sort to fail faster."
+    }
+   ],
+   "probes": [
+    "What goes wrong if you treat a tiny-N generate-all OA as DP?",
+    "Where do people forget undo, duplicate skipping, or early pruning in these templates?"
+   ],
+   "hints": {
+    "1": "Ask whether you restored state and whether duplicates were filtered.",
+    "2": "N ≤ 20 ≠ automatic DP; sort+skip duplicates; undo marks; prune sum>target.",
+    "3": "List: backtracking not DP under N ≤ 20/15; use the adjacent-equal continue; restore visited/'*'; prune over-limit / sort descending for Matchsticks."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Recursive take-it-or-leave-it subsets vs iterative masks from 0 to 2^N-1",
+   "strong_answer": "The recursive include/exclude template is the standard interview form; mapping 0..2^N-1 to binary choices is an alternate iterative way to generate the same power set under tiny N."
+  },
+  {
+   "topic": "Swap-based permutations vs boolean visited array",
+   "strong_answer": "Both realize O(N!) generation: swap-based rearranges in place; a visited array builds the permutation by choosing unused indices—same completeness, different bookkeeping."
+  },
+  {
+   "topic": "Visited array vs in-place board[i][j] = '*' for grid DFS",
+   "strong_answer": "Either marks a cell as used for Word Search–style paths; in-place '*' avoids extra memory but must be undone on backtrack exactly like a visited flag."
+  },
+  {
+   "topic": "Backtracking with pruning vs assuming DP at N ≤ 20 / N ≤ 15",
+   "strong_answer": "Those bounds often mean a searchable tree with pruning (sum limits, state parameters), not that the problem requires DP formulation."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating an OA with N ≤ 20 or N ≤ 15 as DP by default.",
+   "correction": "It is often a simple backtracking tree with pruning logic, not DP."
+  },
+  {
+   "trap": "Emitting duplicate subsets/permutations when the input has duplicate values.",
+   "correction": "Sort the array and skip with if (i > start && nums[i] == nums[i-1]) continue;."
+  },
+  {
+   "trap": "Leaving a grid cell marked after a DFS path fails.",
+   "correction": "Undo visited or restore board[i][j] after the recursive call returns."
+  },
+  {
+   "trap": "Letting branches run after they already cannot succeed.",
+   "correction": "Terminate when sum > target (or similar limits); for Matchsticks-style K-partition, sorting largest-first fails bad assignments faster."
+  },
+  {
+   "trap": "Checking N-Queens diagonals by scanning the board each time.",
+   "correction": "Track diagonals in arrays indexed by row + col and row - col + n - 1 for O(1) validity checks."
+  }
+ ]
+}

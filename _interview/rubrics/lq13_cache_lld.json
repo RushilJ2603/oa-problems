@@ -1,0 +1,268 @@
+{
+ "id": "lq13_cache_lld",
+ "title": "LQ13 — Design an LRU / LFU Cache",
+ "type": "LLD",
+ "relevance": "High — the bridge LLD + DSA design problem (coding screens + OOD rounds); Amazon, Google, Meta, Microsoft, Uber, Flipkart, Atlassian, and most product cos probe HashMap+DLL composition, Strategy for eviction, and concurrency.",
+ "difficulty": "mid",
+ "prereqs": [
+  "l01_oop_solid",
+  "l02_patterns_creational",
+  "l03_patterns_structural"
+ ],
+ "company_notes": "Very common across campus coding and LLD/machine-coding rounds: LRU is treated as mandatory, LFU is a common stronger follow-up, and experienced loops add TTL, concurrency, stats, and production cache discussion (Redis/Caffeine/TinyLFU).",
+ "phases": [
+  {
+   "phase": "requirements",
+   "goal": "Lock down exact cache semantics and non-functional constraints before design.",
+   "must_hit": [
+    {
+     "id": "req1",
+     "point": "States mandatory behavior: fixed capacity, get(key), put(key,value), and eviction on overflow by the chosen policy.",
+     "weight": "core",
+     "evidence_hint": "“I’ll confirm fixed capacity and define get/put behavior plus eviction when capacity is full.”"
+    },
+    {
+     "id": "req2",
+     "point": "Commits to O(1) average for both get and put as the primary contract.",
+     "weight": "core",
+     "evidence_hint": "“The target is O(1) average for both operations, so structure choice must enforce that.”"
+    },
+    {
+     "id": "req3",
+     "point": "Clarifies policy semantics: get counts as use, and LFU tie-break is LRU within the same frequency.",
+     "weight": "extended",
+     "evidence_hint": "“On read we update recency/frequency, and LFU ties evict the least recently used in that bucket.”"
+    }
+   ],
+   "probes": [
+    "What assumptions do you want to confirm before coding this cache?"
+   ],
+   "hints": {
+    "1": "List the minimal functional API and when eviction happens.",
+    "2": "Add performance and policy semantics, especially what get should update.",
+    "3": "State fixed capacity + O(1) get/put + get updates usage + LFU ties by LRU."
+   }
+  },
+  {
+   "phase": "entities",
+   "goal": "Identify the minimal state objects and invariants needed for O(1) operations.",
+   "must_hit": [
+    {
+     "id": "ent1",
+     "point": "For LRU, uses Map<K, Node> plus one doubly linked list with sentinel head/tail (MRU at head, LRU at tail).",
+     "weight": "core",
+     "evidence_hint": "“Map gives key lookup; DLL gives O(1) recency reorder and tail eviction.”"
+    },
+    {
+     "id": "ent2",
+     "point": "For LFU, uses keyToNode, freqToList, and minFreq to locate eviction bucket in O(1).",
+     "weight": "core",
+     "evidence_hint": "“I keep a map from key to node, a map from frequency to DLL, and track minFreq.”"
+    },
+    {
+     "id": "ent3",
+     "point": "Node stores key as well as value and links so eviction can delete from map in O(1).",
+     "weight": "extended",
+     "evidence_hint": "“Node must carry key; otherwise eviction cannot remove map entry directly.”"
+    }
+   ],
+   "probes": [
+    "Which core data structures do you need for LRU and LFU, and why?"
+   ],
+   "hints": {
+    "1": "A single structure cannot satisfy fast lookup and fast eviction updates together.",
+    "2": "Pair hash lookup with linked ordering; LFU needs per-frequency ordering.",
+    "3": "Use map + DLL for LRU, and keyToNode + freqToList + minFreq for LFU."
+   }
+  },
+  {
+   "phase": "class_design",
+   "goal": "Define clean responsibilities and interfaces so policy and storage concerns stay decoupled.",
+   "must_hit": [
+    {
+     "id": "cd1",
+     "point": "Defines cache-facing API (get, put) and positions optional invalidate/clear/stats as extensions.",
+     "weight": "core",
+     "evidence_hint": "“I’ll keep a small cache API first, then add invalidate/clear/stats if requested.”"
+    },
+    {
+     "id": "cd2",
+     "point": "Separates responsibilities: Cache coordinates, DoublyLinkedList handles pointer surgery, policy decides victim.",
+     "weight": "core",
+     "evidence_hint": "“Cache should not do raw pointer manipulation; list helpers own remove/addFront/removeLast.”"
+    },
+    {
+     "id": "cd3",
+     "point": "Uses EvictionPolicy Strategy boundary to avoid policy if/else soup and support LRU/LFU swapping.",
+     "weight": "extended",
+     "evidence_hint": "“Cache depends on an EvictionPolicy interface so policy changes do not rewrite callers.”"
+    }
+   ],
+   "probes": [
+    "How would you split classes so this stays extensible and testable?"
+   ],
+   "hints": {
+    "1": "Start from API facade vs internal helpers.",
+    "2": "Isolate list pointer operations and eviction decision logic.",
+    "3": "Cache facade + DLL utility + policy interface is the clean split."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Show correct update/eviction flows that preserve invariants on every get/put path.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "LRU hit path unlinks the node and moves it to head on get and on put update.",
+     "weight": "core",
+     "evidence_hint": "“Any access/update refreshes recency: remove node then addFront.”"
+    },
+    {
+     "id": "impl2",
+     "point": "LRU overflow evicts tail.prev and removes the same key from map in the same operation.",
+     "weight": "core",
+     "evidence_hint": "“Victim is list tail predecessor; evict from list and map together.”"
+    },
+    {
+     "id": "impl3",
+     "point": "LFU access removes from current frequency list, increments frequency, re-inserts into new list, and bumps minFreq when the old min bucket becomes empty.",
+     "weight": "core",
+     "evidence_hint": "“On access I migrate node to freq+1 list and advance minFreq if prior list emptied.”"
+    },
+    {
+     "id": "impl4",
+     "point": "LFU new insert starts at frequency 1 with minFreq = 1, and eviction removes LRU tail from the minFreq list.",
+     "weight": "extended",
+     "evidence_hint": "“Fresh keys start in freq 1; victim is tail of current minFreq bucket.”"
+    }
+   ],
+   "probes": [
+    "Walk me through put when capacity is full for both LRU and LFU.",
+    "What exact state changes happen on a get hit?"
+   ],
+   "hints": {
+    "1": "Trace one hit and one overflow path with list and map updates.",
+    "2": "Name the victim location for each policy before coding.",
+    "3": "LRU evicts tail.prev; LFU evicts tail of minFreq list after promotion bookkeeping."
+   }
+  },
+  {
+   "phase": "extensibility",
+   "goal": "Demonstrate policy and feature evolution without rewriting core cache callers.",
+   "must_hit": [
+    {
+     "id": "ext1",
+     "point": "Applies Strategy so new eviction policies can be added without changing cache clients (OCP signal).",
+     "weight": "core",
+     "evidence_hint": "“I can plug LRU or LFU (and future policies) behind the same cache interface.”"
+    },
+    {
+     "id": "ext2",
+     "point": "Treats TTL as orthogonal to capacity eviction: store expiresAt, lazily expire on get, and optionally sweep in background.",
+     "weight": "core",
+     "evidence_hint": "“TTL expiry is separate from LRU/LFU choice; expired entries are misses and removed.”"
+    },
+    {
+     "id": "ext3",
+     "point": "Positions Factory, Proxy/Decorator, and Observer for creation, data-store wrapping, and eviction/stats notifications.",
+     "weight": "extended",
+     "evidence_hint": "“Factory picks policy, caching proxy fronts store, observer hooks power removal/stats events.”"
+    }
+   ],
+   "probes": [
+    "If tomorrow we need another policy and TTL, what changes and what stays stable?"
+   ],
+   "hints": {
+    "1": "Separate policy choice from cache API surface.",
+    "2": "Keep expiry logic independent from capacity policy logic.",
+    "3": "Use EvictionPolicy strategy plus optional factory/proxy/observer hooks."
+   }
+  },
+  {
+   "phase": "concurrency",
+   "goal": "Establish correctness under concurrent access and discuss throughput scaling choices.",
+   "must_hit": [
+    {
+     "id": "conc1",
+     "point": "Starts with one lock around get/put mutations across map and ordering structures as the safe baseline.",
+     "weight": "core",
+     "evidence_hint": "“I’ll first guarantee correctness with a single lock guarding map+list state changes.”"
+    },
+    {
+     "id": "conc2",
+     "point": "Explains that get is not a pure read for LRU/LFU because it mutates order/frequency, so naive read-lock assumptions are unsafe.",
+     "weight": "core",
+     "evidence_hint": "“Even get mutates internals, so read/write split needs care.”"
+    },
+    {
+     "id": "conc3",
+     "point": "Mentions scaling options: striped or segmented caches via hash(key) % N to reduce contention.",
+     "weight": "extended",
+     "evidence_hint": "“To improve throughput, shard into independent segments and lock per segment.”"
+    },
+    {
+     "id": "conc4",
+     "point": "Avoids holding lock during slow loads; uses load outside lock then put (or singleflight) to keep critical section small.",
+     "weight": "extended",
+     "evidence_hint": "“Never keep global lock while calling a slow loader; compute outside, then insert safely.”"
+    }
+   ],
+   "probes": [
+    "How would you make this thread-safe first, then scale throughput if contention is high?"
+   ],
+   "hints": {
+    "1": "Prioritize correctness before micro-optimizing concurrency.",
+    "2": "Identify every path that mutates map/list state, including get.",
+    "3": "Use one lock baseline, then discuss striping/segmentation and short critical sections."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Hand-rolled DLL vs LinkedHashMap",
+   "strong_answer": "LinkedHashMap (access-order + removeEldestEntry) is a fast Java-only LRU shortcut, but hand-rolled map+DLL better demonstrates O(1) mechanics and extends cleanly to LFU, portability, and custom concurrency."
+  },
+  {
+   "topic": "Separate LRUCache/LFUCache classes vs Strategy",
+   "strong_answer": "Separate classes are simpler for single-policy coding prompts, while EvictionPolicy Strategy is preferable when the requirement is to support both or switch policy at construction."
+  },
+  {
+   "topic": "Global lock vs striped/segmented locks",
+   "strong_answer": "A single synchronized/reentrant lock is the safest interview baseline; striped segments improve throughput under contention but increase design complexity and require careful invariants."
+  },
+  {
+   "topic": "Exact LFU vs approximate LFU/LRU in production",
+   "strong_answer": "Interview solutions usually expect exact O(1) LFU structures; production systems often use sampled or sketch-based approaches (for example TinyLFU-style ideas) to balance memory and CPU."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating get as read-only and not updating recency/frequency.",
+   "correction": "For both LRU and LFU, get must count as use and update ordering/frequency state."
+  },
+  {
+   "trap": "Evicting arbitrary key when LFU frequencies tie.",
+   "correction": "Within the same frequency bucket, evict the least recently used node (bucket tail)."
+  },
+  {
+   "trap": "Evicting when updating an existing key at full capacity.",
+   "correction": "Update value and usage metadata in place; size is unchanged so no eviction."
+  },
+  {
+   "trap": "Not handling capacity 0 and capacity 1 edge behavior.",
+   "correction": "Define and implement explicit behavior for capacity 0 and validate thrash behavior for capacity 1."
+  },
+  {
+   "trap": "Node does not store key, making map cleanup expensive on eviction.",
+   "correction": "Store key inside node so eviction removes both list node and map entry in O(1)."
+  },
+  {
+   "trap": "LFU minFreq not updated after promotions or empty-bucket cleanup.",
+   "correction": "When a frequency list empties, remove it and advance minFreq when appropriate."
+  },
+  {
+   "trap": "Using a heap for LFU while still claiming O(1) operations.",
+   "correction": "A heap makes access updates O(log n); use freq-to-DLL buckets for O(1) interview target."
+  }
+ ]
+}

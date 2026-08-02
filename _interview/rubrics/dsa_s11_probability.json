@@ -1,0 +1,183 @@
+{
+ "id": "dsa_s11_probability",
+ "title": "Probability Foundations",
+ "type": "FUND",
+ "relevance": "Campus OAs and SDE interviews routinely test coin/dice/card counting, combinations, addition/complement, independence, and simple conditional probability as quick aptitude filters.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Amazon appears in a QA/server-selection wrapped combinatorial OA variant.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the core probability formulas and how to read a finite sample space.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "P(E) equals favourable outcomes over total outcomes, and every probability satisfies 0 ≤ P(E) ≤ 1.",
+     "weight": "core",
+     "evidence_hint": "States the classical ratio definition and the 0-to-1 bound without inventing extra axioms."
+    },
+    {
+     "id": "fund2",
+     "point": "The complement rule is P(E') = 1 − P(E); independence gives P(A ∩ B) = P(A)P(B); conditional is P(A|B) = P(A ∩ B)/P(B); addition is P(A ∪ B) = P(A)+P(B)−P(A ∩ B).",
+     "weight": "core",
+     "evidence_hint": "Recites complement, independence, conditional, and addition formulas as distinct tools."
+    },
+    {
+     "id": "fund3",
+     "point": "For two fair coins, sample space {HH, HT, TH, TT} has 4 outcomes and at least one head has probability 3/4.",
+     "weight": "extended",
+     "evidence_hint": "Lists the four equally likely outcomes and counts the three with a head."
+    }
+   ],
+   "probes": [
+    "What is P(E) for equally likely outcomes, and how do you get the probability that an event does not happen?"
+   ],
+   "hints": {
+    "1": "Start from favourable over total, then think about the opposite event.",
+    "2": "Write P(E') = 1 − P(E), and name addition, independence, and conditional if asked.",
+    "3": "For two coins, total 4; at least one head is HH, HT, TH so 3/4."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show correct counting on dice, cards, combinations, and successive draws.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Two fair dice have 36 outcomes; exactly five pairs sum to 8, so P(sum=8)=5/36; for sum S≥8 the ways shortcut is 13−S.",
+     "weight": "core",
+     "evidence_hint": "Uses 6×6=36, lists five sum-8 pairs or applies 13−8=5, and states 5/36."
+    },
+    {
+     "id": "mech2",
+     "point": "From a 52-card deck, red face cards are 3 face ranks times 2 red suits = 6 cards, so P(red face card)=6/52=3/26.",
+     "weight": "core",
+     "evidence_hint": "Defines face cards as Jacks, Queens, Kings; multiplies by two red suits; simplifies 6/52 to 3/26."
+    },
+    {
+     "id": "mech3",
+     "point": "Without replacement, P(all 3 green from 4 red and 5 green) is ⁵C₃/⁹C₃ = 5/42, equivalently (5/9)×(4/8)×(3/7).",
+     "weight": "extended",
+     "evidence_hint": "Either uses combinations over ⁹C₃ or multiplies shrinking green counts and gets 5/42."
+    },
+    {
+     "id": "mech4",
+     "point": "Product of two dice is even via complement: both odd has probability (1/2)×(1/2)=1/4, so P(even product)=3/4.",
+     "weight": "extended",
+     "evidence_hint": "Identifies odd×odd as the only odd product case and subtracts from 1."
+    }
+   ],
+   "probes": [
+    "Two dice are rolled; what is P(sum is 8), and how does the dice-sum shortcut check your count?"
+   ],
+   "hints": {
+    "1": "Fix the total sample size before listing favourable outcomes.",
+    "2": "For two dice use 36; for sum 8 either list pairs or use ways = 13−S when S≥8.",
+    "3": "Favourable pairs for sum 8 are (2,6),(3,5),(4,4),(5,3),(6,2) → 5/36."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose between complement vs enumeration and with vs without replacement.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "For independent 'at least one' success, prefer 1−P(all fail); three archers with hit probs 1/2, 1/3, 1/4 give miss product (1/2)×(2/3)×(3/4)=1/4, so at least one hit is 3/4.",
+     "weight": "core",
+     "evidence_hint": "Immediately switches to none-hit product and subtracts from 1 to get 3/4."
+    },
+    {
+     "id": "tr2",
+     "point": "'Drawn at random' defaults to without replacement (combinations or shrinking fractions); only explicit with-replacement yields independent repeats like (5/9)³.",
+     "weight": "core",
+     "evidence_hint": "States the default without-replacement reading and contrasts the with-replacement independent product."
+    },
+    {
+     "id": "tr3",
+     "point": "Addition needs the intersection term: P(M∪P)=0.6+0.5−0.3=0.8, otherwise double-counting both.",
+     "weight": "extended",
+     "evidence_hint": "Applies P(A)+P(B)−P(A∩B) and warns that omitting the intersection overshoots."
+    }
+   ],
+   "probes": [
+    "When should you use 1−P(all fail) instead of enumerating every 'at least one' case?"
+   ],
+   "hints": {
+    "1": "Look for 'at least one' across independent trials.",
+    "2": "Compute each miss probability, multiply, subtract from 1.",
+    "3": "Archers: misses 1/2, 2/3, 3/4 → none hit 1/4 → at least one 3/4."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply conditional probability and OA-wrapped combinatorial patterns including derangements.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Given sum of two dice is 8, the reduced space has 5 outcomes and only (3,5) has first die 3, so the conditional probability is 1/5.",
+     "weight": "core",
+     "evidence_hint": "Restricts to the five sum-8 pairs and counts one favourable → 1/5."
+    },
+    {
+     "id": "app2",
+     "point": "Given at least one of two children is a boy, the reduced space is {BB, BG, GB}, so P(both boys)=1/3, not 1/2.",
+     "weight": "core",
+     "evidence_hint": "Drops GG, keeps three equally likely outcomes, and picks only BB."
+    },
+    {
+     "id": "app3",
+     "point": "Hypergeometric OA wrap: 20 servers with 4 faulty and 16 good, choose 3 with exactly one faulty is (⁴C₁×¹⁶C₂)/²⁰C₃ = 8/19.",
+     "weight": "extended",
+     "evidence_hint": "Frames as choose 1 from faulty and 2 from good over choose 3 from 20, arriving at 8/19."
+    },
+    {
+     "id": "app4",
+     "point": "Derangement of 4 letters: !4=9 and 4!=24, so P(no letter in correct envelope)=9/24=3/8.",
+     "weight": "extended",
+     "evidence_hint": "Uses !4=9 over 24 permutations and simplifies to 3/8."
+    }
+   ],
+   "probes": [
+    "Given the sum of two dice is 8, what is P(first die shows 3)?"
+   ],
+   "hints": {
+    "1": "Condition by shrinking the sample space to outcomes that satisfy the given.",
+    "2": "List the five sum-8 pairs and see how many have first die 3.",
+    "3": "Only (3,5) works among five, so answer is 1/5."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Complement (1 − P(all fail)) vs enumerating every 'at least one' case",
+   "strong_answer": "For independent trials asking for at least one success, compute the all-fail product and subtract from 1; this avoids summing overlapping hit patterns, as with the three archers yielding 3/4."
+  },
+  {
+   "topic": "Without replacement vs with replacement",
+   "strong_answer": "'Drawn at random' means without replacement unless stated otherwise—use combinations or shrinking successive fractions. Explicit with replacement keeps the same fraction each draw (independent product)."
+  },
+  {
+   "topic": "Addition rule with intersection vs naively adding probabilities",
+   "strong_answer": "P(A ∪ B) = P(A)+P(B)−P(A ∩ B); dropping the intersection double-counts overlap, e.g. 0.6+0.5−0.3=0.8 for passing at least one subject."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating 1 as a prime when a die shows a prime.",
+   "correction": "On {1,2,3,4,5,6} the primes are only {2,3,5}, so P(prime)=3/6=1/2."
+  },
+  {
+   "trap": "Assuming 'drawn at random' means with replacement / independent repeats.",
+   "correction": "Default is without replacement; with-replacement independence applies only when the problem says so."
+  },
+  {
+   "trap": "Given at least one boy in a two-child family, answering 1/2 that both are boys.",
+   "correction": "Conditioning removes only GG, leaving {BB, BG, GB}, so P(both boys | at least one boy)=1/3."
+  },
+  {
+   "trap": "Forgetting the intersection when summing 'multiple of 3 or multiple of 4' dice sums.",
+   "correction": "Use addition with A∩B (sum 12 only): 12/36+9/36−1/36=20/36=5/9."
+  }
+ ]
+}

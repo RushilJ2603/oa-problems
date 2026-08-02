@@ -1,0 +1,211 @@
+{
+ "id": "dsa_s13_algebra",
+ "title": "Algebra: Equations, Surds, Indices, Logarithms, Functions",
+ "type": "FUND",
+ "relevance": "Campus and OA quant screens use algebra to test fast equation setup, identities, and minimization without calculus.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Cisco SDE-intern aptitude sets.",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the core identities for indices, surds, logs, and quadratic roots.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Index laws: product adds exponents, quotient subtracts, power multiplies exponents; negative exponent is reciprocal; fractional exponent is a root.",
+     "weight": "core",
+     "evidence_hint": "States x^a x^b = x^{a+b}, x^a/x^b = x^{a-b}, (x^a)^b = x^{ab}, x^{-a}=1/x^a, and x^{a/b} as a root."
+    },
+    {
+     "id": "fund2",
+     "point": "To rationalise 1/(√a+√b), multiply numerator and denominator by √a−√b.",
+     "weight": "core",
+     "evidence_hint": "Names the conjugate multiply-by-(√a−√b)/(√a−√b) step."
+    },
+    {
+     "id": "fund3",
+     "point": "Log laws: product→sum, quotient→difference, power→coefficient; change of base log_b x = log_c x / log_c b.",
+     "weight": "core",
+     "evidence_hint": "Recalls all four log identities including change of base."
+    },
+    {
+     "id": "fund4",
+     "point": "For ax²+bx+c=0: roots via quadratic formula; sum α+β=−b/a; product αβ=c/a; discriminant Δ=b²−4ac classifies real distinct, equal, or complex roots.",
+     "weight": "core",
+     "evidence_hint": "Gives formula, Vieta relations, and Δ>0 / =0 / <0 cases."
+    }
+   ],
+   "probes": [
+    "State the index, surd, logarithm, and quadratic-root formulas you rely on in aptitude algebra."
+   ],
+   "hints": {
+    "1": "Start from the definition block: indices, surds, logs, then quadratics.",
+    "2": "List each family as a short identity set, including discriminant sign cases.",
+    "3": "Include rationalising with conjugate and Vieta sum/product with Δ=b²−4ac."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to set up and solve linear, quadratic, surd/index, log, function, and inequality problems.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Simultaneous linear systems can be added when the ask is a sum of unknowns (e.g. p+n or x+y) without solving each variable.",
+     "weight": "core",
+     "evidence_hint": "Adds 2p+3n=18 and 3p+2n=17 to get 5(p+n)=35 so p+n=7, or adds license equations to get x+y=40."
+    },
+    {
+     "id": "mech2",
+     "point": "Two-digit reverse difference is always 9 times the digit difference; with digit sum 12 and reverse greater by 18, original is 57.",
+     "weight": "extended",
+     "evidence_hint": "Uses 9(y−x)=18 with x+y=12 to get digits 5 and 7."
+    },
+    {
+     "id": "mech3",
+     "point": "Equal real roots need Δ=0; for kx²−12x+9=0 that forces k=4.",
+     "weight": "core",
+     "evidence_hint": "Sets (−12)²−4(k)(9)=0 → 144−36k=0 → k=4."
+    },
+    {
+     "id": "mech4",
+     "point": "Compare surds by raising to a common power (LCM of indices); for √2, ∛3, fourth-root of 4, sixth-root of 6, LCM 12 shows ∛3 is largest.",
+     "weight": "extended",
+     "evidence_hint": "Compares 64, 81, 64, 36 after twelfth powers and picks ∛3."
+    },
+    {
+     "id": "mech5",
+     "point": "Digit count of a positive integer: if log₁₀ N = characteristic c plus mantissa, digits = c+1; for 6⁵⁰ with given logs, log₁₀ N=38.905 so 39 digits.",
+     "weight": "core",
+     "evidence_hint": "Computes 50(0.3010+0.4771)=38.905 and answers 39."
+    },
+    {
+     "id": "mech6",
+     "point": "AM–GM: for positive a,b, (a+b)/2 ≥ √(ab); minimum of 4x+9/x is 12.",
+     "weight": "core",
+     "evidence_hint": "Applies AM–GM to get ≥12 when 4x=9/x."
+    }
+   ],
+   "probes": [
+    "Walk through solving a simultaneous system for a combined cost, a discriminant-equal-roots condition, and an AM–GM minimum of the form ax+b/x."
+   ],
+   "hints": {
+    "1": "Pick one linear add-trick, one Δ=0 quadratic, and one AM–GM example.",
+    "2": "For logs digit count, separate characteristic and mantissa; for surds, use a common exponent.",
+    "3": "Cite p+n=7 or x+y=40, k=4 from Δ=0, and min 4x+9/x=12 via AM–GM."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose the faster algebraic path over brute-force solving or calculus.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer adding/scaling equations when only a linear combination (like x+y or p+n) is needed instead of full elimination for each unknown.",
+     "weight": "core",
+     "evidence_hint": "Explains why adding license or pen/notebook equations is enough for the total."
+    },
+    {
+     "id": "tr2",
+     "point": "Prefer AM–GM over calculus for minimizing ax+b/x forms; the minimum is always 2√(ab).",
+     "weight": "core",
+     "evidence_hint": "States OAs use AM–GM for these minima and quotes min=2√(ab)."
+    },
+    {
+     "id": "tr3",
+     "point": "Bill shortfall trick: assume all smaller denomination, then shortfall divided by per-bill upgrade yields count of larger bills.",
+     "weight": "extended",
+     "evidence_hint": "If all 46 bills were fives → 230; shortfall 110 / extra 5 → 22 tens."
+    }
+   ],
+   "probes": [
+    "When would you add equations or use AM–GM instead of solving every variable or taking a derivative?"
+   ],
+   "hints": {
+    "1": "Think about what the question actually asks for—sum, min, or each unknown.",
+    "2": "Contrast full solve vs add-for-sum, and calculus vertex vs AM–GM for ax+b/x.",
+    "3": "Name add-for-(x+y), AM–GM min=2√(ab), and the all-fives shortfall trick."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Map OA-style tech wordings to the same algebraic techniques.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "License mix: 40x+100y=2600 and swap 100x+40y=3000; adding gives total licenses x+y=40.",
+     "weight": "core",
+     "evidence_hint": "Adds to 140(x+y)=5600 → x+y=40."
+    },
+    {
+     "id": "app2",
+     "point": "Quadratic profit P(x)=−2x²+120x−1000 is maximized at x=−b/(2a)=30 with P(30)=800.",
+     "weight": "core",
+     "evidence_hint": "Uses vertex formula and substitutes to get 800."
+    },
+    {
+     "id": "app3",
+     "point": "Capacity C(n)=27^{n/3}×9^{n/2} reduces to 3^{2n}; needing 3¹⁰ gives n=5.",
+     "weight": "extended",
+     "evidence_hint": "Rewrites both bases as powers of 3, equates 2n=10."
+    },
+    {
+     "id": "app4",
+     "point": "For f(x+y)=f(x)+f(y)−4 with f(2)=10, shift g(x)=f(x)−4 to get Cauchy, then f(x)=3x+4 and f(7)=25.",
+     "weight": "core",
+     "evidence_hint": "Defines g, finds c=3, evaluates f(7)=25."
+    },
+    {
+     "id": "app5",
+     "point": "Latency T=2C+32/C+5 minimized by AM–GM on 2C+32/C (≥16) plus 5 → T_min=21 ms.",
+     "weight": "core",
+     "evidence_hint": "Gets variable part ≥16, adds 5 for 21 ms."
+    }
+   ],
+   "probes": [
+    "Solve an OA-style licensing, profit-max, scaling, functional-equation, or latency-min problem using the algebra above."
+   ],
+   "hints": {
+    "1": "Strip the story and write the equations or function given.",
+    "2": "Match technique: add system, vertex, common base, constant shift, or AM–GM.",
+    "3": "Recover x+y=40, P_max=800, n=5, f(7)=25, or T_min=21 ms."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Adding equations vs solving each unknown",
+   "strong_answer": "When the ask is only a sum like p+n or x+y, add the equations (or a multiple) directly; full elimination wastes time if individual values are not needed."
+  },
+  {
+   "topic": "AM–GM vs calculus for ax + b/x minima",
+   "strong_answer": "For positive terms of form ax+b/x, AM–GM gives the minimum 2√(ab) without derivatives; calculus is unnecessary for these OA patterns."
+  },
+  {
+   "topic": "Bill shortfall trick vs full variables",
+   "strong_answer": "Assume all bills are the smaller denomination, then shortfall divided by the per-bill upgrade equals the count of larger bills—faster than a two-variable system when only one count is asked."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating log₁₀ N’s integer part as the digit count.",
+   "correction": "If log₁₀ x = c + m with mantissa m≥0, the number of digits is c+1 (e.g. 38.905 → 39 digits)."
+  },
+  {
+   "trap": "Forgetting that a two-digit number minus its reverse is 9 times the digit difference.",
+   "correction": "Difference is always 9×(difference of digits); use with digit sum to solve quickly."
+  },
+  {
+   "trap": "Maximizing/minimizing a quadratic by trial instead of the vertex.",
+   "correction": "Absolute max/min of ax²+bx+c is at x=−b/(2a)."
+  },
+  {
+   "trap": "Leaving a constant in Cauchy-like functional equations.",
+   "correction": "For f(x+y)=f(x)+f(y)+k forms, shift (e.g. g(x)=f(x)−4 when k=−4) to reach g(x+y)=g(x)+g(y) and g(x)=cx."
+  },
+  {
+   "trap": "Using calculus by default for ax+b/x style minima in OAs.",
+   "correction": "AM–GM applies directly; minimum of ax+b/x is 2√(ab)."
+  }
+ ]
+}

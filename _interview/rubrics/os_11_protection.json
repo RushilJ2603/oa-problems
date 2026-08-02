@@ -1,0 +1,168 @@
+{
+ "id": "os_11_protection",
+ "title": "Protection and security",
+ "type": "FUND",
+ "relevance": "Interviewers use protection vs security, least privilege, access matrices, malware distinctions, and defense-in-depth to test whether candidates understand how systems limit access and resist threats.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what protection and security are, their goals, and the principle of least privilege.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Protection is an internal mechanism controlling how processes and users access system resources; security defends against external and internal threats and sets policy at the boundary.",
+     "weight": "core",
+     "evidence_hint": "Candidate separates protection (access control mechanisms) from security (threat defense and policy)."
+    },
+    {
+     "id": "fund2",
+     "point": "The goal of protection is that each object is accessed correctly and only by processes that are allowed, enforcing a well-defined set of operations per object.",
+     "weight": "core",
+     "evidence_hint": "Mentions correct, authorized access and allowed operations on objects like memory, files, devices, CPU."
+    },
+    {
+     "id": "fund3",
+     "point": "Principle of least privilege: every program and user gets just the privileges needed to do its job, and no more, limiting damage from bugs or compromise.",
+     "weight": "core",
+     "evidence_hint": "States least privilege and that excess rights increase blast radius when something fails."
+    }
+   ],
+   "probes": [
+    "What is the difference between protection and security in an OS?",
+    "What is the principle of least privilege, and why does it matter?"
+   ],
+   "hints": {
+    "1": "Think internal access control versus defending against attackers and misuse.",
+    "2": "Protection provides mechanisms; security sets policy and guards the boundary.",
+    "3": "Least privilege means only the rights needed for the job—no more—so a buggy or compromised component does less damage."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain protection domains, the access matrix and its implementations, violation categories, attacks, and malware types.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "A protection domain is a set of access rights, each an <object, {allowed operations}> pair; a process runs in a domain and may only perform operations that domain grants.",
+     "weight": "core",
+     "evidence_hint": "Defines domain as a set of object–operation rights that bound what a process can do."
+    },
+    {
+     "id": "mech2",
+     "point": "The access matrix has rows as domains, columns as objects; entry (i, j) is the operations domain i may invoke on object j; systems implement it as ACLs (by column) or capabilities (by row).",
+     "weight": "core",
+     "evidence_hint": "Describes matrix shape and ACL-per-object versus capability-per-domain compact forms."
+    },
+    {
+     "id": "mech3",
+     "point": "Security violations include breaches of confidentiality, integrity, and availability, plus theft of service and denial of service.",
+     "weight": "core",
+     "evidence_hint": "Lists CIA triad plus unauthorized use of resources and preventing legitimate use."
+    },
+    {
+     "id": "mech4",
+     "point": "Common attack methods include masquerading, replay, man-in-the-middle, and session hijacking.",
+     "weight": "extended",
+     "evidence_hint": "Names spoofing identity, resending messages, sitting in the data path, and stealing an authenticated session."
+    },
+    {
+     "id": "mech5",
+     "point": "Program threats: trojan looks legitimate but hides a payload and does not self-replicate; virus is self-replicating code in a host program; worm self-replicates across systems on its own; spyware collects info; trap door/backdoor bypasses authentication.",
+     "weight": "core",
+     "evidence_hint": "Contrasts trojan vs virus vs worm on host and self-replication, and mentions spyware and backdoors."
+    }
+   ],
+   "probes": [
+    "How does the access matrix model protection, and how do ACLs and capabilities relate to it?",
+    "Walk through the CIA triad and the other classic violation types.",
+    "How do a virus, a worm, and a trojan horse differ?"
+   ],
+   "hints": {
+    "1": "Start from who can do what to which object, then how that table is stored.",
+    "2": "Rows are domains, columns are objects; ACLs group by object, capabilities by domain.",
+    "3": "Virus needs a host and execution to spread; worm spreads alone; trojan neither self-replicates nor needs a host—it relies on the user running it."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast compact realizations of the access matrix and how defenses address different threat layers.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Access-control lists implement the matrix by column (per object: who may access it); capabilities implement it by row (per domain: what it may touch).",
+     "weight": "core",
+     "evidence_hint": "Clearly maps ACL to object-centric and capability to domain-centric views of the same matrix."
+    },
+    {
+     "id": "tr2",
+     "point": "Cryptography protects confidentiality and authenticity with keys; firewalls barrier trusted and untrusted networks and inspect traffic (packet-filter, application-proxy, system-call).",
+     "weight": "extended",
+     "evidence_hint": "Separates crypto (message secrecy/authenticity) from firewalls (boundary traffic control and types)."
+    }
+   ],
+   "probes": [
+    "When would you think in terms of ACLs versus capabilities?",
+    "What roles do cryptography and firewalls play in defense?"
+   ],
+   "hints": {
+    "1": "Both encode the same who-can-do-what model, stored differently.",
+    "2": "Ask whether you index by object (who may touch it) or by domain (what may it touch).",
+    "3": "ACL = column/per-object list; capability = row/per-domain list of rights."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply threat models and layered defenses, including defense in depth.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "System and network threats include port scanning, DoS/DDoS, and SYN attacks against the TCP handshake.",
+     "weight": "core",
+     "evidence_hint": "Names probing open services, flooding (including distributed), and SYN connection-flood tricks."
+    },
+    {
+     "id": "app2",
+     "point": "Defense in depth must be enforced at four levels—physical, human, operating system, and network—because security is only as strong as the weakest link.",
+     "weight": "core",
+     "evidence_hint": "Lists physical, human, OS, and network layers and the weakest-link idea."
+    }
+   ],
+   "probes": [
+    "What system and network threats would you watch for beyond malware?",
+    "What does defense in depth mean, and at what levels must it be applied?"
+   ],
+   "hints": {
+    "1": "Think probing services and flooding resources, not only malicious programs.",
+    "2": "Defense must hold at physical sites, people, the OS, and the network.",
+    "3": "Four levels: physical, human, operating system, network—weakest link limits the whole."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Access-control lists vs capabilities",
+   "strong_answer": "Both implement the access matrix compactly: ACLs by column (per object, who may access it) and capabilities by row (per domain, what it may touch)."
+  },
+  {
+   "topic": "Cryptography vs firewalls",
+   "strong_answer": "Cryptography protects confidentiality and authenticity of messages with keys so only intended parties can read and verify senders; firewalls place a barrier between trusted and untrusted networks, limiting and inspecting traffic (packet-filter, application-proxy, system-call)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating protection and security as the same thing.",
+   "correction": "Protection is the internal access-control mechanism; security defends against threats and sets policy at the boundary—protection provides mechanisms, security the policy."
+  },
+  {
+   "trap": "Confusing trojan, virus, and worm under the malware umbrella.",
+   "correction": "A virus needs a host and an execution to spread; a worm needs neither and spreads on its own; a trojan neither self-replicates nor needs a host—it relies on the user running it willingly."
+  },
+  {
+   "trap": "Thinking confidentiality, integrity, and availability cover all classic violation categories.",
+   "correction": "Beyond the CIA triad, attacks also include theft of service (unauthorized use of resources) and denial of service (preventing legitimate use)."
+  }
+ ]
+}

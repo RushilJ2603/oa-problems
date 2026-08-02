@@ -1,0 +1,191 @@
+{
+ "id": "dsa_s07_interest",
+ "title": "Simple & Compound Interest",
+ "type": "FUND",
+ "relevance": "Campus OAs and aptitude rounds test SI/CI formulas, compounding-frequency adjustments, CI−SI differences, and present-value instalment setups.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish SI and CI definitions, amount formulas, frequency adjustments, and CI−SI difference formulas.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Simple interest is SI = (P × R × T) / 100, and amount A = P + SI.",
+     "weight": "core",
+     "evidence_hint": "States SI = PRT/100 with P principal, R rate per annum, T in years, and A = P + SI."
+    },
+    {
+     "id": "fund2",
+     "point": "Compound amount after n periods is A = P(1 + R/100)^n, and CI = A − P.",
+     "weight": "core",
+     "evidence_hint": "Writes A = P(1+R/100)^n with R as rate per period and CI as A minus P."
+    },
+    {
+     "id": "fund3",
+     "point": "Half-yearly compounding uses rate R/2 with 2T periods; quarterly uses R/4 with 4T periods.",
+     "weight": "extended",
+     "evidence_hint": "Names both adjustments: halve or quarter the rate and double or quadruple the period count."
+    },
+    {
+     "id": "fund4",
+     "point": "For 2 years, CI − SI = P(R/100)^2; for 3 years, CI − SI = P(R/100)^2(R/100 + 3).",
+     "weight": "extended",
+     "evidence_hint": "Recalls both closed-form difference formulas for the 2-year and 3-year cases."
+    }
+   ],
+   "probes": [
+    "State the SI and CI formulas, how half-yearly and quarterly compounding adjust rate and periods, and the CI−SI difference formulas for 2 and 3 years."
+   ],
+   "hints": {
+    "1": "Separate what SI adds on principal from what CI multiplies each period.",
+    "2": "Write SI = PRT/100 and A = P(1+R/100)^n, then scale R and n for compounding frequency.",
+    "3": "SI = PRT/100 with A = P+SI; CI amount A = P(1+R/100)^n with CI = A−P; half-yearly R/2 and 2T, quarterly R/4 and 4T; 2-year Diff = P(R/100)^2."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how to compute SI/CI with fractional time, rate recovery, multiples, split lending, and interest-on-interest.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Under SI, convert months to a fractional year (months over 12) before using SI = PRT/100.",
+     "weight": "core",
+     "evidence_hint": "Turns mixed years-and-months into a single fractional T, then plugs into the SI formula."
+    },
+    {
+     "id": "mech2",
+     "point": "If a sum becomes n times itself in T years at SI, it becomes m times in ((m−1)/(n−1)) × T years.",
+     "weight": "core",
+     "evidence_hint": "Uses linear SI: interest for n-times is (n−1)P in T years, so m-times needs (m−1)/(n−1) times as long."
+    },
+    {
+     "id": "mech3",
+     "point": "For 2 years at rate R%, the effective compound rate is R + R + R²/100 percent.",
+     "weight": "extended",
+     "evidence_hint": "Applies successive percentage change: two R% steps plus the cross term R²/100."
+    },
+    {
+     "id": "mech4",
+     "point": "For a fractional final year under annual compounding, compound full years first, then apply proportional simple interest on that amount for the leftover fraction.",
+     "weight": "extended",
+     "evidence_hint": "Finishes complete compound years, then multiplies by one plus the proportional rate for the remaining fraction."
+    },
+    {
+     "id": "mech5",
+     "point": "CI equals SI in the first year; from the second year, CI also includes interest on the first year's interest.",
+     "weight": "extended",
+     "evidence_hint": "States year-1 equality and that year-2 CI adds interest-on-interest on top of another year of interest on principal."
+    }
+   ],
+   "probes": [
+    "How do you handle fractional years under SI versus annual CI, and what is the SI rule for going from n-times to m-times?"
+   ],
+   "hints": {
+    "1": "Ask whether interest is linear in time or applied to a growing base.",
+    "2": "For SI multiples use ((m−1)/(n−1))×T; for partial CI years, finish full compounds then apply a proportional rate.",
+    "3": "Convert months via /12 for SI; CI for 2½ years means two full compounds then half-year SI on the new amount; year-1 CI equals SI."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast linear SI with multiplicative CI, when difference formulas help, and why instalments need present value.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "SI grows linearly with time on principal only; CI multiplies the running amount each period, so interest earns interest.",
+     "weight": "core",
+     "evidence_hint": "Contrasts PRT-style linear interest with A = P(1+R/100)^n multiplicative growth."
+    },
+    {
+     "id": "tr2",
+     "point": "The CI−SI gap is interest-on-interest; the ratio of 3-year difference to 2-year difference equals 3 + R/100, which recovers R without finding P first.",
+     "weight": "core",
+     "evidence_hint": "Uses D3/D2 = 3 + R/100 from the difference formulas to solve for rate."
+    },
+    {
+     "id": "tr3",
+     "point": "Equal annual loan instalments must equate the present values of each instalment to the original principal, not split the matured amount or subtract from principal directly.",
+     "weight": "extended",
+     "evidence_hint": "Writes P = X/(1+r) + X/(1+r)^2 (or the analogous PV sum) instead of dividing final amount by two."
+    }
+   ],
+   "probes": [
+    "Why does CI exceed SI after the first year, how can D3/D2 give the rate, and why must instalment problems use present values?"
+   ],
+   "hints": {
+    "1": "Compare what each method does with interest already earned, and how future payments relate to today's principal.",
+    "2": "Difference formulas isolate interest-on-interest; instalments discount each future payment back to today.",
+    "3": "D3/D2 = 3 + R/100; instalments satisfy P = Σ X/(1+r)^k rather than principal/2 or final-amount/2."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply SI/CI to growth multiples, population-style problems, interrupted compounding, and phase switches.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Under CI, if the amount multiplies by a fixed factor each block of years, total time is (number of such blocks) times block length — e.g. triple every 4 years to reach 81 = 3^4 takes 16 years.",
+     "weight": "core",
+     "evidence_hint": "Counts compounding cycles from the growth-factor power and multiplies by years per cycle."
+    },
+    {
+     "id": "app2",
+     "point": "Population or similar percent growth is modeled like compound interest: past population = current / (1 + R/100)^n.",
+     "weight": "core",
+     "evidence_hint": "Inverts A = P(1+R/100)^n to recover an earlier population or balance."
+    },
+    {
+     "id": "app3",
+     "point": "When a withdrawal interrupts compounding, apply interest to the current balance, subtract the withdrawal from that credited amount, then compound only the remainder.",
+     "weight": "extended",
+     "evidence_hint": "Walks step-by-step: compound, withdraw from the post-interest balance, continue CI on what remains."
+    },
+    {
+     "id": "app4",
+     "point": "A scheme can run an SI phase first, then treat the ending SI amount as the new principal for a later CI phase.",
+     "weight": "extended",
+     "evidence_hint": "Computes SI amount for the first phase, then applies CI to that new principal for later years."
+    }
+   ],
+   "probes": [
+    "If a balance compounds and money is withdrawn mid-way, how do you find the final value, and how do CI growth-multiple timelines work?"
+   ],
+   "hints": {
+    "1": "Always operate on the running balance after each credit or withdrawal, not only the original principal.",
+    "2": "For CI multiples, write the target as a power of the per-cycle factor; for withdrawals, compound then subtract then compound again.",
+    "3": "If P→3P every 4 years and 81 = 3^4, time is 16 years; after a withdrawal, continue CI only on the post-withdrawal balance."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Simple interest vs compound interest",
+   "strong_answer": "SI = PRT/100 adds interest linear in time on principal only; CI multiplies via A = P(1+R/100)^n so interest earns interest. Over the same P, R, and time, CI exceeds SI after year 1; the 2-year gap is P(R/100)^2 and the 3-year gap is P(R/100)^2(R/100 + 3)."
+  },
+  {
+   "topic": "Full-year compounding vs fractional leftover year",
+   "strong_answer": "With annual compounding and a fractional final period, compound complete years first, then apply proportional simple interest on that amount for the fraction (e.g. half-year at half the annual rate), rather than treating the fraction as another full compound period."
+  },
+  {
+   "topic": "Naive instalment split vs present-value instalments",
+   "strong_answer": "Equal annual repayments are not principal/2 or final-amount/2; equate the loan principal to the sum of discounted instalments so each future payment is valued in today's money."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "In instalment problems, subtracting instalments from the principal directly or dividing the final amount by two.",
+   "correction": "Equate the present values of the instalments to the original loan amount."
+  },
+  {
+   "trap": "Treating a mid-stream withdrawal as reducing the initial principal, or computing interest on withdrawn and remaining parts with mismatched timelines.",
+   "correction": "Compound step-by-step: apply interest to the current balance, subtract the withdrawal from that credited amount, then compound only what remains."
+  },
+  {
+   "trap": "Assuming CI always differs from SI even in the first year.",
+   "correction": "CI for the first year equals SI; the extra appears from year 2 onward as interest on prior interest."
+  }
+ ]
+}

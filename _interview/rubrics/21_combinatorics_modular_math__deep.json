@@ -1,0 +1,229 @@
+{
+ "id": "21_combinatorics_modular_math__deep",
+ "title": "Combinatorics & Modular Math — Depth Pass",
+ "type": "CP",
+ "relevance": "High — second wave after CSES fact/invFact / stars-and-bars / Catalan; these are the CF Div2 C–D “count under constraints + mod inverse” drills that show up in harder OAs and blue→CM contests.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "FAANG/OA counting with modular pow as product over independent groups (Pocket Book, Alice and the List of Presents, Kyoya); contribution rewrite for sum of (max−min) over k-subsets (Max-Min Sums); complementary pair counting with no shared endpoint (Ball in Berland); expected product of a random pair via inverses (Sakurako’s Box).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Establish that the candidate spots depth-pass combo: a hidden rewrite whose answer is ways under a mod, not a named sequence.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Depth-pass combo is recognized when the answer is ways mod 998244353/1e9+7 and constraints allow an O(n) pass after O(N) factorial precompute.",
+     "weight": "core",
+     "evidence_hint": "Candidate names modular ways plus fact/invFact precompute then a linear scan, not a closed Catalan/named formula."
+    },
+    {
+     "id": "rec2",
+     "point": "After named-sequence drills, the statement hides a rewrite: complementary count, per-index max/min contribution, product of independent column/type choices, or IE on sorted-key collisions.",
+     "weight": "core",
+     "evidence_hint": "Lists complementary / contribution / independent product / sort-key IE as the rewrite family."
+    },
+    {
+     "id": "rec3",
+     "point": "Also flag depth-pass when the statement mixes counting with construction, binary-search paths, or gcd-constrained arrays.",
+     "weight": "extended",
+     "evidence_hint": "Mentions BS-path reconstruction or gcd-forced fill alongside modular counting."
+    }
+   ],
+   "probes": [
+    "When do you treat a counting problem as depth-pass combo rather than a named sequence like Catalan?"
+   ],
+   "hints": {
+    "1": "Look at the required output form and what the statement refuses to name.",
+    "2": "Ways mod 998244353 or 1e9+7 plus a rewrite (complement, contribution, independent product, IE) is the signal.",
+    "3": "Say: answer is ways mod 998244353/1e9+7, O(n) after O(N) fact precompute, or counting mixed with construction / binary-search paths / gcd arrays."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Show the candidate can choose the right rewrite—complement, contribution, sequential product, residue DP, sweep, hockey-stick, or IE.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Prefer complementary counting total − invalid when invalids partition by a key (Ball in Berland: C(k,2) − ∑C(boy_c,2) − ∑C(girl_c,2); Number Of Permutations IE on sort-keys).",
+     "weight": "core",
+     "evidence_hint": "States total pairs/perms minus colliding partitions, possibly with +both for IE."
+    },
+    {
+     "id": "appr2",
+     "point": "Contribution / linearity: rewrite ∑_S f(S) as ∑_i a_i · (# subsets where i is max/min)—sort then a_i is max in C(i,K−1) subsets and min in C(n−1−i,K−1) (Max-Min Sums); same idea as digit place-value contribution.",
+     "weight": "core",
+     "evidence_hint": "Sorts, multiplies each a_i by binomial counts of being max or min, not loops over all subsets."
+    },
+    {
+     "id": "appr3",
+     "point": "When type order is forced (last color/group fixed), answer is sequential product ∏ C(pref+c_i−1, c_i−1), not a single multinomial (Kyoya).",
+     "weight": "core",
+     "evidence_hint": "Places colors in forced order ending with last color; multiplies binomials of growing prefixes."
+    },
+    {
+     "id": "appr4",
+     "point": "Residue/constraint DP: pre-count values per residue class then DP the product (Ayoub mod 3); same pattern for ≤K adjacent same-color pairs ∑_{i=0}^{K} C(n−1,i)·m·(m−1)^{n−1−i}.",
+     "weight": "extended",
+     "evidence_hint": "Builds residue frequencies then multiplies into dp[i][r], or sums the ≤K adjacent-pair formula."
+    },
+    {
+     "id": "appr5",
+     "point": "Sweep with live binomials: on each new segment opening with enough active, add C(active−1, k−1) (Rescue Nibel!); hockey-stick for grid-path rectangle sums via ∑ C(i+r,i)=C(n+r+1,n).",
+     "weight": "extended",
+     "evidence_hint": "Sorts events and adds C(active−1,k−1), or reduces rectangle path sums with hockey-stick."
+    }
+   ],
+   "probes": [
+    "Walk through how you would rewrite sum-of-f(S) over k-subsets, and when you would instead do total minus colliding pairs."
+   ],
+   "hints": {
+    "1": "Ask whether invalids share a key, or whether f(S) depends on who is max/min.",
+    "2": "Complement when partitions collide; contribution when each index’s max/min count is binomial after sort.",
+    "3": "Ball in Berland: C(k,2)−∑C(c,2); Max-Min Sums: a_i·C(i,K−1) / C(n−1−i,K−1); Kyoya: ∏ C(pref+c−1,c−1)."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Confirm modular fact/invFact templates and the concrete modular formulas used on this ladder.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Independent choices: per column count distinct letters and answer ∏ dist[j] mod 1e9+7 (Pocket Book); independent nonempty subsets give (2^n−1)^m (Alice and the List of Presents).",
+     "weight": "core",
+     "evidence_hint": "Implements product of column alphabets or modular pow of (2^n−1) across types."
+    },
+    {
+     "id": "impl2",
+     "point": "Sakurako’s Box: ∑_{i<j} a_i a_j / C(n,2) via ((∑a)^2−∑a^2)/2 · inv(C(n,2)), not nested pair loops.",
+     "weight": "core",
+     "evidence_hint": "Uses sum and sum-of-squares plus modular inverse of C(n,2)."
+    },
+    {
+     "id": "impl3",
+     "point": "Binary Search path counts: simulate BS on value x to get L larger and S smaller on the path, then C(n−x,L)·C(x−1,S)·(n−1−L−S)!.",
+     "weight": "extended",
+     "evidence_hint": "Simulates the BS path, counts L and S, multiplies the two binomials by the remaining factorial."
+    },
+    {
+     "id": "impl4",
+     "point": "IE for two injections with forbidden equalities: P(M,N)^2 total, then ∑ (−1)^k C(N,k)·P(M−k,N−k)^2 (NEQ).",
+     "weight": "extended",
+     "evidence_hint": "Writes alternating IE over k fixed equal positions with falling factorials."
+    }
+   ],
+   "probes": [
+    "How do you implement the expected product of a random pair mod 1e9+7 without O(n^2) enumeration?"
+   ],
+   "hints": {
+    "1": "Expand the pairwise product in terms of (∑a)^2 and ∑a^2.",
+    "2": "You need inv of C(n,2) after the algebraic identity.",
+    "3": "((∑a)^2−∑a^2)/2 · inv(C(n,2))."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Tie the approach to the stated constraint pattern: linear work after factorial precompute.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Standard depth-pass shape: O(N) factorial (and invFact) precompute, then O(n) to answer.",
+     "weight": "core",
+     "evidence_hint": "States O(N) precompute of fact/invFact then an O(n) pass over the array or events."
+    },
+    {
+     "id": "cx2",
+     "point": "Close Tuples hard version upgrades to two pointers plus fact so each left endpoint’s C(#in [a_i, a_i+k], m−1) stays fast after sort.",
+     "weight": "extended",
+     "evidence_hint": "Sorts, two-pointers the window, answers with precomputed binomials—not per-query factorials from scratch."
+    }
+   ],
+   "probes": [
+    "What complexity should you aim for once fact and invFact are precomputed?"
+   ],
+   "hints": {
+    "1": "The research pattern line already states the target shape.",
+    "2": "Precompute factorials over the max N, then scan the n elements or events once.",
+    "3": "O(N) fact/invFact precompute, then O(n) to finish."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Surface the ladder’s easy-to-miss closed-form and structural traps.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Jury Meeting: if max−second > 1 answer is 0; otherwise use an n! / (cnt_second+1)-style fact/inv count for unique-max adjacency.",
+     "weight": "core",
+     "evidence_hint": "Checks the max vs second gap before any factorial formula."
+    },
+    {
+     "id": "pit2",
+     "point": "Do not collapse Kyoya-style forced order into one multinomial; it is the sequential product ∏ C(pref+c_i−1, c_i−1) with last color fixed.",
+     "weight": "core",
+     "evidence_hint": "Rejects a single multinomial and writes the prefix product of binomials."
+    },
+    {
+     "id": "pit3",
+     "point": "Gap placements (Shaass and Lights): multinomial of gap sizes times ∏ 2^{gap−1} only for internal gaps—not every gap.",
+     "weight": "extended",
+     "evidence_hint": "Applies 2^{gap−1} only to internal gaps between already-on lights."
+    },
+    {
+     "id": "pit4",
+     "point": "Minimum number of steps: right-to-left, each a adds current b-count then doubles it (cnt_b = 2·cnt_b)—easy to get the modular chain order wrong.",
+     "weight": "extended",
+     "evidence_hint": "Scans right-to-left, updates answer from cnt_b then doubles cnt_b on each a."
+    }
+   ],
+   "probes": [
+    "What special-case check do you need before counting permutations with a unique maximum adjacency constraint?"
+   ],
+   "hints": {
+    "1": "Compare the largest value to the second-largest.",
+    "2": "If they differ by more than one, no valid arrangement exists.",
+    "3": "If max−second > 1 → 0; else n! / (cnt_second+1) with fact/inv."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "complementary total−invalid vs direct enumeration of valid pairs/perms",
+   "strong_answer": "Prefer total − invalid when invalids partition cleanly by a key (Ball in Berland C(k,2)−∑C(c,2); Number Of Permutations n! minus sorted-by-a/b plus both). Direct construction is harder when the bad set is the structured piece."
+  },
+  {
+   "topic": "contribution/linearity on indices vs summing f(S) over all subsets",
+   "strong_answer": "Rewrite ∑_S f(S) as ∑_i a_i · (#S where i is max/min) after sorting (Max-Min Sums; same family as Bargain / Count The Blocks digit contribution) instead of enumerating subsets."
+  },
+  {
+   "topic": "sequential placement product vs single multinomial",
+   "strong_answer": "When order of types is forced (last color fixed), use ∏ C(pref+c−1, c−1) (Kyoya)—not one multinomial over all color counts."
+  },
+  {
+   "topic": "closed-form modular identity vs nested loops for expected pairwise product",
+   "strong_answer": "Sakurako’s Box forces ((∑a)^2−∑a^2)/2 · inv(C(n,2)) rather than nested loops over pairs."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating Kyoya / forced last-group placement as a single multinomial.",
+   "correction": "Last color is fixed; answer is the sequential product ∏ C(pref+c_i−1, c_i−1)."
+  },
+  {
+   "trap": "Skipping the Jury Meeting gap check and always emitting a factorial formula.",
+   "correction": "If max−second > 1 the answer is 0; only then apply the n! / (cnt_second+1)-style count."
+  },
+  {
+   "trap": "Computing expected pairwise product with nested loops.",
+   "correction": "Use ((∑a)^2−∑a^2)/2 · inv(C(n,2))."
+  },
+  {
+   "trap": "Applying 2^{gap−1} to every gap when placing lights.",
+   "correction": "Multinomial over gap sizes, and ∏ 2^{gap−1} only for internal gaps (Shaass and Lights)."
+  },
+  {
+   "trap": "Forgetting IE’s +both term when subtracting sorted-by-a and sorted-by-b permutations.",
+   "correction": "Number Of Permutations: n! − (#sorted by a) − (#sorted by b) + (#sorted by both)."
+  }
+ ]
+}

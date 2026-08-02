@@ -1,0 +1,275 @@
+{
+ "id": "34_max_flow_matching",
+ "title": "Max flow, min cut, bipartite matching",
+ "type": "CP",
+ "relevance": "Medium — “assign people↔jobs / seats↔students” bipartite matching is the interview slice; raw Dinic / min-cut / MCMF is mostly Candidate-Master rating stretch Striver never covers.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Boy–girl / worker–job pairs under compatibility → bipartite matching (School Dance / Tessoku A69). Assign each employee exactly one task minimizing total cost → assignment / Hungarian / MCMF (CSES Task Assignment). Seat students so no two can cheat / cover coins by deleting rows or columns → independent set / vertex cover via bipartite matching + König (Coin Grid; LC-style classroom seating). Minimum walls/cells to block all paths from A to B → min cut (Police Chase / Treasure Island), often “cut the network / remove fewest roads.”",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Map assignment, compatibility, blockers, and threshold-check wording to bipartite matching / flow / min-cut rather than forcing raw Dinic.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Interview slice is “assign people↔jobs / seats↔students” bipartite matching; raw Dinic / min-cut / MCMF is mostly Candidate-Master stretch Striver never covers.",
+     "weight": "core",
+     "evidence_hint": "Names people↔jobs / seats↔students matching as the OA ask and treats full Dinic/min-cut/MCMF as stretch."
+    },
+    {
+     "id": "rec2",
+     "point": "Spot signals: assignment, pairwise compatibility, edge/vertex-disjoint paths, “minimum blockers,” or “binary-search a threshold then check a matching/flow.”",
+     "weight": "core",
+     "evidence_hint": "Lists those statement cues and reaches for matching/flow/min-cut."
+    },
+    {
+     "id": "rec3",
+     "point": "Boy–girl / worker–job under compatibility → bipartite matching; employee↔task minimizing cost → Hungarian / MCMF; seat/cheat or clear coins by rows/cols → König vertex cover; block all paths A→B → min cut.",
+     "weight": "core",
+     "evidence_hint": "Maps each OA wording to matching, assignment, König, or min-cut."
+    },
+    {
+     "id": "rec4",
+     "point": "Grid tiling / checkerboard 1×2 tiles and node-split “use ≤1” models are flow/matching stretch beyond the basic interview slice.",
+     "weight": "extended",
+     "evidence_hint": "Mentions checkerboard bipartition + 1×2 tiles or vertex split as advanced modeling."
+    }
+   ],
+   "probes": [
+    "Is this worker–job pairing, cost assignment, row/col cover, or blocking paths—and which model does that force?",
+    "What wording makes you binary-search a threshold and then check a matching or flow?"
+   ],
+   "hints": {
+    "1": "Ask whether the ask is pairs under compatibility, one-task cost assignment, delete rows/cols, or cut all s–t paths.",
+    "2": "Compatibility pairs → s→L→R→t matching; cost assignment → Hungarian/MCMF; rows/cols clear → König; block paths → min cut; threshold then feasible → BS+matching/flow.",
+    "3": "Say: interview slice is people↔jobs / seats↔students matching; signals are assignment, compatibility, disjoint paths, minimum blockers, BS+matching/flow; worker–job → School Dance/A69; cost → Task Assignment; cheat/coins → Coin Grid König; walls/roads → Police Chase/Treasure Island min cut."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "State the flow network or unit bipartite model, min-cut recovery, and when BS+matching or node-split applies.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Build a directed network with capacities; max flow is maximum “stuff” from s to t under capacity + conservation (Edmonds–Karp / Dinic); by max-flow min-cut that equals the cheapest edge set disconnecting s from t.",
+     "weight": "core",
+     "evidence_hint": "States capacity+conservation max flow and equates it to min cut."
+    },
+    {
+     "id": "appr2",
+     "point": "Bipartite matching is the unit-capacity special case s → L (cap 1) → R (cap 1) → t; flow equals matching size.",
+     "weight": "core",
+     "evidence_hint": "Draws s→L→R→t with caps 1 and equates flow to matching size."
+    },
+    {
+     "id": "appr3",
+     "point": "Recover the cut: nodes reachable from s in the residual graph; cut edges are u→v with u reachable and v not.",
+     "weight": "core",
+     "evidence_hint": "Describes residual reachability from s and the reachable/unreachable cut edges."
+    },
+    {
+     "id": "appr4",
+     "point": "Binary search + matching/flow: monotone “can we achieve threshold x?” → rebuild caps / keep edges ≥ x → check flow/matching.",
+     "weight": "core",
+     "evidence_hint": "States BS on x, filter/rebuild by threshold, then matching/flow feasibility."
+    },
+    {
+     "id": "appr5",
+     "point": "Edge-disjoint paths = unit-capacity max flow; node capacity c(v) → split v_in → v_out with cap c(v), in-edges to v_in, out-edges from v_out.",
+     "weight": "extended",
+     "evidence_hint": "Names unit-cap path packing and the vin/vout split for vertex caps."
+    }
+   ],
+   "probes": [
+    "How do you turn bipartite matching into a flow network?",
+    "After max flow, how do you recover the min-cut edges?",
+    "When do you binary-search a threshold before running matching or flow?"
+   ],
+   "hints": {
+    "1": "Think source/sink caps for left/right, residual reachability for the cut, and monotone feasibility for BS.",
+    "2": "Matching → s→L→R→t caps 1; cut → residual BFS/DFS from s; BS → keep edges ≥ x then check; disjoint paths → unit caps; vertex cap → vin→vout.",
+    "3": "Say: max flow under capacity+conservation equals min cut; bipartite is s→L(cap 1)→R(cap 1)→t; cut = residual-reachable u to unreachable v; BS threshold x then rebuild/check; unit-cap flow for edge-disjoint paths; split v_in→v_out for c(v)."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Code Dinic/Edmonds–Karp residuals, matching reconstruction, cut listing, and node-split / path decomposition.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Dinic (or Edmonds–Karp) from memory: level graph + blocking flow; use long long for capacities/flow.",
+     "weight": "core",
+     "evidence_hint": "Names level graph + blocking flow and long long capacities/flow."
+    },
+    {
+     "id": "impl2",
+     "point": "Residual edges: every forward edge has a reverse with capacity 0; augmenting path updates both.",
+     "weight": "core",
+     "evidence_hint": "Adds reverse edges at capacity 0 and updates both directions on augment."
+    },
+    {
+     "id": "impl3",
+     "point": "Matching edges are L→R with flow 1; reconstruct pairs from those saturated matching edges (School Dance).",
+     "weight": "core",
+     "evidence_hint": "Walks L→R edges carrying flow 1 to list the matching."
+    },
+    {
+     "id": "impl4",
+     "point": "After max flow, residual BFS/DFS from s lists min-cut edges u→v with u reachable, v not (Police Chase).",
+     "weight": "core",
+     "evidence_hint": "Runs residual search from s and emits cut edges across the frontier."
+    },
+    {
+     "id": "impl5",
+     "point": "König: max matching = min vertex cover; recover the cover from the min-cut of the matching network (Coin Grid).",
+     "weight": "extended",
+     "evidence_hint": "States König equality and recovers cover via the matching-network min-cut."
+    },
+    {
+     "id": "impl6",
+     "point": "Decompose edge-disjoint paths by walking saturated edges and subtracting; assignment with costs → MCMF or Hungarian (CSES Task Assignment).",
+     "weight": "extended",
+     "evidence_hint": "Describes saturated-edge path walking/subtract and names Hungarian/MCMF for costs."
+    }
+   ],
+   "probes": [
+    "Walk me through residual reverse edges and one augment.",
+    "How do you reconstruct the bipartite matching or the min-cut edge list?",
+    "How do you enforce a vertex capacity in the network?"
+   ],
+   "hints": {
+    "1": "Template first (levels/blocking flow), then reverses, then what you read off after the flow.",
+    "2": "long long + reverse cap 0; matching = L→R flow 1; cut = residual s-reach frontier; vin→vout for node caps; saturated walk for path pack; König from matching cut.",
+    "3": "Say: Dinic level graph + blocking flow with long long; reverse edges capacity 0, update both; matching edges L→R flow 1; residual BFS/DFS from s for cut; König cover from matching-network min-cut; decompose saturated edges; costs → MCMF/Hungarian."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State Dinic’s bipartite unit-matching bound and when Hungarian beats general MCMF.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "Dinic on the unit-capacity bipartite matching network is O(E√V) (Hopcroft–Karp complexity).",
+     "weight": "core",
+     "evidence_hint": "Quotes O(E√V) for Dinic on s→L→R→t unit caps."
+    },
+    {
+     "id": "cx2",
+     "point": "Assignment with costs: Hungarian for dense n≤200, otherwise min-cost max-flow; CSES Task Assignment is the template.",
+     "weight": "core",
+     "evidence_hint": "Picks Hungarian when dense n≤200, else MCMF, citing Task Assignment."
+    },
+    {
+     "id": "cx3",
+     "point": "Don’t force flow when n is small: matching-shaped OA tasks may be assignment DP (Armchairs / Chef Monocarp).",
+     "weight": "extended",
+     "evidence_hint": "Switches to assignment DP on small n instead of building a flow network."
+    }
+   ],
+   "probes": [
+    "What is Dinic’s complexity on unit bipartite matching?",
+    "When do you prefer Hungarian over MCMF for assignment?"
+   ],
+   "hints": {
+    "1": "Separate the special bipartite unit-cap bound from the dense assignment algorithm choice.",
+    "2": "Unit bipartite Dinic → O(E√V); dense n≤200 costs → Hungarian; else MCMF; tiny n → maybe assignment DP.",
+    "3": "Say: Dinic on s→L→R→t caps 1 is O(E√V) (Hopcroft–Karp complexity); Hungarian for dense n≤200 else MCMF (Task Assignment); small-n matching-shaped OAs → Armchairs/Chef Monocarp DP."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch residual bugs, wrong cut/matching readout, skipped node splits, and forcing flow on DP-sized OAs.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Forcing a flow network on matching-shaped OAs when n is small — use assignment DP instead (Armchairs / Chef Monocarp).",
+     "weight": "core",
+     "evidence_hint": "Refuses unnecessary Dinic and names assignment DP on small n."
+    },
+    {
+     "id": "pit2",
+     "point": "Omitting reverse residual edges at capacity 0 (or updating only the forward edge) breaks augmentation.",
+     "weight": "core",
+     "evidence_hint": "Requires reverse cap-0 edges and paired updates on every augment."
+    },
+    {
+     "id": "pit3",
+     "point": "Listing “min cut” edges without residual BFS/DFS from s after max flow (reachable u, unreachable v).",
+     "weight": "core",
+     "evidence_hint": "Insists on residual reachability from s before emitting cut edges."
+    },
+    {
+     "id": "pit4",
+     "point": "Putting a vertex capacity on v without splitting into v_in → v_out with cap c(v).",
+     "weight": "core",
+     "evidence_hint": "Corrects to vin→vout split with in-edges to vin and out-edges from vout."
+    },
+    {
+     "id": "pit5",
+     "point": "Forgetting that bipartite matching edges to report are L→R with flow 1 (not only s→L / R→t).",
+     "weight": "extended",
+     "evidence_hint": "Reads the matching from L→R edges carrying flow 1."
+    }
+   ],
+   "probes": [
+    "What breaks if you skip reverse residual edges?",
+    "How do people mis-recover the min cut or the matching pairs?",
+    "When is building Dinic the wrong first move on an “assignment” OA?"
+   ],
+   "hints": {
+    "1": "Check residuals, what you read after flow, node-cap modeling, and whether n suggests DP.",
+    "2": "Always add reverse cap 0; cut only via residual s-reach; matching = L→R flow 1; vertex caps need vin→vout; small n → assignment DP.",
+    "3": "Say: don’t force flow when Armchairs/Chef Monocarp DP fits; reverse edges capacity 0 and update both; cut = residual reachable u to unreachable v; node cap → v_in→v_out cap c(v); report L→R flow 1 matching edges."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Bipartite unit flow (Dinic) vs assignment DP",
+   "strong_answer": "Seat/student or worker/job compatibility → s→L→R→t unit flow / Dinic. Many matching-shaped OAs with small n are assignment DP instead (Armchairs / Chef Monocarp)—don’t force flow."
+  },
+  {
+   "topic": "Hungarian vs min-cost max-flow for assignment",
+   "strong_answer": "Assign each employee exactly one task minimizing total cost → Hungarian for dense n≤200, otherwise MCMF; CSES Task Assignment is the template."
+  },
+  {
+   "topic": "Max-flow value vs min-cut edge recovery",
+   "strong_answer": "Max-flow min-cut equates the flow value to the cheapest disconnecting edge set; to list edges (Police Chase / Treasure Island blockers), run residual BFS/DFS from s and take u→v with u reachable, v not."
+  },
+  {
+   "topic": "Max matching vs König min vertex cover",
+   "strong_answer": "In bipartite graphs max matching = min vertex cover; recover the cover from the min-cut of the matching network (CSES Coin Grid: rows↔cols to clear)."
+  },
+  {
+   "topic": "Plain threshold matching vs BS + shortest + matching / MCMF path pack",
+   "strong_answer": "Valuable Paper-style: binary-search edge-weight threshold then perfect matching. Stretch adds shortest-path travel limits before matching (Exploration plan) or MCMF to send exactly k edge-disjoint routes at min total length (Distinct Routes II / Parcel Delivery)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Reaching for Dinic on every “matching-shaped” OA.",
+   "correction": "When n is small, many are assignment DP (Armchairs / Chef Monocarp); don’t force flow."
+  },
+  {
+   "trap": "Building residual graph without reverse edges at capacity 0, or updating only the forward edge on augment.",
+   "correction": "Every forward edge has a reverse with capacity 0; an augmenting path updates both."
+  },
+  {
+   "trap": "Claiming min-cut edges without a residual search from s.",
+   "correction": "After max flow, BFS/DFS from s in the residual; cut edges are u→v with u reachable and v not."
+  },
+  {
+   "trap": "Enforcing “vertex used at most c(v) times” by writing a capacity on v without splitting.",
+   "correction": "Split v_in → v_out with cap c(v); all in-edges go to v_in, out-edges leave v_out."
+  },
+  {
+   "trap": "Reconstructing a bipartite matching from s→L or R→t only.",
+   "correction": "Matching edges are L→R with flow 1 (School Dance)."
+  },
+  {
+   "trap": "Treating row/col deletion or classroom non-cheating as a raw max-flow value only.",
+   "correction": "Use bipartite matching + König: max matching = min vertex cover, recover cover from the matching-network min-cut (Coin Grid)."
+  }
+ ]
+}

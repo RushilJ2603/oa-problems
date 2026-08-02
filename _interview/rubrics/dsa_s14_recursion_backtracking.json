@@ -1,0 +1,236 @@
+{
+ "id": "dsa_s14_recursion_backtracking",
+ "title": "Recursion & Backtracking",
+ "type": "FUND",
+ "relevance": "Interviewers and OAs use recursion/backtracking to test combinatorial search: generate-all, existence, and count over a search space, plus the pick/not-pick vs for-each-choice templates.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what recursion is, how the call stack and recursion tree work, and the two dominant combinatorial branching templates.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A recursive solution needs a base case that terminates and a recursive case that reduces the problem to smaller instances of the same problem.",
+     "weight": "core",
+     "evidence_hint": "Candidate states base case + recursive case; mentions solutions depending on smaller instances."
+    },
+    {
+     "id": "fund2",
+     "point": "Each recursive call pauses the caller and is pushed onto the call stack until the child returns; missing or wrong base cases can exhaust the stack and cause overflow.",
+     "weight": "core",
+     "evidence_hint": "Mentions call stack growth and stack overflow from bad/unreachable base cases."
+    },
+    {
+     "id": "fund3",
+     "point": "A recursion tree has one node per call; children are the recursive calls from that state.",
+     "weight": "extended",
+     "evidence_hint": "Describes tracing recursion via a tree of calls."
+    },
+    {
+     "id": "fund4",
+     "point": "Two main templates: Pick/Not-Pick (two branches include/exclude current element) and For-Each Choice (try each valid option, then undo).",
+     "weight": "core",
+     "evidence_hint": "Names both templates and when each fits (array/string vs multi-option state)."
+    }
+   ],
+   "probes": [
+    "What must every recursive algorithm have to terminate, and what happens on the call stack as recursion deepens?",
+    "What are the two dominant templates for exploring a combinatorial recursion tree?"
+   ],
+   "hints": {
+    "1": "Think about how a function calling itself eventually stops, and how paused callers are stored.",
+    "2": "Separate base case vs recursive case, then name the two branching styles over indices vs choices.",
+    "3": "Base case + recursive case; call stack holds paused frames; Pick/Not-Pick and For-Each Choice (with undo)."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how shared-state backtracking works and how subsequence/combination patterns are specialized.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Backtracking’s core is mutate → recurse → un-mutate: share one state buffer by reference, push a choice, recurse, then pop so the buffer is clean for the next choice.",
+     "weight": "core",
+     "evidence_hint": "Describes undo/pop after recurse instead of copying path/board each call."
+    },
+    {
+     "id": "mech2",
+     "point": "Subsequence goals reuse the same tree: print-all collects results; print-one returns true and stops further branches; count returns 1/0 at the base and sums branch results.",
+     "weight": "core",
+     "evidence_hint": "Explains the three return-type tweaks on the same pick/not-pick skeleton."
+    },
+    {
+     "id": "mech3",
+     "point": "Unlimited reuse (combination sum): the Pick branch stays on the same index; Not-Pick advances the index.",
+     "weight": "core",
+     "evidence_hint": "States pick does not do index+1 when reuse is allowed."
+    },
+    {
+     "id": "mech4",
+     "point": "With duplicates, sort and at each depth skip when candidates[i] equals candidates[i-1] (and i is not the first choice at that depth); each element used once advances to i+1.",
+     "weight": "extended",
+     "evidence_hint": "Mentions sort + same-depth duplicate skip in the for-each loop."
+    },
+    {
+     "id": "mech5",
+     "point": "Valid parentheses: place '(' while open < n; place ')' only while close < open; stop when length is 2*n.",
+     "weight": "extended",
+     "evidence_hint": "States the open/close count rules for generating valid strings."
+    }
+   ],
+   "probes": [
+    "Walk through mutate → recurse → undo on a shared path buffer—why not copy the path every call?",
+    "How do print-all, print-one, and count differ on the same pick/not-pick tree?",
+    "For combination sum with unlimited reuse, what happens to the index on the pick branch?"
+   ],
+   "hints": {
+    "1": "Focus on what you change before the recursive call and what you reverse after.",
+    "2": "Same tree, different returns: list vs early true vs sum of 1/0; reuse keeps index on pick.",
+    "3": "Push/pop shared buffer; print-all / short-circuit bool / sum counts; pick stays at index for reuse."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast templates and optimizations that change correctness, asymptotics, or risk of TLE.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Shared buffer with undo avoids expensive copies of paths or boards on every recursive call.",
+     "weight": "core",
+     "evidence_hint": "Compares pass-by-reference mutate/undo vs cloning state each branch."
+    },
+    {
+     "id": "tr2",
+     "point": "On duplicate inputs, pick/not-pick plus a set for uniqueness can TLE; prefer sorted for-each with same-depth duplicate skipping.",
+     "weight": "core",
+     "evidence_hint": "Says set-dedup after pick/not-pick is too slow; branching-level skip is required."
+    },
+    {
+     "id": "tr3",
+     "point": "N-Queens: naive safety per cell is O(N); tracking columns and both diagonals with arrays reduces a safety check to O(1).",
+     "weight": "core",
+     "evidence_hint": "Mentions cols / row+col / row-col+n-1 (or equivalent) for O(1) checks."
+    },
+    {
+     "id": "tr4",
+     "point": "Word Break pure backtracking repeats suffix work exponentially; memoizing by start index yields O(n^3) time with substr costs.",
+     "weight": "extended",
+     "evidence_hint": "Links repeated suffixes to memoization and cites O(n^3)."
+    }
+   ],
+   "probes": [
+    "When would you choose for-each-choice with duplicate skipping over pick/not-pick plus a set?",
+    "How do you make N-Queens attack checks O(1)?",
+    "Why add memoization to word-break-style partition search?"
+   ],
+   "hints": {
+    "1": "Think about duplicates causing duplicate branches, and about repeating the same suffix.",
+    "2": "Compare uniqueness via set vs prune at branch; compare scanning the board vs bit/array attack sets; compare pure DFS vs memo[index].",
+    "3": "Sort+skip same depth (avoid TLE); cols/diag arrays O(1); memo start index → O(n^3)."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply templates to classic generate / search / constraint problems and state their grounded complexities.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Binary exponentiation: x^n = (x^{n/2})^2 (even) or x·(x^{n/2})^2 (odd), giving O(log n) time and O(log n) recursion depth.",
+     "weight": "extended",
+     "evidence_hint": "States halve-exponent recurrence and O(log n) time/space."
+    },
+    {
+     "id": "app2",
+     "point": "Power set / all subsequences via pick/not-pick is O(2^n · n) time (2^n subsequences, O(n) copy each) and O(n) stack/buffer space.",
+     "weight": "core",
+     "evidence_hint": "Cites 2^n results and O(n) copy cost."
+    },
+    {
+     "id": "app3",
+     "point": "Word Search: DFS from each matching start; mark board cell (e.g. '#') then restore; time O(m · n · 3^L) with branching factor 3 and depth L.",
+     "weight": "core",
+     "evidence_hint": "Mentions in-place visit mark/undo and O(m·n·3^L)."
+    },
+    {
+     "id": "app4",
+     "point": "N-Queens places one queen per row; time O(N!) with O(N^2) to copy each board into the answer.",
+     "weight": "core",
+     "evidence_hint": "Row-as-depth placement and O(N!) / board-copy cost."
+    },
+    {
+     "id": "app5",
+     "point": "Palindrome partitioning: choice is the next cut; try endpoints j from i if s[i…j] is palindrome, recurse from j+1; time O(2^n · n).",
+     "weight": "extended",
+     "evidence_hint": "Cut-at-palindrome-prefix framing and O(2^n · n)."
+    },
+    {
+     "id": "app6",
+     "point": "Sudoku: find '.', try '1'–'9' if valid in row/col/3×3 box, recurse bool success, else restore '.'.",
+     "weight": "extended",
+     "evidence_hint": "Empty-cell scan, digit try, validity, undo on failure."
+    }
+   ],
+   "probes": [
+    "How do you generate all subsets with pick/not-pick, and what is the time complexity?",
+    "Explain Word Search backtracking including how you avoid revisiting a cell.",
+    "How would you structure N-Queens recursion and what is the time bound?"
+   ],
+   "hints": {
+    "1": "Map the problem to generate-all, existence, or constraint satisfaction.",
+    "2": "Subsets: two branches per index; grid: mutate cell then four dirs; queens: one per row with attack state.",
+    "3": "Pick/not-pick → O(2^n · n); mark '#'/restore, O(m·n·3^L); row depth, O(N!)."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Shared mutable state with undo vs copying path/board each call",
+   "strong_answer": "Pass one buffer by reference: push/mutate, recurse, pop/un-mutate. Avoids expensive copies while keeping each branch’s state correct after return."
+  },
+  {
+   "topic": "Pick/Not-Pick vs For-Each Choice",
+   "strong_answer": "Pick/Not-Pick fits include/exclude over an index (subsets, subsequence sum). For-Each Choice fits many options at a state (phone letters, cuts, colors) and is the natural place to skip duplicates after sorting."
+  },
+  {
+   "topic": "Combination Sum II uniqueness: set after pick/not-pick vs sort + skip",
+   "strong_answer": "Dumping into a set after standard pick/not-pick on duplicates can TLE. Sort and, in a for-each from start, continue when i > start and candidates[i] == candidates[i-1]; recurse with i+1."
+  },
+  {
+   "topic": "N-Queens safety: scan board O(N) vs attack arrays O(1)",
+   "strong_answer": "Naive per-placement scans cost O(N). Maintain cols, diag1[row+col], diag2[row-col+n-1] so a placement check is O(1), trading space for time."
+  },
+  {
+   "topic": "Word Break: pure backtracking vs memoized partition",
+   "strong_answer": "Trying dictionary prefixes then the suffix repeats identical suffixes exponentially. Memoize by start index; with O(n) loop and O(n) substr per state, time is O(n^3)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Missing, incorrect, or unreachable base cases",
+   "correction": "Always verify base cases; otherwise recursion never stops and the call stack overflows."
+  },
+  {
+   "trap": "Using pick/not-pick plus a set to unique Combination Sum II / duplicate subsets",
+   "correction": "That approach can TLE. Sort and skip duplicates at the same tree depth in a for-each-choice loop."
+  },
+  {
+   "trap": "Advancing the index on Pick when elements may be reused unlimited times",
+   "correction": "On Pick, stay at the same index; only Not-Pick advances. Otherwise you forbid valid reuse."
+  },
+  {
+   "trap": "Blind take/not-take on inputs with duplicates (e.g. [1,2,2])",
+   "correction": "Identical elements generate duplicate subsets. Sort and skip same-value siblings at a depth (i > index && nums[i] == nums[i-1])."
+  },
+  {
+   "trap": "Generating parentheses without open/close constraints",
+   "correction": "Only add '(' if open < n; only add ')' if close < open; finish when length is 2*n so ')' never exceeds '('."
+  },
+  {
+   "trap": "Forgetting the undo step after exploring a branch",
+   "correction": "After recurse, pop the path char/element or restore the board/cell/color so the shared state is clean for the next choice."
+  }
+ ]
+}

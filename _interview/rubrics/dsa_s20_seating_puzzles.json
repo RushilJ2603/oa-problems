@@ -1,0 +1,183 @@
+{
+ "id": "dsa_s20_seating_puzzles",
+ "title": "Seating Arrangements & Puzzles",
+ "type": "FUND",
+ "relevance": "Banking/placement OAs and reasoning screens use seating, floor, and schedule puzzles to test constraint tracking and systematic elimination under time pressure.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the universal solve order and facing-direction conventions before placing anyone.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Sketch the row, circle, or grid frame before reading all the clues.",
+     "weight": "core",
+     "evidence_hint": "Candidate says draw the structure first, then drop clues into it."
+    },
+    {
+     "id": "fund2",
+     "point": "Place the most constrained clue first: definitive statements before relative ones.",
+     "weight": "core",
+     "evidence_hint": "Mentions starting with fixed ends or exact positions, not 'somewhere left of'."
+    },
+    {
+     "id": "fund3",
+     "point": "Facing centre means left is clockwise; facing outward means left is counter-clockwise.",
+     "weight": "core",
+     "evidence_hint": "States both centre and outward left directions correctly without using their own left/right."
+    },
+    {
+     "id": "fund4",
+     "point": "In linear arrangements, North-facing left is your left; South-facing left is your right.",
+     "weight": "extended",
+     "evidence_hint": "Explicitly flips left/right when a person or row faces South."
+    }
+   ],
+   "probes": [
+    "Walk me through the first things you do when you open a seating puzzle, before placing names.",
+    "How does 'left' change when someone faces the centre versus outward?"
+   ],
+   "hints": {
+    "1": "Think about what you put on paper before chasing every clue.",
+    "2": "Order of attack: frame, then absolute placements, then relative ones; facing sets left/right.",
+    "3": "Draw the frame first; start with definitive clues; centre→left clockwise, outward→left counter-clockwise; North left=your left, South left=your right."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how linear, parallel-row, and circular constraints are placed and how invalid cases are eliminated.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "In a single-row linear arrangement, unless stated otherwise, assume everyone faces North.",
+     "weight": "core",
+     "evidence_hint": "States the default North-facing assumption for a single row."
+    },
+    {
+     "id": "mech2",
+     "point": "In a two-row arrangement, one row faces North and the other faces South, so the South-facing row has left/right reversed from our view.",
+     "weight": "core",
+     "evidence_hint": "For parallel rows, correctly reverses left for the South-facing row when placing 'second to the left'."
+    },
+    {
+     "id": "mech3",
+     "point": "When seats are numbered anti-clockwise and people face the centre, moving 'right' follows the anti-clockwise numbering.",
+     "weight": "extended",
+     "evidence_hint": "In a centre-facing circle, places someone third/second to the right by moving anti-clockwise along the numbering."
+    },
+    {
+     "id": "mech4",
+     "point": "When multiple layouts are possible, keep cases and discard any that contradict a later neighbour or facing clue.",
+     "weight": "extended",
+     "evidence_hint": "Describes branching cases then killing one when a neighbour-facing clue fails."
+    }
+   ],
+   "probes": [
+    "In two parallel rows facing each other, how do you interpret 'R sits second to the left of the person who faces A'?",
+    "If eight people face the centre around a circle and seats are numbered anti-clockwise, which way is 'to the right'?"
+   ],
+   "hints": {
+    "1": "Separate single-row defaults from two-row facing.",
+    "2": "South-facing left is flipped; centre-facing right follows anti-clockwise numbering; keep cases until a clue breaks one.",
+    "3": "Single row defaults North; two-row South row reverses left; centre-facing right = anti-clockwise on anti-clockwise seats; eliminate contradicting cases."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Contrast clue-ordering and facing conventions that change how left/right are applied.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer definitive placements (extreme end, fixed seat) over relative placements early, because relative clues leave too many open positions.",
+     "weight": "core",
+     "evidence_hint": "Argues starting with extreme-end or fixed-position clues to shrink possibilities."
+    },
+    {
+     "id": "tr2",
+     "point": "Choosing centre-facing versus outward-facing flips which way 'left' and 'right' run around the circle.",
+     "weight": "core",
+     "evidence_hint": "Explains that the same verbal left/right maps opposite ways depending on facing."
+    },
+    {
+     "id": "tr3",
+     "point": "Do not map your own left and right onto top/bottom seats without flipping by each person's facing direction.",
+     "weight": "extended",
+     "evidence_hint": "Warns against egocentric left/right on circle seats and insists on per-person facing."
+    }
+   ],
+   "probes": [
+    "Why start with 'A sits at the extreme right end' before 'B is somewhere left of C'?",
+    "What goes wrong if you treat every circle seat's left as your left while drawing?"
+   ],
+   "hints": {
+    "1": "Compare absolute clues to vague relative ones.",
+    "2": "Facing direction is the switch that flips clockwise vs counter-clockwise left.",
+    "3": "Definitive clues first; centre left=clockwise, outward left=counter-clockwise; never paste your own left onto seats without facing flip."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply the same constraint method to matrix/floor, weekday schedule, and OA-disguised desk puzzles.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Modern OAs often disguise standard linear or matrix puzzles as corporate team or server-rack stories; extract pure constraints onto a scratchpad immediately.",
+     "weight": "core",
+     "evidence_hint": "Strips story framing and restates only seating/attribute constraints."
+    },
+    {
+     "id": "app2",
+     "point": "Floor/matrix puzzles are solved on a grid of floors, people, and attributes by eliminating impossible floors from odd/even and 'immediately above/below' clues.",
+     "weight": "core",
+     "evidence_hint": "Builds a floor×person×attribute table and uses odd-floor / immediately-above constraints to force placements."
+    },
+    {
+     "id": "app3",
+     "point": "Weekday scheduling uses consecutive-pair slots and fixed-day anchors, then fits gap constraints into the remaining days.",
+     "weight": "extended",
+     "evidence_hint": "Pins the fixed day, lists legal consecutive pairs, then places the two-day-gap pair in leftover slots."
+    }
+   ],
+   "probes": [
+    "An OA describes five engineers at adjacent desks with end, gap, and immediate-neighbour clues—how do you start?",
+    "How would you set up a five-floor puzzle where each person also has a different car?"
+   ],
+   "hints": {
+    "1": "Ignore the corporate wrapping; treat it as a normal lineup.",
+    "2": "For floors, draw a grid; for schedules, lock fixed days and legal consecutive pairs first.",
+    "3": "Translate OA story→linear constraints; floors→people/attribute grid with above/below elimination; schedule→fixed day + consecutive + gap fit."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Definitive clues vs relative clues",
+   "strong_answer": "Start with definitive statements such as sitting at an extreme end; relative clues like 'somewhere left of' leave too many open seats until the frame is constrained."
+  },
+  {
+   "topic": "Facing centre vs facing outward",
+   "strong_answer": "Facing centre: left is clockwise. Facing outward: left is counter-clockwise. The same 'left/right' words reverse around the table when facing flips."
+  },
+  {
+   "topic": "Drawing the frame first vs reading all clues first",
+   "strong_answer": "Sketch the row, circle, or grid before reading all clues so each placement has a structure to drop into rather than holding unbound verbal constraints in memory."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Mapping your own left and right onto top/bottom circle seats without flipping for facing direction.",
+   "correction": "When facing the centre, left is clockwise; when facing outward, left is counter-clockwise—always flip by the person's facing, not yours."
+  },
+  {
+   "trap": "Treating OA 'corporate team assignment' or 'server rack placement' wording as reading comprehension.",
+   "correction": "The underlying logic is still a standard linear or matrix puzzle; extract the pure constraints onto a scratchpad immediately."
+  },
+  {
+   "trap": "In parallel rows, applying North-facing left/right to the South-facing row.",
+   "correction": "The South-facing row has left/right reversed from our perspective; 'second to the left' for that row is our right."
+  }
+ ]
+}

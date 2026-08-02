@@ -1,0 +1,210 @@
+{
+ "id": "dbms_09_dbadmin",
+ "title": "Database Administration Basics",
+ "type": "FUND",
+ "relevance": "Interviewers ask these to see if you understand how to keep data safe, highly available, and secure at scale.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish that backup strategy is driven by RPO/RTO and that scaling and security are core operational concerns for SDEs.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "RPO (Recovery Point Objective) is how much data the business can afford to lose.",
+     "weight": "core",
+     "evidence_hint": "Defines RPO as acceptable data-loss window, not restore speed."
+    },
+    {
+     "id": "fund2",
+     "point": "RTO (Recovery Time Objective) is how fast the system must be back online after an outage.",
+     "weight": "core",
+     "evidence_hint": "Defines RTO as downtime tolerance / time-to-recover."
+    },
+    {
+     "id": "fund3",
+     "point": "When a single database server maxes out CPU or disk I/O, you must scale via replication and/or sharding.",
+     "weight": "extended",
+     "evidence_hint": "Names CPU or disk I/O saturation as the trigger to scale."
+    },
+    {
+     "id": "fund4",
+     "point": "Database security is implemented in layers and should follow the Principle of Least Privilege.",
+     "weight": "extended",
+     "evidence_hint": "Mentions layered controls and least privilege as the guiding principle."
+    }
+   ],
+   "probes": [
+    "What business metrics drive a backup and recovery strategy?",
+    "Why would an interviewer care that an SDE understands operational database topics like backups and security?"
+   ],
+   "hints": {
+    "1": "Think about what the business can lose versus how long it can be down.",
+    "2": "Name the two objectives: one for data loss, one for downtime.",
+    "3": "RPO = how much data can we lose; RTO = how fast must we be back online."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Explain how PITR, replication, sharding, and PostgreSQL security controls actually work.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "PostgreSQL writes every change to a sequential Write-Ahead Log (WAL) before writing it to the actual data files.",
+     "weight": "core",
+     "evidence_hint": "States WAL-before-data-files ordering for durability/replay."
+    },
+    {
+     "id": "mech2",
+     "point": "Point-in-Time Recovery restores a base backup then replays an unbroken WAL archive up to a chosen recovery target time.",
+     "weight": "core",
+     "evidence_hint": "Describes base backup + WAL replay and stopping at a timestamp (e.g. before a bad DROP)."
+    },
+    {
+     "id": "mech3",
+     "point": "In replication, a Primary accepts all writes and continuously streams transaction logs to one or more Read Replicas.",
+     "weight": "core",
+     "evidence_hint": "Primary for writes; replicas get streamed logs and serve reads / failover."
+    },
+    {
+     "id": "mech4",
+     "point": "Sharding partitions data horizontally across multiple servers so each shard handles reads and writes for its subset.",
+     "weight": "extended",
+     "evidence_hint": "Gives a horizontal split example like users A–M vs N–Z on different servers."
+    },
+    {
+     "id": "mech5",
+     "point": "PostgreSQL connection security is controlled by pg_hba.conf (who can connect, from which IPs, with which auth method).",
+     "weight": "extended",
+     "evidence_hint": "Names Host-Based Authentication / pg_hba.conf and its role."
+    },
+    {
+     "id": "mech6",
+     "point": "Row-Level Security can restrict which rows a role can see via policies (e.g. tenant_id matching the current app tenant setting).",
+     "weight": "extended",
+     "evidence_hint": "Explains RLS so SELECT * still only returns allowed tenant rows."
+    }
+   ],
+   "probes": [
+    "How does Point-in-Time Recovery work if someone drops a table mid-afternoon?",
+    "What is the difference between how replication and sharding distribute load?",
+    "How does PostgreSQL enforce who can connect and which rows an app role can see?"
+   ],
+   "hints": {
+    "1": "Start with the log that records changes before the data files are updated.",
+    "2": "PITR = periodic base backup plus continuous WAL archive; replay until just before the mistake.",
+    "3": "Restore midnight’s base backup on a fresh server, then replay WAL and stop at the recovery target time (e.g. 2:14:59 PM before a 2:15 PM DROP)."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare backup approaches and scaling/consistency choices and when each fits.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Async replication acknowledges writes on the Primary immediately (replica catches up later); sync waits for the replica to confirm, slowing writes but aiming for zero data loss if the Primary dies.",
+     "weight": "core",
+     "evidence_hint": "Contrasts write latency vs durability/failover data-loss guarantee."
+    },
+    {
+     "id": "tr2",
+     "point": "Replication primarily scales read performance (and adds failover redundancy); sharding scales write performance by spreading inserts across servers.",
+     "weight": "core",
+     "evidence_hint": "Reads/failover vs write throughput as the main scaling wins."
+    },
+    {
+     "id": "tr3",
+     "point": "A logical backup like pg_dump is slow to restore and does not support PITR; physical backups (pg_basebackup) plus WAL archiving are needed for true disaster recovery with PITR.",
+     "weight": "core",
+     "evidence_hint": "Rejects dump-only as production DR; names physical backup + WAL for PITR."
+    },
+    {
+     "id": "tr4",
+     "point": "PostgreSQL supports Streaming Replication (raw bytes) and Logical Replication (specific tables or changes).",
+     "weight": "extended",
+     "evidence_hint": "Names both streaming and logical replication modes with the right distinction."
+    }
+   ],
+   "probes": [
+    "When would you choose synchronous over asynchronous replication?",
+    "Why isn’t a nightly pg_dump enough for production disaster recovery?",
+    "If reads are the bottleneck versus writes, do you replicate or shard first?"
+   ],
+   "hints": {
+    "1": "Ask what you are optimizing: restore flexibility, read load, write load, or zero loss on primary failure.",
+    "2": "Map choices: dump vs base+WAL; async vs sync; replica for reads vs shards for writes.",
+    "3": "Async = faster writes, possible lag/loss; sync = slower writes, stronger durability; pg_dump ≠ PITR; replicas scale reads, shards scale writes."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply admin patterns to realistic app scenarios: offloading reads, avoiding unsafe privileges, and encrypting data.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Heavy analytics SELECTs can be pointed at a Read Replica while the main app keeps writing to the Primary.",
+     "weight": "core",
+     "evidence_hint": "Gives the analytics-on-replica / app-on-primary split."
+    },
+    {
+     "id": "app2",
+     "point": "The application should connect with a role limited to needed table privileges (e.g. SELECT, INSERT, UPDATE) and without DROP, not as the postgres superuser.",
+     "weight": "core",
+     "evidence_hint": "Least-privilege app role; explicitly avoids superuser and DROP."
+    },
+    {
+     "id": "app3",
+     "point": "Encryption at rest protects files on disk (filesystem-level like LUKS or third-party TDE); encryption in transit uses SSL/TLS between app and database.",
+     "weight": "extended",
+     "evidence_hint": "Separates stolen-disk protection from network protection and names the mechanisms from the file."
+    },
+    {
+     "id": "app4",
+     "point": "Manual relational sharding makes cross-shard queries (e.g. joining a user on one shard to an order on another) slow and complex because data must be fetched over the network.",
+     "weight": "extended",
+     "evidence_hint": "Warns about cross-shard join cost/complexity as a reason to avoid casual sharding."
+    }
+   ],
+   "probes": [
+    "Your analytics team is slowing production. What do you do operationally?",
+    "How should an application authenticate and authorize against PostgreSQL in production?",
+    "What goes wrong if you shard a relational schema by user id and then need user–order joins?"
+   ],
+   "hints": {
+    "1": "Separate reporting load from the write path and tighten who the app can be.",
+    "2": "Replica for heavy SELECTs; RBAC role without superuser/DROP; think about cross-shard joins before sharding.",
+    "3": "Point analytics at a replica; app role with SELECT/INSERT/UPDATE only; RLS for tenant rows; expect network-bound cross-shard joins if you shard manually."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Asynchronous vs Synchronous replication",
+   "strong_answer": "Async lets the Primary acknowledge immediately while the replica catches up—better write latency, but the replica may lag and you can lose recent writes if the Primary dies. Sync waits for replica confirmation—slower writes, but much stronger guarantee of no data loss on Primary failure."
+  },
+  {
+   "topic": "Replication vs Sharding",
+   "strong_answer": "Replication copies the Primary’s logs to read replicas to scale reads and add failover; writes still hit one Primary. Sharding splits data horizontally across servers so each handles reads and writes for its slice, scaling write throughput, at the cost of cross-shard query complexity."
+  },
+  {
+   "topic": "pg_dump (logical) vs pg_basebackup + WAL (physical PITR)",
+   "strong_answer": "pg_dump is a logical SQL backup: slow to restore and cannot do PITR. For production disaster recovery you need physical base backups (pg_basebackup) plus continuous WAL archiving so you can restore and replay to an arbitrary point in time."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Assuming a daily pg_dump is a sufficient production backup strategy.",
+   "correction": "pg_dump is logical, slow to restore, and does not support PITR; use physical backups (pg_basebackup) with WAL archiving for true disaster recovery."
+  },
+  {
+   "trap": "Sharding a relational database manually without considering cross-shard access patterns.",
+   "correction": "Queries that join or span shards (e.g. user on one server, order on another) become slow and complex because data must be fetched over the network."
+  },
+  {
+   "trap": "Letting the application connect as the postgres superuser.",
+   "correction": "Use a least-privilege role with only needed table privileges (e.g. SELECT/INSERT/UPDATE) and no DROP; layer connection rules (pg_hba.conf), optional RLS, and encryption at rest/in transit."
+  }
+ ]
+}

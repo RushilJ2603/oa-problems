@@ -1,0 +1,296 @@
+{
+ "id": "dsa_s16_stacks_queues",
+ "title": "Stacks & Queues",
+ "type": "FUND",
+ "relevance": "Stacks and queues are core interview primitives for modeling LIFO/FIFO behavior, monotonic next-greater patterns, and O(1) cache designs in OAs and SDE rounds.",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish LIFO vs FIFO, constant-time core ops, and how C++ adapters sit on an underlying container.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A stack is LIFO and a queue is FIFO.",
+     "weight": "core",
+     "evidence_hint": "States last-in-first-out for stacks and first-in-first-out for queues."
+    },
+    {
+     "id": "fund2",
+     "point": "Both structures offer core push/pop-style operations in O(1) time.",
+     "weight": "core",
+     "evidence_hint": "Names push/pop (or enqueue/dequeue) and cites O(1) for the core ops."
+    },
+    {
+     "id": "fund3",
+     "point": "In C++, std::stack and std::queue are container adapters that wrap an underlying container, by default std::deque.",
+     "weight": "extended",
+     "evidence_hint": "Mentions adapters (not owning memory themselves) and default deque."
+    },
+    {
+     "id": "fund4",
+     "point": "A std::deque allows fast insertion and deletion at both its beginning and its end.",
+     "weight": "extended",
+     "evidence_hint": "Defines deque as double-ended with fast ops at both ends."
+    }
+   ],
+   "probes": [
+    "What is the difference between a stack and a queue, and what are their core operation complexities?",
+    "In C++, what are std::stack and std::queue, and what underlying container do they use by default?"
+   ],
+   "hints": {
+    "1": "Think about order of removal: which end do you take from?",
+    "2": "Contrast LIFO with FIFO, then mention O(1) push/pop and C++ adapters over a sequence container.",
+    "3": "Stack = LIFO, queue = FIFO, core ops O(1); std::stack/std::queue are adapters wrapping std::deque by default."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Show how stacks/queues are implemented and how classic stack algorithms (parens, min stack, expressions, monotonic order) actually run.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Array stack: keep a topIndex starting at -1; push increments then stores, pop decrements—all O(1).",
+     "weight": "core",
+     "evidence_hint": "Describes topIndex = -1 and ++/-- index updates without shifting."
+    },
+    {
+     "id": "mech2",
+     "point": "Array queue: use front and rear with circular indexing and a size counter so enqueue/dequeue stay O(1) instead of shifting left in O(n).",
+     "weight": "core",
+     "evidence_hint": "Mentions circular rear/front updates and that naive front-shift pop is O(n)."
+    },
+    {
+     "id": "mech3",
+     "point": "Stack via one queue: on push, enqueue then rotate prior elements so the new element sits at the front; push is O(n), pop/top are O(1).",
+     "weight": "core",
+     "evidence_hint": "Explains cycling n existing elements after push so LIFO pop works from the queue front."
+    },
+    {
+     "id": "mech4",
+     "point": "Queue via two stacks: always push to input; when output is empty, transfer all input→output so FIFO pops are amortized O(1) (each element moves once).",
+     "weight": "core",
+     "evidence_hint": "Names input/output stacks and amortized O(1) because transfer only when output is empty."
+    },
+    {
+     "id": "mech5",
+     "point": "Linked-list stack uses head as top (O(1) insert/delete at head); linked-list queue needs head and tail, and must set tail to nullptr when the last node is popped.",
+     "weight": "extended",
+     "evidence_hint": "Head-as-top for stack; head+tail for queue with empty-tail edge case."
+    },
+    {
+     "id": "mech6",
+     "point": "Valid parentheses: push opens; a close must match stack top then pop; final stack empty means valid—nested brackets mirror LIFO.",
+     "weight": "core",
+     "evidence_hint": "Walks push-open / match-and-pop-close / empty-at-end, and ties nesting to LIFO."
+    },
+    {
+     "id": "mech7",
+     "point": "Min stack encoding: on new min x, push 2x - minElement as a flag and set minElement = x; on pop of a flagged value (< minElement), restore prior min via 2×minElement - popped.",
+     "weight": "extended",
+     "evidence_hint": "Gives the 2x - prev_min flag and the restore formula; notes long long for overflow."
+    },
+    {
+     "id": "mech8",
+     "point": "Monotonic stack keeps strictly increasing or decreasing order by popping violators; each element is pushed and popped at most once, so next-greater/smaller scans are O(n).",
+     "weight": "core",
+     "evidence_hint": "States maintain order by popping, and O(n) because each element enters/leaves once."
+    }
+   ],
+   "probes": [
+    "How would you implement a queue with an array without making pop O(n)?",
+    "How do you implement a queue using two stacks with amortized O(1) pop?",
+    "How can getMin on a stack be O(1) without storing a (value, min) pair on every push?"
+   ],
+   "hints": {
+    "1": "For the array queue, avoid shifting every element on dequeue.",
+    "2": "Use circular front/rear (plus size), or two stacks with lazy transfer when the output stack is empty; for min, encode a sentinel below the new min.",
+    "3": "Circular queue: rear = (rear+1)%capacity; two-stack queue: transfer input→output only when output empty (amortized O(1)); min stack: push 2x-oldMin when x is new min, restore with 2*min-top on pop."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare competing implementations and algorithms on time, space, and when each pattern wins.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Fixed array stack/queue: O(1) ops and O(n) capacity space, but overflow at capacity; linked list versions are dynamic O(n) nodes with pointer overhead.",
+     "weight": "core",
+     "evidence_hint": "Contrasts fixed capacity overflow vs dynamic nodes and constant pointer overhead."
+    },
+    {
+     "id": "tr2",
+     "point": "Stack-from-queue pays O(n) on push to keep pop O(1); queue-from-stacks keeps push O(1) and makes pop/peek amortized O(1) (worst-case O(n) on transfer).",
+     "weight": "core",
+     "evidence_hint": "States which op is expensive in each simulation and mentions amortized vs worst-case."
+    },
+    {
+     "id": "tr3",
+     "point": "Min stack: pairs (value, current_min) are simpler extra space; encoding with one minElement uses one value per push and still O(1) ops.",
+     "weight": "extended",
+     "evidence_hint": "Compares pair-per-entry vs encoded single-value approach."
+    },
+    {
+     "id": "tr4",
+     "point": "Trapping rain water: brute left/right max per bar is O(n^2); precomputed max arrays are O(n) time and O(n) space; two-pointers achieve O(n) time and O(1) space; a monotonic stack computes basins horizontally.",
+     "weight": "core",
+     "evidence_hint": "Lists brute vs precompute vs two-pointer space and mentions stack horizontal approach."
+    },
+    {
+     "id": "tr5",
+     "point": "Sliding window maximum: brute O(n × k), heap O(n log n), monotonic deque O(n) by evicting out-of-window fronts and dominated backs.",
+     "weight": "core",
+     "evidence_hint": "Names the three complexities and that deque stores indices in decreasing order."
+    },
+    {
+     "id": "tr6",
+     "point": "LRU needs hash map + doubly linked list for O(1) get/put with arbitrary eviction; LFU needs key→node plus frequency→list buckets (and min_freq) for O(1) frequency-and-recency eviction—heap LFU is O(log n).",
+     "weight": "extended",
+     "evidence_hint": "Contrasts map+DLL for LRU vs nested freq lists for LFU, and rejects heap as too slow."
+    }
+   ],
+   "probes": [
+    "When would you prefer an array-backed queue over a linked-list queue?",
+    "Compare implementing a stack with a queue versus a queue with two stacks—where does the cost land?",
+    "For sliding window maximum, why is a monotonic deque preferable to a heap?"
+   ],
+   "hints": {
+    "1": "Look at capacity limits, which operation you make expensive, and extra space for mins or windows.",
+    "2": "Array = fixed capacity O(1); linked list = growable; simulation cost sits on push or on amortized transfer; window max: deque beats heap’s log factor.",
+    "3": "Array overflows at capacity but O(1); list grows with pointer overhead; stack←queue makes push O(n); queue←stacks amortizes pop; deque gives O(n) window max vs O(n log n) heap."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply stacks, monotonic stacks/deques, and map+list designs to standard interview problems.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Next Greater Element: right-to-left monotonic decreasing stack; map answers for a subset in O(N + M); circular NGE II simulates 2n indices with i % n.",
+     "weight": "core",
+     "evidence_hint": "Describes decreasing stack from the right, hashmap for nums1, and 2n unroll for circular."
+    },
+    {
+     "id": "app2",
+     "point": "Water above bar i is min(left_max, right_max) - height[i]; two pointers move the side with the smaller max.",
+     "weight": "core",
+     "evidence_hint": "States the min-of-bounds formula and moving the smaller-max pointer."
+    },
+    {
+     "id": "app3",
+     "point": "Sum of subarray minimums uses contribution: with PSE at L and NSE at R, arr[i] is strict min in (i-L)*(R-i) subarrays; use strict < on one side and <= on the other to avoid duplicate overcount; answer modulo 10^9 + 7.",
+     "weight": "extended",
+     "evidence_hint": "Gives (i-L)*(R-i), asymmetric < / <= for duplicates, and mod 10^9+7."
+    },
+    {
+     "id": "app4",
+     "point": "Largest rectangle in histogram: for each bar, width extends to nearest smaller left/right; single-pass increasing stack computes area when a smaller bar becomes NSE-right.",
+     "weight": "core",
+     "evidence_hint": "Explains NSE bounds and popping to compute height*width in one pass."
+    },
+    {
+     "id": "app5",
+     "point": "Maximal rectangle: per row, heights count consecutive 1s above; run histogram largest-rectangle each row in O(R × C).",
+     "weight": "extended",
+     "evidence_hint": "Treats each row as histogram base and cites O(R × C)."
+    },
+    {
+     "id": "app6",
+     "point": "Remove k digits: greedy monotonic increasing digit stack—pop larger previous digits while k > 0, then strip leading zeros.",
+     "weight": "extended",
+     "evidence_hint": "Smaller digit in a higher place wins; pop while k remains."
+    },
+    {
+     "id": "app7",
+     "point": "Stock span equals distance to previous greater; stack of {price, span} gives O(1) amortized per next.",
+     "weight": "extended",
+     "evidence_hint": "Pops <= prices accumulating spans, then +1 for today."
+    },
+    {
+     "id": "app8",
+     "point": "Celebrity: knows(a,b) eliminates one candidate; two pointers find a candidate in n - 1 queries, then verify with a full pass (about 2n more knows calls).",
+     "weight": "extended",
+     "evidence_hint": "Elimination then verify; cites n-1 then verification calls."
+    },
+    {
+     "id": "app9",
+     "point": "LRU: unordered_map key→node plus DLL (MRU at head, LRU at tail), dummy head/tail; LFU: key_table plus freq_table lists and min_freq, ties broken by LRU within the min frequency list.",
+     "weight": "core",
+     "evidence_hint": "Map+DLL move-to-front for LRU; freq buckets + min_freq and tail eviction for LFU."
+    }
+   ],
+   "probes": [
+    "How do you find the next greater element for every index in O(n)?",
+    "Explain how to compute trapped rain water in O(1) extra space.",
+    "Design an LRU cache with O(1) get and put—what structures do you need?"
+   ],
+   "hints": {
+    "1": "For next-greater and spans, think about what you can safely discard from a stack.",
+    "2": "Monotonic decreasing stack from the right for NGE; for water, two pointers on the smaller boundary; for LRU, map to nodes in a doubly linked list.",
+    "3": "NGE: pop <= while scanning right-to-left; water: add left_max-height[left] when left side is the bottleneck; LRU: hash map + DLL with move-to-head and evict tail."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Array-backed vs linked-list stack/queue",
+   "strong_answer": "Arrays give O(1) ops with O(n) fixed capacity and overflow risk; linked lists grow dynamically with O(n) node allocations and pointer overhead, using head (stack) or head+tail (queue) for O(1) ends."
+  },
+  {
+   "topic": "Stack using a queue vs queue using two stacks",
+   "strong_answer": "One-queue stack rotates on push so push is O(n) and pop/top are O(1). Two-stack queue pushes to input in O(1) and transfers to output only when empty, making pop/peek amortized O(1) though a single transfer is O(n)."
+  },
+  {
+   "topic": "Min stack pairs vs encoded minElement",
+   "strong_answer": "Storing (value, current_min) pairs is simple and O(1) per op with extra space per entry; encoding 2x - oldMin when x is a new min uses one stack value per push and restores the prior min on pop, still O(1), with care for overflow via long long."
+  },
+  {
+   "topic": "Trapping rain water: precompute vs two pointers vs stack",
+   "strong_answer": "Precomputed left/right max arrays are O(n) time and O(n) space; two pointers track left_max/right_max and move the smaller side for O(n) time and O(1) space; a monotonic decreasing stack fills water horizontally by basin when a taller bar appears."
+  },
+  {
+   "topic": "Sliding window maximum: brute vs heap vs monotonic deque",
+   "strong_answer": "Brute rescans each window in O(n × k); a max-heap is O(n log n) but must handle expired indices; a decreasing deque of indices evicts out-of-window fronts and dominated backs for O(n) time and O(k) space."
+  },
+  {
+   "topic": "LRU vs LFU cache structures",
+   "strong_answer": "LRU pairs a hash map with a doubly linked list so access moves a node to MRU and eviction pops the tail in O(1). LFU groups nodes into frequency lists (map key→node, map freq→list) plus min_freq so eviction is O(1); a frequency heap would be O(log n) and is too slow for the O(1) requirement."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Implementing an array queue by popping from index 0 and shifting the rest left.",
+   "correction": "That makes pop O(n). Use circular front/rear indices (and a size counter) so enqueue and dequeue stay O(1)."
+  },
+  {
+   "trap": "Assuming every pop/peek on a two-stack queue is strictly O(1) in the worst case.",
+   "correction": "Transferring input→output is O(n) when output is empty, but each element moves to output once and is popped once, so amortized cost is O(1)."
+  },
+  {
+   "trap": "Forgetting to clear tail when a linked-list queue’s last element is popped.",
+   "correction": "When head becomes nullptr after pop, also set tail to nullptr so the next push treats the queue as empty."
+  },
+  {
+   "trap": "Treating ^ like left-associative operators in infix→postfix.",
+   "correction": "Precedence still pops >= for left-associative ops, but for ^ do not pop another ^ (right-associative); prefix conversion flips the precedence/associativity handling after reversing."
+  },
+  {
+   "trap": "On min-stack pop/top, treating an encoded flag as a real value.",
+   "correction": "If topVal < minElement, top should return minElement, and pop should restore minElement = 2*minElement - topVal."
+  },
+  {
+   "trap": "Counting duplicate minima twice in sum of subarray minimums.",
+   "correction": "Use strict NSE on one side and previous smaller-or-equal on the other (strict < vs <=) so each equal element owns a disjoint set of subarrays."
+  },
+  {
+   "trap": "Using only a hash map (or only a queue) for LRU.",
+   "correction": "A map gives O(1) lookup but not O(1) recency updates/eviction; a queue cannot remove an arbitrary middle key in O(1). Combine unordered_map with a doubly linked list (dummy head/tail help)."
+  },
+  {
+   "trap": "Picking the wrong structure for the problem family.",
+   "correction": "Matching/nesting → stack; sliding-window extremes → monotonic deque; next greater/smaller → monotonic stack; LRU/LFU → hash map plus linked list (freq buckets for LFU)."
+  }
+ ]
+}

@@ -1,0 +1,232 @@
+{
+ "id": "dsa_s10_perm_comb",
+ "title": "Permutations & Combinations",
+ "type": "FUND",
+ "relevance": "Core aptitude counting skill used in campus OAs and SDE interviews for arrangement, selection, constrained seating, path counting, and password/enumeration problems.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish the multiplication/addition counting principles and the definitions of permutation vs combination.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "Independent successive events multiply: if one event has m ways and another n ways, together they have m × n ways (Multiplication Principle).",
+     "weight": "core",
+     "evidence_hint": "States multiplication for AND/successive independent choices, not addition."
+    },
+    {
+     "id": "fund2",
+     "point": "Mutually exclusive alternatives add: if one event OR another can occur, total ways are m + n (Addition Principle).",
+     "weight": "core",
+     "evidence_hint": "Contrasts OR/addition with AND/multiplication and notes mutual exclusivity."
+    },
+    {
+     "id": "fund3",
+     "point": "Permutation: order matters; ways to arrange r items from n distinct items is nPr = n!/(n-r)!.",
+     "weight": "core",
+     "evidence_hint": "Says order matters and gives the nPr formula correctly."
+    },
+    {
+     "id": "fund4",
+     "point": "Combination: order does not matter; ways to select r items from n distinct items is nCr = n!/(r!(n-r)!).",
+     "weight": "core",
+     "evidence_hint": "Says order does not matter and includes the r! in the denominator."
+    }
+   ],
+   "probes": [
+    "When do you multiply choices versus add them?",
+    "What is the difference between a permutation and a combination, and what are the formulas?"
+   ],
+   "hints": {
+    "1": "Think about whether the events happen one after another or as alternatives.",
+    "2": "AND/successive independent → multiply; mutually exclusive OR → add; then ask whether order of the chosen items matters.",
+    "3": "Multiplication Principle m×n; Addition Principle m+n; nPr = n!/(n-r)! (order matters); nCr = n!/(r!(n-r)!) (order does not)."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Apply standard counting patterns: identical items, together/separated seating, circular/necklace, at-least-one, distribution, and dictionary rank.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Identical letters: arrange by dividing n! by the factorials of each repeated letter's frequency (e.g. SUCCESS → 7!/(3!×2!)).",
+     "weight": "core",
+     "evidence_hint": "Divides total factorial by identical-count factorials rather than using raw n!."
+    },
+    {
+     "id": "mech2",
+     "point": "Bundle trick: items that must stay together are tied as one entity; arrange the bundles plus loose items, then multiply by internal arrangements of the bundle.",
+     "weight": "core",
+     "evidence_hint": "Mentions treating the group as one entity and multiplying by arrangements inside the bundle."
+    },
+    {
+     "id": "mech3",
+     "point": "Gap method: for no two of a restricted set together, seat the others first, count gaps including ends, then place the restricted items into gaps with nPr.",
+     "weight": "core",
+     "evidence_hint": "Seats the unrestricted set first, counts end-inclusive gaps, then uses permutations into gaps."
+    },
+    {
+     "id": "mech4",
+     "point": "Circular seating of n people uses (n-1)!, not n!, because rotations are the same arrangement.",
+     "weight": "core",
+     "evidence_hint": "Explicitly uses (n-1)! and rejects n! for a plain circular table."
+    },
+    {
+     "id": "mech5",
+     "point": "Necklace with flip symmetry: start from circular (n-1)!, then divide by 2 because clockwise and counter-clockwise are the same when the necklace can be flipped.",
+     "weight": "extended",
+     "evidence_hint": "Applies (n-1)!/2 for a flippable necklace of distinct beads."
+    },
+    {
+     "id": "mech6",
+     "point": "At least one: prefer Total possible minus the complementary none cases rather than enumerating every positive case.",
+     "weight": "core",
+     "evidence_hint": "States Total − None (or equivalent) as the preferred at-least-one approach."
+    },
+    {
+     "id": "mech7",
+     "point": "Distinct items into equal unlabelled groups: after dividing by within-group factorials, also divide by k! for the number of identical-size groups to avoid overcounting.",
+     "weight": "extended",
+     "evidence_hint": "Mentions the extra /k! correction when groups are equal and unlabelled."
+    },
+    {
+     "id": "mech8",
+     "point": "Identical objects into distinct bins (including zero): stars and bars gives C(n+r−1, r−1).",
+     "weight": "extended",
+     "evidence_hint": "States the C(n+r−1, r−1) form for identical items into r distinct bins."
+    },
+    {
+     "id": "mech9",
+     "point": "Dictionary rank of a word: at each position, count unused letters smaller than the actual letter, multiply by factorial of remaining positions, sum, then add 1; divide by repeated-letter factorials if letters repeat.",
+     "weight": "extended",
+     "evidence_hint": "Describes position-wise preceding counts × remaining factorial, then Rank = predecessors + 1."
+    }
+   ],
+   "probes": [
+    "How do you count arrangements when some letters repeat?",
+    "How do you force vowels to stay together, or force no two girls together in a row?",
+    "Why is circular seating (n-1)! and when do you also divide by 2?",
+    "How do you handle at least one man on a committee, or distribute identical apples to distinct children?"
+   ],
+   "hints": {
+    "1": "Name the pattern: repeats, together, separated, circular, at-least-one, or identical-into-bins.",
+    "2": "Together → bundle; separated → gaps + nPr; circle → (n-1)!; necklace flip → /2; at least one → Total − None; equal unlabelled groups → extra /k!.",
+    "3": "Work a known template: SUCCESS = 7!/(3!×2!); OPTICAL vowels together = 5!×3!; boys/girls gaps = 4!×5P3; circle of 6 = 5!; necklace of 8 = 7!/2; at least one man = 9C3 − 5C3; identical apples = 12C2."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Choose the right counting model when similar-sounding constraints need different techniques.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "No two X together (gap method) is not the same as separating both groups: gap only separates one side and can still leave the other side adjacent; both sides separated requires alternating patterns.",
+     "weight": "core",
+     "evidence_hint": "Contrasts gap-only separation with forced Q/D (or similar) alternation when both groups cannot clump."
+    },
+    {
+     "id": "tr2",
+     "point": "For at least one constraints, summing direct composition cases versus Total − None: subtraction is usually faster and less error-prone when the complement is simple.",
+     "weight": "core",
+     "evidence_hint": "Compares enumerating 1M/2W-style cases with Total − all-women (or similar) and prefers the complement when easy."
+    },
+    {
+     "id": "tr3",
+     "point": "Selection-only (combination) versus select-then-arrange: if the final objects are words/ordered strings, multiply selections by the arrangements of the chosen letters; if only a committee/set, stop at combinations.",
+     "weight": "extended",
+     "evidence_hint": "Says when to stop at nCr versus when to multiply by k! after selecting letter types."
+    }
+   ],
+   "probes": [
+    "If no two quants and no two developers may sit together, why is the gap method the wrong primary tool?",
+    "When is Total − None better than listing every valid committee composition?",
+    "When forming words from consonants and vowels, what do you do after selecting the letters?"
+   ],
+   "hints": {
+    "1": "Ask whether one group or both groups are restricted, and whether order of the final answer matters.",
+    "2": "One-sided separation → gaps; both sides → alternate; set/committee → combinations; word/password/path string → arrange after selecting or use identical-item arrangements.",
+    "3": "Gap on 4+4 can allow D-D; alternation gives two patterns each 4!×4!. At least one man: 9C3−5C3. Words of 3 consonants + 2 vowels: 5C3×4C2×5!."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Map OA-style problems (paths, passwords, alternating seats, word rank) onto the counting templates.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Shortest grid paths with only Right and Up reduce to arranging identical moves (or choosing positions for one move type), e.g. 4R and 3U → 7!/(4!3!) = 7C4.",
+     "weight": "core",
+     "evidence_hint": "Frames the path as a sequence of fixed counts of R and U and uses multinomial or combination count."
+    },
+    {
+     "id": "app2",
+     "point": "Passwords with start-letter and at-least-one-digit constraints: count letter-start unrestricted strings, subtract all-letter strings (Total − None style), with repetition allowed.",
+     "weight": "core",
+     "evidence_hint": "Gives form like 26×36^4 − 26^5, or factored 26×(36^4 − 26^4)."
+    },
+    {
+     "id": "app3",
+     "point": "Two equal teams that must fully alternate: sum the two patterns (X-start and Y-start), each arranging its own people in their seats (e.g. 4!×4! per pattern).",
+     "weight": "extended",
+     "evidence_hint": "Counts both QDQD… and DQDQ… and multiplies within-group arrangements for each."
+    },
+    {
+     "id": "app4",
+     "point": "Rank of a distinct-letter word in dictionary order equals count of preceding arrangements (position-wise smaller unused letters × remaining factorial) plus 1.",
+     "weight": "extended",
+     "evidence_hint": "Walks letter-by-letter predecessor counts and adds 1 for the word itself (e.g. MEAT rank 15)."
+    }
+   ],
+   "probes": [
+    "How many shortest paths from (0,0) to (4,3) using only Right and Up?",
+    "How many 5-character passwords start with a letter, use letters/digits with repetition, and contain at least one digit?",
+    "How do you seat 4 quants and 4 developers so no two of the same role sit together?",
+    "How do you find the dictionary rank of MEAT among its distinct arrangements?"
+   ],
+   "hints": {
+    "1": "Translate each story into moves, slots, seating patterns, or ordered letter lists.",
+    "2": "Paths → identical R/U arrangements; password → letter-start total minus all letters; both roles separated → two alternating cases; rank → predecessors + 1.",
+    "3": "4R+3U → 35; valid passwords → 26×(36^4−26^4); alternating 4+4 → 1152; MEAT → 12+2+0+1 = 15."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Gap Method vs must alternate",
+   "strong_answer": "Use the gap method when only one group must be separated (seat the others, place into gaps with nPr). If both groups must have no two adjacent, gaps are insufficient because the other group can still clump; force the two alternating patterns and arrange within each role."
+  },
+  {
+   "topic": "Direct case sum vs Total minus None",
+   "strong_answer": "At least one can be done by summing valid compositions, but Total − complementary none is usually faster when the forbidden case is a single simple combination (e.g. all women)."
+  },
+  {
+   "topic": "Labelled recipients vs unlabelled equal groups",
+   "strong_answer": "If groups go to distinct people/labels, multiply the successive combinations (or use n!/(n1!n2!…). If groups are equal-sized and unlabelled, also divide by k! so permutations of the groups are not overcounted."
+  },
+  {
+   "topic": "Combination-only vs select-then-arrange",
+   "strong_answer": "Stop at combinations for unordered committees/teams. If forming words or ordered strings from selected letter types, multiply the selections by the arrangements of the chosen letters."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Treating every even last digit the same when 0 is in the digit set (e.g. one formula like fixed choices for thousands regardless of the units digit).",
+   "correction": "Split cases when the number ends in 0 versus other even digits: ending in 0 frees the leading place differently because 0 cannot lead."
+  },
+  {
+   "trap": "Using n! for people around a circular table.",
+   "correction": "Rotations of the same relative order are identical; use (n-1)!."
+  },
+  {
+   "trap": "Dividing n distinct items into equal unlabelled groups of the same size without dividing by the number of groups factorial.",
+   "correction": "After accounting for within-group order, divide by k! for the k identical-size unlabelled groups."
+  },
+  {
+   "trap": "Applying the gap method when the problem requires that neither of two groups has two members adjacent.",
+   "correction": "Gaps only guarantee one group is separated; the other may still sit together. Force alternating seating of the two groups instead."
+  }
+ ]
+}

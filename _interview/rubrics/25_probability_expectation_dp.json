@@ -1,0 +1,230 @@
+{
+ "id": "25_probability_expectation_dp",
+ "title": "Probability & Expectation DP",
+ "type": "CP",
+ "relevance": "Medium (simple probability / “expected count via indicators” shows up in harder OAs; full expectation-DP with self-loops is mainly a CF ~1600–2100 rating skill Striver never covers)",
+ "difficulty": "mid",
+ "prereqs": [],
+ "company_notes": "Each of n kids rolls 1..k uniformly — expected maximum candy (Candy Lottery / Little Pony Expected Maximum). Array entries uniform in ranges — expected inversions / equal pairs via indicator sum (Inversion Probability style). Monster HP n, each hit deals 1 or 2 — expected hits mod prime (Critical Hit). Keep tossing/drawing until every type collected or every plate empty — coupon / Sushi expectation DP with self-loops.",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Spot probability / expectation asks and when linearity of indicators replaces DP.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "Spot it when the statement asks for a probability or expected value under random draws, random walks, random survivors, or “until all done,” with a small state space (counts, masks, remaining HP, dish multiplicities).",
+     "weight": "core",
+     "evidence_hint": "Names that ask shape and cites a small state like counts, masks, HP, or dish multiplicities."
+    },
+    {
+     "id": "rec2",
+     "point": "For “expected count” problems, reach for linearity of indicators first — often no DP is needed (inversions, empty cells, node removed directly).",
+     "weight": "core",
+     "evidence_hint": "Says E[count] = sum of event probabilities and names an indicator-style example before proposing DP."
+    },
+    {
+     "id": "rec3",
+     "point": "OA disguises: expected maximum of uniform rolls; expected inversions/equal pairs; HP hits dealing 1 or 2 with given Prob; toss/draw until every type collected or every plate empty.",
+     "weight": "extended",
+     "evidence_hint": "Maps at least one of those phrasings to expected-max, indicator sum, Critical Hit–style HP DP, or coupon/Sushi."
+    }
+   ],
+   "probes": [
+    "What in the statement tells you this is probability/expectation rather than ordinary DP?",
+    "Would you try linearity of indicators before writing a DP state?"
+   ],
+   "hints": {
+    "1": "Look for the words probability / expected value and a random process.",
+    "2": "If it asks for an expected count, try indicators first; otherwise check that the remaining state is small.",
+    "3": "Say: Prob/E under random draws/walks/survivors/until-all-done + small counts/masks/HP/dishes; expected counts → Σ P(eventᵢ) often without DP."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Choose forward probability DP, backward expectation DP, or linearity / geometric closed form.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Probability DP pushes forward: dp[v] += dp[u] * P(u→v); answer is a sum of dp[terminal] (or Prob of a property).",
+     "weight": "core",
+     "evidence_hint": "States the forward multiply-by-edge-probability recurrence and where the answer is read."
+    },
+    {
+     "id": "appr2",
+     "point": "Expectation DP pulls backward: E[term]=0; E[s] = cost(s) + Σ P(s→t)·E[t]; if t=s is possible, rearrange the self-loop (“geometric wait”).",
+     "weight": "core",
+     "evidence_hint": "Gives the backward recurrence and mentions isolating E when a self-transition exists."
+    },
+    {
+     "id": "appr3",
+     "point": "Linearity: E[Σ Xᵢ] = Σ E[Xᵢ] with no independence needed — turns many expected-count problems into summing indicator probabilities.",
+     "weight": "core",
+     "evidence_hint": "States the linearity identity and that dependence does not block it."
+    },
+    {
+     "id": "appr4",
+     "point": "Geometric wait: success Prob p each trial ⇒ expected trials 1/p (Sushi empty-dish / coupon phases).",
+     "weight": "extended",
+     "evidence_hint": "Quotes expected trials 1/p and ties it to coupon or empty-dish waits."
+    }
+   ],
+   "probes": [
+    "Is your DP forward probability, backward expectation, or just linearity of indicators?",
+    "If the process can stay in the same state, how do you set up the expectation equation?"
+   ],
+   "hints": {
+    "1": "Decide whether you need Prob of a state, E from a state, or only an expected count.",
+    "2": "Forward: multiply edge probs; backward: E from terminals; expected counts: indicators; self-loop: geometric wait.",
+    "3": "Say: dp[v]+=dp[u]*P(u→v); E[s]=cost+Σ P·E[t] (rearrange if t=s); E[Σ Xᵢ]=Σ E[Xᵢ]; success p ⇒ 1/p waits."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Write self-loop isolation, output format, and the common Prob/E state templates.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "When a self-loop is allowed: E[s] = (cost + Σ_{t≠s} P·E[t]) / (1−P_self) — rearrange E = 1 + p₀E + … to isolate E (Sushi milestone).",
+     "weight": "core",
+     "evidence_hint": "Writes the divided-by-(1−P_self) form or equivalently isolating E from the self term."
+    },
+    {
+     "id": "impl2",
+     "point": "Float vs modular: print doubles with setprecision and absolute/relative 1e-6…1e-9, or output P·Q⁻¹ mod 998244353 / 1e9+7.",
+     "weight": "core",
+     "evidence_hint": "Names either the double precision band or the modular inverse fraction form with a modulus from the topic."
+    },
+    {
+     "id": "impl3",
+     "point": "Common states: dp[i][j] = Prob exactly j heads after i coins; E[i][j][k] on dish multiplicities; dp[mask] = Prob subset still alive; E(x,y,z) until some color hits 100; dp[w][b] turn-based draws.",
+     "weight": "core",
+     "evidence_hint": "Names at least two of those concrete state shapes and what they mean."
+    },
+    {
+     "id": "impl4",
+     "point": "Bitmask probability: state = alive set / chosen subset; transition enumerates pairs or challengers inside the mask (n≤20).",
+     "weight": "extended",
+     "evidence_hint": "Says mask = alive/chosen set and transitions fight/challenger pairs inside it under n≤20."
+    }
+   ],
+   "probes": [
+    "Show the algebra that isolates E when the next state can be the same state.",
+    "What state would you use for heads-count, Sushi dishes, Fish alive-set, or bag-of-mice draws—and how is the answer printed?"
+   ],
+   "hints": {
+    "1": "Write the one-step equation including the stay-put probability, then solve for E.",
+    "2": "Move the self term to the left; pick a state from coins/dishes/mask/colors; match float vs mod output.",
+    "3": "Say: E=(cost+Σ_{t≠s} P·E[t])/(1−P_self); states like dp[i][j], E[i][j][k], dp[mask], E(x,y,z) to 100; doubles at 1e-6…1e-9 or P·Q⁻¹ mod 998244353/1e9+7; mask fights for n≤20."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "Justify that the chosen state space is small enough, and when closed form beats DP.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "These DPs are aimed at small state spaces: counts, masks, remaining HP, or dish multiplicities — not huge unconstrained graphs.",
+     "weight": "core",
+     "evidence_hint": "Explicitly ties feasibility to one of those small state encodings."
+    },
+    {
+     "id": "cx2",
+     "point": "Bitmask probability DP enumerates pairs/challengers inside the alive mask and is the pattern when n≤20.",
+     "weight": "core",
+     "evidence_hint": "Quotes n≤20 as the bitmask-probability constraint cue."
+    },
+    {
+     "id": "cx3",
+     "point": "Prefer linearity / indicators or closed-form geometric waits (e.g. coupon N/(N−k) phases) over building a full expectation DP when the count decomposes.",
+     "weight": "extended",
+     "evidence_hint": "Says skip heavy DP when indicators or geometric/coupon closed form already give the answer."
+    }
+   ],
+   "probes": [
+    "Why is your state small enough to DP?",
+    "When would you refuse to write an expectation DP and use indicators or a geometric wait instead?"
+   ],
+   "hints": {
+    "1": "Ask what dimensions the state actually has.",
+    "2": "Counts/masks/HP/dishes stay small; masks need n≤20; indicators/geometry can replace DP.",
+    "3": "Say: state = counts/masks/HP/dish multiplicities; bitmask alive-set when n≤20; else try Σ P(eventᵢ) or 1/p / N/(N−k) waits before DP."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch self-loop algebra mistakes, false independence demands, output-format errors, and missing boundaries.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Leaving E on both sides when t=s is possible (writing E = 1 + p₀E + … without isolating E) yields an unsolved equation.",
+     "weight": "core",
+     "evidence_hint": "Calls out the unsolved self-loop form and the need to divide by (1−P_self)."
+    },
+    {
+     "id": "pit2",
+     "point": "Requiring independence before using E[count] = Σ P(eventᵢ) — linearity holds even when events are dependent.",
+     "weight": "core",
+     "evidence_hint": "States that dependence does not block indicator linearity."
+    },
+    {
+     "id": "pit3",
+     "point": "Wrong answer channel: printing a raw fraction under a prime mod, or using doubles when the judge wants P·Q⁻¹ mod 998244353 / 1e9+7 (or the reverse precision band).",
+     "weight": "core",
+     "evidence_hint": "Distinguishes modular inverse fraction output from setprecision doubles at 1e-6…1e-9."
+    },
+    {
+     "id": "pit4",
+     "point": "Vague state that omits whose turn / what remains, and skips boundary cases (0 of a type, empty bag, already sorted).",
+     "weight": "extended",
+     "evidence_hint": "Insists on turn/remaining in the state and names at least one explicit base case."
+    }
+   ],
+   "probes": [
+    "What goes wrong if the process can self-loop and you do not rearrange?",
+    "Do you need independence for linearity, and which base cases must be written first?"
+   ],
+   "hints": {
+    "1": "Check the stay-put term, independence assumptions, output format, and empty/zero bases.",
+    "2": "Isolate E; linearity needs no independence; match float vs mod; define turn/remaining and 0/empty/sorted cases.",
+    "3": "List: rearrange self-loop; E[Σ Xᵢ]=Σ E[Xᵢ] even if dependent; doubles vs P·Q⁻¹ mod 998244353/1e9+7; state includes whose turn/what remains with 0-of-type / empty bag / already sorted bases."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Linearity of indicators vs full expectation DP",
+   "strong_answer": "For expected counts (inversions, empty cells, node removed directly), sum indicator probabilities with no independence needed and often skip DP; switch to expectation DP when the process is “until all done” with interacting remaining counts/dishes/HP and self-loops."
+  },
+  {
+   "topic": "Forward probability DP vs backward expectation DP",
+   "strong_answer": "Push Prob forward with dp[v]+=dp[u]*P(u→v) when the answer is Prob of reaching terminals or a property; pull E backward from E[term]=0 with E[s]=cost+Σ P·E[t] when the answer is expected cost/steps from a start state."
+  },
+  {
+   "topic": "Closed-form geometric / coupon waits vs self-loop expectation DP",
+   "strong_answer": "Use 1/p or coupon-style N/(N−k) waits when phases are independent geometric successes; use full E[i][j][k]-style DP (Sushi) when multiplicities interact and you must rearrange E=1+p₀E+… inside each state."
+  },
+  {
+   "topic": "Float doubles vs modular P·Q⁻¹",
+   "strong_answer": "Print doubles with setprecision and absolute/relative 1e-6…1e-9 when the statement asks for a real; output P·Q⁻¹ mod 998244353 / 1e9+7 when the statement wants an exact fraction under a prime modulus (Critical Hit / Beautiful Mirrors style)."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Writing E = 1 + p₀E + … and treating it as already solved when a self-loop exists.",
+   "correction": "Move the self term: E[s] = (cost + Σ_{t≠s} P·E[t]) / (1−P_self)."
+  },
+  {
+   "trap": "Refusing linearity because the indicator events are dependent.",
+   "correction": "E[Σ Xᵢ] = Σ E[Xᵢ] needs no independence — sum P(eventᵢ) for inversions, empty cells, etc."
+  },
+  {
+   "trap": "Using integer division (or raw floats) when the judge wants a modular fraction.",
+   "correction": "Output P·Q⁻¹ mod 998244353 / 1e9+7; for real answers use setprecision with absolute/relative 1e-6…1e-9."
+  },
+  {
+   "trap": "State that does not define whose turn / what remains, with missing 0-of-type / empty-bag / already-sorted bases.",
+   "correction": "Put turn and remaining counts (or mask) into the state and draw those boundary cases explicitly before transitions."
+  }
+ ]
+}

@@ -1,0 +1,210 @@
+{
+ "id": "py_15_sets",
+ "title": "Python Sets",
+ "type": "FUND",
+ "relevance": "Sets are a common interview and OA topic for uniqueness, fast membership checks, and mathematical set operations on collections.",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "",
+ "phases": [
+  {
+   "phase": "fundamentals",
+   "goal": "Establish what a set is, its mutability rules, and how it is created correctly.",
+   "must_hit": [
+    {
+     "id": "fund1",
+     "point": "A set is an unordered collection of unique elements; the set itself is mutable but its elements must be immutable.",
+     "weight": "core",
+     "evidence_hint": "Candidate says unordered/no duplicates, you can add/remove from the set, but elements must be hashable immutables like ints, floats, strings, or tuples."
+    },
+    {
+     "id": "fund2",
+     "point": "An empty set must be created with set(); using {} creates an empty dictionary, not a set.",
+     "weight": "core",
+     "evidence_hint": "Candidate warns that s = {} is a dict and shows s = set() for an empty set."
+    },
+    {
+     "id": "fund3",
+     "point": "Sets cannot contain mutable types such as lists, dicts, or other sets; doing so raises a TypeError for an unhashable type.",
+     "weight": "extended",
+     "evidence_hint": "Candidate rejects nested lists/sets inside a set and mentions unhashable/TypeError."
+    },
+    {
+     "id": "fund4",
+     "point": "Python treats True as 1 and False as 0, so True is a duplicate of 1 inside a set and is ignored.",
+     "weight": "extended",
+     "evidence_hint": "Candidate explains {1, True, ...} keeps 1 and drops True as a duplicate."
+    }
+   ],
+   "probes": [
+    "What is a Python set, and what rules apply to the set versus its elements?",
+    "How do you create an empty set, and what goes wrong with curly braces alone?"
+   ],
+   "hints": {
+    "1": "Think about order, uniqueness, and what can change after creation.",
+    "2": "Separate the mutability of the container from the hashability of its members; also contrast set() with {}.",
+    "3": "Say: unordered unique items; set mutable, elements immutable; empty set via set() because {} is a dict; no lists/dicts/sets as elements; True equals 1 for membership uniqueness."
+   }
+  },
+  {
+   "phase": "mechanics",
+   "goal": "Cover how elements are accessed, added, removed, and combined via set operations and methods.",
+   "must_hit": [
+    {
+     "id": "mech1",
+     "point": "Sets do not support indexing or slicing; access is by iteration or membership tests with in / not in.",
+     "weight": "core",
+     "evidence_hint": "Candidate says subscripting raises TypeError and describes looping or in checks instead."
+    },
+    {
+     "id": "mech2",
+     "point": "add() inserts one element; update() adds multiple elements from an iterable such as a list, tuple, or another set.",
+     "weight": "core",
+     "evidence_hint": "Candidate contrasts single-element add with update taking an iterable."
+    },
+    {
+     "id": "mech3",
+     "point": "discard() removes an item without error if missing; remove() raises KeyError if missing; pop() removes and returns an arbitrary item; clear() empties the set; del deletes the set object.",
+     "weight": "core",
+     "evidence_hint": "Candidate distinguishes discard vs remove (KeyError), pop as arbitrary, clear vs del."
+    },
+    {
+     "id": "mech4",
+     "point": "Union (|), intersection (&), difference (-), and symmetric difference (^) implement the standard mathematical set operations; method forms exist that either return a new set or update in place (e.g. union vs update, intersection vs intersection_update).",
+     "weight": "extended",
+     "evidence_hint": "Candidate maps operators to meanings and notes returning-new vs in-place *_update / update variants."
+    },
+    {
+     "id": "mech5",
+     "point": "Relation helpers include isdisjoint (null intersection), issuperset, and issubset; sorted(s) returns a sorted list of the set's items.",
+     "weight": "extended",
+     "evidence_hint": "Candidate names isdisjoint/issuperset/issubset and that sorted yields a list, not a set."
+    }
+   ],
+   "probes": [
+    "How do you add and remove elements from a set, and how do the removal methods differ?",
+    "Walk through union, intersection, difference, and symmetric difference on two sets."
+   ],
+   "hints": {
+    "1": "Start with what you cannot do for access, then name the add/remove APIs.",
+    "2": "Contrast discard vs remove vs pop; then map | & - ^ to meanings and new-set vs in-place methods.",
+    "3": "No indexing; add/update; discard silent, remove KeyError, pop arbitrary, clear/del; | all, & common, - one-sided, ^ exclusive-or; mention relation checks and sorted returning a list."
+   }
+  },
+  {
+   "phase": "tradeoffs",
+   "goal": "Compare mutating vs non-mutating APIs and set vs frozenset when immutability or nesting is required.",
+   "must_hit": [
+    {
+     "id": "tr1",
+     "point": "Prefer discard when absence should be silent; prefer remove when missing items should surface as KeyError.",
+     "weight": "core",
+     "evidence_hint": "Candidate picks discard for soft delete and remove when the item is required to exist."
+    },
+    {
+     "id": "tr2",
+     "point": "Operator/method forms like union/intersection/difference/symmetric_difference return a new set, while update and the *_update methods mutate the receiver in place.",
+     "weight": "core",
+     "evidence_hint": "Candidate says non-update forms leave originals unchanged; update/intersection_update/etc. change s1."
+    },
+    {
+     "id": "tr3",
+     "point": "Use a frozenset when you need an immutable set usable as a dict key or as an element of another set; ordinary sets cannot nest inside sets.",
+     "weight": "extended",
+     "evidence_hint": "Candidate explains frozenset is immutable/hashable so set-of-frozensets works where set-of-sets fails."
+    }
+   ],
+   "probes": [
+    "When would you choose discard over remove, or a returning set method over an in-place update?",
+    "Why would you use a frozenset instead of a set?"
+   ],
+   "hints": {
+    "1": "Think about error signaling and whether callers need a new collection or a mutated one.",
+    "2": "Compare silent vs KeyError removal, then new-set APIs vs update/*_update, then hashability for nesting/keys.",
+    "3": "discard if missing OK, remove if missing is a bug; union etc. new set vs update mutating; frozenset for dict keys or elements inside another set."
+   }
+  },
+  {
+   "phase": "application",
+   "goal": "Apply sets for membership, nesting via frozenset, and set comprehensions.",
+   "must_hit": [
+    {
+     "id": "app1",
+     "point": "Membership tests with in / not in on sets are much faster than the same checks on lists, which is a common reason to use a set.",
+     "weight": "core",
+     "evidence_hint": "Candidate cites faster membership on sets versus lists for lookups."
+    },
+    {
+     "id": "app2",
+     "point": "A set of sets is illegal, but a set of frozensets is valid because frozensets are immutable and hashable.",
+     "weight": "core",
+     "evidence_hint": "Candidate shows nested frozensets as the way to get a 2D-set-like structure."
+    },
+    {
+     "id": "app3",
+     "point": "Set comprehensions build sets concisely with filters or transforms, similar to list comprehensions.",
+     "weight": "extended",
+     "evidence_hint": "Candidate writes a comprehension with a condition or mapping (e.g. filtered values or squares) producing a set."
+    }
+   ],
+   "probes": [
+    "When would you convert a list to a set in an interview problem?",
+    "How can you represent a set of sets in Python?",
+    "Show a set comprehension with a filter or transformation."
+   ],
+   "hints": {
+    "1": "Think about lookup speed and uniqueness, then about nesting constraints.",
+    "2": "Membership/dedup → set; nesting → frozenset elements; concise build → {expr for ... if ...}.",
+    "3": "Use sets for fast in checks and uniqueness; nest via frozenset; e.g. {i for i in range(...) if ...} or squares via comprehension."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "discard vs remove",
+   "strong_answer": "discard removes without error if the item is absent; remove raises KeyError if absent—choose based on whether missing membership is expected or a bug."
+  },
+  {
+   "topic": "returning set methods vs in-place update/*_update",
+   "strong_answer": "union/intersection/difference/symmetric_difference (and operator forms) return a new set; update and intersection_update/difference_update/symmetric_difference_update mutate the original set in place."
+  },
+  {
+   "topic": "set vs frozenset",
+   "strong_answer": "set is mutable and supports add/remove/update/clear/pop/discard; frozenset is immutable, supports only read operations, and can be a dict key or an element of another set."
+  },
+  {
+   "topic": "set membership vs list membership",
+   "strong_answer": "Testing membership with in/not in is much faster on sets than on lists, so convert to a set when repeated membership checks matter."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Writing s = {} expecting an empty set",
+   "correction": "{} creates an empty dictionary; use s = set() for an empty set."
+  },
+  {
+   "trap": "Assuming True and 1 are distinct set elements",
+   "correction": "Python treats True as 1 (and False as 0), so True is ignored as a duplicate of 1."
+  },
+  {
+   "trap": "Indexing or slicing a set",
+   "correction": "Sets are unordered and not subscriptable; use iteration or in/not in."
+  },
+  {
+   "trap": "Putting a list, dict, or set inside a set",
+   "correction": "Elements must be immutable/hashable; mutable containers raise TypeError: unhashable type."
+  },
+  {
+   "trap": "Trying to build a set of sets for a 2D set",
+   "correction": "Inner sets are unhashable; use frozensets as elements instead."
+  },
+  {
+   "trap": "Calling remove on a missing element",
+   "correction": "remove raises KeyError; use discard if absence should be silent."
+  },
+  {
+   "trap": "Assuming pop() removes a predictable element",
+   "correction": "pop removes and returns an arbitrary item from the set."
+  }
+ ]
+}

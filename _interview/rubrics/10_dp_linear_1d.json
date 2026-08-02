@@ -1,0 +1,240 @@
+{
+ "id": "10_dp_linear_1d",
+ "title": "DP I: Linear / 1D (LIS, Coin Change, House-Robber, 1D Knapsack)",
+ "type": "CP",
+ "relevance": "High (the single most reused OA/interview DP family — fib stairs, rob houses, coin change, subset-sum knapsack, LIS)",
+ "difficulty": "campus",
+ "prereqs": [],
+ "company_notes": "Stairs/tickets/days (min cost with 1/7/30-day passes) → Frog / Climbing Stairs (Amazon, Uber). Loot / delete-and-earn (taking x deletes x±1) → House Robber on a frequency axis (FAANG screens). Fewest coins or number of combinations → unbounded knapsack (nearly every OA bank). Equal skill-sum split or max value under budget W → 0/1 knapsack / Partition Equal Subset Sum (Google, Microsoft, product companies).",
+ "phases": [
+  {
+   "phase": "recognition",
+   "goal": "Confirm the candidate maps signal wording to 1D index DP rather than grid/interval/bitmask families.",
+   "must_hit": [
+    {
+     "id": "rec1",
+     "point": "State lives on a 1D index (position, sum, value, or length) with local transitions: take/skip, extend a prior sum by a coin/item, or append to a better prior subsequence.",
+     "weight": "core",
+     "evidence_hint": "Says dp is indexed by i/sum/value/length and transitions only use nearby prior states."
+    },
+    {
+     "id": "rec2",
+     "point": "Signal words include number of ways / min coins to make a sum, max points if adjacent choices conflict, subset with sum = half / capacity W, or longest increasing subsequence.",
+     "weight": "core",
+     "evidence_hint": "Names at least two of those phrases as the cue for this family."
+    },
+    {
+     "id": "rec3",
+     "point": "If dp[i] only needs dp[i-1], dp[i-2], or a loop over coins/items into a sum array, the problem belongs in linear/1D DP.",
+     "weight": "core",
+     "evidence_hint": "States the i-1/i-2 window or coin-into-sum-array shape as the membership test."
+    },
+    {
+     "id": "rec4",
+     "point": "Delete-and-earn / Boredom-style \"taking x deletes neighbors\" is House Robber after mapping values to points on a frequency axis.",
+     "weight": "extended",
+     "evidence_hint": "Maps value-axis loot wording to freq then rob."
+    }
+   ],
+   "probes": [
+    "What wording or recurrence shape makes you pick linear/1D DP over grid or interval DP?",
+    "How do stairs, adjacent-conflict loot, coin change, equal partition, and LIS each signal this family?"
+   ],
+   "hints": {
+    "1": "Look at whether the state is a single index and transitions are local.",
+    "2": "Match signal phrases: ways/min coins, adjacent conflict, half-sum/capacity W, LIS; or dp needing only i-1/i-2 or a coin loop.",
+    "3": "Say: 1D index DP; take/skip or coin-into-sum or LIS append; if only i-1/i-2 or coins into a sum array, it is this family; delete-and-earn is freq-axis House Robber."
+   }
+  },
+  {
+   "phase": "approach",
+   "goal": "Get the candidate to name the right 1D template before coding: take/skip, unbounded vs 0/1 knapsack, or LIS.",
+   "must_hit": [
+    {
+     "id": "appr1",
+     "point": "Adjacent conflict / House Robber / Boredom uses take/skip: dp[i] = max(dp[i-1], dp[i-2] + a[i]).",
+     "weight": "core",
+     "evidence_hint": "Writes or states that exact take/skip recurrence."
+    },
+    {
+     "id": "appr2",
+     "point": "Unbounded coin change uses dp[x] = min(dp[x-c]) + 1 (or ways analog); loop order decides permutations vs combinations.",
+     "weight": "core",
+     "evidence_hint": "States min-coins recurrence and that outer-sum/inner-coins vs outer-coins/inner-sum flips permutation vs combination counting."
+    },
+    {
+     "id": "appr3",
+     "point": "0/1 knapsack / Partition Equal Subset Sum is boolean or count DP to a target (often sum/2), each item used at most once.",
+     "weight": "core",
+     "evidence_hint": "Names subset-sum/partition to sum/2 or capacity W with 0/1 use."
+    },
+    {
+     "id": "appr4",
+     "point": "LIS is either ending-at-i DP or patience-sorting tails with lower_bound; House Robber II reduces a circle to two linear House Robber runs.",
+     "weight": "extended",
+     "evidence_hint": "Mentions O(n^2) ending-at-i and/or tails+lower_bound, and circle→two linears."
+    }
+   ],
+   "probes": [
+    "Before coding, which template is this: take/skip, unbounded coins, 0/1 subset-sum, or LIS?",
+    "For coins, how do you choose loop order? For a circular robber, how do you reduce it?"
+   ],
+   "hints": {
+    "1": "Classify adjacent conflict vs coins vs partition vs LIS.",
+    "2": "Take/skip uses i-1 vs i-2+a[i]; coins need the min/ways recurrence and loop-order meaning; partition targets sum/2; circle→two linear robs.",
+    "3": "Say: max(dp[i-1], dp[i-2]+a[i]); dp[x]=min(dp[x-c])+1 with outer-sum→permutations vs outer-coin→combinations; 0/1 to sum/2; LIS ending-at-i or tails+lower_bound; HR II = two linear runs."
+   }
+  },
+  {
+   "phase": "implementation",
+   "goal": "Verify the candidate can write the standard 1D templates, rolling arrays, and reconstruction pointers.",
+   "must_hit": [
+    {
+     "id": "impl1",
+     "point": "Implement House Robber / Boredom take/skip and Climbing Stairs fib ways dp[i]=dp[i-1]+dp[i-2].",
+     "weight": "core",
+     "evidence_hint": "Sketches both recurrences correctly."
+    },
+    {
+     "id": "impl2",
+     "point": "In a 1D 0/1 knapsack array, iterate capacity downward so each item is used at most once; Book Shop–style rolling array is fine.",
+     "weight": "core",
+     "evidence_hint": "States downward capacity loop for 0/1 correctness."
+    },
+    {
+     "id": "impl3",
+     "point": "Coin Combinations: outer sum, inner coins → permutations; outer coins, inner sum → combinations (order fixed).",
+     "weight": "core",
+     "evidence_hint": "States both nestings and which counting they produce."
+    },
+    {
+     "id": "impl4",
+     "point": "For path/subsequence reconstruction store prev[i] (or parent pointers) beside dp[i]; space-optimize fib/rob/frog to O(1) or O(K) when only a window is needed.",
+     "weight": "extended",
+     "evidence_hint": "Mentions prev pointers and window-only space."
+    }
+   ],
+   "probes": [
+    "Write the take/skip and min-coins skeletons, and the 0/1 downward capacity loop.",
+    "How do you nest coin loops for combinations vs permutations, and how do you reconstruct a path?"
+   ],
+   "hints": {
+    "1": "Start from rob/stairs and the coin min update.",
+    "2": "Add downward capacity for 0/1; separate the two coin nestings; keep prev for reconstruction.",
+    "3": "Say: max(skip, take prior); dp[i]=dp[i-1]+dp[i-2]; downward 1D 0/1; outer-sum=perms, outer-coin=combs; prev[i] for indices; keep O(1)/O(K) window if possible."
+   }
+  },
+  {
+   "phase": "complexity",
+   "goal": "State the LIS costs and when to flip knapsack dimensions or shrink space to a window.",
+   "must_hit": [
+    {
+     "id": "cx1",
+     "point": "LIS has both O(n^2) ending-at-i DP and O(n log n) tails + lower_bound (patience sorting).",
+     "weight": "core",
+     "evidence_hint": "Quotes both O(n^2) and O(n log n) LIS approaches."
+    },
+    {
+     "id": "cx2",
+     "point": "When only a window of prior states is needed, space-optimize fib / rob / frog to O(1) or O(K).",
+     "weight": "core",
+     "evidence_hint": "Says drop the full array to constant or K previous states."
+    },
+    {
+     "id": "cx3",
+     "point": "If weight capacity is 10^9 but values are small, flip to DP on value and store min weight (Knapsack 2 style).",
+     "weight": "extended",
+     "evidence_hint": "Names flipping the dimension when W is 10^9 and sum of values is small."
+    }
+   ],
+   "probes": [
+    "What complexities do you quote for the two LIS templates?",
+    "When do you shrink to O(1)/O(K) space, and when do you flip knapsack off of weight?"
+   ],
+   "hints": {
+    "1": "Separate LIS asymptotic options from space tricks.",
+    "2": "O(n^2) vs O(n log n) LIS; window→O(1)/O(K); huge W→DP on value.",
+    "3": "Say: LIS O(n^2) ending-at-i and O(n log n) tails+lower_bound; fib/rob/frog → O(1) or O(K); if W is 10^9 and values small, DP value → min weight."
+   }
+  },
+  {
+   "phase": "pitfalls",
+   "goal": "Catch wrong coin nesting, upward 0/1 updates, odd-sum partitions, and missing reconstruction/circle handling.",
+   "must_hit": [
+    {
+     "id": "pit1",
+     "point": "Mixing coin loop order: outer sum/inner coins counts permutations; outer coins/inner sum counts combinations—swapping them silently wrong-counts ways.",
+     "weight": "core",
+     "evidence_hint": "Explains the permutation vs combination nesting trap."
+    },
+    {
+     "id": "pit2",
+     "point": "Iterating capacity upward in a 1D 0/1 knapsack reuses the same item; must go downward.",
+     "weight": "core",
+     "evidence_hint": "Names upward iteration as the classic double-use bug."
+    },
+    {
+     "id": "pit3",
+     "point": "Equal partition is impossible when sum is odd; otherwise target sum/2 with boolean/count DP.",
+     "weight": "core",
+     "evidence_hint": "Checks odd sum first, then knapsack to sum/2."
+    },
+    {
+     "id": "pit4",
+     "point": "Forgetting prev[i] when asked to reconstruct indices, or treating circular House Robber as one linear pass instead of two.",
+     "weight": "extended",
+     "evidence_hint": "Mentions parent pointers and the two-run circular reduction."
+    }
+   ],
+   "probes": [
+    "What breaks if your coin loops or 1D 0/1 direction are wrong?",
+    "When is equal partition immediately impossible, and what do circular robber / reconstruction need?"
+   ],
+   "hints": {
+    "1": "Check loop nesting, capacity direction, and parity of sum.",
+    "2": "Outer-sum vs outer-coin; downward 0/1; odd sum→impossible; circle needs two runs; keep prev.",
+    "3": "List: wrong nesting → perms/combs swapped; upward 1D 0/1 reuses items; odd sum blocks equal partition; HR II = two linear runs; store prev[i] to rebuild."
+   }
+  }
+ ],
+ "tradeoffs": [
+  {
+   "topic": "Coin Combinations I vs II (outer sum/inner coins vs outer coins/inner sum)",
+   "strong_answer": "Outer sum then inner coins counts permutations of coins; outer coins then inner sum counts combinations with order fixed—same unbounded knapsack family, different nesting for the ask."
+  },
+  {
+   "topic": "LIS O(n^2) ending-at-i DP vs O(n log n) tails + lower_bound",
+   "strong_answer": "Ending-at-i DP is the clear interview explanation; patience-sorting tails with lower_bound is the O(n log n) template CSES forces when n is larger."
+  },
+  {
+   "topic": "Weight-indexed 0/1 knapsack vs value-dimension knapsack",
+   "strong_answer": "Classic DP indexes by weight/capacity; when W is 10^9 but values are small, flip state to value and store min weight."
+  },
+  {
+   "topic": "Full dp array vs O(1)/O(K) window",
+   "strong_answer": "Keep the full array when you need all states or reconstruction aids; if only dp[i-1]/dp[i-2] or a jump window of K is used, shrink to O(1) or O(K) previous states."
+  }
+ ],
+ "gotchas": [
+  {
+   "trap": "Using the wrong coin-loop nesting and reporting the wrong 'number of ways'.",
+   "correction": "Outer sum, inner coins → permutations; outer coins, inner sum → combinations."
+  },
+  {
+   "trap": "1D 0/1 knapsack iterating capacity upward so an item is reused.",
+   "correction": "Iterate capacity downward so each item is used at most once."
+  },
+  {
+   "trap": "Attempting equal partition without checking parity.",
+   "correction": "If sum is odd, answer is impossible; otherwise run subset-sum to sum/2."
+  },
+  {
+   "trap": "Solving circular House Robber with a single linear pass.",
+   "correction": "Reduce the circle to two linear House Robber runs."
+  },
+  {
+   "trap": "Computing only lengths/values when the ask needs the actual subsequence or path.",
+   "correction": "Store prev[i] or parent pointers alongside dp[i] and walk them back."
+  }
+ ]
+}
