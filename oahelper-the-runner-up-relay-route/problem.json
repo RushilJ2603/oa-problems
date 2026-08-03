@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-the-runner-up-relay-route",
+  "title": "The Runner-Up Relay Route",
+  "company": "Google",
+  "difficulty": "Hard",
+  "tags": ["shortest-path", "graphs", "dijkstra"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 3000, "memory_mb": 256},
+  "origin": "OA Helper — Google OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "graphs",
+  "author": "grok",
+  "links": []
+}

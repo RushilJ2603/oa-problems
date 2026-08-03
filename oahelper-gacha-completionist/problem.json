@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-gacha-completionist",
+  "title": "Gacha Completionist",
+  "company": "HackerRank",
+  "difficulty": "Hard",
+  "tags": ["dynamic-programming", "math", "modular-arithmetic"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — HackerRank OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "dp",
+  "author": "grok",
+  "links": []
+}

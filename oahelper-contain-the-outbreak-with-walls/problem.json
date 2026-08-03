@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-contain-the-outbreak-with-walls",
+  "title": "Contain the Outbreak with Walls",
+  "company": "Flipkart",
+  "difficulty": "Hard",
+  "tags": ["simulation", "bfs", "greedy"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 5000, "memory_mb": 256},
+  "origin": "OA Helper — Flipkart OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "greedy",
+  "author": "grok",
+  "links": []
+}
