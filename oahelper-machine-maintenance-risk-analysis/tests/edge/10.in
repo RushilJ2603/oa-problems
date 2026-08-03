@@ -1,0 +1,11 @@
+100
+2
+1
+2
+0
+0
+M1 Exact PRESS
+M2 Other PRESS
+PRESS 50 50
+R1 M1 1 50 10
+R2 M1 2 50 10

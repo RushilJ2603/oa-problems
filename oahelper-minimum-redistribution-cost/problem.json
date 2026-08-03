@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-minimum-redistribution-cost",
+  "title": "Minimum Redistribution Cost",
+  "company": "Amazon",
+  "difficulty": "Medium",
+  "tags": ["greedy", "prefix-sum", "circular-array"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — Amazon OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "greedy",
+  "author": "grok",
+  "links": []
+}
