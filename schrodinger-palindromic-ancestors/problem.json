@@ -1,0 +1,17 @@
+{
+  "id": "schrodinger-palindromic-ancestors",
+  "title": "Palindromic Paths to the Root",
+  "company": "Schrodinger",
+  "difficulty": "Hard",
+  "tags": ["trees", "dfs", "bitmask", "xor-prefix", "offline-queries"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 3000, "memory_mb": 256},
+  "origin": "Schrodinger OA (Iris — Personal)",
+  "source": "gyan",
+  "topic": "trees",
+  "author": "claude",
+  "links": []
+}

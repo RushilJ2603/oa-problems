@@ -1,0 +1,17 @@
+{
+  "id": "schrodinger-min-removal-unique",
+  "title": "Shortest Block to Delete for Distinct Letters",
+  "company": "Schrodinger",
+  "difficulty": "Medium",
+  "tags": ["strings", "two-pointers", "bitmask", "observation"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "Schrodinger OA (Iris — Personal)",
+  "source": "gyan",
+  "topic": "strings",
+  "author": "claude",
+  "links": []
+}

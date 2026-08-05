@@ -1,0 +1,28 @@
+{
+  "id": "schrodinger-three-regions",
+  "title": "Three Regions, One Reorganisation",
+  "company": "Schrodinger",
+  "difficulty": "Medium",
+  "tags": [
+    "brute-force",
+    "enumeration",
+    "greedy",
+    "64-bit"
+  ],
+  "languages": [
+    "cpp",
+    "py"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 4000,
+    "memory_mb": 256
+  },
+  "origin": "Schrodinger OA (Iris — Personal)",
+  "source": "gyan",
+  "topic": "brute-force",
+  "author": "claude",
+  "links": []
+}
