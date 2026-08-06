@@ -1,0 +1,17 @@
+{
+  "id": "teradata-shortest-path-conditional-weights",
+  "title": "Shortest Path with Conditional Edge Weights",
+  "company": "Teradata",
+  "difficulty": "Medium",
+  "tags": [],
+  "languages": [],
+  "runnable": false,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 5000, "memory_mb": 256},
+  "origin": "Teradata OA, 2026-08-05 (transcribed from photos of the screen)",
+  "source": "gyan",
+  "topic": "",
+  "author": "claude",
+  "links": []
+}
