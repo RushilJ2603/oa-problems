@@ -23,8 +23,9 @@
   "author": "jishu",
   "links": [
     {
-      "name": "LeetCode 526 (same problem)",
-      "url": "https://leetcode.com/problems/beautiful-arrangement/"
+      "site": "LeetCode",
+      "url": "https://leetcode.com/problems/beautiful-arrangement/",
+      "note": "526 — same problem"
     }
   ],
   "source": "gyan",

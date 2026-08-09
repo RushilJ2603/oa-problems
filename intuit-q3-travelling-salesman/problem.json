@@ -1,0 +1,21 @@
+{
+  "id": "intuit-q3-travelling-salesman",
+  "title": "Travelling Salesman",
+  "company": "Intuit",
+  "difficulty": "Hard",
+  "tags": ["bitmask-dp", "dynamic-programming", "graphs", "np-hard"],
+  "languages": [],
+  "runnable": false,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 3000, "memory_mb": 256},
+  "origin": "Intuit OA (Iris — Personal)",
+  "source": "gyan",
+  "topic": "bitmask-dp",
+  "author": "claude",
+  "links": [
+    {"site": "LeetCode", "url": "https://leetcode.com/problems/find-the-shortest-superstring/", "note": "943 — the same dp[mask][last] recurrence, wearing a strings costume"},
+    {"site": "LeetCode", "url": "https://leetcode.com/problems/shortest-path-visiting-all-nodes/", "note": "847 — the open-walk variant (revisits allowed): BFS over (mask, node)"},
+    {"site": "AtCoder", "url": "https://atcoder.jp/contests/abc180/tasks/abc180_e", "note": "ABC180 E — literal closed-tour TSP over a cost matrix, N <= 17"}
+  ]
+}

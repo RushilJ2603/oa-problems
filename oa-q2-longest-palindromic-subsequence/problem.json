@@ -19,12 +19,13 @@
     "time_ms": 2000,
     "memory_mb": 256
   },
-  "origin": "OA (transcribed) \u2014 1-hour set, Q2",
+  "origin": "OA (transcribed) — 1-hour set, Q2",
   "author": "jishu",
   "links": [
     {
-      "name": "LeetCode 516 (same problem)",
-      "url": "https://leetcode.com/problems/longest-palindromic-subsequence/"
+      "site": "LeetCode",
+      "url": "https://leetcode.com/problems/longest-palindromic-subsequence/",
+      "note": "516 — same problem"
     }
   ],
   "source": "gyan",

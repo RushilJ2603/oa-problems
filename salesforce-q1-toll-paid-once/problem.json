@@ -1,0 +1,17 @@
+{
+  "id": "salesforce-q1-toll-paid-once",
+  "title": "The Toll You Only Pay Once",
+  "company": "Salesforce",
+  "difficulty": "Hard",
+  "tags": ["graphs", "dijkstra", "shortest-paths", "steiner-tree", "64-bit"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 5000, "memory_mb": 256},
+  "origin": "Salesforce OA (Iris — Personal)",
+  "source": "gyan",
+  "topic": "graphs",
+  "author": "claude",
+  "links": []
+}

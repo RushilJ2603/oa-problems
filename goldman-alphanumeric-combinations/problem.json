@@ -13,5 +13,5 @@
   "source": "oa-helper",
   "topic": "dynamic-programming",
   "author": "jishu",
-  "links": [{"name": "Solve on LeetCode — 91. Decode Ways", "url": "https://leetcode.com/problems/decode-ways/"}]
+  "links": [{"site": "LeetCode", "url": "https://leetcode.com/problems/decode-ways/", "note": "91 — Decode Ways (same algorithm)"}]
 }

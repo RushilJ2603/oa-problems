@@ -1,0 +1,19 @@
+{
+  "id": "intuit-q1-lru-cache",
+  "title": "LRU Cache",
+  "company": "Intuit",
+  "difficulty": "Medium",
+  "tags": ["design", "hash-map", "doubly-linked-list"],
+  "languages": [],
+  "runnable": false,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "Intuit OA (Iris — Personal)",
+  "source": "gyan",
+  "topic": "design",
+  "author": "claude",
+  "links": [
+    {"site": "LeetCode", "url": "https://leetcode.com/problems/lru-cache/", "note": "146 — the exact problem; solve and submit there"}
+  ]
+}

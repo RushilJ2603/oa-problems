@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-binary-palindromic-numbers",
+  "title": "Binary Palindromic Numbers",
+  "company": "Teradata",
+  "difficulty": "Medium",
+  "tags": ["bit-manipulation", "enumeration", "binary-search", "constructive", "strings"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 3000, "memory_mb": 256},
+  "origin": "OA Helper — Teradata OA",
+  "source": "oa-helper",
+  "topic": "bit-manipulation",
+  "author": "claude",
+  "links": []
+}

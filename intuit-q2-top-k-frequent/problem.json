@@ -1,0 +1,19 @@
+{
+  "id": "intuit-q2-top-k-frequent",
+  "title": "Top K Frequent Elements",
+  "company": "Intuit",
+  "difficulty": "Easy",
+  "tags": ["hash-map", "sorting", "heap", "counting"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "Intuit OA (Iris — Personal)",
+  "source": "gyan",
+  "topic": "hash-map",
+  "author": "claude",
+  "links": [
+    {"site": "LeetCode", "url": "https://leetcode.com/problems/top-k-frequent-words/", "note": "692 — same problem, same tie-break rule"}
+  ]
+}

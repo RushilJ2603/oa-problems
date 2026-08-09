@@ -1,0 +1,17 @@
+{
+  "id": "salesforce-q2-max-min-of-two-sums",
+  "title": "Balance the Two Baskets",
+  "company": "Salesforce",
+  "difficulty": "Medium",
+  "tags": ["dynamic-programming", "knapsack", "two-dimensional-dp", "subset-selection"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 3000, "memory_mb": 256},
+  "origin": "Salesforce OA (Iris — Personal)",
+  "source": "gyan",
+  "topic": "dynamic-programming",
+  "author": "claude",
+  "links": []
+}
