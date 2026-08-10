@@ -1,0 +1,4 @@
+CREATE TABLE departments (id INTEGER PRIMARY KEY, name TEXT NOT NULL);
+CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT NOT NULL, salary INTEGER NOT NULL, department_id INTEGER);
+INSERT INTO departments (id, name) VALUES (1,'B'), (2,'A');
+INSERT INTO employees (id, name, salary, department_id) VALUES (1,'P',5,1), (2,'Q',5,2);

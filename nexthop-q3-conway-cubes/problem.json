@@ -1,0 +1,19 @@
+{
+  "id": "nexthop-q3-conway-cubes",
+  "title": "Conway Cubes",
+  "company": "NextHop.ai",
+  "difficulty": "Medium",
+  "tags": ["simulation", "cellular-automaton", "grid", "implementation", "hash-set"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 3000, "memory_mb": 256},
+  "origin": "NextHop.ai OA (Iris — Personal, recalled)",
+  "source": "gyan",
+  "topic": "simulation",
+  "author": "claude",
+  "links": [
+    {"site": "Advent of Code", "url": "https://adventofcode.com/2020/day/17", "note": "2020 Day 17 Part 1 — same rules; there the cycle count is fixed at 6"}
+  ]
+}

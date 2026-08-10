@@ -1,0 +1,19 @@
+{
+  "id": "sql-department-top-earners",
+  "title": "Department Top Earners",
+  "company": "Practice",
+  "difficulty": "Hard",
+  "tags": ["sql", "window-functions", "dense-rank", "group-wise-top-n", "joins"],
+  "languages": ["sql"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "rows_ordered",
+  "limits": {"time_ms": 3000, "memory_mb": 256},
+  "origin": "SQL practice set (authored for OA Judge)",
+  "source": "gyan",
+  "topic": "sql",
+  "author": "claude",
+  "links": [
+    {"site": "LeetCode", "url": "https://leetcode.com/problems/department-top-three-salaries/", "note": "185 — same group-wise top-N, order left unspecified there"}
+  ]
+}

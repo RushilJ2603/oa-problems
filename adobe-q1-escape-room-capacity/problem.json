@@ -1,0 +1,19 @@
+{
+  "id": "adobe-q1-escape-room-capacity",
+  "title": "Escape Room Capacity",
+  "company": "Adobe",
+  "difficulty": "Medium",
+  "tags": ["sweep-line", "prefix-sum", "difference-array", "sorting", "intervals"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "Adobe OA on Unstop (Iris — Personal, transcribed from screenshots)",
+  "source": "gyan",
+  "topic": "sweep-line",
+  "author": "claude",
+  "links": [
+    {"site": "LeetCode", "url": "https://leetcode.com/problems/car-pooling/", "note": "1094 — identical problem: capacity, half-open trips, boolean answer"}
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "nexthop-q1-flips-to-make-or",
+  "title": "Minimum Flips to Make a OR b Equal to c",
+  "company": "NextHop.ai",
+  "difficulty": "Easy",
+  "tags": ["bit-manipulation", "bitmask", "greedy", "math"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "NextHop.ai OA (Iris — Personal, recalled)",
+  "source": "gyan",
+  "topic": "bit-manipulation",
+  "author": "claude",
+  "links": [
+    {"site": "LeetCode", "url": "https://leetcode.com/problems/minimum-flips-to-make-a-or-b-equal-to-c/", "note": "1318 — same problem; this version widens the range to 60 bits"}
+  ]
+}

@@ -1,0 +1,2 @@
+CREATE TABLE employee (id INTEGER PRIMARY KEY, salary INTEGER NOT NULL);
+INSERT INTO employee (id, salary) VALUES (1, 7), (2, 7), (3, 7), (4, 7);

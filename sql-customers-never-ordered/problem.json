@@ -1,0 +1,19 @@
+{
+  "id": "sql-customers-never-ordered",
+  "title": "Customers Who Never Ordered",
+  "company": "Practice",
+  "difficulty": "Medium",
+  "tags": ["sql", "left-join", "anti-join", "null-handling", "not-in"],
+  "languages": ["sql"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "rows",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "SQL practice set (authored for OA Judge)",
+  "source": "gyan",
+  "topic": "sql",
+  "author": "claude",
+  "links": [
+    {"site": "LeetCode", "url": "https://leetcode.com/problems/customers-who-never-order/", "note": "183 — same anti-join, without the NULL trap"}
+  ]
+}

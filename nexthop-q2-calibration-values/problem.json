@@ -1,0 +1,19 @@
+{
+  "id": "nexthop-q2-calibration-values",
+  "title": "Calibration Values",
+  "company": "NextHop.ai",
+  "difficulty": "Medium",
+  "tags": ["strings", "parsing", "simulation", "two-pointers"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "NextHop.ai OA (Iris — Personal, recalled)",
+  "source": "gyan",
+  "topic": "strings",
+  "author": "claude",
+  "links": [
+    {"site": "Advent of Code", "url": "https://adventofcode.com/2023/day/1", "note": "2023 Day 1 Part 2 — same rules; 'two1nine' is one of its own examples"}
+  ]
+}

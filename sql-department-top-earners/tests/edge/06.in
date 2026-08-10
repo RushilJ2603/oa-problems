@@ -1,0 +1,3 @@
+CREATE TABLE departments (id INTEGER PRIMARY KEY, name TEXT NOT NULL);
+CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT NOT NULL, salary INTEGER NOT NULL, department_id INTEGER);
+INSERT INTO departments (id, name) VALUES (1,'A'), (2,'B');

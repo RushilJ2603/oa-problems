@@ -1,0 +1,17 @@
+{
+  "id": "adobe-q2-top-selling-products",
+  "title": "Top Selling Products",
+  "company": "Adobe",
+  "difficulty": "Medium",
+  "tags": ["sql", "joins", "group-by", "having", "aggregation"],
+  "languages": ["sql"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "rows_ordered",
+  "limits": {"time_ms": 3000, "memory_mb": 256},
+  "origin": "Adobe OA on Unstop (Iris — Personal, transcribed from screenshots)",
+  "source": "gyan",
+  "topic": "sql",
+  "author": "claude",
+  "links": []
+}

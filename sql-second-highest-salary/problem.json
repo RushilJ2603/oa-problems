@@ -1,0 +1,19 @@
+{
+  "id": "sql-second-highest-salary",
+  "title": "Second Highest Salary",
+  "company": "Practice",
+  "difficulty": "Medium",
+  "tags": ["sql", "subquery", "distinct", "null-handling", "order-by"],
+  "languages": ["sql"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "rows",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "SQL practice set (authored for OA Judge)",
+  "source": "gyan",
+  "topic": "sql",
+  "author": "claude",
+  "links": [
+    {"site": "LeetCode", "url": "https://leetcode.com/problems/second-highest-salary/", "note": "176 — the same problem, same NULL rule"}
+  ]
+}

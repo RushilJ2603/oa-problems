@@ -1,0 +1,4 @@
+CREATE TABLE Products (ProductID INTEGER PRIMARY KEY, ProductName TEXT NOT NULL, Price REAL NOT NULL);
+CREATE TABLE Sales (SaleID INTEGER PRIMARY KEY, ProductID INTEGER NOT NULL, QuantitySold INTEGER NOT NULL, SaleDate TEXT NOT NULL);
+INSERT INTO Products (ProductID, ProductName, Price) VALUES (1,'Penny',0.01), (2,'ThreeCent',0.03);
+INSERT INTO Sales (SaleID, ProductID, QuantitySold, SaleDate) VALUES (1,1,101,'2024-01-01'), (2,2,209,'2024-01-02');
