@@ -1,0 +1,17 @@
+{
+  "id": "arista-q3-office-placement",
+  "title": "Office Placement",
+  "company": "Arista Networks",
+  "difficulty": "Medium",
+  "tags": ["brute-force", "combinatorics", "grid", "minimax", "search"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "Arista Networks OA (Iris — Personal, recalled)",
+  "source": "gyan",
+  "topic": "brute-force",
+  "author": "claude",
+  "links": []
+}

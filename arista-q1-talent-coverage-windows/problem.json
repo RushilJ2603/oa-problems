@@ -1,0 +1,17 @@
+{
+  "id": "arista-q1-talent-coverage-windows",
+  "title": "Talent Coverage Windows",
+  "company": "Arista Networks",
+  "difficulty": "Medium",
+  "tags": ["sliding-window", "two-pointers", "hash-map", "array"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "Arista Networks OA (Iris — Personal, recalled)",
+  "source": "gyan",
+  "topic": "sliding-window",
+  "author": "claude",
+  "links": []
+}
