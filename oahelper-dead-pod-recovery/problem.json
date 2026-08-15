@@ -1,0 +1,26 @@
+{
+  "id": "oahelper-dead-pod-recovery",
+  "title": "Dead Pod Recovery",
+  "company": "Schrodinger",
+  "difficulty": "Medium",
+  "tags": [
+    "graphs",
+    "data-structures"
+  ],
+  "languages": [
+    "cpp",
+    "py"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper — Schrodinger OA",
+  "source": "oa-helper",
+  "topic": "graphs",
+  "author": "grok",
+  "links": []
+}

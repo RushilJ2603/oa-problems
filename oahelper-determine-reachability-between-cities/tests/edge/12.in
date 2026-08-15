@@ -1,0 +1,8 @@
+2
+LineX 6 S1 S2 S3 S4 S5 S6
+LineY 4 T1 T2 T3 T4
+4
+S1 S6
+S1 T1
+T1 T4
+S6 T4

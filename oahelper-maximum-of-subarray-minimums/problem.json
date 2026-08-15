@@ -1,0 +1,28 @@
+{
+  "id": "oahelper-maximum-of-subarray-minimums",
+  "title": "Maximum of Subarray Minimums",
+  "company": "Oracle",
+  "difficulty": "Medium",
+  "tags": [
+    "Array",
+    "Sliding Window",
+    "Monotonic Queue",
+    "Queue"
+  ],
+  "languages": [
+    "cpp",
+    "py"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper \u2014 Oracle OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "array",
+  "author": "grok",
+  "links": []
+}

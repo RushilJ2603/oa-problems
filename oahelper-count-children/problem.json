@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-count-children",
+  "title": "Count Children",
+  "company": "ThoughtWorks",
+  "difficulty": "Medium",
+  "tags": ["tree", "dp"],
+  "languages": ["py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper - ThoughtWorks OA",
+  "source": "oa-helper",
+  "topic": "dp",
+  "author": "grok",
+  "links": []
+}

@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-anti-clockwise-spiral-print-of-a-2d-array",
+  "title": "Anti-Clockwise Spiral Print of a 2D Array",
+  "company": "ValueLabs",
+  "difficulty": "Medium",
+  "tags": ["array", "matrix", "simulation"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — ValueLabs OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "dp-grid",
+  "author": "grok",
+  "links": []
+}

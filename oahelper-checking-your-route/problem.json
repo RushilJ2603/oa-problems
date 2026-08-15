@@ -1,0 +1,26 @@
+{
+  "id": "oahelper-checking-your-route",
+  "title": "Classify the edges",
+  "company": "Akamai",
+  "difficulty": "Medium",
+  "tags": [
+    "graphs",
+    "dijkstra"
+  ],
+  "languages": [
+    "cpp",
+    "py"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper \u2014 Akamai OA",
+  "source": "oa-helper",
+  "topic": "graphs",
+  "author": "grok",
+  "links": []
+}

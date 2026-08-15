@@ -1,0 +1,20 @@
+{
+  "id": "oahelper-executing-processes",
+  "title": "Executing Processes",
+  "company": "Amazon",
+  "difficulty": "Medium",
+  "tags": ["segment-tree", "sorting", "binary-search"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper — Amazon OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "greedy",
+  "author": "grok",
+  "links": []
+}

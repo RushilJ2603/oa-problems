@@ -1,0 +1,20 @@
+{
+  "id": "oahelper-arithmetic-slices",
+  "title": "Stable Latency Periods",
+  "company": "Rakuten",
+  "difficulty": "Medium",
+  "tags": ["dynamic-programming", "math"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper - Rakuten OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "dp",
+  "author": "grok",
+  "links": []
+}

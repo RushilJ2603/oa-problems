@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-consistent-data",
+  "title": "Consistent Data",
+  "company": "GigSky",
+  "difficulty": "Medium",
+  "tags": ["dynamic-programming", "math", "combinatorics"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — GigSky OA",
+  "source": "oa-helper",
+  "topic": "dynamic programming",
+  "author": "grok",
+  "links": []
+}

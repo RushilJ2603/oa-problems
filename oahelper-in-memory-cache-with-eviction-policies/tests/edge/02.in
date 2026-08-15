@@ -1,0 +1,13 @@
+2
+LFU
+10
+put a 1
+put b 2
+get a
+get a
+get b
+put c 3
+get a
+get b
+get c
+delete a

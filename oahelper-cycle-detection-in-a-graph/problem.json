@@ -1,0 +1,19 @@
+{
+  "id": "oahelper-cycle-detection-in-a-graph",
+  "title": "Cycle Detection in a Graph",
+  "company": "KLA",
+  "difficulty": "Medium",
+  "tags": ["Graph Theory", "Topological Sort", "Dynamic Programming"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper - KLA OA",
+  "source": "oa-helper",
+  "topic": "graphs",
+  "author": "grok"
+}

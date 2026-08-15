@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-factor-lower-bound",
+  "title": "Factor Lower Bound",
+  "company": "Infoedge",
+  "difficulty": "Medium",
+  "tags": ["Array", "Math", "Binary Search", "Number Theory"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper — Infoedge OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "Binary Search",
+  "author": "grok",
+  "links": []
+}

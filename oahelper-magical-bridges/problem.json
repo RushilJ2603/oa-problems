@@ -1,0 +1,26 @@
+{
+  "id": "oahelper-magical-bridges",
+  "title": "Magical Bridges",
+  "company": "Salesforce",
+  "difficulty": "Medium",
+  "tags": [
+    "graph-theory",
+    "shortest-path"
+  ],
+  "languages": [
+    "cpp",
+    "py"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 3000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper \u2014 Salesforce OA",
+  "source": "oa-helper",
+  "topic": "graphs",
+  "author": "grok",
+  "links": []
+}

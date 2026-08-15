@@ -1,0 +1,27 @@
+{
+  "id": "oahelper-disk-storage",
+  "title": "Disk Storage",
+  "company": "uber",
+  "difficulty": "Medium",
+  "tags": [
+    "tree",
+    "bitmask",
+    "dfs"
+  ],
+  "languages": [
+    "cpp",
+    "py"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper \u2014 uber OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "graphs",
+  "author": "grok",
+  "links": []
+}

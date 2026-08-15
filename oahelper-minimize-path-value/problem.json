@@ -1,0 +1,30 @@
+{
+  "id": "oahelper-minimize-path-value",
+  "title": "Minimize Path Value",
+  "company": "Akamai",
+  "difficulty": "Medium",
+  "tags": [
+    "Graph Theory",
+    "Union-Find",
+    "Binary Search",
+    "Shortest Path",
+    "Minimum Spanning Tree",
+    "Sorting"
+  ],
+  "languages": [
+    "cpp",
+    "py"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper \u2014 Akamai OA (story-wrapped original)",
+  "source": "oa-helper",
+  "topic": "graphs",
+  "author": "grok",
+  "links": []
+}

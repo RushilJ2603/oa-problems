@@ -1,0 +1,20 @@
+{
+  "id": "oahelper-determine-reachability-between-cities",
+  "title": "Determine Reachability Between Cities",
+  "company": "Bloomberg",
+  "difficulty": "Medium",
+  "tags": ["union-find", "graph", "hash-table"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper - Bloomberg OA",
+  "source": "oa-helper",
+  "topic": "graphs",
+  "author": "grok",
+  "links": []
+}

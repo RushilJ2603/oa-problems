@@ -1,0 +1,28 @@
+{
+  "id": "oahelper-balanced-nodes-in-a-binary-tree",
+  "title": "Balanced Nodes in a Binary Tree",
+  "company": "HirePro",
+  "difficulty": "Medium",
+  "tags": [
+    "tree",
+    "binary-tree",
+    "depth-first-search",
+    "recursion"
+  ],
+  "languages": [
+    "cpp",
+    "py"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper - HirePro OA",
+  "source": "oa-helper",
+  "topic": "trees",
+  "author": "grok",
+  "links": []
+}

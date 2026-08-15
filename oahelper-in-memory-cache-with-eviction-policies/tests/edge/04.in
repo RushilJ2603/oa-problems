@@ -1,0 +1,8 @@
+1
+LRU
+5
+put a 1
+put a 2
+get a
+put b 3
+get a

@@ -1,0 +1,20 @@
+{
+  "id": "oahelper-cache-optimization-power",
+  "title": "Cache Optimization Power",
+  "company": "Amazon",
+  "difficulty": "Hard",
+  "tags": ["stack-monotonic"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper — Amazon OA",
+  "source": "oa-helper",
+  "topic": "stack-monotonic",
+  "author": "grok",
+  "links": []
+}

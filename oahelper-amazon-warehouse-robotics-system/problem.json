@@ -1,0 +1,20 @@
+{
+  "id": "oahelper-amazon-warehouse-robotics-system",
+  "title": "Amazon Warehouse Robotics System",
+  "company": "Amazon",
+  "difficulty": "Medium",
+  "tags": ["Array", "Sorting", "Counting"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper \u2014 Amazon OA",
+  "source": "oa-helper",
+  "topic": "arrays-prefix",
+  "author": "grok",
+  "links": []
+}

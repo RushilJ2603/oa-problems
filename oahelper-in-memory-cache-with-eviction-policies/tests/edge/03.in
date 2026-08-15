@@ -1,0 +1,8 @@
+5
+LRU
+5
+put x 1
+delete x
+get x
+put y 2
+get y

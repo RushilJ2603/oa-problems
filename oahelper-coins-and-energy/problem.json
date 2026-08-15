@@ -1,0 +1,26 @@
+{
+  "id": "oahelper-coins-and-energy",
+  "title": "Coins and Energy",
+  "company": "Project44",
+  "difficulty": "Medium",
+  "tags": [
+    "dynamic-programming",
+    "dp-1d"
+  ],
+  "languages": [
+    "cpp",
+    "py"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper \u2014 Project44 OA",
+  "source": "oa-helper",
+  "topic": "dp-1d",
+  "author": "grok",
+  "links": []
+}

@@ -1,0 +1,17 @@
+{
+  "id": "oahelper-cheapest-route-within-a-time-budget",
+  "title": "Cheapest Route Within a Time Budget",
+  "company": "PhonePe",
+  "difficulty": "Medium",
+  "tags": ["graphs", "dynamic-programming"],
+  "languages": ["cpp", "py"],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {"time_ms": 2000, "memory_mb": 256},
+  "origin": "OA Helper - PhonePe OA",
+  "source": "oa-helper",
+  "topic": "graphs",
+  "author": "grok",
+  "links": []
+}

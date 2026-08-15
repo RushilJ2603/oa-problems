@@ -1,0 +1,26 @@
+{
+  "id": "oahelper-in-memory-cache-with-eviction-policies",
+  "title": "In-Memory Cache with Eviction Policies",
+  "company": "Kaigentic",
+  "difficulty": "Medium",
+  "tags": [
+    "linked-list",
+    "design"
+  ],
+  "languages": [
+    "cpp",
+    "py"
+  ],
+  "runnable": true,
+  "io_mode": "stdin_stdout",
+  "compare": "tokens",
+  "limits": {
+    "time_ms": 2000,
+    "memory_mb": 256
+  },
+  "origin": "OA Helper \u2014 Kaigentic OA",
+  "source": "oa-helper",
+  "topic": "linked-list",
+  "author": "grok",
+  "links": []
+}
